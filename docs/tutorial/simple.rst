@@ -4,7 +4,7 @@ Simple Non Linear Problem
 Overview
 -------------
 
-.. code-block::
+::
 
   minimize  2*(3*a+b)*c**2 + 3
   s.t.      0 <= a <= 1, a is integer
@@ -45,7 +45,7 @@ Variable
 
 We declear variables using *Variable*.
 
-.. code-block::
+::
 
   0 <= a <= 1, a is integer
   1 <= b <= 2, b is continuous

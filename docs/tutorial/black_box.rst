@@ -4,7 +4,7 @@ Black Box Optimization Problem
 Overview
 -------------
 
-.. code-block::
+::
 
   minimize  simulator(a, b)
   s.t.      0 <= a <= 1, a is integer

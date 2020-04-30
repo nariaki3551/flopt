@@ -4,7 +4,7 @@ Permutation Optimization Problem
 Overview
 --------
 
-.. code-block::
+::
 
   minimize the total distance of routing the cities.
   s.t.     We have to visit every city one time.
