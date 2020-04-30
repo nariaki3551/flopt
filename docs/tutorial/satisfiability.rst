@@ -4,7 +4,7 @@ Satisfiability Problem
 Overview
 --------
 
-.. code-block::
+::
 
   maximize (c1+2*c2+3*c3+4*c4)
   s.t.     c1 = x0 or x1

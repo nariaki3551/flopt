@@ -45,14 +45,14 @@ Compute Performance
 - dataset can be select from `flopt.Dataset_list()`.
 - param_file's format is `parameter = value`, for example, as follows.
 
-.. code-block::
+::
 
   n_trial = 10000
   timelimit = 30
 
 Example for running the script.
 
-.. code-block::
+.. code-block:: bash
 
   python compute_performance.py 2-Opt 2-Opt_timelimit30 --datasets tsp  --params default.param
   python compute_performance.py RandomSearch RandomSearch_iteration100  --datasets tsp  --params default.param
@@ -64,7 +64,7 @@ Example for running the script.
 View Performance
 ^^^^^^^^^^^^^^^^
 
-.. code-block::
+.. code-block:: bash
 
   python view_performance.py --algo algoA algoB  --datasets datasetA datasetB
   python view_performance.py --algo algoA algoB  --datasets datasetA datasetB --xitem iteration
@@ -75,7 +75,7 @@ View Performance
 
 Example for running the script.
 
-.. code-block::
+.. code-block:: bash
 
   python view_performance.py --algo 2-Opt_timelimit30
   python view_performance.py -- datasets tsp

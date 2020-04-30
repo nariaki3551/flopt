@@ -8,4 +8,3 @@ Tutorial
    black_box
    permutation
    satisfiability
-   performance
