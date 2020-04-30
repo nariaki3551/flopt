@@ -1,0 +1,594 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="japanease" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="japanease" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>flopt.variable &mdash; flopt  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> flopt
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorial/index.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../reference/index.html">API Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">flopt</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>flopt.variable</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for flopt.variable</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">traceback</span>
+<span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">ceil</span><span class="p">,</span> <span class="n">floor</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="kn">from</span> <span class="nn">.expression</span> <span class="kn">import</span> <span class="n">Expression</span>
+
+<span class="n">INI_BOUND</span> <span class="o">=</span> <span class="mf">1e10</span>
+
+<div class="viewcode-block" id="Variable"><a class="viewcode-back" href="../../reference/Variable.html#flopt.Variable">[docs]</a><span class="k">def</span> <span class="nf">Variable</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">lowBound</span><span class="o">=-</span><span class="n">INI_BOUND</span><span class="p">,</span> <span class="n">upBound</span><span class="o">=</span><span class="n">INI_BOUND</span><span class="p">,</span> <span class="n">iniValue</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cat</span><span class="o">=</span><span class="s1">&#39;Continuous&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create Variable object</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name : str</span>
+<span class="sd">      name of variable</span>
+<span class="sd">    lowBound : float, optional</span>
+<span class="sd">      lowBound</span>
+<span class="sd">    upBound : float, optional</span>
+<span class="sd">      upBound</span>
+<span class="sd">    iniValue : float, optional</span>
+<span class="sd">      set value to variable</span>
+<span class="sd">    cat : str, optional</span>
+<span class="sd">      category of variable</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    VarElement Family</span>
+<span class="sd">      return VarElement Family</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Create Integer, Continuous and Binary Variable </span>
+<span class="sd">    </span>
+<span class="sd">    &gt;&gt;&gt; a = Variable(name=&#39;a&#39;, lowBound=0, upBound=1, cat=&#39;Integer&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; b = Variable(name=&#39;b&#39;, lowBound=1, upBound=2, cat=&#39;Continuous&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; c = Variable(name=&#39;b&#39;, lowBound=-2, intValue=3, cat=&#39;Continuous&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; d = Variable(name=&#39;d&#39;, cat=&#39;Binary&#39;)</span>
+
+<span class="sd">    Create [lowBound, ..., upBound] range permutation variable</span>
+
+<span class="sd">    &gt;&gt;&gt; e = Variable(name=&#39;e&#39;, lowBound=0, upBound=10, cat=&#39;Permutation&#39;)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">cat</span> <span class="o">==</span> <span class="s1">&#39;Continuous&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">VarContinuous</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">lowBound</span><span class="p">,</span> <span class="n">upBound</span><span class="p">,</span> <span class="n">iniValue</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">cat</span> <span class="o">==</span> <span class="s1">&#39;Integer&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">VarInteger</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">lowBound</span><span class="p">,</span> <span class="n">upBound</span><span class="p">,</span> <span class="n">iniValue</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">cat</span> <span class="o">==</span> <span class="s1">&#39;Binary&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">VarBinary</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">iniValue</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">cat</span> <span class="o">==</span> <span class="s1">&#39;Permutation&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">VarPermutation</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">lowBound</span><span class="p">,</span> <span class="n">upBound</span><span class="p">,</span> <span class="n">iniValue</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;cat </span><span class="si">{</span><span class="n">cat</span><span class="si">}</span><span class="s2"> cannot be used&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="VarElement"><a class="viewcode-back" href="../../reference/Variable.html#flopt.VarElement">[docs]</a><span class="k">class</span> <span class="nc">VarElement</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base Variable class</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">lowBound</span><span class="p">,</span> <span class="n">upBound</span><span class="p">,</span> <span class="n">iniValue</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lowBound</span> <span class="o">=</span> <span class="n">lowBound</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">upBound</span> <span class="o">=</span> <span class="n">upBound</span>
+        <span class="k">if</span> <span class="n">iniValue</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">iniValue</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getIniValue</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_value</span> <span class="o">=</span> <span class="n">iniValue</span>
+
+<div class="viewcode-block" id="VarElement.getType"><a class="viewcode-back" href="../../reference/Variable.html#flopt.VarElement.getType">[docs]</a>    <span class="k">def</span> <span class="nf">getType</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">          return variable type</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span></div>
+
+<div class="viewcode-block" id="VarElement.value"><a class="viewcode-back" href="../../reference/Variable.html#flopt.VarElement.value">[docs]</a>    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float or int</span>
+<span class="sd">          return value of variable</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value</span></div>
+
+<div class="viewcode-block" id="VarElement.setValue"><a class="viewcode-back" href="../../reference/Variable.html#flopt.VarElement.setValue">[docs]</a>    <span class="k">def</span> <span class="nf">setValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        set the value to variable</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_value</span> <span class="o">=</span> <span class="n">value</span></div>
+
+<div class="viewcode-block" id="VarElement.feasible"><a class="viewcode-back" href="../../reference/Variable.html#flopt.VarElement.feasible">[docs]</a>    <span class="k">def</span> <span class="nf">feasible</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        bool</span>
+<span class="sd">          return true if value of self is in between lowBound and upBound else false</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">lowBound</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upBound</span></div>
+
+<div class="viewcode-block" id="VarElement.clip"><a class="viewcode-back" href="../../reference/Variable.html#flopt.VarElement.clip">[docs]</a>    <span class="k">def</span> <span class="nf">clip</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        map in an feasible area by clipping.</span>
+<span class="sd">        ex. value &lt; lowBound -&gt; value = lowBound,</span>
+<span class="sd">        value &gt; upBound  -&gt; value = upBound</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">lowBound</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lowBound</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">upBound</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">upBound</span></div>
+
+    <span class="k">def</span> <span class="nf">getVariables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># for getVariables() in Expression class</span>
+        <span class="k">return</span> <span class="p">{</span><span class="bp">self</span><span class="p">}</span>
+
+<div class="viewcode-block" id="VarElement.setRandom"><a class="viewcode-back" href="../../reference/Variable.html#flopt.VarElement.setRandom">[docs]</a>    <span class="k">def</span> <span class="nf">setRandom</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        set random value to variable</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span>  <span class="c1"># define each VarElement family</span></div>
+
+    <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+            <span class="n">other</span> <span class="o">=</span> <span class="n">VarConst</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">other</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">Expression</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="s1">&#39;+&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="n">VarElement</span><span class="p">,</span> <span class="n">Expression</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="n">Expression</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="s1">&#39;+&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span>
+
+    <span class="k">def</span> <span class="fm">__radd__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span> <span class="o">+</span> <span class="n">other</span>
+
+    <span class="k">def</span> <span class="fm">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+            <span class="n">other</span> <span class="o">=</span> <span class="n">VarConst</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">other</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">Expression</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="n">VarElement</span><span class="p">,</span> <span class="n">Expression</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="n">Expression</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span>
+
+    <span class="k">def</span> <span class="fm">__rsub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">other</span> <span class="o">+</span> <span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+            <span class="n">other</span> <span class="o">=</span> <span class="n">VarConst</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">other</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">Expression</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="s1">&#39;*&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="n">VarElement</span><span class="p">,</span> <span class="n">Expression</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="n">Expression</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="s1">&#39;*&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span>
+
+    <span class="k">def</span> <span class="fm">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span> <span class="o">*</span> <span class="n">other</span>
+
+    <span class="k">def</span> <span class="fm">__truediv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+            <span class="n">other</span> <span class="o">=</span> <span class="n">VarConst</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">other</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">Expression</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="s1">&#39;/&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="n">VarElement</span><span class="p">,</span> <span class="n">Expression</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="n">Expression</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="s1">&#39;/&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span>
+
+    <span class="k">def</span> <span class="fm">__rtruediv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+            <span class="n">other</span> <span class="o">=</span> <span class="n">VarConst</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">other</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">Expression</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;/&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="n">VarElement</span><span class="p">,</span> <span class="n">Expression</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="n">Expression</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;/&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span>
+
+    <span class="k">def</span> <span class="fm">__mod__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">other</span> <span class="o">=</span> <span class="n">VarConst</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">other</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">Expression</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="s1">&#39;%&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="n">VarInteger</span><span class="p">,</span> <span class="n">Expression</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="n">Expression</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="s1">&#39;%&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__pow__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+            <span class="n">other</span> <span class="o">=</span> <span class="n">VarConst</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">other</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">Expression</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="s1">&#39;^&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="n">VarElement</span><span class="p">,</span> <span class="n">Expression</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="n">Expression</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="s1">&#39;^&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span>
+
+    <span class="k">def</span> <span class="fm">__rpow__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+            <span class="n">other</span> <span class="o">=</span> <span class="n">VarConst</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">other</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">Expression</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;^&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="n">VarElement</span><span class="p">,</span> <span class="n">Expression</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="n">Expression</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;^&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span>
+
+    <span class="k">def</span> <span class="fm">__abs__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_value</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__int__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_value</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__float__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_value</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__neg__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># 0 - self</span>
+        <span class="n">zero</span> <span class="o">=</span> <span class="n">VarConst</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;0&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Expression</span><span class="p">(</span><span class="n">zero</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__pos__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">name</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">s</span>  <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;Name: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;  Type    : </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;  Value   : </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">()</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;  lowBound: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">lowBound</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;  upBound : </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">upBound</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="k">return</span> <span class="n">s</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s1">&#39;VarElement(&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">&quot;, </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">lowBound</span><span class="si">}</span><span class="s1">, </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">upBound</span><span class="si">}</span><span class="s1">, </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">()</span><span class="si">}</span><span class="s1">)&#39;</span></div>
+
+
+<div class="viewcode-block" id="VarInteger"><a class="viewcode-back" href="../../reference/Variable.html#flopt.VarInteger">[docs]</a><span class="k">class</span> <span class="nc">VarInteger</span><span class="p">(</span><span class="n">VarElement</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Ingeter Variable class</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">lowBound</span><span class="p">,</span> <span class="n">upBound</span><span class="p">,</span> <span class="n">iniValue</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">ceil</span><span class="p">(</span><span class="n">lowBound</span><span class="p">),</span> <span class="n">floor</span><span class="p">(</span><span class="n">upBound</span><span class="p">),</span> <span class="n">iniValue</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="s1">&#39;VarInteger&#39;</span>
+
+    <span class="k">def</span> <span class="nf">getIniValue</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lowBound</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">upBound</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>
+
+    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_value</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">warn</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;value is not int, so output value is casted into int&quot;</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">warn</span><span class="p">)</span>            
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_value</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">setRandom</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_value</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lowBound</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">upBound</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="VarBinary"><a class="viewcode-back" href="../../reference/Variable.html#flopt.VarBinary">[docs]</a><span class="k">class</span> <span class="nc">VarBinary</span><span class="p">(</span><span class="n">VarInteger</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Binary Variable class</span>
+
+
+<span class="sd">    .. note::</span>
+<span class="sd">      Binary Variable behaves differently in &quot;-&quot; and &quot;~&quot; operation.</span>
+<span class="sd">      </span>
+<span class="sd">      &quot;-&quot; is the subtraction as interger variable, and</span>
+<span class="sd">      &quot;~&quot; is the inversion as binary (bool) variable.</span>
+
+<span class="sd">      &gt;&gt;&gt; a = Variable(&#39;a&#39;, intValue=1, cat=&#39;Binary&#39;)</span>
+<span class="sd">      &gt;&gt;&gt; a.value()</span>
+<span class="sd">      &gt;&gt;&gt; 1</span>
+<span class="sd">      &gt;&gt;&gt; (-a).value()</span>
+<span class="sd">      &gt;&gt;&gt; -1</span>
+<span class="sd">      &gt;&gt;&gt; (~a).value()</span>
+<span class="sd">      &gt;&gt;&gt; 0</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">iniValue</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">iniValue</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="s1">&#39;VarBinary&#39;</span>
+
+    <span class="k">def</span> <span class="nf">setRandom</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_value</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__invert__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># (self+1)%2</span>
+        <span class="n">two</span> <span class="o">=</span> <span class="n">VarConst</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;2&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Expression</span><span class="p">(</span><span class="bp">self</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">two</span><span class="p">,</span> <span class="s1">&#39;%&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__and__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+            <span class="n">other</span> <span class="o">=</span> <span class="n">VarConst</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">other</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Expression</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="s1">&#39;&amp;&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__rand__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+            <span class="n">other</span> <span class="o">=</span> <span class="n">VarConst</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">other</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Expression</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;&amp;&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__or__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+            <span class="n">other</span> <span class="o">=</span> <span class="n">VarConst</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">other</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Expression</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="s1">&#39;|&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__ror__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+            <span class="n">other</span> <span class="o">=</span> <span class="n">VarConst</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">other</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Expression</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;|&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="VarContinuous"><a class="viewcode-back" href="../../reference/Variable.html#flopt.VarContinuous">[docs]</a><span class="k">class</span> <span class="nc">VarContinuous</span><span class="p">(</span><span class="n">VarElement</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Continuous Variable class</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">lowBound</span><span class="p">,</span> <span class="n">upBound</span><span class="p">,</span> <span class="n">iniValue</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">lowBound</span><span class="p">,</span> <span class="n">upBound</span><span class="p">,</span> <span class="n">iniValue</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="s1">&#39;VarContinuous&#39;</span>
+
+    <span class="k">def</span> <span class="nf">getIniValue</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lowBound</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">upBound</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+
+    <span class="k">def</span> <span class="nf">setRandom</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_value</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lowBound</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">upBound</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="VarPermutation"><a class="viewcode-back" href="../../reference/Variable.html#flopt.VarPermutation">[docs]</a><span class="k">class</span> <span class="nc">VarPermutation</span><span class="p">(</span><span class="n">VarElement</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Permutation Variable class</span>
+
+<span class="sd">    This has [lowBound, ... upBound] range permutation.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+
+<span class="sd">    &gt;&gt;&gt; a = Variable(&#39;a&#39;, lowBound=0, upBound=3, cat=&#39;Permutation&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; a.value()</span>
+<span class="sd">    &gt;&gt;&gt; [2, 1, 3, 0]   # randomized</span>
+<span class="sd">    &gt;&gt;&gt; b = Variable(&#39;b&#39;, lowBound=0, upBound=3, iniValue=[0,1,2,3], cat=&#39;Permutation&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; b.value()</span>
+<span class="sd">    &gt;&gt;&gt; [0, 1, 2, 3]</span>
+
+<span class="sd">    We can use list operation to Peramutation Variable</span>
+
+<span class="sd">    &gt;&gt;&gt; b[1]</span>
+<span class="sd">    &gt;&gt;&gt; 1</span>
+<span class="sd">    &gt;&gt;&gt; len(b)</span>
+<span class="sd">    &gt;&gt;&gt; 4</span>
+<span class="sd">    &gt;&gt;&gt; b[1:3]</span>
+<span class="sd">    &gt;&gt;&gt; [1, 2]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">lowBound</span><span class="p">,</span> <span class="n">upBound</span><span class="p">,</span> <span class="n">iniValue</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">lowBound</span><span class="p">,</span> <span class="n">upBound</span><span class="p">,</span> <span class="n">iniValue</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="s1">&#39;VarPermutation&#39;</span>
+
+    <span class="k">def</span> <span class="nf">getIniValue</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lowBound</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">upBound</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+
+<div class="viewcode-block" id="VarPermutation.value"><a class="viewcode-back" href="../../reference/Variable.html#flopt.VarPermutation.value">[docs]</a>    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        list</span>
+<span class="sd">          return permutation</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value</span><span class="p">[:]</span>  <span class="c1"># copy</span>
+        <span class="k">return</span> <span class="n">_value</span></div>
+
+<div class="viewcode-block" id="VarPermutation.setRandom"><a class="viewcode-back" href="../../reference/Variable.html#flopt.VarPermutation.setRandom">[docs]</a>    <span class="k">def</span> <span class="nf">setRandom</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        shuffle the list</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_value</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_value</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_value</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_value</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="VarConst"><a class="viewcode-back" href="../../reference/Variable.html#flopt.VarConst">[docs]</a><span class="k">class</span> <span class="nc">VarConst</span><span class="p">(</span><span class="n">VarElement</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    It is the variable of constant value.</span>
+<span class="sd">    We use it the operation including constant value.</span>
+<span class="sd">    See VarElement class `__add__`, `__sub__`, and so on.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name : str</span>
+<span class="sd">      name</span>
+<span class="sd">    const : float or int</span>
+<span class="sd">      value</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">const</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">const</span><span class="p">,</span> <span class="n">const</span><span class="p">,</span> <span class="n">const</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="s1">&#39;VarConst&#39;</span>
+
+    <span class="k">def</span> <span class="nf">getVariables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># for getVariables() in Expression class</span>
+        <span class="k">return</span> <span class="nb">set</span><span class="p">()</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Nariaki Tateiwa, Takashi Wakamatsu
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,406 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="japanease" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="japanease" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Variable &mdash; flopt  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="CustomObject" href="CustomObject.html" />
+    <link rel="prev" title="API Reference" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> flopt
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorial/index.html">Tutorial</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Variable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CustomObject.html">CustomObject</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Problem.html">Problem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Solver.html">Solver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Solution.html">Solution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Expression.html">Expression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Performance.html">Performance</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">flopt</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">API Reference</a> &raquo;</li>
+        
+      <li>Variable</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/reference/Variable.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <span class="target" id="module-flopt.variable"></span><div class="section" id="variable">
+<h1>Variable<a class="headerlink" href="#variable" title="Permalink to this headline">¶</a></h1>
+<dl class="py function">
+<dt id="flopt.Variable">
+<code class="sig-prename descclassname">flopt.</code><code class="sig-name descname">Variable</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">lowBound</span><span class="o">=</span><span class="default_value">- 10000000000.0</span></em>, <em class="sig-param"><span class="n">upBound</span><span class="o">=</span><span class="default_value">10000000000.0</span></em>, <em class="sig-param"><span class="n">iniValue</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">cat</span><span class="o">=</span><span class="default_value">'Continuous'</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/flopt/variable.html#Variable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#flopt.Variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create Variable object</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) -- name of variable</p></li>
+<li><p><strong>lowBound</strong> (<em>float</em><em>, </em><em>optional</em>) -- lowBound</p></li>
+<li><p><strong>upBound</strong> (<em>float</em><em>, </em><em>optional</em>) -- upBound</p></li>
+<li><p><strong>iniValue</strong> (<em>float</em><em>, </em><em>optional</em>) -- set value to variable</p></li>
+<li><p><strong>cat</strong> (<em>str</em><em>, </em><em>optional</em>) -- category of variable</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>return VarElement Family</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>VarElement Family</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>Create Integer, Continuous and Binary Variable</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="n">lowBound</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">upBound</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">cat</span><span class="o">=</span><span class="s1">&#39;Integer&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="n">lowBound</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">upBound</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">cat</span><span class="o">=</span><span class="s1">&#39;Continuous&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="n">lowBound</span><span class="o">=-</span><span class="mi">2</span><span class="p">,</span> <span class="n">intValue</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">cat</span><span class="o">=</span><span class="s1">&#39;Continuous&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="n">cat</span><span class="o">=</span><span class="s1">&#39;Binary&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Create [lowBound, ..., upBound] range permutation variable</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">e</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;e&#39;</span><span class="p">,</span> <span class="n">lowBound</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">upBound</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">cat</span><span class="o">=</span><span class="s1">&#39;Permutation&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt id="flopt.variable.VarElement">
+<em class="property">class </em><code class="sig-prename descclassname">flopt.variable.</code><code class="sig-name descname">VarElement</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">lowBound</span></em>, <em class="sig-param"><span class="n">upBound</span></em>, <em class="sig-param"><span class="n">iniValue</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/flopt/variable.html#VarElement"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#flopt.variable.VarElement" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base Variable class</p>
+<dl class="py method">
+<dt id="flopt.variable.VarElement.clip">
+<code class="sig-name descname">clip</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/flopt/variable.html#VarElement.clip"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#flopt.variable.VarElement.clip" title="Permalink to this definition">¶</a></dt>
+<dd><p>map in an feasible area by clipping.
+ex. value &lt; lowBound -&gt; value = lowBound,
+value &gt; upBound  -&gt; value = upBound</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="flopt.variable.VarElement.feasible">
+<code class="sig-name descname">feasible</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/flopt/variable.html#VarElement.feasible"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#flopt.variable.VarElement.feasible" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>return true if value of self is in between lowBound and upBound else false</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="flopt.variable.VarElement.getType">
+<code class="sig-name descname">getType</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/flopt/variable.html#VarElement.getType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#flopt.variable.VarElement.getType" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>return variable type</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="flopt.variable.VarElement.setRandom">
+<code class="sig-name descname">setRandom</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/flopt/variable.html#VarElement.setRandom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#flopt.variable.VarElement.setRandom" title="Permalink to this definition">¶</a></dt>
+<dd><p>set random value to variable</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="flopt.variable.VarElement.setValue">
+<code class="sig-name descname">setValue</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/flopt/variable.html#VarElement.setValue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#flopt.variable.VarElement.setValue" title="Permalink to this definition">¶</a></dt>
+<dd><p>set the value to variable</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="flopt.variable.VarElement.value">
+<code class="sig-name descname">value</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/flopt/variable.html#VarElement.value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#flopt.variable.VarElement.value" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>return value of variable</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float or int</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="flopt.variable.VarInteger">
+<em class="property">class </em><code class="sig-prename descclassname">flopt.variable.</code><code class="sig-name descname">VarInteger</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">lowBound</span></em>, <em class="sig-param"><span class="n">upBound</span></em>, <em class="sig-param"><span class="n">iniValue</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/flopt/variable.html#VarInteger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#flopt.variable.VarInteger" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ingeter Variable class</p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="flopt.variable.VarBinary">
+<em class="property">class </em><code class="sig-prename descclassname">flopt.variable.</code><code class="sig-name descname">VarBinary</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">iniValue</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/flopt/variable.html#VarBinary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#flopt.variable.VarBinary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Binary Variable class</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Binary Variable behaves differently in &quot;-&quot; and &quot;~&quot; operation.</p>
+<p>&quot;-&quot; is the subtraction as interger variable, and
+&quot;~&quot; is the inversion as binary (bool) variable.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="n">intValue</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">cat</span><span class="o">=</span><span class="s1">&#39;Binary&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">value</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="mi">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="o">-</span><span class="n">a</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="o">-</span><span class="mi">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="o">~</span><span class="n">a</span><span class="p">)</span><span class="o">.</span><span class="n">value</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="mi">0</span>
+</pre></div>
+</div>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt id="flopt.variable.VarContinuous">
+<em class="property">class </em><code class="sig-prename descclassname">flopt.variable.</code><code class="sig-name descname">VarContinuous</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">lowBound</span></em>, <em class="sig-param"><span class="n">upBound</span></em>, <em class="sig-param"><span class="n">iniValue</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/flopt/variable.html#VarContinuous"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#flopt.variable.VarContinuous" title="Permalink to this definition">¶</a></dt>
+<dd><p>Continuous Variable class</p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="flopt.variable.VarPermutation">
+<em class="property">class </em><code class="sig-prename descclassname">flopt.variable.</code><code class="sig-name descname">VarPermutation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">lowBound</span></em>, <em class="sig-param"><span class="n">upBound</span></em>, <em class="sig-param"><span class="n">iniValue</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/flopt/variable.html#VarPermutation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#flopt.variable.VarPermutation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Permutation Variable class</p>
+<p>This has [lowBound, ... upBound] range permutation.</p>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="n">lowBound</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">upBound</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">cat</span><span class="o">=</span><span class="s1">&#39;Permutation&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="o">.</span><span class="n">value</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>   <span class="c1"># randomized</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="n">lowBound</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">upBound</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">iniValue</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span> <span class="n">cat</span><span class="o">=</span><span class="s1">&#39;Permutation&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="o">.</span><span class="n">value</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>We can use list operation to Peramutation Variable</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="mi">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">len</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="mi">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt id="flopt.variable.VarPermutation.setRandom">
+<code class="sig-name descname">setRandom</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/flopt/variable.html#VarPermutation.setRandom"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#flopt.variable.VarPermutation.setRandom" title="Permalink to this definition">¶</a></dt>
+<dd><p>shuffle the list</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="flopt.variable.VarPermutation.value">
+<code class="sig-name descname">value</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/flopt/variable.html#VarPermutation.value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#flopt.variable.VarPermutation.value" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>list</dt><dd><p>return permutation</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="flopt.variable.VarConst">
+<em class="property">class </em><code class="sig-prename descclassname">flopt.variable.</code><code class="sig-name descname">VarConst</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">const</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/flopt/variable.html#VarConst"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#flopt.variable.VarConst" title="Permalink to this definition">¶</a></dt>
+<dd><p>It is the variable of constant value.
+We use it the operation including constant value.
+See VarElement class <cite>__add__</cite>, <cite>__sub__</cite>, and so on.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) -- name</p></li>
+<li><p><strong>const</strong> (<em>float</em><em> or </em><em>int</em>) -- value</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="CustomObject.html" class="btn btn-neutral float-right" title="CustomObject" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral float-left" title="API Reference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Nariaki Tateiwa, Takashi Wakamatsu
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

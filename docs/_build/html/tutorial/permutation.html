@@ -1,0 +1,311 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="japanease" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="japanease" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Permutation Optimization Problem &mdash; flopt  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Satisfiability Problem" href="satisfiability.html" />
+    <link rel="prev" title="Black Box Optimization Problem" href="black_box.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> flopt
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Tutorial</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="simple.html">Simple Non Linear Problem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="black_box.html">Black Box Optimization Problem</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Permutation Optimization Problem</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#permutation-variable">Permutation Variable</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#objective-function">Objective function</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#solver">Solver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#result">Result</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="satisfiability.html">Satisfiability Problem</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../reference/index.html">API Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">flopt</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">Tutorial</a> &raquo;</li>
+        
+      <li>Permutation Optimization Problem</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/tutorial/permutation.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="permutation-optimization-problem">
+<h1>Permutation Optimization Problem<a class="headerlink" href="#permutation-optimization-problem" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">minimize</span> <span class="n">the</span> <span class="n">total</span> <span class="n">distance</span> <span class="n">of</span> <span class="n">routing</span> <span class="n">the</span> <span class="n">cities</span><span class="o">.</span>
+<span class="n">s</span><span class="o">.</span><span class="n">t</span><span class="o">.</span>     <span class="n">We</span> <span class="n">have</span> <span class="n">to</span> <span class="n">visit</span> <span class="n">every</span> <span class="n">city</span> <span class="n">one</span> <span class="n">time</span><span class="o">.</span>
+         <span class="n">we</span> <span class="n">have</span> <span class="n">the</span> <span class="n">distance</span> <span class="n">between</span> <span class="nb">all</span> <span class="n">the</span> <span class="n">cities</span><span class="o">.</span>
+</pre></div>
+</div>
+<p>This is one of the most famous optimization problem, Traveling Salesman Problem (TSP).
+There are two ways of solving TSP:</p>
+<ol class="arabic simple">
+<li><p>optimize the permutations directly</p></li>
+<li><p>optimize the permutations using the Linear Programming (LP) method.</p></li>
+</ol>
+<p>The former method is shown in the following.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">flopt</span> <span class="kn">import</span> <span class="n">Variable</span><span class="p">,</span> <span class="n">Problem</span><span class="p">,</span> <span class="n">Solver</span>
+
+<span class="c1"># We have the distance matrix D, and the number of city is N</span>
+
+<span class="c1"># Variables</span>
+<span class="n">perm</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="s1">&#39;perm&#39;</span><span class="p">,</span> <span class="n">lowBound</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">upBound</span><span class="o">=</span><span class="n">N</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">cat</span><span class="o">=</span><span class="s1">&#39;Permutation&#39;</span><span class="p">)</span>
+
+<span class="c1"># Object</span>
+<span class="k">def</span> <span class="nf">tsp_dist</span><span class="p">(</span><span class="n">perm</span><span class="p">):</span>
+    <span class="n">distance</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">head</span><span class="p">,</span> <span class="n">tail</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">perm</span><span class="p">,</span> <span class="n">perm</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">+</span><span class="p">[</span><span class="n">perm</span><span class="p">[</span><span class="mi">0</span><span class="p">]]):</span>
+        <span class="n">distance</span> <span class="o">+=</span> <span class="n">D</span><span class="p">[</span><span class="n">head</span><span class="p">][</span><span class="n">tail</span><span class="p">]</span>  <span class="c1"># D is the distance matrix</span>
+    <span class="k">return</span> <span class="n">distance</span>
+<span class="n">tsp_obj</span> <span class="o">=</span> <span class="n">CustomObject</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="n">tsp_dist</span><span class="p">,</span> <span class="n">variables</span><span class="o">=</span><span class="p">[</span><span class="n">perm</span><span class="p">])</span>
+
+<span class="c1"># Problem</span>
+<span class="n">prob</span> <span class="o">=</span> <span class="n">Problem</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;TSP&#39;</span><span class="p">)</span>
+<span class="n">prob</span> <span class="o">+=</span> <span class="n">tsp_obj</span>
+
+<span class="c1"># Solver</span>
+<span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="n">algo</span><span class="o">=</span><span class="s1">&#39;2-Opt&#39;</span><span class="p">)</span>
+<span class="n">solver</span><span class="o">.</span><span class="n">setParams</span><span class="p">(</span><span class="n">timelimit</span><span class="o">=</span><span class="mi">60</span><span class="p">)</span>
+<span class="n">prob</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">solver</span><span class="p">,</span> <span class="n">msg</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Result</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">perm</span><span class="o">.</span><span class="n">value</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="permutation-variable">
+<h2>Permutation Variable<a class="headerlink" href="#permutation-variable" title="Permalink to this headline">¶</a></h2>
+<p>We can get a variable representing the permutation by setting <cite>cat='Permuation'</cite>.
+It contains a list of [lowBound, ... , upBound].</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Variables</span>
+<span class="n">perm</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="s1">&#39;perm&#39;</span><span class="p">,</span> <span class="n">lowBound</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">upBound</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">cat</span><span class="o">=</span><span class="s1">&#39;Permutation&#39;</span><span class="p">)</span>
+<span class="o">&gt;&gt;</span> <span class="n">perm</span><span class="o">.</span><span class="n">value</span><span class="p">()</span>
+<span class="o">&gt;&gt;</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>  <span class="c1"># permutation is shuffled</span>
+
+<span class="n">perm</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="s1">&#39;perm&#39;</span><span class="p">,</span> <span class="n">lowBound</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">upBound</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">iniValue</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">)),</span> <span class="n">cat</span><span class="o">=</span><span class="s1">&#39;Permutation&#39;</span><span class="p">)</span>
+<span class="o">&gt;&gt;</span> <span class="n">perm</span><span class="o">.</span><span class="n">value</span><span class="p">()</span>
+<span class="o">&gt;&gt;</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="objective-function">
+<h2>Objective function<a class="headerlink" href="#objective-function" title="Permalink to this headline">¶</a></h2>
+<p>Then, we prepare the objective function. We can represent the TSP objective function by the function <cite>tsp_dist</cite> using the distance matrix D (D[i][j] is the distance between city i and j).
+In order for Solver to solve this problem, we use CustomObject to transform this function. We use Variable <cite>perm</cite> as the argument of the function <cite>tsp_dist</cite>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">tsp_dist</span><span class="p">(</span><span class="n">perm</span><span class="p">):</span>
+    <span class="n">distance</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">head</span><span class="p">,</span> <span class="n">tail</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">perm</span><span class="p">,</span> <span class="n">perm</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">+</span><span class="p">[</span><span class="n">perm</span><span class="p">[</span><span class="mi">0</span><span class="p">]]):</span>
+        <span class="n">distance</span> <span class="o">+=</span> <span class="n">D</span><span class="p">[</span><span class="n">head</span><span class="p">][</span><span class="n">tail</span><span class="p">]</span>  <span class="c1"># D is the distance matrix</span>
+    <span class="k">return</span> <span class="n">distance</span>
+<span class="n">tsp_obj</span> <span class="o">=</span> <span class="n">CustomObject</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="n">tsp_dist</span><span class="p">,</span> <span class="n">variables</span><span class="o">=</span><span class="p">[</span><span class="n">perm</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="solver">
+<h2>Solver<a class="headerlink" href="#solver" title="Permalink to this headline">¶</a></h2>
+<p>The algorithms for the permutation variables are <cite>RandoSearch</cite> and <cite>2-Opt</cite>.
+In most cases, <cite>2-Opt</cite> is better.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Solver</span>
+<span class="n">solver</span> <span class="o">=</span> <span class="n">Solver</span><span class="p">(</span><span class="n">algo</span><span class="o">=</span><span class="s1">&#39;2-Opt&#39;</span><span class="p">)</span>
+<span class="n">solver</span><span class="o">.</span><span class="n">setParams</span><span class="p">(</span><span class="n">timelimit</span><span class="o">=</span><span class="mi">60</span><span class="p">)</span>
+<span class="n">prob</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">solver</span><span class="p">,</span> <span class="n">msg</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="result">
+<h2>Result<a class="headerlink" href="#result" title="Permalink to this headline">¶</a></h2>
+<p>The result of the solver is reflected in Variable <cite>perm</cite>.
+We can get the best solution by <cite>perm.value()</cite></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">perm</span><span class="o">.</span><span class="n">value</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="satisfiability.html" class="btn btn-neutral float-right" title="Satisfiability Problem" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="black_box.html" class="btn btn-neutral float-left" title="Black Box Optimization Problem" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Nariaki Tateiwa, Takashi Wakamatsu
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

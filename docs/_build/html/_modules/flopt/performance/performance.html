@@ -1,0 +1,357 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="japanease" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="japanease" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>flopt.performance.performance &mdash; flopt  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> flopt
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial/index.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">API Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">flopt</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>flopt.performance.performance</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for flopt.performance.performance</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">product</span>
+
+<span class="kn">from</span> <span class="nn">flopt</span> <span class="kn">import</span> <span class="n">env</span> <span class="k">as</span> <span class="n">flopt_env</span>
+<span class="kn">from</span> <span class="nn">flopt</span> <span class="kn">import</span> <span class="n">Problem</span><span class="p">,</span> <span class="n">Solver</span><span class="p">,</span> <span class="n">Solver_list</span>
+<span class="kn">from</span> <span class="nn">.custom_dataset</span> <span class="kn">import</span> <span class="n">CustomDataset</span>
+<span class="kn">from</span> <span class="nn">.log_visualizer</span> <span class="kn">import</span> <span class="n">LogVisualizer</span>
+
+<span class="n">performance_dir</span> <span class="o">=</span> <span class="n">flopt_env</span><span class="o">.</span><span class="n">performance_dir</span>
+
+
+<div class="viewcode-block" id="compute"><a class="viewcode-back" href="../../../reference/Performance.html#flopt.performance.compute">[docs]</a><span class="k">def</span> <span class="nf">compute</span><span class="p">(</span><span class="n">datasets</span><span class="p">,</span> <span class="n">solvers</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> 
+    <span class="n">timelimit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">msg</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">save_prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Measure the performance of (dataset, solver)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    datasets : list of Dataset or Dataset or Problem</span>
+<span class="sd">        datasets</span>
+<span class="sd">    solvers  : list of solvers or solver</span>
+<span class="sd">        solvers</span>
+<span class="sd">    timelimit : float</span>
+<span class="sd">        timelimit</span>
+<span class="sd">    msg : bool</span>
+<span class="sd">        if true, then display log during solve</span>
+<span class="sd">    save_prefix : str</span>
+<span class="sd">        the path in which each log is saved</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        logs; logs[solver.name, dataset.name, instance.name] = log</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+
+<span class="sd">    We calculate the performance of (dataset, solver).</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        from flopt import Solver</span>
+<span class="sd">        import flopt</span>
+
+<span class="sd">        # datasets</span>
+<span class="sd">        tsp_dataset = flopt.performance.datasets[&#39;tsp&#39;]</span>
+<span class="sd">        func_dataset = flopt.performance.datasets[&#39;func&#39;]</span>
+
+<span class="sd">        # compute the performance</span>
+<span class="sd">        logs = flopt.performance.compute([func_dataset, tsp_dataset], timelimit=2, msg=True)</span>
+
+<span class="sd">        # visualize the performance</span>
+<span class="sd">        log_visualizer = flopt.performance.LogVisualizer(logs)</span>
+<span class="sd">        lov_visualizer.plot()</span>
+
+
+<span class="sd">    We can select the solver to calculate the performance.</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        rs_solver = Solver(&#39;RandomSearch&#39;)</span>
+
+<span class="sd">        # compute the performance</span>
+<span class="sd">        logs = flopt.performance.compute(</span>
+<span class="sd">            [func_dataset, tsp_dataset],  # dataset list</span>
+<span class="sd">            [rs_solver],  # solver list</span>
+<span class="sd">            timelimit=2,</span>
+<span class="sd">            msg=True</span>
+<span class="sd">        )</span>
+
+<span class="sd">        # visualize the performance</span>
+<span class="sd">        log_visualizer = flopt.performance.LogVisualizer(logs)</span>
+<span class="sd">        lov_visualizer.plot()</span>
+<span class="sd">        </span>
+<span class="sd">    </span>
+<span class="sd">    We can use user defined problem as dataset</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">      # prob is user defined problem</span>
+<span class="sd">      flopt.performance.compute(prob, timelimit=2, msg=True)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># datasets settings</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">datasets</span><span class="p">,</span> <span class="n">Problem</span><span class="p">):</span>
+      <span class="n">cd</span> <span class="o">=</span> <span class="n">CustomDataset</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="n">probs</span><span class="o">=</span><span class="p">[</span><span class="n">datasets</span><span class="p">])</span>
+      <span class="n">datasets</span> <span class="o">=</span> <span class="p">[</span><span class="n">cd</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">datasets</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">datasets</span> <span class="o">=</span> <span class="p">[</span><span class="n">datasets</span><span class="p">]</span>
+
+    <span class="c1"># solvers settings</span>
+    <span class="k">if</span> <span class="n">solvers</span> <span class="o">==</span> <span class="s1">&#39;all&#39;</span><span class="p">:</span>
+        <span class="n">solvers</span> <span class="o">=</span> <span class="p">[</span><span class="n">Solver</span><span class="p">(</span><span class="n">algo</span><span class="o">=</span><span class="n">algo</span><span class="p">)</span> <span class="k">for</span> <span class="n">algo</span> <span class="ow">in</span> <span class="n">Solver_list</span><span class="p">()]</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">solvers</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">solvers</span> <span class="o">=</span> <span class="p">[</span><span class="n">solvers</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">solver</span> <span class="ow">in</span> <span class="n">solvers</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">timelimit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">solver</span><span class="o">.</span><span class="n">setParams</span><span class="p">(</span><span class="n">timelimit</span><span class="o">=</span><span class="n">timelimit</span><span class="p">)</span>
+
+    <span class="c1"># save_prefix setting</span>
+    <span class="k">if</span> <span class="n">save_prefix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">save_prefix</span> <span class="o">=</span> <span class="n">performance_dir</span>
+
+    <span class="n">logs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">dataset</span> <span class="ow">in</span> <span class="n">datasets</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">instance</span> <span class="ow">in</span> <span class="n">dataset</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">solver</span> <span class="ow">in</span> <span class="n">solvers</span><span class="p">:</span>
+                <span class="n">solver</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+                <span class="n">formulatable</span><span class="p">,</span> <span class="n">prob</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">createProblem</span><span class="p">(</span><span class="n">solver</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">formulatable</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">state</span><span class="p">,</span> <span class="n">log</span> <span class="o">=</span> <span class="n">prob</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">solver</span><span class="o">=</span><span class="n">solver</span><span class="p">,</span> <span class="n">msg</span><span class="o">=</span><span class="n">msg</span><span class="p">)</span>
+                <span class="n">save_log</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="n">solver</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">instance</span><span class="p">,</span> <span class="n">save_prefix</span><span class="p">)</span>
+                <span class="n">logs</span><span class="p">[</span><span class="n">dataset</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">instance</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">solver</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">log</span>
+    <span class="k">return</span> <span class="n">logs</span></div>
+
+
+<span class="k">def</span> <span class="nf">save_log</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="n">solver</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">instance</span><span class="p">,</span> <span class="n">save_prefix</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    save log as save_prefix/solver.name/dataset.name/instance.name/log.pickle</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">save_dir</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">save_prefix</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">solver</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">dataset</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">instance</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">&#39;</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">save_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">save_dir</span><span class="si">}</span><span class="s1">/log.pickle&#39;</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">pf</span><span class="p">:</span>
+        <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="n">pf</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="performance"><a class="viewcode-back" href="../../../reference/Performance.html#flopt.performance.performance">[docs]</a><span class="k">def</span> <span class="nf">performance</span><span class="p">(</span><span class="n">datasets</span><span class="p">,</span> <span class="n">solver_names</span><span class="o">=</span><span class="n">Solver_list</span><span class="p">(),</span>
+    <span class="n">xitem</span><span class="o">=</span><span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="n">load_prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    plot performance of each (dataset, algo) where algo is solver.name</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    datasets : list of Dataset or a Problem</span>
+<span class="sd">      datasets name</span>
+<span class="sd">    solver_names : list of str</span>
+<span class="sd">      solver names</span>
+<span class="sd">    xitem : str</span>
+<span class="sd">      x-label item of figure (time or iteration)</span>
+<span class="sd">    load_prefix : str</span>
+<span class="sd">      the path in which each log is saved</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    flopt.performance.compute</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">datasets</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">dataset_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">dataset</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">dataset</span> <span class="ow">in</span> <span class="n">datasets</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">datasets</span><span class="p">,</span> <span class="n">Problem</span><span class="p">):</span>
+        <span class="n">dataset_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;user&#39;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">dataset_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">datasets</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">solver_names</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">solver_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">solver_names</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">load_prefix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">load_prefix</span> <span class="o">=</span> <span class="n">performance_dir</span>
+
+    <span class="n">log_visualizer</span> <span class="o">=</span> <span class="n">LogVisualizer</span><span class="p">()</span>
+    <span class="n">log_visualizer</span><span class="o">.</span><span class="n">load</span><span class="p">(</span>
+        <span class="n">solver_names</span><span class="o">=</span><span class="n">solver_names</span><span class="p">,</span>
+        <span class="n">datasets</span><span class="o">=</span><span class="n">dataset_names</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">log_visualizer</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">xitem</span><span class="o">=</span><span class="n">xitem</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Nariaki Tateiwa, Takashi Wakamatsu
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

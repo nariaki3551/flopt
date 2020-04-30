@@ -1,0 +1,363 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="japanease" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="japanease" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>flopt.solvers.base &mdash; flopt  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> flopt
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial/index.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../reference/index.html">API Reference</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">flopt</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+          <li><a href="../solvers.html">flopt.solvers</a> &raquo;</li>
+        
+      <li>flopt.solvers.base</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for flopt.solvers.base</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">time</span>
+<span class="kn">from</span> <span class="nn">.solver_utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Log</span><span class="p">,</span> <span class="n">start_solver_message</span><span class="p">,</span>
+    <span class="n">during_solver_message_header</span><span class="p">,</span>
+    <span class="n">during_solver_message</span><span class="p">,</span>
+    <span class="n">end_solver_message</span>
+<span class="p">)</span>
+
+<div class="viewcode-block" id="BaseSearch"><a class="viewcode-back" href="../../../reference/Solver.html#flopt.solvers.base.BaseSearch">[docs]</a><span class="k">class</span> <span class="nc">BaseSearch</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base Search Class</span>
+
+<span class="sd">    For developer;</span>
+
+<span class="sd">    - `self.best_solution` has references to variables defined by the user</span>
+<span class="sd">    - `self.obj.value(solution)` returns the objective value by the solution</span>
+<span class="sd">    - `self.recordLog()` records the log (objective value, time, iteratino)</span>
+<span class="sd">      for each time incumbent solution (`self.bset_solution`) is updated.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name : str</span>
+<span class="sd">      name of solver</span>
+<span class="sd">    feasible_guard : str</span>
+<span class="sd">      type of guarder to keep feasibility of solution</span>
+<span class="sd">    can_solve_problems : list of str</span>
+<span class="sd">      problem names can be solved by this solver</span>
+<span class="sd">    best_solution : Solution</span>
+<span class="sd">      best solution</span>
+<span class="sd">    best_obj_value : float</span>
+<span class="sd">      incumbent objective value</span>
+<span class="sd">    solution : Solution</span>
+<span class="sd">      solution</span>
+<span class="sd">    obj : ObjectiveFunction</span>
+<span class="sd">      objective function</span>
+<span class="sd">    feasible_guard : str</span>
+<span class="sd">      type of guarder to keep feasibility of solution</span>
+<span class="sd">    timelimit : float</span>
+<span class="sd">      timelimit, unit is second</span>
+<span class="sd">    msg : bool</span>
+<span class="sd">      if true, then display logs</span>
+<span class="sd">    callbacks : list of function</span>
+<span class="sd">       List of callback functions that are invoked at the end of each trial.</span>
+<span class="sd">       Each function must accept three parameters with the following types</span>
+<span class="sd">       in this order: list of solution object, best_solution, best_obj_value</span>
+<span class="sd">    log : Log</span>
+<span class="sd">      Solver Log class</span>
+<span class="sd">    start_time : time()</span>
+<span class="sd">      start_time of solver</span>
+<span class="sd">    trial_ix : int</span>
+<span class="sd">      number of trials</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># base information</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;BaseSearch(base)&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">feasible_guard</span> <span class="o">=</span> <span class="s1">&#39;clip&#39;</span>
+        <span class="c1"># each solver</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">can_solve_problems</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># core variables</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">best_solution</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">best_obj_value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solution</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">obj</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timelimit</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">msg</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">callbacks</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># for log</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> <span class="n">Log</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">trial_ix</span> <span class="o">=</span> <span class="mi">0</span>
+
+<div class="viewcode-block" id="BaseSearch.setParams"><a class="viewcode-back" href="../../../reference/Solver.html#flopt.solvers.base.BaseSearch.setParams">[docs]</a>    <span class="k">def</span> <span class="nf">setParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">feasible_guard</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        set some parameters</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        params : dict</span>
+<span class="sd">            {paramname: paramvalue}</span>
+<span class="sd">        feasible_guard : str</span>
+<span class="sd">            &#39;clip&#39; is noly selectable</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">param</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">params</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">feasible_guard</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">feasible_guard</span> <span class="o">=</span> <span class="n">feasible_guard</span>
+        <span class="k">for</span> <span class="n">param</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+          <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BaseSearch.reset"><a class="viewcode-back" href="../../../reference/Solver.html#flopt.solvers.base.BaseSearch.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        reset log, best_obj_value, start_time, trial_ix</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> <span class="n">Log</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">best_obj_value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;inf&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">trial_ix</span> <span class="o">=</span> <span class="mi">0</span></div>
+
+<div class="viewcode-block" id="BaseSearch.solve"><a class="viewcode-back" href="../../../reference/Solver.html#flopt.solvers.base.BaseSearch.solve">[docs]</a>    <span class="k">def</span> <span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">solution</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">msg</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        solve the problem of (solution, obj)</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        solution : Solution</span>
+<span class="sd">          solution object</span>
+<span class="sd">        obj : ObjectiveFunction</span>
+<span class="sd">          objective function</span>
+<span class="sd">        msg : bool</span>
+<span class="sd">            if true, then display logs</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        (status, Log)</span>
+<span class="sd">        status:</span>
+<span class="sd">            0 normal    termination</span>
+<span class="sd">            1 timelimit termination</span>
+<span class="sd">            2 Ctrl-C    termination</span>
+<span class="sd">            3 abnormal  termination</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">best_solution</span> <span class="o">=</span> <span class="n">solution</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solution</span> <span class="o">=</span> <span class="n">solution</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">obj</span> <span class="o">=</span> <span class="n">obj</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">msg</span> <span class="o">=</span> <span class="n">msg</span>
+
+        <span class="k">if</span> <span class="n">msg</span><span class="p">:</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;timelimit&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">timelimit</span><span class="p">}</span>
+            <span class="n">start_solver_message</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">solution</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">search</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Get user ctrl-cuser ctrl-c&#39;</span><span class="p">)</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="mi">2</span>
+
+        <span class="k">if</span> <span class="n">msg</span><span class="p">:</span>
+            <span class="n">obj_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj</span><span class="o">.</span><span class="n">value</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">best_solution</span><span class="p">)</span>
+            <span class="n">end_solver_message</span><span class="p">(</span><span class="n">status</span><span class="p">,</span> <span class="n">obj_value</span><span class="p">,</span> <span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">start_time</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">status</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">,</span> <span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">start_time</span></div>
+
+<div class="viewcode-block" id="BaseSearch.updateSolution"><a class="viewcode-back" href="../../../reference/Solver.html#flopt.solvers.base.BaseSearch.updateSolution">[docs]</a>    <span class="k">def</span> <span class="nf">updateSolution</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">solution</span><span class="p">,</span> <span class="n">obj_value</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        update self.best_solution</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">best_solution</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">solution</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">obj_value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">best_obj_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj</span><span class="o">.</span><span class="n">value</span><span class="p">(</span><span class="n">solution</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">best_obj_value</span> <span class="o">=</span> <span class="n">obj_value</span></div>
+
+<div class="viewcode-block" id="BaseSearch.recordLog"><a class="viewcode-back" href="../../../reference/Solver.html#flopt.solvers.base.BaseSearch.recordLog">[docs]</a>    <span class="k">def</span> <span class="nf">recordLog</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        write log in `self.log`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+            <span class="s1">&#39;obj_value&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">best_obj_value</span><span class="p">,</span>
+            <span class="s1">&#39;time&#39;</span><span class="p">:</span> <span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">start_time</span><span class="p">,</span>
+            <span class="s1">&#39;iteration&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">trial_ix</span>
+        <span class="p">})</span></div>
+
+<div class="viewcode-block" id="BaseSearch.search"><a class="viewcode-back" href="../../../reference/Solver.html#flopt.solvers.base.BaseSearch.search">[docs]</a>    <span class="k">def</span> <span class="nf">search</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        define each solver</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div></div>
+
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Nariaki Tateiwa, Takashi Wakamatsu
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

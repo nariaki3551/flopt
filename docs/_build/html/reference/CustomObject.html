@@ -1,0 +1,316 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="japanease" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="japanease" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>CustomObject &mdash; flopt  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Problem" href="Problem.html" />
+    <link rel="prev" title="Variable" href="Variable.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> flopt
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorial/index.html">Tutorial</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Variable.html">Variable</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">CustomObject</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Problem.html">Problem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Solver.html">Solver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Solution.html">Solution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Expression.html">Expression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Performance.html">Performance</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">flopt</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">API Reference</a> &raquo;</li>
+        
+      <li>CustomObject</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/reference/CustomObject.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <span class="target" id="module-flopt.custom_object"></span><div class="section" id="customobject">
+<h1>CustomObject<a class="headerlink" href="#customobject" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="flopt.custom_object.CustomObject">
+<em class="property">class </em><code class="sig-prename descclassname">flopt.custom_object.</code><code class="sig-name descname">CustomObject</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">func</span></em>, <em class="sig-param"><span class="n">variables</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/flopt/custom_object.html#CustomObject"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#flopt.custom_object.CustomObject" title="Permalink to this definition">¶</a></dt>
+<dd><p>Objective function from using user defined function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>func</strong> (<em>function</em>) -- objective function</p></li>
+<li><p><strong>variables</strong> (<em>list</em>) -- variables</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>We have the objective funcion <span class="math notranslate nohighlight">\(simulater(a, b)\)</span> where simulater is
+a black box function, a and b are continuous variable.
+In this case, we can input objective function into Problem
+by using CustomObject as follows.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">a</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="n">cat</span><span class="o">=</span><span class="s1">&#39;Continuous&#39;</span><span class="p">)</span>
+<span class="n">b</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="n">cat</span><span class="o">=</span><span class="s1">&#39;Continuous&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">user_simulater</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">simulater</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+<span class="n">obj</span> <span class="o">=</span> <span class="n">CustomObject</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="n">user_simulater</span><span class="p">,</span> <span class="n">variables</span><span class="o">=</span><span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">])</span>
+<span class="n">prob</span> <span class="o">=</span> <span class="n">Problem</span><span class="p">(</span><span class="s1">&#39;simulater&#39;</span><span class="p">)</span>
+<span class="n">prob</span> <span class="o">+=</span> <span class="n">obj</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The order of variables in the variables list must be the same as
+the func argument. (However even the name does not have to be the same.)
+In the case that objective function is simulater(a, b)
+where a is integer variable and b is the continuous variable,</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="n">cat</span><span class="o">=</span><span class="s1">&#39;Integer&#39;</span><span class="p">)</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="n">cat</span><span class="o">=</span><span class="s1">&#39;Continuous&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">user_simulater</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">simulater</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+<span class="n">obj</span> <span class="o">=</span> <span class="n">CustomObject</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="n">user_simulater</span><span class="p">,</span> <span class="n">variables</span><span class="o">=</span><span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<p>In addition, we can use some operations (&quot;+&quot;, &quot;-&quot;, &quot;*&quot;, &quot;/&quot;) between CustomObject and
+Variable, Expression and CustomObject.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">user_func</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">return</span> <span class="n">x</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="n">iniValue</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">obj</span> <span class="o">=</span> <span class="n">CustomObject</span><span class="p">(</span><span class="n">user_func</span><span class="p">,</span> <span class="p">[</span><span class="n">a</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">obj</span><span class="o">.</span><span class="n">value</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="mi">3</span>
+</pre></div>
+</div>
+<p>CustomObject + Variable</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="n">iniValue</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">obj_b</span> <span class="o">=</span> <span class="n">obj</span> <span class="o">+</span> <span class="n">b</span>  <span class="c1"># 3+1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">obj_b</span><span class="o">.</span><span class="n">value</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="mi">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">obj_b</span><span class="o">.</span><span class="n">variables</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">VarElement</span><span class="p">(</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="o">-</span><span class="mf">10000000000.0</span><span class="p">,</span> <span class="mf">10000000000.0</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+<span class="go">     VarElement(&quot;b&quot;, -10000000000.0, 10000000000.0, 1)]</span>
+</pre></div>
+</div>
+<p>CustomObject + Expression</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">Variable</span><span class="p">(</span><span class="s1">&#39;c&#39;</span><span class="p">,</span> <span class="n">iniValue</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">obj_bc</span> <span class="o">=</span> <span class="p">(</span><span class="n">b</span><span class="o">+</span><span class="n">c</span><span class="p">)</span> <span class="o">+</span> <span class="n">obj</span> <span class="c1"># (1+2)+3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">obj_bc</span><span class="o">.</span><span class="n">value</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="mi">6</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">obj_bc</span><span class="o">.</span><span class="n">variables</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">VarElement</span><span class="p">(</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="o">-</span><span class="mf">10000000000.0</span><span class="p">,</span> <span class="mf">10000000000.0</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+<span class="go">     VarElement(&quot;b&quot;, -10000000000.0, 10000000000.0, 1),</span>
+<span class="go">     VarElement(&quot;c&quot;, -10000000000.0, 10000000000.0, 2)]</span>
+</pre></div>
+</div>
+<p>CustomObject + CustomObject</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">user_func2</span><span class="p">(</span><span class="n">y</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">return</span> <span class="n">y</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">obj2</span> <span class="o">=</span> <span class="n">CustomObject</span><span class="p">(</span><span class="n">user_func2</span><span class="p">,</span> <span class="p">[</span><span class="n">b</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">obj2</span><span class="o">.</span><span class="n">value</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="mi">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">obj_sum</span> <span class="o">=</span> <span class="p">(</span><span class="n">obj</span> <span class="o">+</span> <span class="n">obj2</span><span class="p">)</span>  <span class="c1"># 3+1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">obj_sum</span><span class="o">.</span><span class="n">value</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="mi">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">VarElement</span><span class="p">(</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="o">-</span><span class="mf">10000000000.0</span><span class="p">,</span> <span class="mf">10000000000.0</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+<span class="go">     VarElement(&quot;b&quot;, -10000000000.0, 10000000000.0, 1)]</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt id="flopt.custom_object.CustomObject.value">
+<code class="sig-name descname">value</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/flopt/custom_object.html#CustomObject.value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#flopt.custom_object.CustomObject.value" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>return objective value</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>int or float</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="Problem.html" class="btn btn-neutral float-right" title="Problem" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="Variable.html" class="btn btn-neutral float-left" title="Variable" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Nariaki Tateiwa, Takashi Wakamatsu
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
