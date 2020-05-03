@@ -17,3 +17,7 @@ def create_variables(*args, **kwargs):
         for i in [0, 1]
     ]
     return variables
+
+
+def minimum_obj():
+    return 0
