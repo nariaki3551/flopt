@@ -10,6 +10,16 @@ from flopt.solvers.solver_utils import (
     end_solver_message
 )
 
+import logging
+
+loggers_to_shut_up = [
+    "hyperopt.tpe",
+    "hyperopt.fmin",
+    "hyperopt.pyll.base",
+]
+for logger in loggers_to_shut_up:
+    logging.getLogger(logger).setLevel(logging.ERROR)
+
 class HyperoptTPESearch(BaseSearch):
     """
     TPE Search using Hyperopt (https://hyperopt.github.io/hyperopt/)
@@ -82,7 +92,7 @@ class HyperoptTPESearch(BaseSearch):
             self.updateSolution(self.solution, obj_value)
             self.recordLog()
             if self.msg:
-                during_solver_message('*', obj_value, time()-self.start_time, self.trial_ix)
+                self.during_solver_message('*')
         
         # callbacks
         for callback in self.callbacks:
@@ -97,8 +107,7 @@ class HyperoptTPESearch(BaseSearch):
 
         if self.msg:
             during_solver_message_header()
-            during_solver_message('S', self.best_obj_value,
-                time()-self.start_time, self.trial_ix)
+            self.during_solver_message('S')
 
 
     def closeProcess(self):

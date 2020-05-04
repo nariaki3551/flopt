@@ -10,7 +10,7 @@ from .log_visualizer import LogVisualizer
 performance_dir = flopt_env.performance_dir
 
 
-def compute(datasets, solvers='all', 
+def compute(datasets, solvers='all',
     timelimit=None, msg=True, save_prefix=None):
     """
     Measure the performance of (dataset, solver)
@@ -72,8 +72,8 @@ def compute(datasets, solvers='all',
         # visualize the performance
         log_visualizer = flopt.performance.LogVisualizer(logs)
         lov_visualizer.plot()
-        
-    
+
+
     We can use user defined problem as dataset
 
     .. code-block:: python

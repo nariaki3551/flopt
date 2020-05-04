@@ -1,6 +1,10 @@
 from flopt import Variable, Problem, CustomObject
 from .base_dataset import BaseDataset
-from datasets.functions import benchmark_func
+from datasets.funcLib import benchmark_func
+
+import logging
+logger = logging.getLogger(__name__)
+
 
 class FuncDataset(BaseDataset):
     """
@@ -19,11 +23,14 @@ class FuncDataset(BaseDataset):
         """
         create FuncInstance
         """
+        logger.debug(f'{instance_name}')
         func_data = benchmark_func[instance_name]
         create_objective = func_data['co']
         create_variables = func_data['cv']
+        minimum_value    = func_data['mo']
         func_instance = FuncInstance(
-            instance_name, create_objective, create_variables
+            instance_name, create_objective,
+            create_variables, minimum_value
         )
         return func_instance
 
@@ -43,10 +50,12 @@ class FuncInstance:
     n : int
       dimension (for some instance)
     """
-    def __init__(self, name, create_objective, create_variables, n=10):
+    def __init__(self, name, create_objective, create_variables,
+            minimum_value, n=10):
         self.name = name
         self.create_objective = create_objective
         self.create_variables = create_variables
+        self.minimum_value    = minimum_value
         self.n = n
 
     def createProblem(self, solver):
@@ -85,6 +94,8 @@ class FuncInstance:
         func = self.create_objective(self.n)
         _func = lambda *x: func(x)
         obj = CustomObject(_func, variables)
+        minimum_value = self.minimum_value(self.n)
         prob = Problem(name='Function:{self.name}')
         prob.setObjective(obj)
+        prob.setBestBd(minimum_value)
         return prob

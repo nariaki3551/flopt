@@ -21,7 +21,7 @@ class OptunaSearch(BaseSearch):
     Parameters
     ----------
     n_trial : int
-      number of trials
+        number of trials
     """
     def __init__(self):
         super().__init__()
@@ -64,7 +64,7 @@ class OptunaSearch(BaseSearch):
             self.updateSolution(self.solution, obj_value)
             self.recordLog()
             if self.msg:
-                during_solver_message('*', obj_value, time()-self.start_time, self.trial_ix)
+                self.during_solver_message('*')
 
         # callback
         for callback in self.callbacks:
@@ -78,8 +78,7 @@ class OptunaSearch(BaseSearch):
 
         if self.msg:
             during_solver_message_header()
-            during_solver_message('S', self.best_obj_value,
-                time()-self.start_time, self.trial_ix)
+            self.during_solver_message('S')
 
     def closeProcess(self):
         self.recordLog()
