@@ -81,8 +81,7 @@ class ShuffledFrogLeapingSearch(BaseSearch):
                 self.recordLog()
 
             if self.msg and i%100 == 0:
-                during_solver_message(' ', obj_value,
-                    time.time()-self.start_time, self.trial_ix)
+                self.during_solver_message(' ')
 
             # callback
             for callback in self.callbacks:

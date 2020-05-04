@@ -1,5 +1,5 @@
 from flopt import Variable, Problem, CustomObject
-from .base_dataset import BaseDataset
+from .base_dataset import BaseDataset, BaseInstance
 from datasets.funcLib import benchmark_func
 
 import logging
@@ -13,7 +13,7 @@ class FuncDataset(BaseDataset):
     Parameters
     ----------
     instance_names : list
-      instance name list
+        instance name list
     """
     def __init__(self):
         self.name = 'func'
@@ -35,20 +35,20 @@ class FuncDataset(BaseDataset):
         return func_instance
 
 
-class FuncInstance:
+class FuncInstance(BaseInstance):
     """
     Function Benchmark Instance
 
     Parameters
     ----------
     name : str
-      instance name
+        instance name
     create_objective : function
-      function which generates the objective function using dimension n
+        function which generates the objective function using dimension n
     create_variables : function
-      function which generates the variables using dimension n
+        function which generates the variables using dimension n
     n : int
-      dimension (for some instance)
+        dimension (for some instance)
     """
     def __init__(self, name, create_objective, create_variables,
             minimum_value, n=10):
@@ -58,6 +58,12 @@ class FuncInstance:
         self.minimum_value    = minimum_value
         self.n = n
 
+    def getBestValue(self):
+        """
+        return the optimal value of objective function
+        """
+        return self.minimum_value(self.n)
+
     def createProblem(self, solver):
         """
         Create problem according to solver
@@ -65,13 +71,13 @@ class FuncInstance:
         Parameters
         ----------
         solver : Solver
-          solver
+            solver
 
         Returns
         -------
         (bool, Problem)
-          if solver can be solve this instance return
-          (true, prob formulated according to solver)
+            if solver can be solve this instance return
+            (true, prob formulated according to solver)
         """
         if 'blackbox' in solver.can_solve_problems:
             return True, self.createProblemFunc()
@@ -86,7 +92,7 @@ class FuncInstance:
         Returns
         -------
         Problem
-          problem
+            problem
         """
         variables = self.create_variables(self.n)
         for var in variables:
@@ -94,8 +100,6 @@ class FuncInstance:
         func = self.create_objective(self.n)
         _func = lambda *x: func(x)
         obj = CustomObject(_func, variables)
-        minimum_value = self.minimum_value(self.n)
         prob = Problem(name='Function:{self.name}')
         prob.setObjective(obj)
-        prob.setBestBd(minimum_value)
         return prob

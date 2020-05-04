@@ -20,6 +20,7 @@ loggers_to_shut_up = [
 for logger in loggers_to_shut_up:
     logging.getLogger(logger).setLevel(logging.ERROR)
 
+
 class HyperoptTPESearch(BaseSearch):
     """
     TPE Search using Hyperopt (https://hyperopt.github.io/hyperopt/)

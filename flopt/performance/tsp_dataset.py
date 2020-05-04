@@ -2,7 +2,7 @@ from math import sqrt
 import numpy as np
 from flopt import Variable, Problem, CustomObject
 from flopt import env as flopt_env
-from .base_dataset import BaseDataset
+from .base_dataset import BaseDataset, BaseInstance
 
 # instance problems
 tsp_storage = f'{flopt_env.datasets_dir}/tspLib/tsp'
@@ -108,7 +108,7 @@ def read_node_coord(f, edge_weight_type, dim, D):
 
 
 
-class TSPInstance:
+class TSPInstance(BaseInstance):
     """
     TSP Instance
 

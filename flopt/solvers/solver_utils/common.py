@@ -63,9 +63,9 @@ def calculate_gap(obj_value, best_bd):
     if obj_value is None or best_bd is None:
         return ' '*6 + '-'
     else:
-        gap = (obj_value - best_bd) / (abs(obj_value)+1e-5)
-        if gap > 1e3:
-            return f'{gap:7.1e}'
+        gap = (obj_value - best_bd) / (abs(obj_value)+1e-4)
+        if gap > 0.999:
+            return ' '*7
         else:
             return f'{gap:7.3f}'
 
