@@ -26,4 +26,4 @@ def create_variables(*args, **kwargs):
     return variables
 
 def minimum_obj(*args, **kwargs):
-    return 0
+    return -186.7309

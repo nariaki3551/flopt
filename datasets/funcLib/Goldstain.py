@@ -24,5 +24,5 @@ def create_variables(*args, **kwargs):
     return variables
 
 
-def minimum_obj():
+def minimum_obj(*args, **kwargs):
     return 3

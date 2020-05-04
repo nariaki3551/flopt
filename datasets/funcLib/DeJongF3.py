@@ -20,4 +20,4 @@ def create_variables(*args, **kwargs):
 
 
 def minimum_obj(n):
-    return 0
+    return -6*n
