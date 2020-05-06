@@ -1,3 +1,9 @@
+from flopt.env import setup_logger
+
+
+logger = setup_logger(__name__)
+
+
 def start_solver_message(algo_name, param_str, solution):
     # stat about variables
     n_var = len(solution)
