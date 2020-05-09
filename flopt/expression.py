@@ -294,6 +294,9 @@ class ExpressionConst(Expression):
     def __neg__(self):
         return ExpressionConst(-self._value)
 
+    def __hash__(self):
+        return hash((self._value, self.type))
+
 
 # class ExpressionNeg(Expression):
 #     def __init__(self, expression):
