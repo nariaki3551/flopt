@@ -1,4 +1,9 @@
 import matplotlib.pyplot as plt
+from flopt.env import setup_logger
+
+
+logger = setup_logger(__name__)
+
 
 class Log:
     def __init__(self):

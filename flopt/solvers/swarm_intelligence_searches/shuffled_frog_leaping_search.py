@@ -2,9 +2,6 @@ import time
 import random
 
 import numpy as np
-# import matplotlib
-# matplotlib.use('Pdf')
-# from matplotlib import pyplot as plt
 
 from flopt.solvers.base import BaseSearch
 from flopt.solvers.solver_utils import (
@@ -14,6 +11,10 @@ from flopt.solvers.solver_utils import (
     during_solver_message,
     end_solver_message
 )
+from flopt.env import setup_logger
+
+
+logger = setup_logger(__name__)
 
 
 class ShuffledFrogLeapingSearch(BaseSearch):
@@ -77,13 +78,11 @@ class ShuffledFrogLeapingSearch(BaseSearch):
                 self.updateSolution(self.frogs[0])
                 self.best_obj_value = obj_value
                 if self.msg:
-                    during_solver_message('*', obj_value,
-                        time.time()-self.start_time, self.trial_ix)
+                    self.during_solver_message('*')
                 self.recordLog()
 
             if self.msg and i%100 == 0:
-                during_solver_message(' ', obj_value,
-                    time.time()-self.start_time, self.trial_ix)
+                self.during_solver_message(' ')
 
             # callback
             for callback in self.callbacks:
@@ -160,8 +159,7 @@ class ShuffledFrogLeapingSearch(BaseSearch):
         self.recordLog()
         if self.msg:
             during_solver_message_header()
-            during_solver_message('S', self.best_obj_value,
-                                  time.time() - self.start_time, self.trial_ix)
+            self.during_solver_message('S')
 
     def closeProcess(self):
         self.recordLog()

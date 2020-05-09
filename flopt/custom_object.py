@@ -1,9 +1,13 @@
 from functools import reduce
 from operator import mul
 
-from .variable import VarElement
-from .expression import Expression
-from flopt.constraint import Constraint
+from flopt.variable import VarElement
+from flopt.expression import Expression
+from flopt.env import setup_logger
+
+
+logger = setup_logger(__name__)
+
 
 class CustomObject:
     """

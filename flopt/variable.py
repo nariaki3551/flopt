@@ -1,10 +1,13 @@
 import random
 import traceback
 from math import ceil, floor
-import warnings
 
-from .expression import Expression
-from flopt.constraint import Constraint
+from flopt.expression import Expression
+from flopt.env import setup_logger
+
+
+logger = setup_logger(__name__)
+
 
 INI_BOUND = 1e10
 
@@ -258,7 +261,7 @@ class VarInteger(VarElement):
     def value(self):
         if not isinstance(self._value, int):
             warn = f"value is not int, so output value is casted into int"
-            warnings.warn(warn)            
+            logger.warning(warn)       
         return int(self._value)
 
     def setRandom(self):

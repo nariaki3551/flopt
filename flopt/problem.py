@@ -1,8 +1,13 @@
-from .expression import Expression, ExpressionConst
+from flopt.expression import Expression, ExpressionConst
 from flopt.constraint import Constraint
-from .custom_object import CustomObject
-from .solution import Solution
-from .solvers import Solver
+from flopt.custom_object import CustomObject
+from flopt.solution import Solution
+from flopt.solvers import Solver
+from flopt.env import setup_logger
+
+
+logger = setup_logger(__name__)
+
 
 class Problem:
     """
@@ -114,9 +119,9 @@ class Problem:
             return log object
         """        
         if solver is None:
-          solver = Solver(algo='RandomSearch')
+            solver = Solver(algo='RandomSearch')
         if timelimit is not None:
-          solver.setParams(timelimit=timelimit)
+            solver.setParams(timelimit=timelimit)
 
         # convert for solver
         solution = Solution('s', self.variables)

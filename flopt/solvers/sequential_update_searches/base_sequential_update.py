@@ -7,6 +7,11 @@ from flopt.solvers.solver_utils import (
     during_solver_message,
     end_solver_message
 )
+from flopt.env import setup_logger
+
+
+logger = setup_logger(__name__)
+
 
 class SequentialUpdateSearch(BaseSearch):
     """
@@ -17,14 +22,14 @@ class SequentialUpdateSearch(BaseSearch):
     2. Check a new solution can be incumbent solutions
     3. Update incumbent solution
 
-    Each child class, define `self.set_new_sol()` function which 
+    Each child class, define `self.set_new_sol()` function which
     generates a new solution and sets it to self.variabels.
     For example, see RandomSearch class.
 
     Parameters
     ----------
     n_trial : str
-      number of trials
+        number of trials
     """
     def __init__(self):
         super().__init__()
@@ -55,7 +60,7 @@ class SequentialUpdateSearch(BaseSearch):
                 self.updateSolution(self.solution, obj_value)
                 self.recordLog()
                 if self.msg:
-                    during_solver_message('*', obj_value, time()-self.start_time, self.trial_ix)
+                    self.during_solver_message('*')
 
             # callbacks
             for callback in self.callbacks:
@@ -75,8 +80,8 @@ class SequentialUpdateSearch(BaseSearch):
 
         if self.msg:
             during_solver_message_header()
-            during_solver_message('S', self.best_obj_value,
-                time()-self.start_time, self.trial_ix)
+            self.during_solver_message('S')
+
 
     def closeProcess(self):
         self.recordLog()

@@ -1,4 +1,8 @@
 from flopt.constraint import Constraint
+from flopt.env import setup_logger
+
+logger = setup_logger(__name__)
+
 
 class Expression:
     """
@@ -301,6 +305,9 @@ class ExpressionConst(Expression):
 
     def __neg__(self):
         return ExpressionConst(-self._value)
+
+    def __hash__(self):
+        return hash((self._value, self.type))
 
 
 # class ExpressionNeg(Expression):

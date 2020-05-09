@@ -1,4 +1,5 @@
 from flopt import Variable
+from flopt.expression import ExpressionConst
 
 a = Variable(name='a', lowBound=1, upBound=5, iniValue=2, cat='Continuous')
 b = Variable(name='b', lowBound=1, upBound=5, iniValue=3, cat='Continuous')
@@ -95,3 +96,6 @@ def test_Expression_cas2():
 
 def test_Expression_hash():
     hash(c)
+
+def test_ExpressionConst_hash():
+    hash(ExpressionConst(0))
