@@ -98,16 +98,18 @@ class BaseSearch:
         self.start_time = None
         self.trial_ix = 0
 
-    def solve(self, solution, obj, msg=False):
+    def solve(self, solution, obj, constraints, msg=False):
         """
         solve the problem of (solution, obj)
 
         Parameters
         ----------
         solution : Solution
-          solution object
+            solution object
         obj : ObjectiveFunction
-          objective function
+            objective function
+        constraints : list of Constraint
+            constraints
         msg : bool
             if true, then display logs
 
@@ -123,6 +125,7 @@ class BaseSearch:
         self.best_solution = solution
         self.solution = solution.clone()
         self.obj = obj
+        self.constraints = constraints
         self.start_time = time()
         self.msg = msg
 

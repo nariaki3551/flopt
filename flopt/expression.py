@@ -1,3 +1,5 @@
+from flopt.constraint import Constraint
+
 class Expression:
     """
 
@@ -252,7 +254,13 @@ class Expression:
         return hash((hash(self.elmA), hash(self.elmB), hash(self.operater)))
     
     def __eq__(self, other):
-        return hash(self) == hash(other)
+        return Constraint(self-other, 'eq')
+    
+    def __le__(self, other):
+        return Constraint(self-other, 'le')
+    
+    def __ge__(self, other):
+        return Constraint(self-other, 'ge')
 
     def __str__(self):
         s  = f'Name: {self.name}\n'

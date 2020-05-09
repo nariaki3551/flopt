@@ -4,6 +4,7 @@ from math import ceil, floor
 import warnings
 
 from .expression import Expression
+from flopt.constraint import Constraint
 
 INI_BOUND = 1e10
 
@@ -223,7 +224,13 @@ class VarElement:
         return hash(self.name)
 
     def __eq__(self, other):
-        return self.name == other.name
+        return Constraint(self-other, 'eq')
+    
+    def __le__(self, other):
+        return Constraint(self-other, 'le')
+    
+    def __ge__(self, other):
+        return Constraint(self-other, 'ge')
 
     def __str__(self):
         s  = f'Name: {self.name}\n'

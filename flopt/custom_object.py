@@ -3,6 +3,7 @@ from operator import mul
 
 from .variable import VarElement
 from .expression import Expression
+from flopt.constraint import Constraint
 
 class CustomObject:
     """
@@ -127,7 +128,7 @@ class CustomObject:
         return value
 
     def getVariables(self):
-        return self.variables
+        return set(self.variables)
 
     def __add__(self, other):
         if isinstance(other, (int, float)):
@@ -255,6 +256,15 @@ class CustomObject:
         for var in self.variables:
             tmp.append(hash(var))
         return hash(tuple(tmp))
+
+    def __eq__(self, other):
+        return Constraint(self-other, 'eq')
+    
+    def __le__(self, other):
+        return Constraint(self-other, 'le')
+    
+    def __ge__(self, other):
+        return Constraint(self-other, 'ge')
 
     def __str__(self):
         s  = f'Name: None\n'
