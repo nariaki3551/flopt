@@ -9,6 +9,11 @@ from flopt.solvers.solver_utils import (
     during_solver_message,
     end_solver_message
 )
+from flopt.env import setup_logger
+
+
+logger = setup_logger(__name__)
+
 
 class OptunaSearch(BaseSearch):
     """

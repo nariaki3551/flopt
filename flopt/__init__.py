@@ -1,12 +1,14 @@
-from .variable import Variable
-from .problem import Problem
-from .custom_object import CustomObject
-from .solvers import Solver, Solver_list
-from .solution import Solution
-
-from .env import Environment
+from flopt.env import Environment
 env = Environment()
 
+from flopt.variable import Variable
+from flopt.problem import Problem
+from flopt.custom_object import CustomObject
+from flopt.solvers import Solver, Solver_list
+from flopt.solution import Solution
+
+# performance
 import flopt.performance
 
+# specific problems
 from flopt.problems import LpProblem

@@ -1,7 +1,12 @@
-from .expression import Expression, ExpressionConst
-from .custom_object import CustomObject
-from .solution import Solution
-from .solvers import Solver
+from flopt.expression import Expression, ExpressionConst
+from flopt.custom_object import CustomObject
+from flopt.solution import Solution
+from flopt.solvers import Solver
+from flopt.env import setup_logger
+
+
+logger = setup_logger(__name__)
+
 
 class Problem:
     """

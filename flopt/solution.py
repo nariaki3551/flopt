@@ -2,7 +2,11 @@ import random
 from math import sqrt, floor, ceil
 from copy import deepcopy
 
-from .expression import Expression
+from flopt.expression import Expression
+from flopt.env import setup_logger
+
+
+logger = setup_logger(__name__)
 
 
 class Solution:

@@ -4,6 +4,11 @@ import pulp
 from pulp import LpMinimize, LpMaximize
 from flopt import Problem, Solution
 from flopt.problem import ObjectiveFunction
+from flopt.env import setup_logger
+
+
+logger = setup_logger(__name__)
+
 
 class LpVariable(pulp.LpVariable):
     def __init__(self, name, lowBound, upBound, cat):

@@ -2,9 +2,6 @@ import time
 import random
 
 import numpy as np
-# import matplotlib
-# matplotlib.use('Pdf')
-# from matplotlib import pyplot as plt
 
 from flopt.solvers.base import BaseSearch
 from flopt.solvers.solver_utils import (
@@ -14,6 +11,10 @@ from flopt.solvers.solver_utils import (
     during_solver_message,
     end_solver_message
 )
+from flopt.env import setup_logger
+
+
+logger = setup_logger(__name__)
 
 
 class ShuffledFrogLeapingSearch(BaseSearch):
