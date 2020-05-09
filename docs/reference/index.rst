@@ -5,7 +5,7 @@ API Reference
     :maxdepth: 2
 
     Variable
-    CustomObject
+    CustomExpression
     Problem
     Solver
     Solution

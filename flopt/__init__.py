@@ -2,8 +2,8 @@ from flopt.env import Environment
 env = Environment()
 
 from flopt.variable import Variable
+from flopt.custom_expression import CustomExpression
 from flopt.problem import Problem
-from flopt.custom_object import CustomObject
 from flopt.solvers import Solver, Solver_list
 from flopt.solution import Solution
 

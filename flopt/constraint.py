@@ -2,19 +2,16 @@ class Constraint:
     """Constraint Class
 
     three type constraint, ==, <=, and >=.
+    
+    1. eq type (equal); `expression == 0`
 
-    - eq type (equal)
-    expression == 0
+    2. le type (less than or equal); `expression <= 0`
 
-    - le type (less than or equal)
-    expression <= 0
-
-    - ge type (greater than or equal)
-    expression >= 0
+    3. ge type (greater than or equal); `expression >= 0`
 
     Parameters
     ----------
-    expression : Expression or CustomObject
+    expression : Expression family
         expression of constraint.
     type : str
         Constraint type. We must choice from eq, le or ge.

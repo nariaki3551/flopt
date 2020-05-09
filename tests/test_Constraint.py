@@ -1,4 +1,4 @@
-from flopt import Variable, CustomObject
+from flopt import Variable, CustomExpression
 from flopt.expression import Expression
 
 a = Variable('a', lowBound=1, upBound=3, iniValue=2, cat='Integer')

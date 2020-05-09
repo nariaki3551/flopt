@@ -1,4 +1,4 @@
-from flopt import Variable, Problem, CustomObject
+from flopt import Variable, Problem, CustomExpression
 from .base_dataset import BaseDataset, BaseInstance
 from datasets.funcLib import benchmark_func
 
@@ -99,7 +99,7 @@ class FuncInstance(BaseInstance):
             var.setRandom()
         func = self.create_objective(self.n)
         _func = lambda *x: func(x)
-        obj = CustomObject(_func, variables)
+        obj = CustomExpression(_func, variables)
         prob = Problem(name='Function:{self.name}')
         prob.setObjective(obj)
         return prob

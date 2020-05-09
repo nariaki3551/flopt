@@ -12,9 +12,9 @@ class Expression:
 
     Parameters
     ----------
-    elmA : VarElement family or Expression
+    elmA : VarElement family or Expression family
       first element
-    elmB : VarElement family or Expression
+    elmB : VarElement family or Expression family
       later element
     operater : str
       operater between elmA and elmB
@@ -74,10 +74,18 @@ class Expression:
     def setVarDict(self, var_dict):
         self.var_dict = var_dict
     
-    def unsetVarDict(self, var_dict):
+    def unsetVarDict(self):
         self.var_dict = None
+
+    def value(self, solution=None):
+        if solution is None:
+            return self._value()
+        else:
+            var_dict = {var.name : var for var in solution}
+            self.setVarDict(var_dict)
+            return self._value()
         
-    def value(self):
+    def _value(self):
         """
         Returns
         -------
@@ -145,13 +153,7 @@ class Expression:
             return NotImplemented
 
     def __radd__(self, other):
-        if isinstance(other, (int, float)):
-            other = ExpressionConst(other)
-            return Expression(other, self, '+')
-        elif isinstance(other, Expression):
-            return Expression(other, self, '+')
-        else:
-            return NotImplemented
+        return self + other
 
     def __sub__(self, other):
         if isinstance(other, (int, float)):
@@ -268,13 +270,15 @@ class Expression:
 
     def __str__(self):
         s  = f'Name: {self.name}\n'
-        s += f'  Type    : Expression\n'
+        s += f'  Type    : {self.type}\n'
         s += f'  Value   : {self.value()}\n'
         return s
 
     def __repr__(self):
         s = f'Expression({self.elmA_name}, {self.elmB_name}, {self.operater})'
         return s
+
+
 
 class ExpressionConst(Expression):
     """

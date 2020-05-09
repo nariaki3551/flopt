@@ -1,6 +1,6 @@
 import numpy as np
 
-from flopt import Variable, Problem, CustomObject, Solver
+from flopt import Variable, Problem, CustomExpression, Solver
 
 __doc__ = """
 This is a sample code of "TSP"
@@ -23,7 +23,7 @@ def tsp_dist(perm):
     for head, tail in zip(perm, perm[1:]+[perm[0]]):
         distance += D[head][tail]
     return distance
-tsp_obj = CustomObject(func=tsp_dist, variables=[perm])
+tsp_obj = CustomExpression(func=tsp_dist, variables=[perm])
 
 
 # Problem

@@ -3,7 +3,6 @@ from copy import deepcopy
 import pulp
 from pulp import LpMinimize, LpMaximize
 from flopt import Problem, Solution
-from flopt.problem import ObjectiveFunction
 from flopt.env import setup_logger
 
 
@@ -53,7 +52,6 @@ class LpProblem(Problem):
         """
 
         # convert for pulp
-        obj = ObjectiveFunction(deepcopy(self.obj))
         solution = Solution('s', self.variables)
 
         # conver VarElement -> LpVariable
@@ -78,7 +76,7 @@ class LpProblem(Problem):
         name = '' if self.name is None else self.name
         sense = LpMinimize if self.sense == 'minimize' else LpMaximize
         lpProb = pulp.LpProblem(name=name, sense=sense)
-        lpProb.setObjective(obj.value(lp_solution))
+        lpProb.setObjective(self.obj.value(lp_solution))
         for const in self.constraints:
             const_obj = ObjectiveFunction(const)
             if const.type == 'eq':

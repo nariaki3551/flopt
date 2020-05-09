@@ -75,7 +75,7 @@ Clauses
 Objective function
 ------------------
 
-We can create the objective function by arithmetic operation of literals or cluses, or the CustomObject.
+We can create the objective function by arithmetic operation of literals or cluses, or the CustomExpression.
 For example, :math:`(c_1+2c_2+3c_3+4c_4)` can be formulated as follows.
 
 .. code-block:: python

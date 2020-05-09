@@ -1,6 +1,6 @@
 from math import sqrt
 import numpy as np
-from flopt import Variable, Problem, CustomObject
+from flopt import Variable, Problem, CustomExpression
 from flopt import env as flopt_env
 from .base_dataset import BaseDataset, BaseInstance
 
@@ -160,7 +160,7 @@ class TSPInstance(BaseInstance):
             for head, tail in zip(perm, perm[1:]+[perm[0]]):
                 distance += self.D[head][tail]
             return distance
-        tsp_obj = CustomObject(func=tsp_dist, variables=[perm])
+        tsp_obj = CustomExpression(func=tsp_dist, variables=[perm])
 
         # Problem
         prob = Problem(name=f'TSP:{self.name}')
