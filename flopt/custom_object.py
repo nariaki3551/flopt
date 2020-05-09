@@ -3,6 +3,7 @@ from operator import mul
 
 from flopt.variable import VarElement
 from flopt.expression import Expression
+from flopt.constraint import Constraint
 from flopt.env import setup_logger
 
 

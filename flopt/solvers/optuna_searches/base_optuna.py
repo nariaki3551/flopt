@@ -10,6 +10,7 @@ from flopt.solvers.solver_utils import (
     end_solver_message
 )
 from flopt.env import setup_logger
+import flopt.constants
 
 
 logger = setup_logger(__name__)
@@ -40,7 +41,12 @@ class OptunaSearch(BaseSearch):
         pass
 
     def search(self):
-        status = 0
+        if self.constraints:
+            logger.error("This Solver does not support the problem with constraints.")
+            status = flopt.constants.SOLVER_ABNORMAL_TERMINATE
+            return status
+
+        status = flopt.constants.SOLVER_NORMAL_TERMINATE
         self.startProcess()
         self.createStudy()
         self.study.optimize(self.objective, self.n_trial, timeout=self.timelimit)
@@ -48,7 +54,6 @@ class OptunaSearch(BaseSearch):
         return status
 
     def objective(self, trial):
-
         # set value into self.solution
         self.trial_ix += 1
         for var in self.solution:

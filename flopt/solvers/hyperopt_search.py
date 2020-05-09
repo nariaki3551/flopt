@@ -2,7 +2,7 @@ from time import time
 import hyperopt
 from hyperopt import hp
 
-from .base import BaseSearch
+from flopt.solvers.base import BaseSearch
 from flopt.solvers.solver_utils import (
     Log, start_solver_message,
     during_solver_message_header,
@@ -10,6 +10,7 @@ from flopt.solvers.solver_utils import (
     end_solver_message
 )
 from flopt.env import setup_logger
+import flopt.constants
 
 
 logger = setup_logger(__name__)
@@ -45,8 +46,13 @@ class HyperoptTPESearch(BaseSearch):
         self.can_solve_problems = ['blackbox']
 
     def search(self):
+        if self.constraints:
+            logger.error("This Solver does not support the problem with constraints.")
+            status = flopt.constants.SOLVER_ABNORMAL_TERMINATE
+            return status
+
         self.startProcess()
-        status = 0
+        status = flopt.constants.SOLVER_NORMAL_TERMINATE
 
         # make the search space
         space = self.gen_space()
@@ -61,7 +67,7 @@ class HyperoptTPESearch(BaseSearch):
                 show_progressbar=self.show_progressbar,
             )
         except TimeoutError:
-            status = 1  # timelimit termination
+            status = flopt.constants.SOLVER_TIMELIMIT_TERMINATE
 
         self.closeProcess()
         return status

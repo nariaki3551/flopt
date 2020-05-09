@@ -8,6 +8,7 @@ from flopt.solvers.solver_utils import (
     end_solver_message
 )
 from flopt.env import setup_logger
+import flopt.constants
 
 
 logger = setup_logger(__name__)
@@ -41,14 +42,19 @@ class SequentialUpdateSearch(BaseSearch):
         search a better solution using `self.setNewSolution()` function
         `self.setNewSolution()` generate new solution and set it into self.solution
         """
+        if self.constraints:
+            logger.error("This Solver does not support the problem with constraints.")
+            status = flopt.constants.SOLVER_ABNORMAL_TERMINATE
+            return status
+
         self.startProcess()
-        status = 0
+        status = flopt.constants.SOLVER_NORMAL_TERMINATE
 
         for self.trial_ix in range(1, int(self.n_trial)+1):
             # check time limit
             if time() > self.start_time + self.timelimit:
                 self.closeProcess()
-                status = 1
+                status = flopt.constants.SOLVER_TIMELIMIT_TERMINATE
                 return status
 
             # generate new solution and set it into self.solution

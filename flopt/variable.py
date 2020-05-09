@@ -3,6 +3,7 @@ import traceback
 from math import ceil, floor
 
 from flopt.expression import Expression
+from flopt.constraint import Constraint
 from flopt.env import setup_logger
 
 

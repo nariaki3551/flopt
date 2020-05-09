@@ -1,11 +1,12 @@
 from time import time
-from .solver_utils import (
+from flopt.solvers.solver_utils import (
     Log, start_solver_message,
     during_solver_message_header,
     during_solver_message,
     end_solver_message
 )
 from flopt.env import setup_logger
+import flopt.constants
 
 
 logger = setup_logger(__name__)
@@ -123,12 +124,7 @@ class BaseSearch:
 
         Returns
         -------
-        (status, Log)
-        status:
-            0 normal    termination
-            1 timelimit termination
-            2 Ctrl-C    termination
-            3 abnormal  termination
+        status, Log
         """
         self.best_solution = solution
         self.solution = solution.clone()
@@ -145,7 +141,7 @@ class BaseSearch:
             status = self.search()
         except KeyboardInterrupt:
             print('Get user ctrl-cuser ctrl-c')
-            status = 2
+            status = flopt.constants.SOLVER_INTERRUPT_TERMINATE
 
         if msg:
             obj_value = self.obj.value(self.best_solution)

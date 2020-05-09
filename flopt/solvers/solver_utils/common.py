@@ -1,4 +1,5 @@
 from flopt.env import setup_logger
+import flopt.constants
 
 
 logger = setup_logger(__name__)
@@ -31,8 +32,8 @@ def start_solver_message(algo_name, param_str, solution):
     message = (
         "\n",
         "Welcome to the flopt Solver\n",
-        "Version 0.0\n",
-        "Build Date: Mar 28 2020\n",
+        f"Version {flopt.constants.VERSION}\n",
+        f"Date: {flopt.constants.DATE}0\n",
         "\n",
         f"Algorithm: {algo_name}\n",
         f"Params: {param_str}\n",
@@ -93,10 +94,10 @@ def during_solver_message(head, obj_value, best_bd, time, iteration):
 
 def end_solver_message(status, obj_value, time):
     status_str = {
-        0: 'normal termination',
-        1: 'timelimit termination',
-        2: 'Ctrl-C termination',
-        3: 'abnormal termination'
+        flopt.constants.SOLVER_NORMAL_TERMINATE:    'normal termination',
+        flopt.constants.SOLVER_TIMELIMIT_TERMINATE: 'timelimit termination',
+        flopt.constants.SOLVER_INTERRUPT_TERMINATE: 'Ctrl-C termination',
+        flopt.constants.SOLVER_ABNORMAL_TERMINATE:  'abnormal termination'
     }
 
     message = (
