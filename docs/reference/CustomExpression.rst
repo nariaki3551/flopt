@@ -1,4 +1,4 @@
-.. module:: flopt.custom_expression
+.. module:: flopt.expression
 
 CustomExpression
 ================
