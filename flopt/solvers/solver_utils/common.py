@@ -41,13 +41,48 @@ def start_solver_message(algo_name, param_str, solution):
 
 
 def during_solver_message_header():
-    header = '     Trial  ObjValue Time[s]'
-    line   = '----------------------------'
+    header = '     Trial Incumbent    BestBd  Gap[%] Time[s]'
+    line   = '----------------------------------------------'
     print(header)
     print(line)
 
-def during_solver_message(head, obj_value, time, iteration):
-    print(f'{head:2s} {iteration:7d} {obj_value:9.3f} {time:7.2f}')
+
+def value2str(value):
+    if value is None:
+        return ' '*8 + '-'
+    if abs(value) > 1e4:
+        value_str = f'{value:9.2e}'
+    elif abs(value) > 1e-3:
+        value_str = f'{value:9.3f}'
+    else:
+        value_str = f'{value:9.5f}'
+    return value_str
+
+
+def calculate_gap(obj_value, best_bd):
+    if obj_value is None or best_bd is None:
+        return ' '*6 + '-'
+    else:
+        gap = (obj_value - best_bd) / (abs(obj_value)+1e-4)
+        if gap > 0.999:
+            return ' '*7
+        else:
+            return f'{gap:7.3f}'
+
+
+def during_solver_message(head, obj_value, best_bd, time, iteration):
+    obj_value_str = value2str(obj_value)
+    best_bd_str   = value2str(best_bd)
+    gap_str = calculate_gap(obj_value, best_bd)
+    message = (
+        f'{head:2s}',
+        f'{iteration:7d}',
+        f'{obj_value_str}',
+        f'{best_bd_str}',
+        f'{gap_str}',
+        f'{time:7.2f}'
+    )
+    print(' '.join(message))
 
 
 def end_solver_message(status, obj_value, time):
@@ -57,7 +92,7 @@ def end_solver_message(status, obj_value, time):
         2: 'Ctrl-C termination',
         3: 'abnormal termination'
     }
-    
+
     message = (
         "",
         f"Status: {status_str[status]}",

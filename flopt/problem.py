@@ -61,7 +61,7 @@ class Problem:
             obj = ExpressionConst(obj)
         self.obj = obj
         self.variables = obj.getVariables()
-    
+
     def getObjectiveValue(self):
         """
         Returns
@@ -99,9 +99,9 @@ class Problem:
             obj = ObjectiveFunction(-self.obj)
         
         if solver is None:
-          solver = Solver(algo='RandomSearch')
+            solver = Solver(algo='RandomSearch')
         if timelimit is not None:
-          solver.setParams(timelimit=timelimit)
+            solver.setParams(timelimit=timelimit)
 
         # convert for soluver
         solution = Solution('s', self.variables)

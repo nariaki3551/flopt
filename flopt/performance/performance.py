@@ -10,7 +10,7 @@ from .log_visualizer import LogVisualizer
 performance_dir = flopt_env.performance_dir
 
 
-def compute(datasets, solvers='all', 
+def compute(datasets, solvers='all',
     timelimit=None, msg=True, save_prefix=None):
     """
     Measure the performance of (dataset, solver)
@@ -72,8 +72,8 @@ def compute(datasets, solvers='all',
         # visualize the performance
         log_visualizer = flopt.performance.LogVisualizer(logs)
         lov_visualizer.plot()
-        
-    
+
+
     We can use user defined problem as dataset
 
     .. code-block:: python
@@ -111,6 +111,8 @@ def compute(datasets, solvers='all',
                 formulatable, prob = instance.createProblem(solver)
                 if not formulatable:
                     continue
+                best_bd = instance.getBestValue()
+                solver.setParams(best_bd=best_bd)
                 state, log = prob.solve(solver=solver, msg=msg)
                 save_log(log, solver, dataset, instance, save_prefix)
                 logs[dataset.name, instance.name, solver.name] = log
@@ -128,20 +130,22 @@ def save_log(log, solver, dataset, instance, save_prefix):
 
 
 def performance(datasets, solver_names=Solver_list(),
-    xitem='time', load_prefix=None):
+    xitem='time', plot_type='all', save_prefix=None, load_prefix=None):
     """
     plot performance of each (dataset, algo) where algo is solver.name
 
     Parameters
     ----------
     datasets : list of Dataset or a Problem
-      datasets name
+        datasets name
     solver_names : list of str
-      solver names
+        solver names
     xitem : str
-      x-label item of figure (time or iteration)
+        x-label item of figure (time or iteration)
+    save_prefix : str
+        prefix of fig save name
     load_prefix : str
-      the path in which each log is saved
+        the path in which each log is saved
 
     See Also
     --------
@@ -163,4 +167,8 @@ def performance(datasets, solver_names=Solver_list(),
         solver_names=solver_names,
         datasets=dataset_names,
     )
-    log_visualizer.plot(xitem=xitem)
+    log_visualizer.plot(
+        xitem=xitem,
+        plot_type=plot_type,
+        save_prefix=save_prefix
+    )
