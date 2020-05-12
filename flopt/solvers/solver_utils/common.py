@@ -33,7 +33,7 @@ def start_solver_message(algo_name, param_str, solution):
         "\n",
         "Welcome to the flopt Solver\n",
         f"Version {flopt.constants.VERSION}\n",
-        f"Date: {flopt.constants.DATE}0\n",
+        f"Date: {flopt.constants.DATE}\n",
         "\n",
         f"Algorithm: {algo_name}\n",
         f"Params: {param_str}\n",

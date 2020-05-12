@@ -7,7 +7,6 @@ import flopt
 from flopt import Solver, Solver_list
 from flopt.performance import Dataset_list
 
-import logging
 
 def compute(algo, dataset_names, params):
     """
@@ -52,16 +51,7 @@ def read_paramfile(paramfile):
     return params
 
 
-def setLogger(log_level):
-    formatter = '%(levelname)s:%(asctime)s:%(filename)s:%(funcName)s:%(funcName)s:%(message)s'
-    logging.basicConfig(
-        level=log_level,
-        format=formatter
-    )
-
-
 def argparser():
-    print(Solver_list, Dataset_list)
     parser = ArgumentParser()
     parser.add_argument(
         'algorithm',
@@ -100,7 +90,7 @@ if __name__ == '__main__':
     paramfile = args.params
     log_level = args.log_level
 
-    setLogger(log_level)
+    flopt.env.setLogLevel(log_level)
 
     params = read_paramfile(paramfile)
     params['name'] = savename
