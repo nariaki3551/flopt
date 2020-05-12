@@ -8,6 +8,7 @@ from flopt.solvers.solver_utils import (
     during_solver_message,
     end_solver_message
 )
+from flopt.solution import Solution
 from flopt.env import setup_logger
 import flopt.constants
 
@@ -20,9 +21,7 @@ class LpVariable(pulp.LpVariable):
         super().__init__(name, lowBound=lowBound, upBound=upBound, cat=cat)
 
     def value(self):
-        """
-        for Creating the objective function fo pulp
-        """
+        """for creating the objective and constraints of pulp"""
         return self
 
     def getValue(self):
@@ -30,7 +29,18 @@ class LpVariable(pulp.LpVariable):
 
 
 class PulpSearch(BaseSearch):
-    """LP Solver
+    """PuLP API LP Solver
+
+    Parameters
+    ----------
+    solver : pulp.Solver
+        solver pulp use, see https://coin-or.github.io/pulp/technical/solvers.html.
+        default is pulp.PULP_CBC_CMD
+    
+    Returns
+    -------
+    status : int
+        status of solver
     """
 
     def __init__(self):
@@ -50,15 +60,32 @@ class PulpSearch(BaseSearch):
             solver = pulp.PULP_CBC_CMD(maxSeconds=self.timelimit, msg=self.msg)
         lp_status = lp_prob.solve(solver)
 
-        # get result of solver
+        # get result
         for lp_var, var in zip(lp_solution, self.solution):
-            var.setValue(lp_var.getValue())
-        self.updateSolution(self.solution, obj_value=None)
+            value = lp_var.getValue()
+            if var.getType() in {'VarInteger', 'VarBinary'}:
+                value = round(value)
+            var.setValue(value)
+            logger.debug(f'{var.name}: {value}')
+        self.updateSolution(self.solution)
+
+        if lp_status in {-1, -2, -3}:
+            # -1: infeasible
+            # -2: unbounded
+            # -3: undefined
+            status = flopt.constants.SOLVER_ABNORMAL_TERMINATE
+            logger.info(f'PuLP LpStatus {pulp.constants.LpStatus[lp_status]}')
 
         return status
 
 
     def createLpProblem(self):
+        """Convert Problem into pulp.LpProblem
+
+        Returns
+        -------
+        pulp.LpProblem, Solution
+        """
         # conver VarElement -> LpVariable
         lp_variables = []
         for var in self.solution:
@@ -67,15 +94,14 @@ class PulpSearch(BaseSearch):
             elif var.getType() == 'VarInteger':
                 cat = 'Integer'
             elif var.getType() == 'VarBinary':
-                car = 'Binary'
+                cat = 'Binary'
             else:
                 raise ValueError
             lp_var = LpVariable(
                 var.name, lowBound=var.lowBound, upBound=var.upBound, cat=cat
             )
             lp_variables.append(lp_var)
-        lp_solution = self.solution.clone()
-        lp_solution._variables = lp_variables
+        lp_solution = Solution('lp_solution', lp_variables)
 
         # conver Problem -> pulp.LpProblem
         name = '' if self.name is None else self.name
