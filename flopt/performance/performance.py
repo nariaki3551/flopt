@@ -106,6 +106,7 @@ def compute(datasets, solvers='all',
 
     for dataset in datasets:
         for instance in dataset:
+            print(instance)
             for solver in solvers:
                 solver.reset()
                 formulatable, prob = instance.createProblem(solver)
@@ -130,7 +131,8 @@ def save_log(log, solver, dataset, instance, save_prefix):
 
 
 def performance(datasets, solver_names=Solver_list(),
-    xitem='time', plot_type='all', save_prefix=None, load_prefix=None):
+    xitem='time', yscale='linear',
+    plot_type='all', save_prefix=None, load_prefix=None):
     """
     plot performance of each (dataset, algo) where algo is solver.name
 
@@ -142,6 +144,12 @@ def performance(datasets, solver_names=Solver_list(),
         solver names
     xitem : str
         x-label item of figure (time or iteration)
+    yscale : str
+        linear or log
+    plot_type : str
+        all: create figures for each dataset.
+        each: create figures for each instance.
+        noshow: do not create figures.
     save_prefix : str
         prefix of fig save name
     load_prefix : str
@@ -167,8 +175,13 @@ def performance(datasets, solver_names=Solver_list(),
         solver_names=solver_names,
         datasets=dataset_names,
     )
-    log_visualizer.plot(
-        xitem=xitem,
-        plot_type=plot_type,
-        save_prefix=save_prefix
-    )
+
+    if not plot_type == "noshow":
+        log_visualizer.plot(
+            xitem=xitem,
+            yscale=yscale,
+            plot_type=plot_type,
+            save_prefix=save_prefix
+        )
+
+    log_visualizer.stat()

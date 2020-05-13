@@ -36,3 +36,6 @@ class Log:
             plt.show()
 
         return fig, ax
+
+    def __getitem__(self, k):
+        return self.logs[k]
