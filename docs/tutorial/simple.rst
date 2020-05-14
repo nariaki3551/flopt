@@ -43,8 +43,7 @@ This problem can be formulated using `flopt` as follows,
 Variable
 -----------
 
-We declear variables using *Variable*.
-
+We declear variables using :doc:`../api_reference/Variable`.
 ::
 
   0 <= a <= 1, a is integer
