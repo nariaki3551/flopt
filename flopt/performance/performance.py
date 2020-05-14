@@ -130,7 +130,7 @@ def save_log(log, solver, dataset, instance, save_prefix):
         pickle.dump(log, pf)
 
 
-def performance(datasets, solver_names=Solver_list(),
+def performance(datasets, solver_names=None,
     xitem='time', yscale='linear',
     plot_type='all', save_prefix=None, load_prefix=None):
     """
@@ -141,7 +141,7 @@ def performance(datasets, solver_names=Solver_list(),
     datasets : list of Dataset or a Problem
         datasets name
     solver_names : list of str
-        solver names
+        solver names, if solver_names is None, all solvers in flopt is used.
     xitem : str
         x-label item of figure (time or iteration)
     yscale : str
@@ -165,7 +165,10 @@ def performance(datasets, solver_names=Solver_list(),
         dataset_names = ['user']
     else:
         dataset_names = [datasets.name]
-    if not isinstance(solver_names, list):
+
+    if solver_names is None:
+        solver_names = flopt.Solver_list()
+    elif not isinstance(solver_names, list):
         solver_names = [solver_names]
     if load_prefix is None:
         load_prefix = performance_dir

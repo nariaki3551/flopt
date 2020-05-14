@@ -3,14 +3,9 @@ class Constraint:
 
     three type constraint, ==, <=, and >=.
 
-    - eq type (equal)
-    expression == 0
-
-    - le type (less than or equal)
-    expression <= 0
-
-    - ge type (greater than or equal)
-    expression >= 0
+    - eq type (equal) expression == 0
+    - le type (less than or equal) expression <= 0
+    - ge type (greater than or equal) expression >= 0
 
     Parameters
     ----------
@@ -22,15 +17,15 @@ class Constraint:
     def __init__(self, expression, _type, name=None):
         assert _type in {'eq', 'le', 'ge'},\
             f"""get constraint type {_type} but this is not supported.
-                You must choice from eq, le or ge. 
+                You must choice from eq, le or ge.
              """
         self.expression = expression
         self.type = _type
         self.name = None
-    
+
     def getVariables(self):
         return self.expression.getVariables()
-    
+
     def __str__(self):
         s  = f'Name: {self.name}\n'
         s += f'  Type      :  Constraint\n'

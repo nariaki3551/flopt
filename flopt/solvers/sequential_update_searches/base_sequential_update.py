@@ -21,7 +21,9 @@ class SequentialUpdateSearch(BaseSearch):
 
     1. Generate a new solution
     2. Check a new solution can be incumbent solutions
-    3. Update incumbent solution
+    3. If the new solution is an incumbent solution,
+       then update best solution by it.
+    4. Repeat 1--3
 
     Each child class, define `self.set_new_sol()` function which
     generates a new solution and sets it to self.variabels.

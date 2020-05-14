@@ -2,8 +2,7 @@ import random
 from .base_sequential_update import SequentialUpdateSearch
 
 class TwoOpt(SequentialUpdateSearch):
-    """
-    2-Opt Search for permutation optimization problem.
+    """2-Opt Search
     """
     def __init__(self):
         super().__init__()

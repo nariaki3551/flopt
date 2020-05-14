@@ -1,5 +1,4 @@
 import random
-import traceback
 from math import ceil, floor
 
 from flopt.expression import Expression
@@ -13,8 +12,7 @@ logger = setup_logger(__name__)
 INI_BOUND = 1e10
 
 def Variable(name, lowBound=-INI_BOUND, upBound=INI_BOUND, iniValue=None, cat='Continuous'):
-    """
-    Create Variable object
+    """Create Variable object
 
     Parameters
     ----------
@@ -27,7 +25,8 @@ def Variable(name, lowBound=-INI_BOUND, upBound=INI_BOUND, iniValue=None, cat='C
     iniValue : float, optional
       set value to variable
     cat : str, optional
-      category of variable
+      category of variable. We can choice from
+      "Continuous", "Integer", "Binary", "Permutation".
 
     Returns
     -------
@@ -61,8 +60,7 @@ def Variable(name, lowBound=-INI_BOUND, upBound=INI_BOUND, iniValue=None, cat='C
 
 
 class VarElement:
-    """
-    Base Variable class
+    """Base Variable class
     """
     def __init__(self, name, lowBound, upBound, iniValue):
         self.name = name
@@ -108,8 +106,8 @@ class VarElement:
     def clip(self):
         """
         map in an feasible area by clipping.
-        ex. value < lowBound -> value = lowBound,
-        value > upBound  -> value = upBound
+        ex. If value < lowBound, then value = lowBound.
+        Else if value > upBound, then value = upBound.
         """
         if self._value < self.lowBound:
             self._value = self.lowBound
@@ -249,8 +247,7 @@ class VarElement:
 
 
 class VarInteger(VarElement):
-    """
-    Ingeter Variable class
+    """Ingeter Variable class
     """
     def __init__(self, name, lowBound, upBound, iniValue):
         super().__init__(name, ceil(lowBound), floor(upBound), iniValue)
@@ -270,8 +267,7 @@ class VarInteger(VarElement):
 
 
 class VarBinary(VarInteger):
-    """
-    Binary Variable class
+    """Binary Variable class
 
 
     .. note::
@@ -322,8 +318,7 @@ class VarBinary(VarInteger):
 
 
 class VarContinuous(VarElement):
-    """
-    Continuous Variable class
+    """Continuous Variable class
     """
     def __init__(self, name, lowBound, upBound, iniValue):
         super().__init__(name, lowBound, upBound, iniValue)
@@ -337,8 +332,7 @@ class VarContinuous(VarElement):
 
 
 class VarPermutation(VarElement):
-    """
-    Permutation Variable class
+    """Permutation Variable class
 
     This has [lowBound, ... upBound] range permutation.
 
@@ -393,7 +387,8 @@ class VarPermutation(VarElement):
 
 
 class VarConst(VarElement):
-    """
+    """Constant Variable class
+
     It is the variable of constant value.
     We use it the operation including constant value.
     See VarElement class `__add__`, `__sub__`, and so on.
