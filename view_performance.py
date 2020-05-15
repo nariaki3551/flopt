@@ -8,7 +8,7 @@ from flopt.performance import performance
 
 
 def view_performance(algos, dataset_names,
-    xitem, yscale, plot_type, save_prefix):
+    xitem, yscale, plot_type, save_prefix, time, iteration):
     """
     display the log (dataset, algo).
     log data is laod from ./performance/algo/dataset/instance/log.pickle
@@ -27,6 +27,10 @@ def view_performance(algos, dataset_names,
         'all' or 'each'
     save_prefix : str
         save figure {save_prefix}instance_name.pdf
+    time : int or float
+        summary logs whose time less than time
+    iteration : int
+        summary logs whose iteration less than iteration
     """
     datasets = [
         flopt.performance.datasets[dataset_name]
@@ -39,7 +43,9 @@ def view_performance(algos, dataset_names,
         xitem=xitem,
         yscale=yscale,
         plot_type=plot_type,
-        save_prefix=save_prefix
+        save_prefix=save_prefix,
+        time=time,
+        iteration=iteration,
     )
 
 
@@ -77,6 +83,16 @@ def argparser():
         default=None
     )
     parser.add_argument(
+        '--time',
+        default=None,
+        type=float,
+    )
+    parser.add_argument(
+        '--iteration',
+        default=None,
+        type=int,
+    )
+    parser.add_argument(
         '--log_level',
         type=int,
         default=30,
@@ -95,6 +111,8 @@ if __name__ == '__main__':
     yscale      = args.yscale
     plot_type   = args.plot_type
     save_prefix = args.save_prefix
+    time        = args.time
+    iteration   = args.iteration
     log_level   = args.log_level
 
     flopt.env.setLogLevel(log_level)
@@ -106,5 +124,5 @@ if __name__ == '__main__':
 
     view_performance(
         algos, dataset, xitem, yscale,
-        plot_type, save_prefix
+        plot_type, save_prefix, time, iteration
     )
