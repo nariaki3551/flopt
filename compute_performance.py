@@ -98,7 +98,7 @@ if __name__ == '__main__':
     paramfile = args.params
     log_level = args.log_level
 
-    setLogger(log_level)
+    flopt.env.setLogLevel(log_level)
 
     params = read_paramfile(paramfile)
     params['name'] = savename

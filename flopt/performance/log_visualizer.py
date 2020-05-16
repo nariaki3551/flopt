@@ -9,8 +9,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from flopt import env as flopt_env
+from flopt.solvers.solver_utils.common import value2str
+from flopt.env import setup_logger
 
 performance_dir = flopt_env.performance_dir
+logger = setup_logger(__name__)
 
 
 class LogVisualizer:
@@ -65,16 +68,23 @@ class LogVisualizer:
             with open(picklefile, 'rb') as pf:
                 self.logs[dataset, instance_name, solver_name] = pickle.load(pf)
 
-    def plot(self, xitem='time', plot_type='all', save_prefix=None, col=2):
+    def plot(self, xitem='time', yscale='linear',
+            plot_type='all', save_prefix=None, col=2):
         """
         plot all logs
 
         Parameters
         ----------
         xitem : str
-          x-label name. 'time' or 'iteration'
+            x-label name. 'time' or 'iteration'
+        yscale : str
+            linear or log
+        plot_type : str
+            all: create figures for each dataset.
+            each: create figures for each instance.
+            noshow: do not create figures.
         col : int
-          #columns of figure
+            #columns of figure
         """
         datasets = set(dataset for dataset, _, _ in self.logs)
         for dataset in datasets:
@@ -104,7 +114,7 @@ class LogVisualizer:
                         show=False, xitem=xitem, linestyle='--', marker='.',
                         label=solver_name, fig=fig, ax=ax
                     )
-                setax(ax, instance)
+                setax(ax, instance, yscale)
                 if plot_type == 'each':
                     if save_prefix is None:
                         plt.show()
@@ -116,6 +126,82 @@ class LogVisualizer:
                 plt.show()
             else:
                 save_fig(fig, f'{save_prefix}{dataset}.pdf')
+
+
+    def stat(self, time=None, iteration=None):
+        """display static information
+
+        Parameters
+        ----------
+        time : int or float
+            summary logs whose time less than time
+        iteration : int
+            summary logs whose iteration less than iteration
+        """
+        logger.debug(f'summary logs time={time}, iteration={iteration}')
+        datasets = set(dataset for dataset, _, _ in self.logs)
+        for dataset in datasets:
+            stat_message_header = [
+                "","",
+                f"{dataset}",
+                "="*len(dataset),
+                ""
+            ]
+            solvers = sorted(set(s for d, _, s in self.logs if d == dataset))
+            instances = sorted(set(i for d, i, _ in self.logs if d == dataset))
+            stat_messages = []
+            stat = {
+                'num_wins': [0]*len(solvers),
+                'score': [0]*len(solvers)
+            }
+            for instance in instances:
+                stat_message = [instance]
+                obj_values = []
+                for i, solver in enumerate(solvers):
+                    if (dataset, instance, solver) in self.logs:
+                        logs = self.logs[dataset, instance, solver]
+                        log = logs.getLog(time=time, iteration=iteration)
+                        obj_value = log['obj_value']
+                        stat_message.append(value2str(obj_value))
+                        obj_values.append(obj_value)
+                    else:
+                        stat_message.append('')
+                        obj_values.append(float('inf'))
+                stat_messages.append(stat_message)
+                sorted_solver_ixs = np.argsort(obj_values)
+                win_solver_ix = sorted_solver_ixs[0]
+                stat['num_wins'][win_solver_ix] += 1
+                for i, solver_ix in enumerate(sorted_solver_ixs):
+                    stat['score'][solver_ix] += i
+
+
+            print("\n".join(stat_message_header))
+            messages = []
+            messages.append(["Instance"] + solvers)
+            messages.append(["-"*8] + ["-"*len(s) for s in solvers])
+            messages += stat_messages
+            messages.append([''])
+            messages.append(['#Win'] + list(map(str, stat['num_wins'])))
+            # simple ranking
+            sorted_solver_ix = np.argsort(stat['score'])
+            ranks = [0]*len(solvers)
+            for i, solver_ix in enumerate(sorted_solver_ix, 1):
+                ranks[solver_ix] = i
+            messages.append(['Ranking'] + list(map(str, ranks)))
+
+            arr_dict = defaultdict(int)
+            for message in messages:
+                for col, el in enumerate(message):
+                    arr_dict[col] = max(arr_dict[col], len(el))
+            for i, message in enumerate(messages):
+                message = [
+                    '{}{}'.format(' '*(arr_dict[col]-len(el)), el)
+                    for col, el in enumerate(message)
+                ]
+                messages[i] = message
+            for message in messages:
+                print(' '.join(message))
+
 
     def __len__(self):
         return len(self.logs)
@@ -142,7 +228,8 @@ def iter_axs(axs, col):
             i, j = i+1, 0
 
 
-def setax(ax, title):
+def setax(ax, title, yscale):
     ax.grid('--')
     ax.legend()
     ax.set_title(title)
+    ax.set_yscale(yscale)

@@ -33,7 +33,7 @@ def start_solver_message(algo_name, param_str, solution):
         "\n",
         "Welcome to the flopt Solver\n",
         f"Version {flopt.constants.VERSION}\n",
-        f"Date: {flopt.constants.DATE}0\n",
+        f"Date: {flopt.constants.DATE}\n",
         "\n",
         f"Algorithm: {algo_name}\n",
         f"Params: {param_str}\n",
@@ -70,11 +70,11 @@ def calculate_gap(obj_value, best_bd):
     if obj_value is None or best_bd is None:
         return ' '*6 + '-'
     else:
-        gap = (obj_value - best_bd) / (abs(obj_value)+1e-4)
-        if gap > 0.999:
+        gap = (obj_value - best_bd) / (abs(obj_value)+1e-4) * 100
+        if gap > 99.9:
             return ' '*7
         else:
-            return f'{gap:7.3f}'
+            return f'{gap:7.2f}'
 
 
 def during_solver_message(head, obj_value, best_bd, time, iteration):
