@@ -10,6 +10,7 @@ from flopt.solvers.optuna_searches import (
 )
 from flopt.solvers.hyperopt_search import HyperoptTPESearch
 from flopt.solvers.swarm_intelligence_searches import ShuffledFrogLeapingSearch
+from flopt.solvers.pulp_search import PulpSearch
 from flopt.solvers.scipy_search import ScipySearch
 
 algos = {
@@ -19,6 +20,7 @@ algos = {
     'OptunaCmaEsSearch': OptunaCmaEsSearch,
     'HyperoptTPESearch': HyperoptTPESearch,
     'SFLA'             : ShuffledFrogLeapingSearch,
+    'PulpSearch'       : PulpSearch,
     'ScipySearch'      : ScipySearch,
 }
 

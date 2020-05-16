@@ -43,7 +43,7 @@ class Plot2DFunc:
 
 if __name__ == '__main__':
 
-    from flopt import Variable, Problem, Solver, CustomObject
+    from flopt import Variable, Problem, Solver, CustomExpression
 
     def test_func(x, y):
         return (1.5-x+x*y)**2 + (2.25-x+x*y*y)**2 + (2.625-x+x*y*y*y)**2
@@ -53,7 +53,7 @@ if __name__ == '__main__':
     x = Variable('x', lowBound=-10, upBound=10, cat='Continuous')
     y = Variable('y', lowBound=-10, upBound=10, cat='Continuous')
 
-    obj = CustomObject(test_func, [x, y])
+    obj = CustomExpression(test_func, [x, y])
 
     prob = Problem('plot test')
     prob += obj

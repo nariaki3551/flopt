@@ -1,4 +1,4 @@
-from flopt import Variable, Problem, Solver, CustomObject
+from flopt import Variable, Problem, Solver, CustomExpression
 
 __doc__ = """
 This is a sample code of "MAXSAT"

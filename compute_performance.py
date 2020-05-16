@@ -6,6 +6,10 @@ from itertools import product
 import flopt
 from flopt import Solver, Solver_list
 from flopt.performance import Dataset_list
+from flopt.env import setup_logger
+
+
+logger = setup_logger(__name__)
 
 
 def compute(algo, dataset_names, params):
@@ -49,6 +53,10 @@ def read_paramfile(paramfile):
                 param_value = float(param_value)
             params[param_name] = param_value
     return params
+
+
+def setLogger(log_level):
+    flopt.env.setLogLevel(log_level)
 
 
 def argparser():

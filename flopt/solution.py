@@ -2,7 +2,6 @@ import random
 from math import sqrt, floor, ceil
 from copy import deepcopy
 
-from flopt.expression import Expression
 from flopt.env import setup_logger
 
 

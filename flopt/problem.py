@@ -1,6 +1,6 @@
+from flopt.variable import VarElement
 from flopt.expression import Expression, ExpressionConst
 from flopt.constraint import Constraint
-from flopt.custom_object import CustomObject
 from flopt.solution import Solution
 from flopt.solvers import Solver
 from flopt.env import setup_logger
@@ -19,7 +19,7 @@ class Problem:
         name of problem
     sense : str, optional
         minimize or maximize
-    obj : Expression or CustomObject
+    obj : Expression family
         objective function
     variables : set of VarElement family
         variables
@@ -62,11 +62,13 @@ class Problem:
 
         Parameters
         ----------
-        obj : VarElement family, Expression or CustomObject
+        obj : int, float, VarElement family or Expression family
             objective functioon
         """
         if isinstance(obj, (int, float)):
             obj = ExpressionConst(obj)
+        elif isinstance(obj, VarElement):
+            obj = Exprression(obj, 0, '+')
         self.obj = obj
         self.variables |= obj.getVariables()
     
@@ -127,17 +129,12 @@ class Problem:
         solution = Solution('s', self.variables)
 
         if self.sense == 'minimize':
-            obj = ObjectiveFunction(self.obj)
+            obj = self.obj
         elif self.sense == 'maximize':
-            obj = ObjectiveFunction(-self.obj)
-
-        constraints = [
-            Constraint(ObjectiveFunction(const.expression), const.type)
-            for const in self.constraints
-        ]
+            obj = -self.obj
 
         status, log, self.time = solver.solve(
-            solution, obj, constraints, msg=msg
+            solution, obj, self.constraints, msg=msg
         )
 
         return status, log
@@ -158,51 +155,3 @@ class Problem:
         s += f'  #constraints : {len(self.constraints)}\n'
         s += f'  #variables   : {len(self.variables)}'
         return s
-
-
-class ObjectiveFunction:
-    """
-    TODO: rename class name
-    Objective Function for Solver
-
-    ObjectiveFunction is an overwrap class for expression and customObjects.
-    In this class, by specifying the value argument as a solution,
-    we can compute the objective value of the solution.
-
-    Parameters
-    ----------
-    obj : Expression or CustomObject
-        objective function
-    type : str
-        'Expression' or 'CustomObject'
-    """
-    def __init__(self, obj):
-        if isinstance(obj, Constraint):
-            obj = obj.expression
-        if isinstance(obj, Expression):
-            self.type = 'Expression'
-            self.obj = obj
-        elif isinstance(obj, CustomObject):
-            self.type = 'CustomObject'
-            self.obj = obj
-
-    def value(self, solution):
-        """
-        Parameters
-        ----------
-        solution : Solution
-            solution used for calculation of expressions
-
-        Returns
-        -------
-        float
-            the objective value with respect to the solution
-        """
-        if self.type == 'Expression':
-            var_dict = {var.name : var for var in solution}
-            self.obj.setVarDict(var_dict)
-            return self.obj.value()
-        elif self.type == 'CustomObject':
-            var_list = solution.getVariables()
-            self.obj.setVarList(var_list)
-            return self.obj.value()

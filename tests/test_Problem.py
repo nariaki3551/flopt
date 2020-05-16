@@ -1,4 +1,4 @@
-from flopt import Variable, Problem, CustomObject
+from flopt import Variable, Problem, CustomExpression
 
 a = Variable('a', iniValue=0, cat='Binary')
 b = Variable('b', iniValue=2, cat='Continuous')
