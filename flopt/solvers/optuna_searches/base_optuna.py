@@ -49,7 +49,11 @@ class OptunaSearch(BaseSearch):
         status = flopt.constants.SOLVER_NORMAL_TERMINATE
         self.startProcess()
         self.createStudy()
-        self.study.optimize(self.objective, self.n_trial, timeout=self.timelimit)
+        try:
+            self.study.optimize(self.objective, self.n_trial, timeout=self.timelimit)
+        except Exception as e:
+            logger.info(f'Exception {e}')
+            status = flopt.constants.SOLVER_ABNORMAL_TERMINATE
         self.closeProcess()
         return status
 

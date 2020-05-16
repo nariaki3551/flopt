@@ -142,6 +142,7 @@ class LogVisualizer:
         datasets = set(dataset for dataset, _, _ in self.logs)
         for dataset in datasets:
             stat_message_header = [
+                "","",
                 f"{dataset}",
                 "="*len(dataset),
                 ""
