@@ -64,9 +64,6 @@ def test_VarBinary_cast2():
 def test_VarBinary_hash():
     hash(a)
 
-def test_VarBinary_eq():
-    assert (a == b) is False
-
 # base function
 def test_VarBinary_getType():
     assert a.getType() == 'VarBinary'

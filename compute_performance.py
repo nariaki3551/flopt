@@ -7,6 +7,7 @@ import flopt
 from flopt import Solver, Solver_list
 from flopt.performance import Dataset_list
 
+
 def compute(algo, dataset_names, params):
     """
     compute the peformance of (dataset, algo).
@@ -51,7 +52,6 @@ def read_paramfile(paramfile):
 
 
 def argparser():
-    print(Solver_list, Dataset_list)
     parser = ArgumentParser()
     parser.add_argument(
         'algorithm',
@@ -71,6 +71,12 @@ def argparser():
         default=None,
         help='param file'
     )
+    parser.add_argument(
+        '--log_level',
+        type=int,
+        default=30,
+        help='10:DEBUG,20:INFO,30:WARNING,40:ERROR,50:CRITICAL'
+    )
     return parser
 
 
@@ -82,6 +88,9 @@ if __name__ == '__main__':
     savename  = args.savename
     datasets  = args.datasets
     paramfile = args.params
+    log_level = args.log_level
+
+    flopt.env.setLogLevel(log_level)
 
     params = read_paramfile(paramfile)
     params['name'] = savename

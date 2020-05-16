@@ -10,4 +10,5 @@ API Reference
     Solver
     Solution
     Expression
+    Constraint
     Performance

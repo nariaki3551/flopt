@@ -2,13 +2,30 @@ from time import time
 import hyperopt
 from hyperopt import hp
 
-from .base import BaseSearch
+from flopt.solvers.base import BaseSearch
 from flopt.solvers.solver_utils import (
     Log, start_solver_message,
     during_solver_message_header,
     during_solver_message,
     end_solver_message
 )
+from flopt.env import setup_logger
+import flopt.constants
+
+
+logger = setup_logger(__name__)
+
+
+import logging
+
+loggers_to_shut_up = [
+    "hyperopt.tpe",
+    "hyperopt.fmin",
+    "hyperopt.pyll.base",
+]
+for logger in loggers_to_shut_up:
+    logging.getLogger(logger).setLevel(logging.ERROR)
+
 
 class HyperoptTPESearch(BaseSearch):
     """
@@ -29,8 +46,13 @@ class HyperoptTPESearch(BaseSearch):
         self.can_solve_problems = ['blackbox']
 
     def search(self):
+        if self.constraints:
+            logger.error("This Solver does not support the problem with constraints.")
+            status = flopt.constants.SOLVER_ABNORMAL_TERMINATE
+            return status
+
         self.startProcess()
-        status = 0
+        status = flopt.constants.SOLVER_NORMAL_TERMINATE
 
         # make the search space
         space = self.gen_space()
@@ -45,7 +67,7 @@ class HyperoptTPESearch(BaseSearch):
                 show_progressbar=self.show_progressbar,
             )
         except TimeoutError:
-            status = 1  # timelimit termination
+            status = flopt.constants.SOLVER_TIMELIMIT_TERMINATE
 
         self.closeProcess()
         return status
@@ -82,7 +104,7 @@ class HyperoptTPESearch(BaseSearch):
             self.updateSolution(self.solution, obj_value)
             self.recordLog()
             if self.msg:
-                during_solver_message('*', obj_value, time()-self.start_time, self.trial_ix)
+                self.during_solver_message('*')
         
         # callbacks
         for callback in self.callbacks:
@@ -97,8 +119,7 @@ class HyperoptTPESearch(BaseSearch):
 
         if self.msg:
             during_solver_message_header()
-            during_solver_message('S', self.best_obj_value,
-                time()-self.start_time, self.trial_ix)
+            self.during_solver_message('S')
 
 
     def closeProcess(self):

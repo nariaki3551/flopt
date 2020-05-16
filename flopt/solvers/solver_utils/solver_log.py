@@ -1,11 +1,28 @@
 import matplotlib.pyplot as plt
+from flopt.env import setup_logger
+
+
+logger = setup_logger(__name__)
+
 
 class Log:
     def __init__(self):
-        self.solutions = list()
+        self.logs = list()
     
     def append(self, log_dict):
-        self.solutions.append(log_dict)
+        self.logs.append(log_dict)
+
+    def getLog(self, time=None, iteration=None):
+        if time is None and iteration is None:
+            return self.logs[-1]
+        for pre_log, log in zip(self.logs[:], self.logs[1:]):
+            if time is not None:
+                if log['time'] > time:
+                    return pre_log
+            if iteration is not None:
+                if log['iteration'] > iteration:
+                    return pre_log
+        return self.logs[-1]
     
     def plot(self, show=True, title=None, label=None,
         xitem='time', xlabel='Time [s]',
@@ -21,8 +38,8 @@ class Log:
             ax.set_ylabel(ylabel)
             ax.set_xscale(xscale)
             ax.set_yscale(yscale)
-        X = [sol[xitem] for sol in self.solutions]
-        Y = [sol[yitem] for sol in self.solutions]
+        X = [log[xitem] for log in self.logs]
+        Y = [log[yitem] for log in self.logs]
         
         ax.plot(X, Y, linestyle=linestyle, marker=marker, label=label)
         ax.legend()
@@ -31,3 +48,6 @@ class Log:
             plt.show()
 
         return fig, ax
+
+    def __getitem__(self, k):
+        return self.logs[k]

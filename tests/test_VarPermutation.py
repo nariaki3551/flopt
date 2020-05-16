@@ -7,9 +7,6 @@ b = Variable('b', lowBound=0, upBound=4, cat='Permutation')
 def test_VarPermutation_hash():
     hash(a)
 
-def test_VarPermutation_eq():
-    assert (a == b) is False
-
 # base function
 def test_VarPermutation_getType():
     assert a.getType() == 'VarPermutation'

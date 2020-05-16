@@ -1,10 +1,16 @@
 from time import time
-from .solver_utils import (
+from flopt.solvers.solver_utils import (
     Log, start_solver_message,
     during_solver_message_header,
     during_solver_message,
     end_solver_message
 )
+from flopt.env import setup_logger
+import flopt.constants
+
+
+logger = setup_logger(__name__)
+
 
 class BaseSearch:
     """
@@ -20,35 +26,37 @@ class BaseSearch:
     Parameters
     ----------
     name : str
-      name of solver
+        name of solver
     feasible_guard : str
-      type of guarder to keep feasibility of solution
+        type of guarder to keep feasibility of solution
     can_solve_problems : list of str
-      problem names can be solved by this solver
+        problem names can be solved by this solver
     best_solution : Solution
-      best solution
+        best solution
     best_obj_value : float
-      incumbent objective value
+        incumbent objective value
+    best_bd : float
+        best lower bound value
     solution : Solution
-      solution
+        solution
     obj : ObjectiveFunction
-      objective function
+        objective function
     feasible_guard : str
-      type of guarder to keep feasibility of solution
+        type of guarder to keep feasibility of solution
     timelimit : float
-      timelimit, unit is second
+        timelimit, unit is second
     msg : bool
-      if true, then display logs
+        if true, then display logs
     callbacks : list of function
        List of callback functions that are invoked at the end of each trial.
        Each function must accept three parameters with the following types
        in this order: list of solution object, best_solution, best_obj_value
     log : Log
-      Solver Log class
+        Solver Log class
     start_time : time()
-      start_time of solver
+        start_time of solver
     trial_ix : int
-      number of trials
+        number of trials
     """
     def __init__(self):
         # base information
@@ -59,6 +67,7 @@ class BaseSearch:
         # core variables
         self.best_solution = None
         self.best_obj_value = float('inf')
+        self.best_bd = None
         self.solution = None
         self.obj = None
         # parameters
@@ -98,31 +107,29 @@ class BaseSearch:
         self.start_time = None
         self.trial_ix = 0
 
-    def solve(self, solution, obj, msg=False):
+    def solve(self, solution, obj, constraints, msg=False):
         """
         solve the problem of (solution, obj)
 
         Parameters
         ----------
         solution : Solution
-          solution object
+            solution object
         obj : ObjectiveFunction
-          objective function
+            objective function
+        constraints : list of Constraint
+            constraints
         msg : bool
             if true, then display logs
 
         Returns
         -------
-        (status, Log)
-        status:
-            0 normal    termination
-            1 timelimit termination
-            2 Ctrl-C    termination
-            3 abnormal  termination
+        status, Log
         """
         self.best_solution = solution
         self.solution = solution.clone()
         self.obj = obj
+        self.constraints = constraints
         self.start_time = time()
         self.msg = msg
 
@@ -134,7 +141,7 @@ class BaseSearch:
             status = self.search()
         except KeyboardInterrupt:
             print('Get user ctrl-cuser ctrl-c')
-            status = 2
+            status = flopt.constants.SOLVER_INTERRUPT_TERMINATE
 
         if msg:
             obj_value = self.obj.value(self.best_solution)
@@ -158,9 +165,14 @@ class BaseSearch:
         """
         self.log.append({
             'obj_value': self.best_obj_value,
+            'best_bd': self.best_bd,
             'time': time()-self.start_time,
             'iteration': self.trial_ix
         })
+
+    def during_solver_message(self, head):
+        during_solver_message(head, self.best_obj_value,
+            self.best_bd, time()-self.start_time, self.trial_ix)
 
     def search(self):
         """

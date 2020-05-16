@@ -1,6 +1,10 @@
 from flopt import Variable, Problem, CustomObject
-from .base_dataset import BaseDataset
-from datasets.functions import benchmark_func
+from .base_dataset import BaseDataset, BaseInstance
+from datasets.funcLib import benchmark_func
+
+import logging
+logger = logging.getLogger(__name__)
+
 
 class FuncDataset(BaseDataset):
     """
@@ -9,7 +13,7 @@ class FuncDataset(BaseDataset):
     Parameters
     ----------
     instance_names : list
-      instance name list
+        instance name list
     """
     def __init__(self):
         self.name = 'func'
@@ -19,35 +23,46 @@ class FuncDataset(BaseDataset):
         """
         create FuncInstance
         """
+        logger.debug(f'{instance_name}')
         func_data = benchmark_func[instance_name]
         create_objective = func_data['co']
         create_variables = func_data['cv']
+        minimum_value    = func_data['mo']
         func_instance = FuncInstance(
-            instance_name, create_objective, create_variables
+            instance_name, create_objective,
+            create_variables, minimum_value
         )
         return func_instance
 
 
-class FuncInstance:
+class FuncInstance(BaseInstance):
     """
     Function Benchmark Instance
 
     Parameters
     ----------
     name : str
-      instance name
+        instance name
     create_objective : function
-      function which generates the objective function using dimension n
+        function which generates the objective function using dimension n
     create_variables : function
-      function which generates the variables using dimension n
+        function which generates the variables using dimension n
     n : int
-      dimension (for some instance)
+        dimension (for some instance)
     """
-    def __init__(self, name, create_objective, create_variables, n=10):
+    def __init__(self, name, create_objective, create_variables,
+            minimum_value, n=10):
         self.name = name
         self.create_objective = create_objective
         self.create_variables = create_variables
+        self.minimum_value    = minimum_value
         self.n = n
+
+    def getBestValue(self):
+        """
+        return the optimal value of objective function
+        """
+        return self.minimum_value(self.n)
 
     def createProblem(self, solver):
         """
@@ -56,13 +71,13 @@ class FuncInstance:
         Parameters
         ----------
         solver : Solver
-          solver
+            solver
 
         Returns
         -------
         (bool, Problem)
-          if solver can be solve this instance return
-          (true, prob formulated according to solver)
+            if solver can be solve this instance return
+            (true, prob formulated according to solver)
         """
         if 'blackbox' in solver.can_solve_problems:
             return True, self.createProblemFunc()
@@ -77,7 +92,7 @@ class FuncInstance:
         Returns
         -------
         Problem
-          problem
+            problem
         """
         variables = self.create_variables(self.n)
         for var in variables:
@@ -88,3 +103,6 @@ class FuncInstance:
         prob = Problem(name='Function:{self.name}')
         prob.setObjective(obj)
         return prob
+
+    def __str__(self):
+        return f'Instance: {self.name}'

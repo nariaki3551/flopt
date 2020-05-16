@@ -1,5 +1,5 @@
 from copy import deepcopy
-from .base_dataset import BaseDataset
+from .base_dataset import BaseDataset, BaseInstance
 
 class CustomDataset(BaseDataset):
     """
@@ -91,7 +91,7 @@ class CustomDataset(BaseDataset):
         return self
 
 
-class CustomInstance:
+class CustomInstance(BaseInstance):
     """
     Custom Instance
 
