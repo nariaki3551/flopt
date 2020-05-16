@@ -11,6 +11,18 @@ class Log:
     
     def append(self, log_dict):
         self.logs.append(log_dict)
+
+    def getLog(self, time=None, iteration=None):
+        if time is None and iteration is None:
+            return self.logs[-1]
+        for pre_log, log in zip(self.logs[:], self.logs[1:]):
+            if time is not None:
+                if log['time'] > time:
+                    return pre_log
+            if iteration is not None:
+                if log['iteration'] > iteration:
+                    return pre_log
+        return self.logs[-1]
     
     def plot(self, show=True, title=None, label=None,
         xitem='time', xlabel='Time [s]',
@@ -36,3 +48,6 @@ class Log:
             plt.show()
 
         return fig, ax
+
+    def __getitem__(self, k):
+        return self.logs[k]

@@ -1,0 +1,4 @@
+performance/*
+docs/_*
+*__pycache__
+*.ipynb*

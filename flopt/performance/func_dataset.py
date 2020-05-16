@@ -103,3 +103,6 @@ class FuncInstance(BaseInstance):
         prob = Problem(name='Function:{self.name}')
         prob.setObjective(obj)
         return prob
+
+    def __str__(self):
+        return f'Instance: {self.name}'
