@@ -25,6 +25,9 @@ class Constraint:
         self.type = _type
         self.name = None
     
+    def value(self, solution=None):
+        return self.expression.value(solution)
+    
     def getVariables(self):
         return self.expression.getVariables()
     

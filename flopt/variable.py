@@ -12,7 +12,7 @@ logger = setup_logger(__name__)
 
 INI_BOUND = 1e10
 
-def Variable(name, lowBound=-INI_BOUND, upBound=INI_BOUND, iniValue=None, cat='Continuous'):
+def Variable(name, lowBound=-INI_BOUND, upBound=INI_BOUND, cat='Continuous', iniValue=None):
     """
     Create Variable object
 
@@ -24,10 +24,10 @@ def Variable(name, lowBound=-INI_BOUND, upBound=INI_BOUND, iniValue=None, cat='C
       lowBound
     upBound : float, optional
       upBound
-    iniValue : float, optional
-      set value to variable
     cat : str, optional
       category of variable
+    iniValue : float, optional
+      set value to variable
 
     Returns
     -------

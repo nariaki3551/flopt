@@ -1,50 +1,91 @@
-from flopt import Variable, Problem, Solver, Solver_list
+from flopt import Variable, Problem, Solver, Solver_list, CustomExpression
 
 
-test_all = False
-
-test_solver_list = False
-test_common = False
+test_all = True
 test_SFLA = True
 
-if test_solver_list or test_all:
-    def test_Solver_list():
-        solver_list = Solver_list()
+# Problem without constraint
+a = Variable('a', 0, 1, 'Integer')
+b = Variable('b', 1, 2, 'Continuous')
+c = Variable('c', 1, 3, 'Continuous')
+prob = Problem(name='Test')
+prob += a + b + c
 
-if test_common or test_all:
-    def test_common():
-        # Variables
-        a = Variable('a', lowBound=0, upBound=1, cat='Integer')
-        b = Variable('b', lowBound=1, upBound=2, cat='Continuous')
-        c = Variable('c', lowBound=1, upBound=3, cat='Continuous')
-        prob = Problem(name='Test')
-        prob += 2*(3*a+b)*c**2+3
+# Problem with constraint
+prob_with_const = Problem(name='TestC')
+prob_with_const += a + b + c
+prob_with_const += a + b >= 2
 
-        solver_list = Solver_list()
+# Permutation Problem
+p = Variable('p', 0, 4, 'Permutation')
+prob_perm = Problem('TestP')
+def obj(p):
+    return p[-1] - p[0]
+prob_perm +=  CustomExpression(obj, [p])
 
-        for algo in Solver_list():
-            def test_Solver_params():
-                solver = Solver(algo=algo)
-                solver.setParams(n_trial=10)
-                prob.solve(solver, timelimit=1)
 
-            def test_Solver_callbacks():
-                def callback(solutions, best_solution, best_obj_value):
-                    pass
-                solver = Solver(algo=algo)
-                solver.setParams(n_trial=10, callbacks=[callback])
-                prob.solve(solver, timelimit=1)
+# callback
+def callback(solutions, best_solution, best_obj_value):
+    pass
 
-if test_SFLA or test_all:
-    def test_SFLA_1():
-        # Variables
-        prob = Problem(name='Test')
-        x = Variable('x', lowBound=0, upBound=100, cat='Continuous')
-        y = Variable('y', lowBound=0, upBound=100, cat='Continuous')
-        prob += (x+y)/(x-1)*(y-1)
+def test_Solver_list():
+    Solver_list()
 
-        solver = Solver(algo="SFLA")
-        solver.setParams(n_memeplex=5, n_frog_per_memeplex=10,
-                         n_memetic_iter=100, n_iter=1000, max_step=0.01, msg=True)
-        prob.solve(solver=solver, timelimit=10)
+def test_RandomSearch1():
+    solver = Solver(algo='RandomSearch')
+    solver.setParams(n_trial=10, callbacks=[callback])
+    prob.solve(solver, timelimit=1)
+
+def test_RandomSearch2():
+    solver = Solver(algo='RandomSearch')
+    solver.setParams(n_trial=10, callbacks=[callback])
+    prob_perm.solve(solver, timelimit=1)
+
+def test_2Opt():
+    solver = Solver(algo='2-Opt')
+    solver.setParams(n_trial=10, callbacks=[callback])
+    prob_perm.solve(solver, timelimit=1)
+
+def test_OptunaTPESearch():
+    solver = Solver(algo='OptunaTPESearch')
+    solver.setParams(n_trial=10, callbacks=[callback])
+    prob.solve(solver, timelimit=1)
+
+def test_OptunaCmaEsSearch():
+    solver = Solver(algo='OptunaCmaEsSearch')
+    solver.setParams(n_trial=10, callbacks=[callback])
+    prob.solve(solver, timelimit=1)
+
+def test_HyperoptTPESearch():
+    solver = Solver(algo='HyperoptTPESearch')
+    solver.setParams(n_trial=10, callbacks=[callback])
+    prob.solve(solver, timelimit=1)
+
+def test_SFLA():
+    solver = Solver(algo="SFLA")
+    solver.setParams(
+        n_memeplex=5, n_frog_per_memeplex=10, n_memetic_iter=100,
+        n_iter=1000, max_step=0.01, msg=True, callbacks=[callback],
+    )
+    prob.solve(solver=solver, timelimit=10)
+
+def test_PulpSearch1():
+    solver = Solver(algo='PulpSearch')
+    solver.setParams(n_trial=10, callbacks=[callback])
+    prob.solve(solver, timelimit=1)
+
+def test_PulpSearch2():
+    solver = Solver(algo='PulpSearch')
+    solver.setParams(n_trial=10, callbacks=[callback])
+    prob_with_const.solve(solver, timelimit=1)
+
+def test_ScipySearch1():
+    solver = Solver(algo='ScipySearch')
+    solver.setParams(n_trial=10, callbacks=[callback])
+    prob.solve(solver, timelimit=1)
+
+def test_ScipySearch2():
+    solver = Solver(algo='ScipySearch')
+    solver.setParams(n_trial=10, callbacks=[callback])
+    prob_with_const.solve(solver, timelimit=1)
 
