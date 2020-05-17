@@ -4,7 +4,7 @@ from itertools import combinations, product
 import numpy as np
 from tqdm import tqdm
 
-from flopt import Variable, Problem, CustomObject
+from flopt import Variable, Problem, CustomExpression
 from flopt import env as flopt_env
 from .base_dataset import BaseDataset, BaseInstance
 from flopt.env import setup_logger
