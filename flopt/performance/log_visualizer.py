@@ -10,8 +10,10 @@ import matplotlib.pyplot as plt
 
 from flopt import env as flopt_env
 from flopt.solvers.solver_utils.common import value2str
+from flopt.env import setup_logger
 
 performance_dir = flopt_env.performance_dir
+logger = setup_logger(__name__)
 
 
 class LogVisualizer:
@@ -126,12 +128,21 @@ class LogVisualizer:
                 save_fig(fig, f'{save_prefix}{dataset}.pdf')
 
 
-    def stat(self):
+    def stat(self, time=None, iteration=None):
         """display static information
+
+        Parameters
+        ----------
+        time : int or float
+            summary logs whose time less than time
+        iteration : int
+            summary logs whose iteration less than iteration
         """
+        logger.debug(f'summary logs time={time}, iteration={iteration}')
         datasets = set(dataset for dataset, _, _ in self.logs)
         for dataset in datasets:
             stat_message_header = [
+                "","",
                 f"{dataset}",
                 "="*len(dataset),
                 ""
@@ -148,8 +159,9 @@ class LogVisualizer:
                 obj_values = []
                 for i, solver in enumerate(solvers):
                     if (dataset, instance, solver) in self.logs:
-                        last_log = self.logs[dataset, instance, solver][-1]
-                        obj_value = last_log['obj_value']
+                        logs = self.logs[dataset, instance, solver]
+                        log = logs.getLog(time=time, iteration=iteration)
+                        obj_value = log['obj_value']
                         stat_message.append(value2str(obj_value))
                         obj_values.append(obj_value)
                     else:

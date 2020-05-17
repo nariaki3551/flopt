@@ -1,9 +1,7 @@
-.. module:: flopt.solvers
-
 Sequential Update Search
 ------------------------
 
-.. autoclass:: SequentialUpdateSearch
+.. autoclass:: flopt.solvers.SequentialUpdateSearch
 
 Random Search (RandomSearch)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -12,7 +10,7 @@ Random Search (RandomSearch)
 .. image:: https://img.shields.io/badge/Objective-any-orange.svg
 .. image:: https://img.shields.io/badge/Constraints-None-green.svg
 
-.. autoclass:: RandomSearch
+.. autoclass:: flopt.solvers.RandomSearch
 
 
 2-Opt
@@ -22,5 +20,4 @@ Random Search (RandomSearch)
 .. image:: https://img.shields.io/badge/Objective-any-orange.svg
 .. image:: https://img.shields.io/badge/Constraints-None-green.svg
 
-.. autoclass:: TwoOpt
-
+.. autoclass:: flopt.solvers.TwoOpt

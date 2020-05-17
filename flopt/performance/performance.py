@@ -4,10 +4,12 @@ from itertools import product
 
 from flopt import env as flopt_env
 from flopt import Problem, Solver, Solver_list
+from flopt.env import setup_logger
 from .custom_dataset import CustomDataset
 from .log_visualizer import LogVisualizer
 
 performance_dir = flopt_env.performance_dir
+logger = setup_logger(__name__)
 
 
 def compute(datasets, solvers='all',
@@ -132,7 +134,8 @@ def save_log(log, solver, dataset, instance, save_prefix):
 
 def performance(datasets, solver_names=None,
     xitem='time', yscale='linear',
-    plot_type='all', save_prefix=None, load_prefix=None):
+    plot_type='all', save_prefix=None,
+    time=None, iteration=None, load_prefix=None):
     """
     plot performance of each (dataset, algo) where algo is solver.name
 
@@ -152,6 +155,10 @@ def performance(datasets, solver_names=None,
         noshow: do not create figures.
     save_prefix : str
         prefix of fig save name
+    time : int or float
+        summary logs whose time less than time
+    iteration : int
+        summary logs whose iteration less than iteration
     load_prefix : str
         the path in which each log is saved
 
@@ -187,4 +194,4 @@ def performance(datasets, solver_names=None,
             save_prefix=save_prefix
         )
 
-    log_visualizer.stat()
+    log_visualizer.stat(time=time, iteration=iteration)

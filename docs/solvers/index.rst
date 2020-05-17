@@ -4,9 +4,10 @@ Solvers
 .. toctree::
     :maxdepth: 2
 
-    SequentialUpdateSearch
-    SwarmIntelligenceSearch
-    BasianSearch
+    SequentialUpdate
+    SwarmIntelligence
+    Basian
+    Evolution
 
 
 Solver Base class

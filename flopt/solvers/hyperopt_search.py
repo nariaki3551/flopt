@@ -34,9 +34,9 @@ class HyperoptTPESearch(BaseSearch):
     Parameters
     ----------
     n_trial : int
-      number of trials
+        number of trials
     show_progressbar : bool
-      whether display a progress bar of search
+        whether display a progress bar of search
     """
     def __init__(self):
         super().__init__()

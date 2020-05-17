@@ -5,6 +5,16 @@ from .base_optuna import OptunaSearch
 class OptunaCmaEsSearch(OptunaSearch):
     """
     CmaEsSearch with Optuna.
+    https://optuna.readthedocs.io/en/latest/reference/samplers.html#optuna.samplers.CmaEsSampler
+
+    Parameters
+    ----------
+    x0
+    sigma0
+    n_startup_trials
+    independent_sampler
+    warn_independe_sampling
+    seed
     """
     def __init__(self):
         super().__init__()
@@ -18,8 +28,10 @@ class OptunaCmaEsSearch(OptunaSearch):
         self.seed = None
 
     def createStudy(self):
+        # initial value
+        x0 = {var.name: var.value() for var in self.solution}
         sampler = CmaEsSampler(
-            x0 = self.x0,
+            x0 = x0,
             sigma0 = self.sigma0,
             n_startup_trials = self.n_startup_trials,
             independent_sampler = self.independent_sampler,

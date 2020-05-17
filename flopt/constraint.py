@@ -9,7 +9,7 @@ class Constraint:
 
     Parameters
     ----------
-    expression : Expression or CustomObject
+    expression : Expression family
         expression of constraint.
     type : str
         Constraint type. We must choice from eq, le or ge.
@@ -22,7 +22,10 @@ class Constraint:
         self.expression = expression
         self.type = _type
         self.name = None
-
+    
+    def value(self, solution=None):
+        return self.expression.value(solution)
+    
     def getVariables(self):
         return self.expression.getVariables()
 

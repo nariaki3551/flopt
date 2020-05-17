@@ -68,7 +68,7 @@ If you want to set initial value into each variable, you use `iniValue` option.
 Problem
 -----------
 
-We can create the objective function by arithmetic operation of variables for example :math:`2(3a+b)c^2 + 3`, or the CustomObject.
+We can create the objective function by arithmetic operation of variables for example :math:`2(3a+b)c^2 + 3`, or the CustomExpression.
 
 We set the object function in *Problem* using `+=` operation or `.setObjective` function.
 

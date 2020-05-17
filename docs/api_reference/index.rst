@@ -5,7 +5,7 @@ API Reference
     :maxdepth: 1
 
     Variable
-    CustomObject
+    CustomExpression
     Problem
     Solver
     Performance
