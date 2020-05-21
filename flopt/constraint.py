@@ -26,8 +26,18 @@ class Constraint:
     def value(self, solution=None):
         return self.expression.value(solution)
     
+    def feasible(self, solution=None):
+        exp_value = self.value(solution)
+        if self.type == 'eq':
+            return exp_value == 0
+        elif self.type == 'le':
+            return exp_value <= 0
+        elif self.type == 'ge':
+            return exp_value >= 0
+
     def getVariables(self):
         return self.expression.getVariables()
+
 
     def __str__(self):
         s  = f'Name: {self.name}\n'

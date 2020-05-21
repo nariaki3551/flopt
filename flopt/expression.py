@@ -12,9 +12,9 @@ class Expression:
 
     Parameters
     ----------
-    elmA : VarElement family or Expression family
+    elmA : Variable family or Expression family
       first element
-    elmB : VarElement family or Expression family
+    elmB : Variable family or Expression family
       later element
     operater : str
       operater between elmA and elmB
@@ -73,7 +73,7 @@ class Expression:
 
     def setVarDict(self, var_dict):
         self.var_dict = var_dict
-    
+
     def unsetVarDict(self):
         self.var_dict = None
 
@@ -84,7 +84,7 @@ class Expression:
             var_dict = {var.name : var for var in solution}
             self.setVarDict(var_dict)
             return self._value()
-        
+
     def _value(self):
         """
         Returns
@@ -103,7 +103,7 @@ class Expression:
                 self.elmB.setVarDict(self.var_dict)
             elif self.elmB.name in self.var_dict:
                 elmB = self.var_dict[self.elmB.name]
-        
+
 
         if self.operater == '+':
             return elmA.value() + elmB.value()
@@ -132,7 +132,7 @@ class Expression:
           return type of expressiono
         """
         return self.type
-    
+
     def getVariables(self):
         """
         Returns
@@ -178,7 +178,7 @@ class Expression:
 
     def __rmul__(self, other):
         return self * other
-        
+
     def __truediv__(self, other):
         if isinstance(other, (int, float)):
             other = ExpressionConst(other)
@@ -187,7 +187,7 @@ class Expression:
             return Expression(self, other, '/')
         else:
             return NotImplemented
-        
+
     def __rtruediv__(self, other):
         if isinstance(other, (int, float)):
             other = ExpressionConst(other)
@@ -252,19 +252,19 @@ class Expression:
 
     def __float__(self):
         return float(self.value())
-    
+
     def __pos__(self):
         return self
 
     def __hash__(self):
         return hash((hash(self.elmA), hash(self.elmB), hash(self.operater)))
-    
+
     def __eq__(self, other):
         return Constraint(self-other, 'eq')
-    
+
     def __le__(self, other):
         return Constraint(self-other, 'le')
-    
+
     def __ge__(self, other):
         return Constraint(self-other, 'ge')
 
@@ -312,7 +312,7 @@ class CustomExpression(Expression):
     .. note::
 
       The order of variables in the variables list must be the same as
-      the func argument. (However even the name does not have to be the same.)    
+      the func argument. (However even the name does not have to be the same.)
 
     In addition, we can use some operations ("+", "-", "*", "/") between CustomExpression and
     Variable, Expression and CustomExpression.
@@ -323,14 +323,14 @@ class CustomExpression(Expression):
     >>> obj = CustomExpression(user_func, [a])
     >>> obj.value()
     >>> 3
-    
+
     For example,
 
     >>> b = Variable('b', iniValue=1)
     >>> obj_b = obj + b  # 3+1
     >>> obj_b.value()
     >>> 4
-    >>> obj_b.variables
+    >>> obj_b.getVariables()
     >>> [VarElement("a", -10000000000.0, 10000000000.0, 3),
          VarElement("b", -10000000000.0, 10000000000.0, 1)]
 
@@ -359,7 +359,7 @@ class CustomExpression(Expression):
         value = self.func(*variables)
         if not isinstance(value, (int, float)):
             value = value.value()
-        
+
         self.unsetVarDict()
         return value
 
@@ -372,6 +372,8 @@ class CustomExpression(Expression):
             tmp.append(hash(var))
         return hash(tuple(tmp))
 
+    def __repr__(self):
+        return 'CustomExpression'
 
 
 class ExpressionConst(Expression):
@@ -393,10 +395,10 @@ class ExpressionConst(Expression):
 
     def getType(self):
         return self.type
-    
+
     def value(self):
         return self._value
-    
+
     def getVariables(self):
         # for getVariables() in Expression calss
         return set()
@@ -407,16 +409,20 @@ class ExpressionConst(Expression):
     def __hash__(self):
         return hash((self._value, self.type))
 
+    def __repr__(self):
+        s = f'ExpressionConst({self._value})'
+        return s
+
 
 # class ExpressionNeg(Expression):
 #     def __init__(self, expression):
 #         self.name = f'-({expression.name})'
 #         self.expression = expression
 #         self.var = var
-#    
+#
 #     def value(self):
 #         return - self.expression.value()
-#    
+#
 #     def getVariables(self):
 #         """for getVariables() in Expression calss"""
 #         return self.expression.getVariables()

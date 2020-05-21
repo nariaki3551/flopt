@@ -15,6 +15,7 @@ Welcome to flopt's documentation!
    solvers/index
    api_reference/index
    reference/index
+   examples/index
 
 Indices and tables
 ==================

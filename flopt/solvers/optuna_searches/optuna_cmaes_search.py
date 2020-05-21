@@ -4,7 +4,7 @@ from .base_optuna import OptunaSearch
 
 class OptunaCmaEsSearch(OptunaSearch):
     """
-    CmaEsSearch with Optuna.
+    CmaEsSearch of Optuna.
     https://optuna.readthedocs.io/en/latest/reference/samplers.html#optuna.samplers.CmaEsSampler
 
     Parameters

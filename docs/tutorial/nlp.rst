@@ -1,8 +1,8 @@
-Simple Non Linear Problem
-=========================
+Non Linear Problem
+==================
 
 Overview
--------------
+--------
 
 ::
 
@@ -41,16 +41,17 @@ This problem can be formulated using `flopt` as follows,
 
 
 Variable
------------
+--------
 
 We declear variables using :doc:`../api_reference/Variable`.
+
 ::
 
   0 <= a <= 1, a is integer
   1 <= b <= 2, b is continuous
   1 <= c <= 3, c is continuous
 
-In flopt,
+In flopt, we denote these as
 
 .. code-block:: python
 
@@ -58,15 +59,23 @@ In flopt,
   b = Variable(name='b', lowBound=1, upBound=2, cat='Continuous')
   c = Variable(name='c', lowBound=1, upBound=3, cat='Continuous')
 
-If you want to set initial value into each variable, you use `iniValue` option.
+, more simplify
 
 .. code-block:: python
 
-  b = Variable(name='b', lowBound=1, upBound=2, iniValue=1.5, cat='Continuous')
+  a = Variable(name='a', 0, 1, 'Integer')
+  b = Variable(name='b', 1, 2, 'Continuous')
+  c = Variable(name='c', 1, 3, 'Continuous')
+
+If we want to set initial value into each variable, we use `iniValue` option.
+
+.. code-block:: python
+
+  b = Variable(name='b', 1, 2, 'Continuous', iniValue=1.5)
 
 
 Problem
------------
+-------
 
 We can create the objective function by arithmetic operation of variables for example :math:`2(3a+b)c^2 + 3`, or the CustomExpression.
 
@@ -86,9 +95,9 @@ If we want to solve a maximize problem, then we set `sense='maximize'` (default 
 
 
 Solver
----------
+------
 
-We select algorithm for the problem we create. We can show the list of solvers by `flopt.Solver_list()`.
+We select algorithm from :doc:`../solvers/index` for the problem. We can see the list of available solvers by `flopt.Solver_list()`.
 
 .. code-block:: python
 
@@ -97,7 +106,7 @@ We select algorithm for the problem we create. We can show the list of solvers b
   # solver.setParams({'n_trial'; 1000, 'timelimit': 3600})  # same above
 
 Solve
---------
+-----
 
 .. code-block:: python
 
@@ -106,7 +115,7 @@ Solve
 
 
 Result
----------
+------
 
 The results of the solver are reflected in the problem and variable objects.
 

@@ -144,7 +144,7 @@ def performance(datasets, solver_names=None,
     datasets : list of Dataset or a Problem
         datasets name
     solver_names : list of str
-        solver names, if solver_names is None, all solvers in flopt is used.
+        solver names
     xitem : str
         x-label item of figure (time or iteration)
     yscale : str
@@ -172,9 +172,8 @@ def performance(datasets, solver_names=None,
         dataset_names = ['user']
     else:
         dataset_names = [datasets.name]
-
     if solver_names is None:
-        solver_names = flopt.Solver_list()
+        solver_names = Solver_list()
     elif not isinstance(solver_names, list):
         solver_names = [solver_names]
     if load_prefix is None:

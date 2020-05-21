@@ -30,13 +30,14 @@ def Variable(name, lowBound=-INI_BOUND, upBound=INI_BOUND, cat='Continuous', ini
 
     Returns
     -------
-    VarElement Family
-      return VarElement Family
+    Variable Family
+      return Variable Family
 
     Examples
     --------
-    Create Integer, Continuous and Binary Variable 
-    
+    Create Integer, Continuous and Binary Variable
+
+    >>> from flopt import Variable
     >>> a = Variable(name='a', lowBound=0, upBound=1, cat='Integer')
     >>> b = Variable(name='b', lowBound=1, upBound=2, cat='Continuous')
     >>> c = Variable(name='b', lowBound=-2, intValue=3, cat='Continuous')
@@ -45,6 +46,15 @@ def Variable(name, lowBound=-INI_BOUND, upBound=INI_BOUND, cat='Continuous', ini
     Create [lowBound, ..., upBound] range permutation variable
 
     >>> e = Variable(name='e', lowBound=0, upBound=10, cat='Permutation')
+
+    We can see the data of variable, print().
+
+    >>> print(e)
+    >>> Name: e
+    >>> Type    : VarPermutation
+    >>> Value   : [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    >>> lowBound: 0
+    >>> upBound : 10
     """
     if cat == 'Continuous':
         return VarContinuous(name, lowBound, upBound, iniValue)
@@ -60,7 +70,8 @@ def Variable(name, lowBound=-INI_BOUND, upBound=INI_BOUND, cat='Continuous', ini
 
 
 class VarElement:
-    """Base Variable class
+    """
+    Base Variable class
     """
     def __init__(self, name, lowBound, upBound, iniValue):
         self.name = name
@@ -106,8 +117,8 @@ class VarElement:
     def clip(self):
         """
         map in an feasible area by clipping.
-        ex. If value < lowBound, then value = lowBound.
-        Else if value > upBound, then value = upBound.
+        ex. value < lowBound -> value = lowBound,
+        value > upBound  -> value = upBound
         """
         if self._value < self.lowBound:
             self._value = self.lowBound
@@ -227,10 +238,10 @@ class VarElement:
 
     def __eq__(self, other):
         return Constraint(self-other, 'eq')
-    
+
     def __le__(self, other):
         return Constraint(self-other, 'le')
-    
+
     def __ge__(self, other):
         return Constraint(self-other, 'ge')
 
@@ -247,7 +258,8 @@ class VarElement:
 
 
 class VarInteger(VarElement):
-    """Ingeter Variable class
+    """
+    Ingeter Variable class
     """
     def __init__(self, name, lowBound, upBound, iniValue):
         super().__init__(name, ceil(lowBound), floor(upBound), iniValue)
@@ -259,7 +271,7 @@ class VarInteger(VarElement):
     def value(self):
         if not isinstance(self._value, int):
             warn = f"value is not int, so output value is casted into int"
-            logger.warning(warn)       
+            logger.warning(warn)
         return int(self._value)
 
     def setRandom(self):
@@ -267,12 +279,13 @@ class VarInteger(VarElement):
 
 
 class VarBinary(VarInteger):
-    """Binary Variable class
+    """
+    Binary Variable class
 
 
     .. note::
       Binary Variable behaves differently in "-" and "~" operation.
-      
+
       "-" is the subtraction as interger variable, and
       "~" is the inversion as binary (bool) variable.
 
@@ -318,7 +331,8 @@ class VarBinary(VarInteger):
 
 
 class VarContinuous(VarElement):
-    """Continuous Variable class
+    """
+    Continuous Variable class
     """
     def __init__(self, name, lowBound, upBound, iniValue):
         super().__init__(name, lowBound, upBound, iniValue)
@@ -332,7 +346,8 @@ class VarContinuous(VarElement):
 
 
 class VarPermutation(VarElement):
-    """Permutation Variable class
+    """
+    Permutation Variable class
 
     This has [lowBound, ... upBound] range permutation.
 
@@ -387,8 +402,7 @@ class VarPermutation(VarElement):
 
 
 class VarConst(VarElement):
-    """Constant Variable class
-
+    """
     It is the variable of constant value.
     We use it the operation including constant value.
     See VarElement class `__add__`, `__sub__`, and so on.

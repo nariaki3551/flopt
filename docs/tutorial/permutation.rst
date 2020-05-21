@@ -70,7 +70,7 @@ Objective function
 ------------------
 
 Then, we prepare the objective function. We can represent the TSP objective function by the function `tsp_dist` using the distance matrix D (D[i][j] is the distance between city i and j).
-In order for Solver to solve this problem, we use CustomExpression to transform this function. We use Variable `perm` as the argument of the function `tsp_dist`.
+In order for Solver to solve this problem, we use CustomExpression to transform this function. We use `perm` Variable as the argument of the function `tsp_dist`.
 
 .. code-block:: python
 
@@ -100,7 +100,7 @@ Result
 ------
 
 The result of the solver is reflected in Variable `perm`.
-We can get the best solution by `perm.value()`
+We can get the best solution by `.value()`
 
 .. code-block:: python
 

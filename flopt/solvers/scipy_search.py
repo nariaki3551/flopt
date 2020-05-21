@@ -77,16 +77,18 @@ class ScipySearch(BaseSearch):
         def callback(values):
             self.trial_ix += 1
             obj_value = func(values)
+            for var, value in zip(self.solution, values):
+                var.setValue(value)
             if time() > self.start_time + self.timelimit:
                 raise TimeoutError
             if obj_value < self.best_obj_value:
                 diff = self.best_obj_value - obj_value
-                for var, value in zip(self.solution, values):
-                    var.setValue(value)
                 self.updateSolution(self.solution, obj_value)
                 self.recordLog()
                 if self.msg and diff > 1e-8:
                     self.during_solver_message('*')
+            for _callback in self.callbacks:
+                _callback([self.solution], self.best_solution, self.best_obj_value)
 
         try:
             res = scipy.optimize.minimize(

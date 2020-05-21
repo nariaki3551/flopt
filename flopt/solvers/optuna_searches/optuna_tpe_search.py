@@ -4,7 +4,7 @@ from .base_optuna import OptunaSearch
 
 class OptunaTPESearch(OptunaSearch):
     """
-    Tree-structured Parzen Estimator (TPE) Sampling Search with Optuna.
+    Tree-structured Parzen Estimator (TPE) Sampling Search of Optuna.
     https://optuna.readthedocs.io/en/latest/reference/samplers.html#optuna.samplers.TPESampler
 
 

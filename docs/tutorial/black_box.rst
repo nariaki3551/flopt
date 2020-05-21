@@ -47,10 +47,10 @@ This problem can be formulated using `flopt` as follows,
 CustomExpression
 ----------------
 
-We can create a complex objective function using *CustomExpression*.
-We input two items to create CustomExpression.
+We can create complex or black-box functions using :doc:`../api_reference/CustomExpression`.
+We input two items to CustomExpression.
 One is the python function,
-and another is the list (or tuple or iterator) of variables in the same order as the arguments in the function.
+and another is the list or tuple of variables in the same order as the arguments in the function.
 
 .. code-block:: python
 
@@ -60,14 +60,14 @@ and another is the list (or tuple or iterator) of variables in the same order as
   custom_obj = CustomExpression(func=user_func, variables=[a, b])
 
 
-When the objective function with a list of variables as arguments, we have the following.
+When the function has a list of variables as arguments, we have the following.
 
 .. code-block:: python
 
   def obj(x):
       return sin(x[0])+cos(x[1])
 
-  x0 = Variable(name='x0', lowBound=1, upBound=2, cat='Continuous')
-  x1 = Variable(name='x1', lowBound=1, upBound=2, cat='Continuous')
+  x0 = Variable(name='x0', 1, 2, 'Continuous')
+  x1 = Variable(name='x1', 1, 2, 'Continuous')
   x = [x0, x1]
   custom_obj = CustomExpression(func=obj, variables=[x])

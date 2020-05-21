@@ -1,5 +1,5 @@
 from flopt.variable import VarElement
-from flopt.expression import Expression, ExpressionConst
+from flopt.expression import Expression, ExpressionConst, CustomExpression
 from flopt.constraint import Constraint
 from flopt.solution import Solution
 from flopt.solvers import Solver
@@ -18,7 +18,8 @@ class Problem:
     name : str
         name of problem
     sense : str, optional
-        minimize or maximize
+        minimize, maximize
+        (future satisfiability is added)
     obj : Expression family
         objective function
     variables : set of VarElement family
@@ -55,15 +56,14 @@ class Problem:
         self.variables = set()
         self.time = None
         self.prob_type = ['blackbox']
-    
+
     def setObjective(self, obj):
-        """
-        set objective function
+        """set objective function
 
         Parameters
         ----------
-        obj : int, float, VarElement family or Expression family
-            objective functioon
+        obj : int, float, Variable family or Expression family
+            objective function
         """
         if isinstance(obj, (int, float)):
             obj = ExpressionConst(obj)
@@ -71,10 +71,9 @@ class Problem:
             obj = Exprression(obj, 0, '+')
         self.obj = obj
         self.variables |= obj.getVariables()
-    
+
     def addConstraint(self, const, name=None):
-        """
-        add constraint
+        """add constraint
 
         Parameters
         ----------
@@ -88,7 +87,7 @@ class Problem:
         const.name = name
         self.constraints.append(const)
         self.variables |= const.getVariables()
-    
+
     def getObjectiveValue(self):
         """
         Returns
@@ -99,10 +98,7 @@ class Problem:
         return self.obj.value()
 
     def solve(self, solver=None, timelimit=None, msg=False):
-        """
-        solve this problem;
-        objective function is self.obj;
-        variables is self.variables
+        """solve this problem
 
         Parameters
         ----------
@@ -119,7 +115,7 @@ class Problem:
             return the status of solving
         Log
             return log object
-        """        
+        """
         if solver is None:
             solver = Solver(algo='RandomSearch')
         if timelimit is not None:

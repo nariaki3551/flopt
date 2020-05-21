@@ -4,7 +4,8 @@ Tutorial
 .. toctree::
    :maxdepth: 1
 
-   simple
+   nlp
+   nlp_constraint
    black_box
    permutation
-   satisfiability
+   max_satisfiability
