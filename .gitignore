@@ -2,3 +2,6 @@ performance/*
 docs/_*
 *__pycache__
 *.ipynb*
+build/
+dist/
+flopt.egg-info/
