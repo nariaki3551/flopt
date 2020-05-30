@@ -2,9 +2,21 @@
 
 A python Non-Linear Programming API with Heuristic approach.
 
+[![Documentation Status](https://readthedocs.org/projects/flopt/badge/?version=latest)](https://flopt.readthedocs.io/en/latest/?badge=latest) [![PyPI version](https://badge.fury.io/py/flopt.svg)](https://badge.fury.io/py/flopt) ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/flopt) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+
+[docs](https://flopt.readthedocs.io/en/latest/) | [tutorial](https://flopt.readthedocs.io/en/latest/tutorial/index.html)
+
 <br>
 
 ## Install
+
+**PyPI**
+
+```
+pip install flopt
+```
+
+**GitHub**
 
 ```
 git clone https://github.com/flab-coder/flopt.git
