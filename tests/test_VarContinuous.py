@@ -67,9 +67,6 @@ def test_VarInteger_cast2():
 def test_VarInteger_hash():
     hash(b)
 
-def test_VarInteger_eq():
-    assert (b == c) is False
-
 # base function
 def test_VarContinuous_getType():
     assert b.getType() == 'VarContinuous'

@@ -4,13 +4,15 @@ from itertools import product
 
 from flopt import env as flopt_env
 from flopt import Problem, Solver, Solver_list
+from flopt.env import setup_logger
 from .custom_dataset import CustomDataset
 from .log_visualizer import LogVisualizer
 
 performance_dir = flopt_env.performance_dir
+logger = setup_logger(__name__)
 
 
-def compute(datasets, solvers='all', 
+def compute(datasets, solvers='all',
     timelimit=None, msg=True, save_prefix=None):
     """
     Measure the performance of (dataset, solver)
@@ -72,8 +74,8 @@ def compute(datasets, solvers='all',
         # visualize the performance
         log_visualizer = flopt.performance.LogVisualizer(logs)
         lov_visualizer.plot()
-        
-    
+
+
     We can use user defined problem as dataset
 
     .. code-block:: python
@@ -106,11 +108,14 @@ def compute(datasets, solvers='all',
 
     for dataset in datasets:
         for instance in dataset:
+            print(instance)
             for solver in solvers:
                 solver.reset()
                 formulatable, prob = instance.createProblem(solver)
                 if not formulatable:
                     continue
+                best_bd = instance.getBestValue()
+                solver.setParams(best_bd=best_bd)
                 state, log = prob.solve(solver=solver, msg=msg)
                 save_log(log, solver, dataset, instance, save_prefix)
                 logs[dataset.name, instance.name, solver.name] = log
@@ -127,21 +132,35 @@ def save_log(log, solver, dataset, instance, save_prefix):
         pickle.dump(log, pf)
 
 
-def performance(datasets, solver_names=Solver_list(),
-    xitem='time', load_prefix=None):
+def performance(datasets, solver_names=None,
+    xitem='time', yscale='linear',
+    plot_type='all', save_prefix=None,
+    time=None, iteration=None, load_prefix=None):
     """
     plot performance of each (dataset, algo) where algo is solver.name
 
     Parameters
     ----------
     datasets : list of Dataset or a Problem
-      datasets name
+        datasets name
     solver_names : list of str
-      solver names
+        solver names
     xitem : str
-      x-label item of figure (time or iteration)
+        x-label item of figure (time or iteration)
+    yscale : str
+        linear or log
+    plot_type : str
+        all: create figures for each dataset.
+        each: create figures for each instance.
+        noshow: do not create figures.
+    save_prefix : str
+        prefix of fig save name
+    time : int or float
+        summary logs whose time less than time
+    iteration : int
+        summary logs whose iteration less than iteration
     load_prefix : str
-      the path in which each log is saved
+        the path in which each log is saved
 
     See Also
     --------
@@ -153,7 +172,9 @@ def performance(datasets, solver_names=Solver_list(),
         dataset_names = ['user']
     else:
         dataset_names = [datasets.name]
-    if not isinstance(solver_names, list):
+    if solver_names is None:
+        solver_names = Solver_list()
+    elif not isinstance(solver_names, list):
         solver_names = [solver_names]
     if load_prefix is None:
         load_prefix = performance_dir
@@ -163,4 +184,13 @@ def performance(datasets, solver_names=Solver_list(),
         solver_names=solver_names,
         datasets=dataset_names,
     )
-    log_visualizer.plot(xitem=xitem)
+
+    if not plot_type == "noshow":
+        log_visualizer.plot(
+            xitem=xitem,
+            yscale=yscale,
+            plot_type=plot_type,
+            save_prefix=save_prefix
+        )
+
+    log_visualizer.stat(time=time, iteration=iteration)

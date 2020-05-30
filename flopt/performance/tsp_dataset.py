@@ -1,8 +1,16 @@
 from math import sqrt
+from itertools import combinations, product
+
 import numpy as np
-from flopt import Variable, Problem, CustomObject
+from tqdm import tqdm
+
+from flopt import Variable, Problem, CustomExpression
 from flopt import env as flopt_env
-from .base_dataset import BaseDataset
+from .base_dataset import BaseDataset, BaseInstance
+from flopt.env import setup_logger
+
+
+logger = setup_logger(__name__)
 
 # instance problems
 tsp_storage = f'{flopt_env.datasets_dir}/tspLib/tsp'
@@ -19,7 +27,7 @@ class TSPDataset(BaseDataset):
     def __init__(self):
         self.name = 'tsp'
         self.instance_names = [
-            'gr17',  'pa561',
+            'test8',  'pa561',
             'gr24',  'pr1002',
             'fri26', 'fl3795',
             'gr120', 'rl5915'
@@ -108,7 +116,7 @@ def read_node_coord(f, edge_weight_type, dim, D):
 
 
 
-class TSPInstance:
+class TSPInstance(BaseInstance):
     """
     TSP Instance
 
@@ -128,6 +136,7 @@ class TSPInstance:
         self.dim = dim
         self.D = D  # Distance matrix
         self.C = C  # Node Coordinate data
+        logger.debug(self.__str__(detail=True))
 
     def createProblem(self, solver):
         """
@@ -145,12 +154,14 @@ class TSPInstance:
           (true, prob formulated according to solver)
         """
         if 'permutation' in solver.can_solve_problems:
-            return True, self.createProblemPerm()
+            return True, self.createPermProblem()
+        elif 'lp' in solver.can_solve_problems:
+            return True, self.createLpProblem()
         else:
             print('this instance only can be `permutation` formulation')
             return False, None
 
-    def createProblemPerm(self):
+    def createPermProblem(self):
         # Variables
         perm = Variable('perm', lowBound=0, upBound=self.dim-1, cat='Permutation')
 
@@ -160,11 +171,37 @@ class TSPInstance:
             for head, tail in zip(perm, perm[1:]+[perm[0]]):
                 distance += self.D[head][tail]
             return distance
-        tsp_obj = CustomObject(func=tsp_dist, variables=[perm])
+        tsp_obj = CustomExpression(func=tsp_dist, variables=[perm])
 
         # Problem
         prob = Problem(name=f'TSP:{self.name}')
-        prob.setObjective(tsp_obj)
+        prob += tsp_obj
+        return prob
+
+    def createLpProblem(self):
+        # Variables
+        cities = list(range(self.dim))
+        x = {(i, j):Variable(f'x{i}_{j}', cat='Binary') for i, j in product(cities, cities)}
+
+        # Problem
+        prob = Problem(name=f'TSP(LP):{self.name}')
+
+        # Objective
+        tsp_obj = sum(self.D[i][j]*x[i, j] for i, j in product(cities, cities) if i != j)
+        prob += tsp_obj
+
+        # Constants (flow condition)
+        for i in cities:
+            prob += sum(x[i, j] for j in cities if j != i) == 1
+            prob += sum(x[j, i] for j in cities if j != i) == 1
+
+        # Connstants (remove subtour)
+        subsets = []
+        for n_cities in range(2, self.dim-1):
+            for subset in combinations(cities, n_cities):
+                subsets.append(subset)
+        for subset in tqdm(subsets):
+            prob += sum(x[i, j] for i, j in product(subset, subset)) <= n_cities - 1
         return prob
 
     def __str__(self, detail=False):

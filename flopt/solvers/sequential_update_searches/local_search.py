@@ -2,8 +2,13 @@ import random
 from .base_sequential_update import SequentialUpdateSearch
 
 class TwoOpt(SequentialUpdateSearch):
-    """
-    2-Opt Search for permutation optimization problem.
+    """2-Opt: a kind of local search for permutation.
+
+    2-Opt applies neighborhood of swapping a edge.
+    Example, we have perm = [0, 1, 2, ..., n-1],
+    [0, 1, .., i-1, j, j-1, ..., i+1, i, j+1, ..., n] is in
+    neighborhood of perm for all i, j in {0..n} and i is neq j.
+
     """
     def __init__(self):
         super().__init__()

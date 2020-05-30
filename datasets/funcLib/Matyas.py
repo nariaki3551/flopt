@@ -3,7 +3,7 @@ from flopt import Variable
 def create_objective(*args, **kwargs):
     def obj(x):
         x1, x2 = x
-        return (x1+2*x2-7)**2 + (2*x1+x2-5)**2
+        return 0.26*(x1*x1+x2*x2)-0.48*x1*x2
     return obj
 
 def create_variables(*args, **kwargs):
@@ -18,3 +18,5 @@ def create_variables(*args, **kwargs):
     ]
     return variables
 
+def minimum_obj(*args, **kwargs):
+    return 0

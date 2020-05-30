@@ -69,9 +69,6 @@ def test_VarInteger_cast2():
 def test_VarInteger_hash():
     hash(a)
 
-def test_VarInteger_eq():
-    assert (a == b) is False
-
 # base function
 def test_VarInteger_getType():
     assert a.getType() == 'VarInteger'

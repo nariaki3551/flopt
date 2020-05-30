@@ -16,7 +16,7 @@ This problem can be formulated using `flopt` as follows,
 
 .. code-block:: python
 
-  from flopt import Variable, CustomObject, Problem, Solver
+  from flopt import Variable, CustomExpression, Problem, Solver
 
   # variables
   a = Variable(name='a', lowBound=0, upBound=1, cat='Integer')
@@ -26,10 +26,10 @@ This problem can be formulated using `flopt` as follows,
   def simulator(a, b):
       return simulator_func(a, b)
 
-  custom_obj = CustomObject(func=user_func, variables=[a, b])
+  custom_obj = CustomExpression(func=user_func, variables=[a, b])
 
   # problem
-  prob = Problem(name='CustomObject')
+  prob = Problem(name='CustomExpression')
   prob += custom_obj
 
   # solver
@@ -44,30 +44,30 @@ This problem can be formulated using `flopt` as follows,
   print('b', b.value())
 
 
-CustomObject
-------------
+CustomExpression
+----------------
 
-We can create a complex objective function using *CustomObject*.
-We input two items to create CustomObject.
+We can create complex or black-box functions using :doc:`../api_reference/CustomExpression`.
+We input two items to CustomExpression.
 One is the python function,
-and another is the list (or tuple or iterator) of variables in the same order as the arguments in the function.
+and another is the list or tuple of variables in the same order as the arguments in the function.
 
 .. code-block:: python
 
   def simulator(a, b):
       return simulator_func(a, b)
 
-  custom_obj = CustomObject(func=user_func, variables=[a, b])
+  custom_obj = CustomExpression(func=user_func, variables=[a, b])
 
 
-When the objective function with a list of variables as arguments, we have the following.
+When the function has a list of variables as arguments, we have the following.
 
 .. code-block:: python
 
   def obj(x):
       return sin(x[0])+cos(x[1])
 
-  x0 = Variable(name='x0', lowBound=1, upBound=2, cat='Continuous')
-  x1 = Variable(name='x1', lowBound=1, upBound=2, cat='Continuous')
+  x0 = Variable(name='x0', 1, 2, 'Continuous')
+  x1 = Variable(name='x1', 1, 2, 'Continuous')
   x = [x0, x1]
-  custom_obj = CustomObject(func=obj, variables=[x])
+  custom_obj = CustomExpression(func=obj, variables=[x])

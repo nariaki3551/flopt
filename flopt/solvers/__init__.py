@@ -1,15 +1,17 @@
-from .sequential_update_searches import(
+from flopt.solvers.sequential_update_searches import(
     SequentialUpdateSearch,
     RandomSearch,
     TwoOpt
 )
-from .optuna_searches import (
+from flopt.solvers.optuna_searches import (
     OptunaSearch,
     OptunaTPESearch,
     OptunaCmaEsSearch
 )
-from .hyperopt_search import HyperoptTPESearch
-from .swarm_intelligence_searches import ShuffledFrogLeapingSearch
+from flopt.solvers.hyperopt_search import HyperoptTPESearch
+from flopt.solvers.swarm_intelligence_searches import ShuffledFrogLeapingSearch
+from flopt.solvers.pulp_search import PulpSearch
+from flopt.solvers.scipy_search import ScipySearch
 
 algos = {
     'RandomSearch'     : RandomSearch,
@@ -17,7 +19,9 @@ algos = {
     'OptunaTPESearch'  : OptunaTPESearch,
     'OptunaCmaEsSearch': OptunaCmaEsSearch,
     'HyperoptTPESearch': HyperoptTPESearch,
-    'SFLA'             : ShuffledFrogLeapingSearch
+    'SFLA'             : ShuffledFrogLeapingSearch,
+    'PulpSearch'       : PulpSearch,
+    'ScipySearch'      : ScipySearch,
 }
 
 def Solver(algo='RandomSearch'):

@@ -3,7 +3,11 @@ from copy import deepcopy
 import pulp
 from pulp import LpMinimize, LpMaximize
 from flopt import Problem, Solution
-from flopt.problem import ObjectiveFunction
+from flopt.env import setup_logger
+
+
+logger = setup_logger(__name__)
+
 
 class LpVariable(pulp.LpVariable):
     def __init__(self, name, lowBound, upBound, cat):
@@ -22,6 +26,7 @@ class LpVariable(pulp.LpVariable):
 class LpProblem(Problem):
     def __init__(self, name=None, sense='minimize'):
         super().__init__(name, sense=sense)
+        self.type = 'LpProblem'
 
     def solve(self, solver=None, timelimit=None, msg=False):
         """
@@ -47,7 +52,6 @@ class LpProblem(Problem):
         """
 
         # convert for pulp
-        obj = ObjectiveFunction(deepcopy(self.obj))
         solution = Solution('s', self.variables)
 
         # conver VarElement -> LpVariable
@@ -69,9 +73,18 @@ class LpProblem(Problem):
         lp_solution._variables = lp_variables
 
         # conver Problem -> pulp.LpProblem
+        name = '' if self.name is None else self.name
         sense = LpMinimize if self.sense == 'minimize' else LpMaximize
-        lpProb = pulp.LpProblem(name=self.name, sense=sense)
-        lpProb.setObjective(obj.value(lp_solution))
+        lpProb = pulp.LpProblem(name=name, sense=sense)
+        lpProb.setObjective(self.obj.value(lp_solution))
+        for const in self.constraints:
+            const_obj = ObjectiveFunction(const)
+            if const.type == 'eq':
+                lpProb += const_obj.value(lp_solution) == 0
+            elif const.type == 'le':
+                lpProb += const_obj.value(lp_solution) <= 0
+            elif const.type == 'ge':
+                lpProb += const_obj.value(lp_solution) >= 0
 
         # solver
         if solver is None:

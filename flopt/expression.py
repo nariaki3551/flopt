@@ -1,3 +1,9 @@
+from flopt.constraint import Constraint
+from flopt.env import setup_logger
+
+logger = setup_logger(__name__)
+
+
 class Expression:
     """
 
@@ -6,9 +12,9 @@ class Expression:
 
     Parameters
     ----------
-    elmA : VarElement family or Expression
+    elmA : Variable family or Expression family
       first element
-    elmB : VarElement family or Expression
+    elmB : Variable family or Expression family
       later element
     operater : str
       operater between elmA and elmB
@@ -67,11 +73,19 @@ class Expression:
 
     def setVarDict(self, var_dict):
         self.var_dict = var_dict
-    
-    def unsetVarDict(self, var_dict):
+
+    def unsetVarDict(self):
         self.var_dict = None
-        
-    def value(self):
+
+    def value(self, solution=None):
+        if solution is None:
+            return self._value()
+        else:
+            var_dict = {var.name : var for var in solution}
+            self.setVarDict(var_dict)
+            return self._value()
+
+    def _value(self):
         """
         Returns
         -------
@@ -89,7 +103,7 @@ class Expression:
                 self.elmB.setVarDict(self.var_dict)
             elif self.elmB.name in self.var_dict:
                 elmB = self.var_dict[self.elmB.name]
-        
+
 
         if self.operater == '+':
             return elmA.value() + elmB.value()
@@ -118,7 +132,7 @@ class Expression:
           return type of expressiono
         """
         return self.type
-    
+
     def getVariables(self):
         """
         Returns
@@ -139,13 +153,7 @@ class Expression:
             return NotImplemented
 
     def __radd__(self, other):
-        if isinstance(other, (int, float)):
-            other = ExpressionConst(other)
-            return Expression(other, self, '+')
-        elif isinstance(other, Expression):
-            return Expression(other, self, '+')
-        else:
-            return NotImplemented
+        return self + other
 
     def __sub__(self, other):
         if isinstance(other, (int, float)):
@@ -170,7 +178,7 @@ class Expression:
 
     def __rmul__(self, other):
         return self * other
-        
+
     def __truediv__(self, other):
         if isinstance(other, (int, float)):
             other = ExpressionConst(other)
@@ -179,7 +187,7 @@ class Expression:
             return Expression(self, other, '/')
         else:
             return NotImplemented
-        
+
     def __rtruediv__(self, other):
         if isinstance(other, (int, float)):
             other = ExpressionConst(other)
@@ -244,25 +252,129 @@ class Expression:
 
     def __float__(self):
         return float(self.value())
-    
+
     def __pos__(self):
         return self
 
     def __hash__(self):
         return hash((hash(self.elmA), hash(self.elmB), hash(self.operater)))
-    
+
     def __eq__(self, other):
-        return hash(self) == hash(other)
+        return Constraint(self-other, 'eq')
+
+    def __le__(self, other):
+        return Constraint(self-other, 'le')
+
+    def __ge__(self, other):
+        return Constraint(self-other, 'ge')
 
     def __str__(self):
         s  = f'Name: {self.name}\n'
-        s += f'  Type    : Expression\n'
+        s += f'  Type    : {self.type}\n'
         s += f'  Value   : {self.value()}\n'
         return s
 
     def __repr__(self):
         s = f'Expression({self.elmA_name}, {self.elmB_name}, {self.operater})'
         return s
+
+
+
+class CustomExpression(Expression):
+    """
+    Objective function from using user defined function.
+
+    Parameters
+    ----------
+    func : function
+      objective function
+    variables : list
+      variables
+
+    Examples
+    --------
+
+    We have the objective funcion :math:`simulater(a, b)` where simulater is
+    a black box function, a and b are continuous variable.
+    In this case, we can input objective function into Problem
+    by using CustomExpression as follows.
+
+    .. code-block:: python
+
+      a = Variable('a', cat='Continuous')
+      b = Variable('b', cat='Continuous')
+      def user_simulater(a, b):
+          return simulater(a, b)
+      obj = CustomExpression(func=user_simulater, variables=[a, b])
+      prob = Problem('simulater')
+      prob += obj
+
+    .. note::
+
+      The order of variables in the variables list must be the same as
+      the func argument. (However even the name does not have to be the same.)
+
+    In addition, we can use some operations ("+", "-", "*", "/") between CustomExpression and
+    Variable, Expression and CustomExpression.
+
+    >>> def user_func(x):
+    >>>     return x
+    >>> a = Variable('a', iniValue=3)
+    >>> obj = CustomExpression(user_func, [a])
+    >>> obj.value()
+    >>> 3
+
+    For example,
+
+    >>> b = Variable('b', iniValue=1)
+    >>> obj_b = obj + b  # 3+1
+    >>> obj_b.value()
+    >>> 4
+    >>> obj_b.getVariables()
+    >>> [VarElement("a", -10000000000.0, 10000000000.0, 3),
+         VarElement("b", -10000000000.0, 10000000000.0, 1)]
+
+    See Also
+    --------
+    flopt.expression.Expression
+    """
+    def __init__(self, func, variables):
+        self.func = func
+        self.variables = variables
+        self.type = 'CustomExpression'
+        self.var_dict = None
+
+        res = (func(*variables))
+        if isinstance(res, (int, float)):
+            self.name = f'{res}'
+        else:
+            self.name = res.name
+
+    def _value(self):
+        if self.var_dict is None:
+            variables = self.variables
+        else:
+            variables = [self.var_dict[var.name] for var in self.variables]
+
+        value = self.func(*variables)
+        if not isinstance(value, (int, float)):
+            value = value.value()
+
+        self.unsetVarDict()
+        return value
+
+    def getVariables(self):
+        return set(self.variables)
+
+    def __hash__(self):
+        tmp = [hash(self.func)]
+        for var in self.variables:
+            tmp.append(hash(var))
+        return hash(tuple(tmp))
+
+    def __repr__(self):
+        return 'CustomExpression'
+
 
 class ExpressionConst(Expression):
     """
@@ -283,10 +395,10 @@ class ExpressionConst(Expression):
 
     def getType(self):
         return self.type
-    
+
     def value(self):
         return self._value
-    
+
     def getVariables(self):
         # for getVariables() in Expression calss
         return set()
@@ -297,16 +409,20 @@ class ExpressionConst(Expression):
     def __hash__(self):
         return hash((self._value, self.type))
 
+    def __repr__(self):
+        s = f'ExpressionConst({self._value})'
+        return s
+
 
 # class ExpressionNeg(Expression):
 #     def __init__(self, expression):
 #         self.name = f'-({expression.name})'
 #         self.expression = expression
 #         self.var = var
-#    
+#
 #     def value(self):
 #         return - self.expression.value()
-#    
+#
 #     def getVariables(self):
 #         """for getVariables() in Expression calss"""
 #         return self.expression.getVariables()

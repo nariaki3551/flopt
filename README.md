@@ -14,13 +14,14 @@ git clone https://github.com/flab-coder/flopt.git
 
 ## Formulatable problems in flopt
 
-- Non-Linear problem (has no constrainets)
+- Non-Linear problem
 
   ```
   minimize  2*(3*a+b)*c**2 + 3
-  s.t       0 <= a <= 1
+  s.t       a + b * c <= 3
+            0 <= a <= 1
             1 <= b <= 2
-            1 <= c <= 3
+                 c <= 3
   ```
 
 - BlackBox problem
@@ -57,11 +58,12 @@ from flopt import Variable, Problem, Solver
 # Variables
 a = Variable('a', lowBound=0, upBound=1, cat='Integer')
 b = Variable('b', lowBound=1, upBound=2, cat='Continuous')
-c = Variable('c', lowBound=1, upBound=3, cat='Continuous')
+c = Variable('c', lowBound=None, upBound=3, cat='Continuous')
 
 # Problem
 prob = Problem()
 prob += 2*(3*a+b)*c**2+3   # set the objective function
+prob += a + b*c <= 3       # set the constraint
 
 # Solver
 solver = Solver(algo='RandomSearch')  # select the heuristic algorithm
@@ -77,18 +79,18 @@ print('c', c.value())
 
 <br>
 
-In addition, you can represent any objective function by *CustomObject*
+In addition, you can represent any objective function by *CustomExpression*
 
 ```python
-from flopt import CustomObject
+from flopt import CustomExpression
 
 from math import sin, cos
 def user_func(a, b, c):
     return (0.7*a + 0.3*cos(b)**2 + 0.1*sin(c))*abs(c)
 
-custom_obj = CustomObject(func=user_func, variables=[a, b, c])
+custom_obj = CustomExpression(func=user_func, variables=[a, b, c])
 
-prob = Problem(name='CustomObject')
+prob = Problem(name='CustomExpression')
 prob += custom_obj
 ```
 
@@ -106,7 +108,7 @@ def tsp_dist(perm):
     for head, tail in zip(perm, perm[1:]+[perm[0]]):
         distance += D[head][tail]  # D is the distance matrix
     return distance
-tsp_obj = CustomObject(func=tsp_dist, variables=[perm])
+tsp_obj = CustomExpression(func=tsp_dist, variables=[perm])
 
 # Problem
 prob = Problem(name='TSP')

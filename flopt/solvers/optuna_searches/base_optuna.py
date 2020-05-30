@@ -9,6 +9,12 @@ from flopt.solvers.solver_utils import (
     during_solver_message,
     end_solver_message
 )
+from flopt.env import setup_logger
+import flopt.constants
+
+
+logger = setup_logger(__name__)
+
 
 class OptunaSearch(BaseSearch):
     """
@@ -21,7 +27,7 @@ class OptunaSearch(BaseSearch):
     Parameters
     ----------
     n_trial : int
-      number of trials
+        number of trials
     """
     def __init__(self):
         super().__init__()
@@ -35,15 +41,23 @@ class OptunaSearch(BaseSearch):
         pass
 
     def search(self):
-        status = 0
+        if self.constraints:
+            logger.error("This Solver does not support the problem with constraints.")
+            status = flopt.constants.SOLVER_ABNORMAL_TERMINATE
+            return status
+
+        status = flopt.constants.SOLVER_NORMAL_TERMINATE
         self.startProcess()
         self.createStudy()
-        self.study.optimize(self.objective, self.n_trial, timeout=self.timelimit)
+        try:
+            self.study.optimize(self.objective, self.n_trial, timeout=self.timelimit)
+        except Exception as e:
+            logger.info(f'Exception {e}')
+            status = flopt.constants.SOLVER_ABNORMAL_TERMINATE
         self.closeProcess()
         return status
 
     def objective(self, trial):
-
         # set value into self.solution
         self.trial_ix += 1
         for var in self.solution:
@@ -64,7 +78,7 @@ class OptunaSearch(BaseSearch):
             self.updateSolution(self.solution, obj_value)
             self.recordLog()
             if self.msg:
-                during_solver_message('*', obj_value, time()-self.start_time, self.trial_ix)
+                self.during_solver_message('*')
 
         # callback
         for callback in self.callbacks:
@@ -78,8 +92,7 @@ class OptunaSearch(BaseSearch):
 
         if self.msg:
             during_solver_message_header()
-            during_solver_message('S', self.best_obj_value,
-                time()-self.start_time, self.trial_ix)
+            self.during_solver_message('S')
 
     def closeProcess(self):
         self.recordLog()

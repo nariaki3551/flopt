@@ -2,9 +2,6 @@ import time
 import random
 
 import numpy as np
-# import matplotlib
-# matplotlib.use('Pdf')
-# from matplotlib import pyplot as plt
 
 from flopt.solvers.base import BaseSearch
 from flopt.solvers.solver_utils import (
@@ -14,6 +11,11 @@ from flopt.solvers.solver_utils import (
     during_solver_message,
     end_solver_message
 )
+from flopt.env import setup_logger
+import flopt.constants
+
+
+logger = setup_logger(__name__)
 
 
 class ShuffledFrogLeapingSearch(BaseSearch):
@@ -60,15 +62,22 @@ class ShuffledFrogLeapingSearch(BaseSearch):
         self.max_step = int(1e10)
 
     def search(self):
+        if self.constraints:
+            logger.error("This Solver does not support the problem with constraints.")
+            status = flopt.constants.SOLVER_ABNORMAL_TERMINATE
+            return status
+
         self.startProcess()
+        status = flopt.constants.SOLVER_NORMAL_TERMINATE
+
         for i in range(self.n_trial):
             self.trial_ix += 1
             
             # check time limit
             if time.time() > self.start_time + self.timelimit:
                 self.closeProcess()
-                self.status = 1
-                return self.status
+                status = flopt.constants.SOLVER_TIMELIMIT_TERMINATE
+                return status
 
             self._memetic_evolution()
 
@@ -77,20 +86,18 @@ class ShuffledFrogLeapingSearch(BaseSearch):
                 self.updateSolution(self.frogs[0])
                 self.best_obj_value = obj_value
                 if self.msg:
-                    during_solver_message('*', obj_value,
-                        time.time()-self.start_time, self.trial_ix)
+                    self.during_solver_message('*')
                 self.recordLog()
 
             if self.msg and i%100 == 0:
-                during_solver_message(' ', obj_value,
-                    time.time()-self.start_time, self.trial_ix)
+                self.during_solver_message(' ')
 
             # callback
             for callback in self.callbacks:
                 callback(self.frogs, self.best_solution, self.best_obj_value)
 
         self.closeProcess()
-        return self.status
+        return status
 
     def _memetic_evolution(self):
         '''
@@ -146,7 +153,6 @@ class ShuffledFrogLeapingSearch(BaseSearch):
                                               for j in range(M)]
 
     def startProcess(self):
-        self.status = 0
         M = self.n_memeplex
         N = self.n_frog_per_memeplex
         self.frogs = [self.solution.clone() for _ in range(M*N)]
@@ -160,8 +166,7 @@ class ShuffledFrogLeapingSearch(BaseSearch):
         self.recordLog()
         if self.msg:
             during_solver_message_header()
-            during_solver_message('S', self.best_obj_value,
-                                  time.time() - self.start_time, self.trial_ix)
+            self.during_solver_message('S')
 
     def closeProcess(self):
         self.recordLog()

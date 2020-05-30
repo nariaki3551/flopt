@@ -4,19 +4,21 @@ from .base_optuna import OptunaSearch
 
 class OptunaTPESearch(OptunaSearch):
     """
-    Tree-structured Parzen Estimator (TPE) Sampling Search with Optuna.
+    Tree-structured Parzen Estimator (TPE) Sampling Search of Optuna.
+    https://optuna.readthedocs.io/en/latest/reference/samplers.html#optuna.samplers.TPESampler
+
 
     Parameters
     ----------
     name : str
-      name
+        name
     consider_prior : bool
     consider_magic_clip : bool
     consider_endpoints : bool
     n_startup_trials : int
     n_ei_candidates : int
     seed : float
-      seed of random generater
+        seed of random generater
     """
     def __init__(self):
         super().__init__()
