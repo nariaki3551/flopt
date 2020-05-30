@@ -67,7 +67,7 @@ In flopt, we denote these as
   b = Variable(name='b', 1, 2, 'Continuous')
   c = Variable(name='c', 1, 3, 'Continuous')
 
-If we want to set initial value into each variable, we use `iniValue` option.
+If we want to set an initial value into each variable, we use `iniValue` option.
 
 .. code-block:: python
 
