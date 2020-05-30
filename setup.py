@@ -20,7 +20,7 @@ setup(
             "tspLib/sop/*.sop"
         ]
     },
-    version='0.1.1.2',
+    version='0.2',
     license='MIT',
     install_requires=[
         'numpy',

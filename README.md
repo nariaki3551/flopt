@@ -58,7 +58,7 @@ from flopt import Variable, Problem, Solver
 # Variables
 a = Variable('a', lowBound=0, upBound=1, cat='Integer')
 b = Variable('b', lowBound=1, upBound=2, cat='Continuous')
-c = Variable('c', lowBound=None, upBound=3, cat='Continuous')
+c = Variable('c', upBound=3, cat='Continuous')
 
 # Problem
 prob = Problem()
@@ -66,7 +66,7 @@ prob += 2*(3*a+b)*c**2+3   # set the objective function
 prob += a + b*c <= 3       # set the constraint
 
 # Solver
-solver = Solver(algo='RandomSearch')  # select the heuristic algorithm
+solver = Solver(algo='ScipySearch')  # select the heuristic algorithm
 solver.setParams(n_trial=1000)  # setting of the hyper parameters
 prob.solve(solver, msg=True)    # run solver to solve the problem
 
