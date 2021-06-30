@@ -99,3 +99,27 @@ def test_Expression_hash():
 
 def test_ExpressionConst_hash():
     hash(ExpressionConst(0))
+
+def test_Expression_maxDegree1():
+    assert a.maxDegree() == 1
+
+def test_Expression_maxDegree3():
+    assert (a*a).maxDegree() == 2
+
+def test_Expression_maxDegree4():
+    assert (a*c).maxDegree() == 2   # a*(a*b)
+
+def test_Expression_maxDegree4():
+    assert (a*a*b*c).maxDegree() == 3  # a*a*(a+b)
+
+
+def test_Expression_toIsing():
+    import numpy as np
+    x = np.array([a, b])
+    J = np.array([
+        [1, 2],
+        [0, 1],
+    ])
+    h = np.array([1, 2])
+    obj = (x.T).dot(J).dot(x) + (h.T).dot(x)
+    obj.toIsing()

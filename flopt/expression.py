@@ -143,6 +143,107 @@ class Expression:
         variables = self.elmA.getVariables() | self.elmB.getVariables()
         return variables
 
+    def hasCustomExpression(self):
+        """
+        Returns
+        -------
+        bool
+            return true if CustomExpression object is in this expression else false
+        """
+        return (isinstance(self.elmA, Expression) and self.elmA.hasCustomExpression())\
+                or (isinstance(self.elmB, Expression) and self.elmB.hasCustomExpression())
+
+    def maxDegree(self):
+        """
+        Returns
+        -------
+        int
+            return the max degree of variants
+
+        Note
+        ----
+        if the CustomExpression object is in this expresson,
+        return Unknown
+        """
+        if self.hasCustomExpression():
+            return 'Unknown'
+        elif self.operater in {'%', '&', '|'}:
+            return 'Unknown'
+        else:
+            import sympy
+            expr = sympy.sympify(self.name)
+            poly = sympy.poly(expr)
+            return max(poly.degree_list())
+
+    def toIsing(self, form='matrix'):
+        """
+        Returns
+        -------
+        IsingStructure
+
+        Examples
+        --------
+
+        >>> a = Variable(name='a', iniValue=1, cat='Binary')
+        >>> b = Variable(name='b', iniValue=1, cat='Binary')
+        >>> c = Variable(name='c', iniValue=1, cat='Binary')
+        >>> import numpy as np
+        >>> x = np.array([a, b, c])
+        >>> J = np.array([
+        >>>     [1, 2, 1],
+        >>>     [0, 1, 1],
+        >>>     [0, 0, 3]
+        >>> ])
+        >>> h = np.array([1, 2, 0])
+        >>> obj = (x.T).dot(H).dot(x) + (h.T).dot(x)
+        >>> Name: (((a*(((a*1)+(b*0))+(c*0)))+(b*(((a*2)+(b*1))+(c*0))))+(c*(((a*1)+(b*1))+(c*3))))+(((a*1)+(b*2))+(c*0))
+              Type    : Expression
+              Value   : 20.25
+              Degree  : 2
+        >>> ising = obj.toIsing()
+        >>> ising.J
+        >>> array([[3., 1., 1.],
+                   [0., 1., 2.],
+                   [0., 0., 1.]])
+        >>> ising.h
+        >>> array([[0.],
+                   [1.],
+                   [2.]])
+        >>> ising.variable_list
+        >>> [VarElement("c", 1, 3, 1), VarElement("a", 0, 1, -1), VarElement("b", 1, 2, 1)]
+
+        set solution
+
+        >>> solution = [1, -1, 1]
+        >>> for var, value in zip(ising.variable_list, solution):
+        >>>     var.setValue(value)
+        """
+        import collections
+        import sympy
+        import numpy as np
+        expr = sympy.sympify(self.name).expand()
+        IsingStructure = collections.namedtuple('IsingStructure', 'J h variable_list')
+        variable_list = list(self.getVariables())
+        num_variables = len(variable_list)
+
+        J = np.zeros((num_variables, num_variables))
+        for i in range(num_variables):
+            var_i = variable_list[i]
+            coeff = expr.coeff(var_i.name, 2)
+            J[i, i] = coeff
+            for j in range(i+1, num_variables):
+                var_j = variable_list[j]
+                coeff = expr.coeff(var_i.name).coeff(var_j.name)
+                J[i, j] = coeff
+
+        h = np.zeros((num_variables, 1))
+        for i in range(num_variables):
+            var_i = variable_list[i]
+            coeff = expr.coeff(var_i.name).as_coefficients_dict()[1]
+            h[i] = coeff
+
+        return IsingStructure(J=J, h=h, variable_list=variable_list)
+
     def __add__(self, other):
         if isinstance(other, (int, float)):
             other = ExpressionConst(other)
@@ -272,6 +373,7 @@ class Expression:
         s  = f'Name: {self.name}\n'
         s += f'  Type    : {self.type}\n'
         s += f'  Value   : {self.value()}\n'
+        s += f'  Degree  : {self.maxDegree()}\n'
         return s
 
     def __repr__(self):
@@ -402,6 +504,10 @@ class ExpressionConst(Expression):
     def getVariables(self):
         # for getVariables() in Expression calss
         return set()
+
+    def hasCustomExpression(self):
+        # for hasCustomExpression in Expression calss
+        return False
 
     def __neg__(self):
         return ExpressionConst(-self._value)

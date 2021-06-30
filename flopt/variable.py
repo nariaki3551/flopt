@@ -135,6 +135,9 @@ class VarElement:
         """
         pass  # define each VarElement family
 
+    def maxDegree(self):
+        return 1
+
     def __add__(self, other):
         if isinstance(other, (int, float)):
             other = VarConst(f'{other}', other)
@@ -421,3 +424,6 @@ class VarConst(VarElement):
     def getVariables(self):
         # for getVariables() in Expression class
         return set()
+
+    def maxDegree(self):
+        return 0
