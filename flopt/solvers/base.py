@@ -115,7 +115,7 @@ class BaseSearch:
         ----------
         solution : Solution
             solution object
-        obj : ObjectiveFunction
+        obj : expression or VarElement family
             objective function
         constraints : list of Constraint
             constraints

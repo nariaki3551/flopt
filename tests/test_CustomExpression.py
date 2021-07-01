@@ -128,3 +128,16 @@ def test_CustomExpression_abs():
 
 def test_CustomExpression_hash():
     hash(custom_obj)
+
+def test_CustomExpression_hasCustomExpression1():
+    assert custom_obj.hasCustomExpression() == True
+
+def test_CustomExpression_hasCustomExpression2():
+    assert (custom_obj + a).hasCustomExpression() == True
+
+def test_CustomExpression_isLinear1():
+    assert (custom_obj).isLinear() == 'Unknown'
+
+def test_CustomExpression_isLinear2():
+    assert (custom_obj+a).isLinear() == 'Unknown'
+

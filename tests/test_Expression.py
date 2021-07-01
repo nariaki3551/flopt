@@ -97,5 +97,28 @@ def test_Expression_cas2():
 def test_Expression_hash():
     hash(c)
 
+def test_Expression_hasCustomExpression1():
+    assert a.hasCustomExpression() == False
+
+def test_Expression_hasCustomExpression2():
+    assert (a+b).hasCustomExpression() == False
+
+def test_Expression_isLinear1():
+    assert a.isLinear() == True
+
+def test_Expression_isLinear2():
+    assert (a+b).isLinear() == True
+
+def test_Expression_isLinear3():
+    assert (a*b).isLinear() == False
+
+
 def test_ExpressionConst_hash():
     hash(ExpressionConst(0))
+
+def test_ExpressionConst_hasCustomExpression():
+    assert ExpressionConst(0).hasCustomExpression() == False
+
+def test_ExpressionConst_isLinear():
+    assert ExpressionConst(0).isLinear() == True
+

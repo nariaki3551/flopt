@@ -1,3 +1,4 @@
+import flopt
 from flopt import Variable, Problem, Solver, Solver_list, CustomExpression
 
 
@@ -15,6 +16,11 @@ prob += a + b + c
 prob_with_const = Problem(name='TestC')
 prob_with_const += a + b + c
 prob_with_const += a + b >= 2
+
+# Non-Linear problem
+prob_nonlinear = Problem('Non-Linear')
+prob_nonlinear += a*b*c
+prob_nonlinear += a + b >= 2
 
 # Permutation Problem
 p = Variable('p', 0, 4, 'Permutation')
@@ -78,6 +84,28 @@ def test_PulpSearch2():
     solver = Solver(algo='PulpSearch')
     solver.setParams(n_trial=10, callbacks=[callback])
     prob_with_const.solve(solver, timelimit=1)
+
+def test_PulpSearch_available1():
+    solver = Solver(algo='PulpSearch')
+    assert solver.available(prob.obj, prob.constraints) == True
+
+def test_PulpSearch_available2():
+    solver = Solver(algo='PulpSearch')
+    assert solver.available(prob_with_const.obj, prob_with_const.constraints) == True
+
+def test_PulpSearch_available3():
+    solver = Solver(algo='PulpSearch')
+    assert solver.available(prob_nonlinear.obj, prob_nonlinear.constraints) == False
+
+def test_PulpSearch_available3():
+    solver = Solver(algo='PulpSearch')
+    solver.setParams(n_trial=10, callbacks=[callback])
+    try:
+        prob_nonlinear.solve(solver, timelimit=1)
+        assert False
+    except flopt.constants.ModelingError:
+        assert True
+
 
 def test_ScipySearch1():
     solver = Solver(algo='ScipySearch')

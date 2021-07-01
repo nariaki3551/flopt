@@ -104,7 +104,6 @@ class Expression:
             elif self.elmB.name in self.var_dict:
                 elmB = self.var_dict[self.elmB.name]
 
-
         if self.operater == '+':
             return elmA.value() + elmB.value()
         elif self.operater == '-':
@@ -142,6 +141,42 @@ class Expression:
         """
         variables = self.elmA.getVariables() | self.elmB.getVariables()
         return variables
+
+    def hasCustomExpression(self):
+        """
+        Returns
+        -------
+        bool
+            return true if CustomExpression object is in this expression else false
+        """
+        return self.elmA.hasCustomExpression() or self.elmB.hasCustomExpression()
+
+    def isLinear(self):
+        """
+        Returns
+        -------
+        bool
+            return true if this expression is linear else false
+
+        Examples
+        --------
+        >>> import flopt
+        >>> a = flopt.Variable('a', iniValue=3)
+        >>> b = flopt.Variable('b', iniValue=3)
+        >>> (a+b).isLinear()
+        >>> True
+        >>> (a*b).isLinear()
+        >>> False
+        >>> ce = flopt.CustomExpression(lambda x: x, [a])
+        >>> ce.isLinear()
+        >>> 'Unknown'
+        """
+        if self.hasCustomExpression():
+            return 'Unknown'
+        import sympy
+        expr = sympy.sympify(self.name)
+        variables = self.getVariables()
+        return all(expr.diff(var.name).is_constant() for var in variables)
 
     def __add__(self, other):
         if isinstance(other, (int, float)):
@@ -366,6 +401,15 @@ class CustomExpression(Expression):
     def getVariables(self):
         return set(self.variables)
 
+    def hasCustomExpression(self):
+        """
+        Returns
+        -------
+        bool
+            return true if CustomExpression object is in this expression else false
+        """
+        return True
+
     def __hash__(self):
         tmp = [hash(self.func)]
         for var in self.variables:
@@ -402,6 +446,10 @@ class ExpressionConst(Expression):
     def getVariables(self):
         # for getVariables() in Expression calss
         return set()
+
+    def hasCustomExpression(self):
+        # for hasCustomExpression in Expression calss
+        return False
 
     def __neg__(self):
         return ExpressionConst(-self._value)
