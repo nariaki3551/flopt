@@ -11,6 +11,3 @@ SOLVER_ABNORMAL_TERMINATE  = 3
 class SolverError(Exception):
     pass
 
-class ModelingError(SolverError):
-    """error which is occurred with modeling in Solver"""
-    pass

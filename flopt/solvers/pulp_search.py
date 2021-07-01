@@ -50,27 +50,22 @@ class PulpSearch(BaseSearch):
         self.can_solve_problems = ['lp']
 
 
-    def available(self, obj, constraints):
+    def available(self, prob):
         """
         Parameters
         ----------
-        obj : Expression or VarElement family
-            objective function
-        constraints : list of Constraint
-            constraints
+        prob : flopt.Problem
 
         Returns
         -------
         bool
             return true if objective and constraint functions are linear else false
         """
-        return all( expr.isLinear() for expr in [obj] + constraints )
+        return all( expr.isLinear() for expr in [prob.obj] + prob.constraints )
 
 
     def search(self):
         status = flopt.constants.SOLVER_NORMAL_TERMINATE
-        if not self.available(self.obj, self.constraints):
-            raise flopt.constants.ModelingError
 
         lp_prob, lp_solution = self.createLpProblem()
 

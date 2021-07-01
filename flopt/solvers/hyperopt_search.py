@@ -45,6 +45,25 @@ class HyperoptTPESearch(BaseSearch):
         self.show_progressbar = False
         self.can_solve_problems = ['blackbox']
 
+
+    def available(self, prob):
+        """
+        Parameters
+        ----------
+        obj : Expression or VarElement family
+            objective function
+        constraints : list of Constraint
+            constraints
+
+        Returns
+        -------
+        bool
+            return true if it can solve the problem else false
+        """
+        return all(not var.getType() == 'VarPermutation' for var in prob.getVariables())\
+                and (not prob.constraints)
+
+
     def search(self):
         if self.constraints:
             logger.error("This Solver does not support the problem with constraints.")
@@ -105,7 +124,7 @@ class HyperoptTPESearch(BaseSearch):
             self.recordLog()
             if self.msg:
                 self.during_solver_message('*')
-        
+
         # callbacks
         for callback in self.callbacks:
             callback([self.solution], self.best_solution, self.best_obj_value)

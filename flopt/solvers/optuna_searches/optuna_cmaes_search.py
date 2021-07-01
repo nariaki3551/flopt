@@ -27,6 +27,7 @@ class OptunaCmaEsSearch(OptunaSearch):
         self.warn_independent_sampling = True
         self.seed = None
 
+
     def createStudy(self):
         # initial value
         x0 = {var.name: var.value() for var in self.solution}
@@ -39,3 +40,4 @@ class OptunaCmaEsSearch(OptunaSearch):
             seed = self.seed
         )
         self.study = optuna.study.create_study(sampler=sampler)
+

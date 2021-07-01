@@ -47,25 +47,110 @@ def test_RandomSearch2():
     solver.setParams(n_trial=10, callbacks=[callback])
     prob_perm.solve(solver, timelimit=1)
 
+def test_RandomSearch_available1():
+    solver = Solver(algo='RandomSearch')
+    assert solver.available(prob) == True
+
+def test_RandomSearch_available2():
+    solver = Solver(algo='RandomSearch')
+    assert solver.available(prob_with_const) == False
+
+def test_RandomSearch_available3():
+    solver = Solver(algo='RandomSearch')
+    assert solver.available(prob_nonlinear) == False
+
+def test_RandomSearch_available4():
+    solver = Solver(algo='RandomSearch')
+    assert solver.available(prob_perm) == True
+
+
 def test_2Opt():
     solver = Solver(algo='2-Opt')
     solver.setParams(n_trial=10, callbacks=[callback])
     prob_perm.solve(solver, timelimit=1)
+
+def test_2Opt_available1():
+    solver = Solver(algo='2-Opt')
+    assert solver.available(prob) == False
+
+def test_2Opt_available2():
+    solver = Solver(algo='2-Opt')
+    assert solver.available(prob_with_const) == False
+
+def test_2Opt_available3():
+    solver = Solver(algo='2-Opt')
+    assert solver.available(prob_nonlinear) == False
+
+def test_2Opt_available4():
+    solver = Solver(algo='2-Opt')
+    assert solver.available(prob_perm) == True
+
 
 def test_OptunaTPESearch():
     solver = Solver(algo='OptunaTPESearch')
     solver.setParams(n_trial=10, callbacks=[callback])
     prob.solve(solver, timelimit=1)
 
+def test_OptunaTPESearch_available1():
+    solver = Solver(algo='OptunaTPESearch')
+    assert solver.available(prob) == True
+
+def test_OptunaTPESearch_available2():
+    solver = Solver(algo='OptunaTPESearch')
+    assert solver.available(prob_with_const) == False
+
+def test_OptunaTPESearch_available3():
+    solver = Solver(algo='OptunaTPESearch')
+    assert solver.available(prob_nonlinear) == False
+
+def test_OptunaTPESearch_available4():
+    solver = Solver(algo='OptunaTPESearch')
+    assert solver.available(prob_perm) == False
+
+
 def test_OptunaCmaEsSearch():
     solver = Solver(algo='OptunaCmaEsSearch')
     solver.setParams(n_trial=10, callbacks=[callback])
     prob.solve(solver, timelimit=1)
 
+def test_OptunaCmaEsSearch_available1():
+    solver = Solver(algo='OptunaCmaEsSearch')
+    assert solver.available(prob) == True
+
+def test_OptunaCmaEsSearch_available2():
+    solver = Solver(algo='OptunaCmaEsSearch')
+    assert solver.available(prob_with_const) == False
+
+def test_OptunaCmaEsSearch_available3():
+    solver = Solver(algo='OptunaCmaEsSearch')
+    assert solver.available(prob_nonlinear) == False
+
+def test_OptunaCmaEsSearch_available4():
+    solver = Solver(algo='OptunaCmaEsSearch')
+    assert solver.available(prob_perm) == False
+
+
 def test_HyperoptTPESearch():
     solver = Solver(algo='HyperoptTPESearch')
     solver.setParams(n_trial=10, callbacks=[callback])
     prob.solve(solver, timelimit=1)
+
+def test_HyperoptTPESearch_available1():
+    solver = Solver(algo='HyperoptTPESearch')
+    assert solver.available(prob) == True
+
+def test_HyperoptTPESearch_available2():
+    solver = Solver(algo='HyperoptTPESearch')
+    assert solver.available(prob_with_const) == False
+
+def test_HyperoptTPESearch_available3():
+    solver = Solver(algo='HyperoptTPESearch')
+    assert solver.available(prob_nonlinear) == False
+
+def test_HyperoptTPESearch_available4():
+    solver = Solver(algo='HyperoptTPESearch')
+    assert solver.available(prob_perm) == False
+
 
 def test_SFLA():
     solver = Solver(algo="SFLA")
@@ -74,6 +159,23 @@ def test_SFLA():
         n_iter=1000, max_step=0.01, msg=True, callbacks=[callback],
     )
     prob.solve(solver=solver, timelimit=10)
+
+def test_SFLA_available1():
+    solver = Solver(algo='SFLA')
+    assert solver.available(prob) == True
+
+def test_SFLA_available2():
+    solver = Solver(algo='SFLA')
+    assert solver.available(prob_with_const) == False
+
+def test_SFLA_available3():
+    solver = Solver(algo='SFLA')
+    assert solver.available(prob_nonlinear) == False
+
+def test_SFLA_available4():
+    solver = Solver(algo='SFLA')
+    assert solver.available(prob_perm) == False
+
 
 def test_PulpSearch1():
     solver = Solver(algo='PulpSearch')
@@ -87,15 +189,15 @@ def test_PulpSearch2():
 
 def test_PulpSearch_available1():
     solver = Solver(algo='PulpSearch')
-    assert solver.available(prob.obj, prob.constraints) == True
+    assert solver.available(prob) == True
 
 def test_PulpSearch_available2():
     solver = Solver(algo='PulpSearch')
-    assert solver.available(prob_with_const.obj, prob_with_const.constraints) == True
+    assert solver.available(prob_with_const) == True
 
 def test_PulpSearch_available3():
     solver = Solver(algo='PulpSearch')
-    assert solver.available(prob_nonlinear.obj, prob_nonlinear.constraints) == False
+    assert solver.available(prob_nonlinear) == False
 
 def test_PulpSearch_available3():
     solver = Solver(algo='PulpSearch')
@@ -103,7 +205,7 @@ def test_PulpSearch_available3():
     try:
         prob_nonlinear.solve(solver, timelimit=1)
         assert False
-    except flopt.constants.ModelingError:
+    except flopt.constants.SolverError:
         assert True
 
 
@@ -116,4 +218,21 @@ def test_ScipySearch2():
     solver = Solver(algo='ScipySearch')
     solver.setParams(n_trial=10, callbacks=[callback])
     prob_with_const.solve(solver, timelimit=1)
+
+def test_ScipySearch_available1():
+    solver = Solver(algo='ScipySearch')
+    assert solver.available(prob) == True
+
+def test_ScipySearch_available2():
+    solver = Solver(algo='ScipySearch')
+    assert solver.available(prob_with_const) == True
+
+def test_ScipySearch_available3():
+    solver = Solver(algo='ScipySearch')
+    assert solver.available(prob_nonlinear) == True
+
+def test_ScipySearch_available4():
+    solver = Solver(algo='ScipySearch')
+    assert solver.available(prob_perm) == False
+
 

@@ -34,11 +34,28 @@ class OptunaSearch(BaseSearch):
         self.name = 'OptunaSearch(base)'
         self.n_trial = 1e100
 
+
     def createStudy(self):
+        raise NotImplementedError
+
+
+    def available(self, prob):
         """
-        set study by each solver
+        Parameters
+        ----------
+        obj : Expression or VarElement family
+            objective function
+        constraints : list of Constraint
+            constraints
+
+        Returns
+        -------
+        bool
+            return true if it can solve the problem else false
         """
-        pass
+        return all(not var.getType() == 'VarPermutation' for var in prob.getVariables())\
+                and (not prob.constraints)
+
 
     def search(self):
         if self.constraints:
@@ -86,6 +103,7 @@ class OptunaSearch(BaseSearch):
 
         return obj_value
 
+
     def startProcess(self):
         self.best_obj_value = self.obj.value(self.best_solution)
         self.recordLog()
@@ -93,6 +111,7 @@ class OptunaSearch(BaseSearch):
         if self.msg:
             during_solver_message_header()
             self.during_solver_message('S')
+
 
     def closeProcess(self):
         self.recordLog()

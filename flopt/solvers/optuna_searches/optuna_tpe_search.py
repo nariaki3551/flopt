@@ -32,6 +32,7 @@ class OptunaTPESearch(OptunaSearch):
         self.n_ei_candidates = 24
         self.seed = None
 
+
     def createStudy(self):
         """
         create sampler and create Study object
@@ -46,3 +47,4 @@ class OptunaTPESearch(OptunaSearch):
             seed = self.seed
         )
         self.study = optuna.study.create_study(sampler=sampler)
+
