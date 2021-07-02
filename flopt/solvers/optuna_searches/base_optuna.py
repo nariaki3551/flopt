@@ -1,6 +1,4 @@
 from time import time
-import optuna
-optuna.logging.disable_default_handler()
 
 from flopt.solvers.base import BaseSearch
 from flopt.solvers.solver_utils import (

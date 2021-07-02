@@ -6,7 +6,6 @@ from itertools import product
 from collections import defaultdict
 
 import numpy as np
-import matplotlib.pyplot as plt
 
 from flopt import env as flopt_env
 from flopt.solvers.solver_utils.common import value2str
@@ -86,6 +85,7 @@ class LogVisualizer:
         col : int
             #columns of figure
         """
+        import matplotlib.pyplot as plt
         datasets = set(dataset for dataset, _, _ in self.logs)
         for dataset in datasets:
             instances = set(i for d, i, _ in self.logs if d == dataset)
