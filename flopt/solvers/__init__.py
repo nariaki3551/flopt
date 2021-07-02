@@ -12,6 +12,7 @@ from flopt.solvers.hyperopt_search import HyperoptTPESearch
 from flopt.solvers.swarm_intelligence_searches import ShuffledFrogLeapingSearch
 from flopt.solvers.pulp_search import PulpSearch
 from flopt.solvers.scipy_search import ScipySearch
+from flopt.solvers.auto_search import AutoSearch
 
 
 algos = {
@@ -23,6 +24,7 @@ algos = {
     'SFLA'             : ShuffledFrogLeapingSearch,
     'PulpSearch'       : PulpSearch,
     'ScipySearch'      : ScipySearch,
+    'auto'             : AutoSearch,
 }
 
 

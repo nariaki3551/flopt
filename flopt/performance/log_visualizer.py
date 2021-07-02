@@ -41,6 +41,7 @@ class LogVisualizer:
     def __init__(self, logs=dict()):
         self.logs = logs
 
+
     def load(self, solver_names, datasets, load_prefix=performance_dir):
         if isinstance(solver_names, str):
             solver_names = [solver_names]
@@ -48,6 +49,7 @@ class LogVisualizer:
             datasets = [datasets]
         for solver_name, dataset in product(solver_names, datasets):
             self.load_log(solver_name, dataset, load_prefix)
+
 
     def load_log(self, solver_name, dataset, load_prefix=performance_dir):
         """
@@ -66,6 +68,7 @@ class LogVisualizer:
             instance_name = picklefile.split('/')[-2]
             with open(picklefile, 'rb') as pf:
                 self.logs[dataset, instance_name, solver_name] = pickle.load(pf)
+
 
     def plot(self, xitem='time', yscale='linear',
             plot_type='all', save_prefix=None, col=2):

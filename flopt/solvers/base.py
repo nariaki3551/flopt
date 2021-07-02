@@ -1,3 +1,4 @@
+import inspect
 from time import time
 import flopt
 from flopt.solvers.solver_utils import (
@@ -98,7 +99,7 @@ class BaseSearch:
         if feasible_guard is not None:
             self.feasible_guard = feasible_guard
         for param, value in kwargs.items():
-          setattr(self, param, value)
+            setattr(self, param, value)
 
 
     def reset(self):
@@ -194,4 +195,18 @@ class BaseSearch:
 
     def available(self, prob):
         raise NotImplementedError
+
+
+    def __str__(self):
+        s  = f'Name: Solver\n'
+        s += f'  Type : {self.name}\n'
+        attrobjs = [
+            (attr, obj) for (attr, obj) in inspect.getmembers(self)
+            if not callable(obj) and attr[:2] != "__" and attr[-2:] != "__" and attr != 'name'
+        ]
+        for attr, obj in attrobjs:
+            s += f'  {attr} : {obj}\n'
+        s += '\n'
+        return s
+
 

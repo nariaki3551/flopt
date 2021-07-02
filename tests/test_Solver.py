@@ -187,4 +187,31 @@ def test_ScipySearch_available(prob, prob_with_const, prob_nonlinear, prob_perm)
     assert solver.available(prob_nonlinear) == True
     assert solver.available(prob_perm) == False
 
+def test_AutoSearch1(prob, callback):
+    solver = Solver(algo='auto')
+    solver.setParams(n_trial=10, callbacks=[callback])
+    prob.solve(solver, timelimit=1)
+
+def test_AutoSearch2(prob_with_const, callback):
+    solver = Solver(algo='auto')
+    solver.setParams(n_trial=10, callbacks=[callback])
+    prob_with_const.solve(solver, timelimit=1)
+
+def test_AutoSearch3(prob_nonlinear, callback):
+    solver = Solver(algo='auto')
+    solver.setParams(n_trial=10, callbacks=[callback])
+    prob_nonlinear.solve(solver, timelimit=1)
+
+def test_AutoSearch4(prob_with_const, callback):
+    solver = Solver(algo='auto')
+    solver.setParams(n_trial=10, callbacks=[callback])
+    prob_with_const.solve(solver, timelimit=1)
+
+def test_AutoSearch_available(prob, prob_with_const, prob_nonlinear, prob_perm):
+    solver = Solver(algo='auto')
+    assert solver.available(prob) == True
+    assert solver.available(prob_with_const) == True
+    assert solver.available(prob_nonlinear) == True
+    assert solver.available(prob_perm) == True
+
 

@@ -29,6 +29,8 @@ class OptunaCmaEsSearch(OptunaSearch):
     def createStudy(self):
         from optuna.study import create_study
         from optuna.samplers import CmaEsSampler
+        from optuna.logging import disable_default_handler
+        disable_default_handler()
         # initial value
         x0 = {var.name: var.value() for var in self.solution}
         sampler = CmaEsSampler(

@@ -37,6 +37,8 @@ class OptunaTPESearch(OptunaSearch):
         """
         from optuna.study import create_study
         from optuna.samplers import TPESampler
+        from optuna.logging import disable_default_handler
+        disable_default_handler()
         sampler = TPESampler(
             consider_prior = self.consider_prior,
             prior_weight = self.prior_weight,
