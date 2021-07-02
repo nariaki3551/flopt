@@ -61,7 +61,8 @@ class PulpSearch(BaseSearch):
         bool
             return true if objective and constraint functions are linear else false
         """
-        return all( expr.isLinear() for expr in [prob.obj] + prob.constraints )
+        return all( expr.isLinear() for expr in [prob.obj] + prob.constraints )\
+                and all(not var.getType() == 'VarPermutation' for var in prob.getVariables())
 
 
     def search(self):
