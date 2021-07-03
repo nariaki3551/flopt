@@ -1,5 +1,5 @@
-VERSION = '0.2'
-DATE = 'May 30, 2020'
+VERSION = '0.3'
+DATE = 'July 3, 2021'
 
 # termination state
 SOLVER_NORMAL_TERMINATE    = 0
