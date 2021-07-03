@@ -129,11 +129,21 @@ class VarElement:
         # for getVariables() in Expression class
         return {self}
 
+    def hasCustomExpression(self):
+        # for hasCustomExpression() in Expression class
+        return False
+
+    def isLinear(self):
+        return True
+
     def setRandom(self):
         """
         set random value to variable
         """
         pass  # define each VarElement family
+
+    def maxDegree(self):
+        return 1
 
     def __add__(self, other):
         if isinstance(other, (int, float)):
@@ -421,3 +431,6 @@ class VarConst(VarElement):
     def getVariables(self):
         # for getVariables() in Expression class
         return set()
+
+    def maxDegree(self):
+        return 0

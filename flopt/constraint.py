@@ -22,10 +22,10 @@ class Constraint:
         self.expression = expression
         self.type = _type
         self.name = None
-    
+
     def value(self, solution=None):
         return self.expression.value(solution)
-    
+
     def feasible(self, solution=None):
         exp_value = self.value(solution)
         if self.type == 'eq':
@@ -37,6 +37,9 @@ class Constraint:
 
     def getVariables(self):
         return self.expression.getVariables()
+
+    def isLinear(self):
+        return self.expression.isLinear()
 
 
     def __str__(self):

@@ -6,7 +6,6 @@ from itertools import product
 from collections import defaultdict
 
 import numpy as np
-import matplotlib.pyplot as plt
 
 from flopt import env as flopt_env
 from flopt.solvers.solver_utils.common import value2str
@@ -42,6 +41,7 @@ class LogVisualizer:
     def __init__(self, logs=dict()):
         self.logs = logs
 
+
     def load(self, solver_names, datasets, load_prefix=performance_dir):
         if isinstance(solver_names, str):
             solver_names = [solver_names]
@@ -49,6 +49,7 @@ class LogVisualizer:
             datasets = [datasets]
         for solver_name, dataset in product(solver_names, datasets):
             self.load_log(solver_name, dataset, load_prefix)
+
 
     def load_log(self, solver_name, dataset, load_prefix=performance_dir):
         """
@@ -68,6 +69,7 @@ class LogVisualizer:
             with open(picklefile, 'rb') as pf:
                 self.logs[dataset, instance_name, solver_name] = pickle.load(pf)
 
+
     def plot(self, xitem='time', yscale='linear',
             plot_type='all', save_prefix=None, col=2):
         """
@@ -86,6 +88,7 @@ class LogVisualizer:
         col : int
             #columns of figure
         """
+        import matplotlib.pyplot as plt
         datasets = set(dataset for dataset, _, _ in self.logs)
         for dataset in datasets:
             instances = set(i for d, i, _ in self.logs if d == dataset)

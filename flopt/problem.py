@@ -57,6 +57,7 @@ class Problem:
         self.time = None
         self.prob_type = ['blackbox']
 
+
     def setObjective(self, obj):
         """set objective function
 
@@ -71,6 +72,7 @@ class Problem:
             obj = Exprression(obj, 0, '+')
         self.obj = obj
         self.variables |= obj.getVariables()
+
 
     def addConstraint(self, const, name=None):
         """add constraint
@@ -88,6 +90,7 @@ class Problem:
         self.constraints.append(const)
         self.variables |= const.getVariables()
 
+
     def getObjectiveValue(self):
         """
         Returns
@@ -96,6 +99,16 @@ class Problem:
             return the objective value
         """
         return self.obj.value()
+
+
+    def getVariables(self):
+        """
+        Returns
+        -------
+        set of VarElement family
+        """
+        return self.variables
+
 
     def solve(self, solver=None, timelimit=None, msg=False):
         """solve this problem
@@ -130,10 +143,11 @@ class Problem:
             obj = -self.obj
 
         status, log, self.time = solver.solve(
-            solution, obj, self.constraints, msg=msg
+            solution, obj, self.constraints, self, msg=msg,
         )
 
         return status, log
+
 
     def __iadd__(self, other):
         if isinstance(other, Constraint):

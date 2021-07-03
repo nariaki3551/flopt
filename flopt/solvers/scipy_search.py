@@ -1,4 +1,5 @@
 from time import time
+
 import scipy
 import numpy as np
 
@@ -26,11 +27,30 @@ class ScipySearch(BaseSearch):
         self.method = None
         self.can_solve_problems = ['blackbox']
 
+
+    def available(self, prob):
+        """
+        Parameters
+        ----------
+        obj : Expression or VarElement family
+            objective function
+        constraints : list of Constraint
+            constraints
+
+        Returns
+        -------
+        bool
+            return true if it can solve the problem else false
+        """
+        return all(not var.getType() == 'VarPermutation' for var in prob.getVariables())
+
+
     def search(self):
         self.startProcess()
         status = self._search()
         self.closeProcess()
         return status
+
 
     def _search(self):
         status = flopt.constants.SOLVER_NORMAL_TERMINATE
@@ -104,7 +124,6 @@ class ScipySearch(BaseSearch):
             status = flopt.constants.SOLVER_TIMELIMIT_TERMINATE
 
         return status
-
 
 
     def startProcess(self):

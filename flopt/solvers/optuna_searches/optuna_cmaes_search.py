@@ -1,5 +1,3 @@
-import optuna
-from optuna.samplers import CmaEsSampler
 from .base_optuna import OptunaSearch
 
 class OptunaCmaEsSearch(OptunaSearch):
@@ -27,7 +25,12 @@ class OptunaCmaEsSearch(OptunaSearch):
         self.warn_independent_sampling = True
         self.seed = None
 
+
     def createStudy(self):
+        from optuna.study import create_study
+        from optuna.samplers import CmaEsSampler
+        from optuna.logging import disable_default_handler
+        disable_default_handler()
         # initial value
         x0 = {var.name: var.value() for var in self.solution}
         sampler = CmaEsSampler(
@@ -38,4 +41,5 @@ class OptunaCmaEsSearch(OptunaSearch):
             warn_independent_sampling = self.warn_independent_sampling,
             seed = self.seed
         )
-        self.study = optuna.study.create_study(sampler=sampler)
+        self.study = create_study(sampler=sampler)
+

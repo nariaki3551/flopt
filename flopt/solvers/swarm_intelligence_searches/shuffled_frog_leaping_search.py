@@ -47,7 +47,6 @@ class ShuffledFrogLeapingSearch(BaseSearch):
     max_step : float (default 0.01)
       max size of step when frog move in memetic evolution.
     """
-
     def __init__(self):
         super().__init__()
         self.name = 'ShuffledFrogLeapingSearch'
@@ -61,6 +60,25 @@ class ShuffledFrogLeapingSearch(BaseSearch):
         self.n_trial = int(1e10)
         self.max_step = int(1e10)
 
+
+    def available(self, prob):
+        """
+        Parameters
+        ----------
+        obj : Expression or VarElement family
+            objective function
+        constraints : list of Constraint
+            constraints
+
+        Returns
+        -------
+        bool
+            return true if it can solve the problem else false
+        """
+        return all(not var.getType() == 'VarPermutation' for var in prob.getVariables())\
+                and (not prob.constraints)
+
+
     def search(self):
         if self.constraints:
             logger.error("This Solver does not support the problem with constraints.")
@@ -72,7 +90,7 @@ class ShuffledFrogLeapingSearch(BaseSearch):
 
         for i in range(self.n_trial):
             self.trial_ix += 1
-            
+
             # check time limit
             if time.time() > self.start_time + self.timelimit:
                 self.closeProcess()
@@ -98,6 +116,7 @@ class ShuffledFrogLeapingSearch(BaseSearch):
 
         self.closeProcess()
         return status
+
 
     def _memetic_evolution(self):
         '''
@@ -167,6 +186,7 @@ class ShuffledFrogLeapingSearch(BaseSearch):
         if self.msg:
             during_solver_message_header()
             self.during_solver_message('S')
+
 
     def closeProcess(self):
         self.recordLog()

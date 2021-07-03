@@ -7,3 +7,4 @@ Solver list is shown in :doc:`../solvers/index`.
 
 .. autofunction:: flopt.Solver_list
 
+.. autofunction:: flopt.allAvailableSolvers

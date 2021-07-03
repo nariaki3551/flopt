@@ -1,5 +1,3 @@
-import optuna
-from optuna.samplers import TPESampler
 from .base_optuna import OptunaSearch
 
 class OptunaTPESearch(OptunaSearch):
@@ -32,10 +30,15 @@ class OptunaTPESearch(OptunaSearch):
         self.n_ei_candidates = 24
         self.seed = None
 
+
     def createStudy(self):
         """
         create sampler and create Study object
         """
+        from optuna.study import create_study
+        from optuna.samplers import TPESampler
+        from optuna.logging import disable_default_handler
+        disable_default_handler()
         sampler = TPESampler(
             consider_prior = self.consider_prior,
             prior_weight = self.prior_weight,
@@ -45,4 +48,5 @@ class OptunaTPESearch(OptunaSearch):
             n_ei_candidates = self.n_ei_candidates,
             seed = self.seed
         )
-        self.study = optuna.study.create_study(sampler=sampler)
+        self.study = create_study(sampler=sampler)
+
