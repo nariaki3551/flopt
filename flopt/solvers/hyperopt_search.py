@@ -1,6 +1,4 @@
 from time import time
-import hyperopt
-from hyperopt import hp
 
 from flopt.solvers.base import BaseSearch
 from flopt.solvers.solver_utils import (
@@ -40,12 +38,34 @@ class HyperoptTPESearch(BaseSearch):
     """
     def __init__(self):
         super().__init__()
+        from hyperopt import STATUS_OK
         self.name = 'HyperoptTPESearch'
         self.n_trial = 1e100
         self.show_progressbar = False
         self.can_solve_problems = ['blackbox']
+        self.hyperopt_STATUS_OK = STATUS_OK
+
+
+    def available(self, prob):
+        """
+        Parameters
+        ----------
+        obj : Expression or VarElement family
+            objective function
+        constraints : list of Constraint
+            constraints
+
+        Returns
+        -------
+        bool
+            return true if it can solve the problem else false
+        """
+        return all(not var.getType() == 'VarPermutation' for var in prob.getVariables())\
+                and (not prob.constraints)
+
 
     def search(self):
+        import hyperopt
         if self.constraints:
             logger.error("This Solver does not support the problem with constraints.")
             status = flopt.constants.SOLVER_ABNORMAL_TERMINATE
@@ -77,6 +97,7 @@ class HyperoptTPESearch(BaseSearch):
         """
         generate search space
         """
+        from hyperopt import hp
         space = dict()
         for var in self.solution:
             name = var.name
@@ -105,12 +126,12 @@ class HyperoptTPESearch(BaseSearch):
             self.recordLog()
             if self.msg:
                 self.during_solver_message('*')
-        
+
         # callbacks
         for callback in self.callbacks:
             callback([self.solution], self.best_solution, self.best_obj_value)
 
-        return {'loss': obj_value, 'status': hyperopt.STATUS_OK}
+        return {'loss': obj_value, 'status': self.hyperopt_STATUS_OK}
 
 
     def startProcess(self):

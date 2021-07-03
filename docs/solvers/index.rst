@@ -4,6 +4,7 @@ Solvers
 .. toctree::
     :maxdepth: 2
 
+    Auto
     SequentialUpdate
     SwarmIntelligence
     Basian

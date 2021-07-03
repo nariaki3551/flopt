@@ -15,6 +15,24 @@ class TwoOpt(SequentialUpdateSearch):
         self.name = '2-Opt'
         self.can_solve_problems = ['permutation']
 
+
+    def available(self, prob):
+        """
+        Parameters
+        ----------
+        obj : Expression or VarElement family
+            objective function
+        constraints : list of Constraint
+            constraints
+
+        Returns
+        -------
+        bool
+            return true if it can solve the problem else false
+        """
+        return all(var.getType() == 'VarPermutation' for var in prob.getVariables())
+
+
     def setNewSolution(self, *args, **kwargs):
         """
         generate new solution from the incumbent solution by

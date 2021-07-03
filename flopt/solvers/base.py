@@ -1,9 +1,11 @@
+import inspect
 from time import time
+import flopt
 from flopt.solvers.solver_utils import (
     Log, start_solver_message,
     during_solver_message_header,
     during_solver_message,
-    end_solver_message
+    end_solver_message,
 )
 from flopt.env import setup_logger
 import flopt.constants
@@ -79,6 +81,7 @@ class BaseSearch:
         self.start_time = None
         self.trial_ix = 0
 
+
     def setParams(self, params=None, feasible_guard=None, **kwargs):
         """
         set some parameters
@@ -96,7 +99,8 @@ class BaseSearch:
         if feasible_guard is not None:
             self.feasible_guard = feasible_guard
         for param, value in kwargs.items():
-          setattr(self, param, value)
+            setattr(self, param, value)
+
 
     def reset(self):
         """
@@ -107,7 +111,8 @@ class BaseSearch:
         self.start_time = None
         self.trial_ix = 0
 
-    def solve(self, solution, obj, constraints, msg=False):
+
+    def solve(self, solution, obj, constraints, prob=None, msg=False):
         """
         solve the problem of (solution, obj)
 
@@ -115,10 +120,12 @@ class BaseSearch:
         ----------
         solution : Solution
             solution object
-        obj : ObjectiveFunction
+        obj : expression or VarElement family
             objective function
         constraints : list of Constraint
             constraints
+        prob : Problem
+            problem
         msg : bool
             if true, then display logs
 
@@ -126,6 +133,10 @@ class BaseSearch:
         -------
         status, Log
         """
+        if prob is not None and not self.available(prob):
+            status = flopt.constants.SOLVER_ABNORMAL_TERMINATE
+            raise flopt.constants.SolverError
+
         self.best_solution = solution
         self.solution = solution.clone()
         self.obj = obj
@@ -149,6 +160,7 @@ class BaseSearch:
 
         return status, self.log, time()-self.start_time
 
+
     def updateSolution(self, solution, obj_value=None):
         """
         update self.best_solution
@@ -158,6 +170,7 @@ class BaseSearch:
             self.best_obj_value = self.obj.value(solution)
         else:
             self.best_obj_value = obj_value
+
 
     def recordLog(self):
         """
@@ -170,13 +183,30 @@ class BaseSearch:
             'iteration': self.trial_ix
         })
 
+
     def during_solver_message(self, head):
         during_solver_message(head, self.best_obj_value,
             self.best_bd, time()-self.start_time, self.trial_ix)
 
+
     def search(self):
-        """
-        define each solver
-        """
-        pass
+        raise NotImplementedError
+
+
+    def available(self, prob):
+        raise NotImplementedError
+
+
+    def __str__(self):
+        s  = f'Name: Solver\n'
+        s += f'  Type : {self.name}\n'
+        attrobjs = [
+            (attr, obj) for (attr, obj) in inspect.getmembers(self)
+            if not callable(obj) and attr[:2] != "__" and attr[-2:] != "__" and attr != 'name'
+        ]
+        for attr, obj in attrobjs:
+            s += f'  {attr} : {obj}\n'
+        s += '\n'
+        return s
+
 

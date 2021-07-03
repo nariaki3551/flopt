@@ -85,6 +85,7 @@ class Expression:
             self.setVarDict(var_dict)
             return self._value()
 
+
     def _value(self):
         """
         Returns
@@ -103,7 +104,6 @@ class Expression:
                 self.elmB.setVarDict(self.var_dict)
             elif self.elmB.name in self.var_dict:
                 elmB = self.var_dict[self.elmB.name]
-
 
         if self.operater == '+':
             return elmA.value() + elmB.value()
@@ -124,6 +124,7 @@ class Expression:
 
         self.unsetVarDict()
 
+
     def getType(self):
         """
         Returns
@@ -132,6 +133,7 @@ class Expression:
           return type of expressiono
         """
         return self.type
+
 
     def getVariables(self):
         """
@@ -143,6 +145,7 @@ class Expression:
         variables = self.elmA.getVariables() | self.elmB.getVariables()
         return variables
 
+
     def hasCustomExpression(self):
         """
         Returns
@@ -150,8 +153,36 @@ class Expression:
         bool
             return true if CustomExpression object is in this expression else false
         """
-        return (isinstance(self.elmA, Expression) and self.elmA.hasCustomExpression())\
-                or (isinstance(self.elmB, Expression) and self.elmB.hasCustomExpression())
+        return self.elmA.hasCustomExpression() or self.elmB.hasCustomExpression()
+
+
+    def isLinear(self):
+        """
+        Returns
+        -------
+        bool
+            return true if this expression is linear else false
+
+        Examples
+        --------
+        >>> import flopt
+        >>> a = flopt.Variable('a', iniValue=3)
+        >>> b = flopt.Variable('b', iniValue=3)
+        >>> (a+b).isLinear()
+        >>> True
+        >>> (a*b).isLinear()
+        >>> False
+        >>> ce = flopt.CustomExpression(lambda x: x, [a])
+        >>> ce.isLinear()
+        >>> 'Unknown'
+        """
+        if self.hasCustomExpression():
+            return 'Unknown'
+        import sympy
+        expr = sympy.sympify(self.name)
+        variables = self.getVariables()
+        return all(expr.diff(var.name).is_constant() for var in variables)
+
 
     def maxDegree(self):
         """
@@ -175,7 +206,8 @@ class Expression:
             poly = sympy.poly(expr)
             return max(poly.degree_list())
 
-    def toIsing(self, form='matrix'):
+
+    def toIsing(self):
         """
         Returns
         -------
@@ -188,6 +220,8 @@ class Expression:
         >>> b = Variable(name='b', iniValue=1, cat='Binary')
         >>> c = Variable(name='c', iniValue=1, cat='Binary')
         >>> import numpy as np
+
+        >>> # make Ising model
         >>> x = np.array([a, b, c])
         >>> J = np.array([
         >>>     [1, 2, 1],
@@ -195,11 +229,13 @@ class Expression:
         >>>     [0, 0, 3]
         >>> ])
         >>> h = np.array([1, 2, 0])
-        >>> obj = (x.T).dot(H).dot(x) + (h.T).dot(x)
+        >>> obj = (x.T).dot(J).dot(x) + (h.T).dot(x)
         >>> Name: (((a*(((a*1)+(b*0))+(c*0)))+(b*(((a*2)+(b*1))+(c*0))))+(c*(((a*1)+(b*1))+(c*3))))+(((a*1)+(b*2))+(c*0))
               Type    : Expression
               Value   : 20.25
               Degree  : 2
+
+        >>> # obj to Ising model
         >>> ising = obj.toIsing()
         >>> ising.J
         >>> array([[3., 1., 1.],
@@ -212,7 +248,7 @@ class Expression:
         >>> ising.variable_list
         >>> [VarElement("c", 1, 3, 1), VarElement("a", 0, 1, -1), VarElement("b", 1, 2, 1)]
 
-        set solution
+        We set solution by
 
         >>> solution = [1, -1, 1]
         >>> for var, value in zip(ising.variable_list, solution):
@@ -243,6 +279,7 @@ class Expression:
             h[i] = coeff
 
         return IsingStructure(J=J, h=h, variable_list=variable_list)
+
 
     def __add__(self, other):
         if isinstance(other, (int, float)):
@@ -467,6 +504,15 @@ class CustomExpression(Expression):
 
     def getVariables(self):
         return set(self.variables)
+
+    def hasCustomExpression(self):
+        """
+        Returns
+        -------
+        bool
+            return true if CustomExpression object is in this expression else false
+        """
+        return True
 
     def __hash__(self):
         tmp = [hash(self.func)]

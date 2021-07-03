@@ -39,6 +39,7 @@ class SequentialUpdateSearch(BaseSearch):
         self.name = 'SequentialUpdate(base)'
         self.n_trial = 1e100
 
+
     def search(self):
         """
         search a better solution using `self.setNewSolution()` function

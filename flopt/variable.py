@@ -129,6 +129,13 @@ class VarElement:
         # for getVariables() in Expression class
         return {self}
 
+    def hasCustomExpression(self):
+        # for hasCustomExpression() in Expression class
+        return False
+
+    def isLinear(self):
+        return True
+
     def setRandom(self):
         """
         set random value to variable
