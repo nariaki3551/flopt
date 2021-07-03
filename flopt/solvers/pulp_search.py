@@ -36,7 +36,7 @@ class PulpSearch(BaseSearch):
     solver : pulp.Solver
         solver pulp use, see https://coin-or.github.io/pulp/technical/solvers.html.
         default is pulp.PULP_CBC_CMD
-    
+
     Returns
     -------
     status : int
@@ -48,6 +48,22 @@ class PulpSearch(BaseSearch):
         self.name = "PulpSearch"
         self.solver = None
         self.can_solve_problems = ['lp']
+
+
+    def available(self, prob):
+        """
+        Parameters
+        ----------
+        prob : flopt.Problem
+
+        Returns
+        -------
+        bool
+            return true if objective and constraint functions are linear else false
+        """
+        return all( expr.isLinear() for expr in [prob.obj] + prob.constraints )\
+                and all(not var.getType() == 'VarPermutation' for var in prob.getVariables())
+
 
     def search(self):
         status = flopt.constants.SOLVER_NORMAL_TERMINATE
@@ -125,5 +141,5 @@ class PulpSearch(BaseSearch):
                     const_exp.value(lp_solution) >= 0,
                     const.name
                 )
-        
+
         return lp_prob, lp_solution

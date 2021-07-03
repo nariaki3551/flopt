@@ -183,6 +183,7 @@ def performance(datasets, solver_names=None,
     log_visualizer.load(
         solver_names=solver_names,
         datasets=dataset_names,
+        load_prefix=load_prefix,
     )
 
     if not plot_type == "noshow":

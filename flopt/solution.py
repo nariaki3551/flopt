@@ -52,7 +52,7 @@ class Solution:
         """
         values = [variable.value() for variable in self._variables]
         return values
-    
+
     def getVariables(self):
         """
         Returns
@@ -61,7 +61,7 @@ class Solution:
           Variable instances which belong to the Solution
         """
         return self._variables
-    
+
     def clone(self):
         """
         Returns
@@ -109,7 +109,7 @@ class Solution:
           Squared 2-norm of the solution as a vector in Euclid space
         """
         return sum(vb.value()*vb.value() for vb in self._variables)
-    
+
     def norm(self):
         """
         Returns
@@ -130,7 +130,7 @@ class Solution:
         for vb1, vb2 in zip(self._variables, other._variables):
             inner += vb1.value()*vb2.value()
         return inner
-    
+
     def floor(self):
         """
         Returns
@@ -183,7 +183,7 @@ class Solution:
         elif isinstance(other, (int, float)):
             for vb1 in vbs1:
                 vb1.setValue(vb1.value() + other)
-            return Solution('+scalar', vbs1)  
+            return Solution('+scalar', vbs1)
         else:
             return NotImplemented
 
@@ -227,7 +227,7 @@ class Solution:
         elif isinstance(other, (int, float)):
             for vb1 in vbs1:
                 vb1.setValue(vb1.value() * other)
-            return Solution('*scalar', vbs1)  
+            return Solution('*scalar', vbs1)
         else:
             return NotImplemented
 
@@ -261,7 +261,7 @@ class Solution:
 
     def __iter__(self):
         return iter(self._variables)
-    
+
     def __getitem__(self, k):
         return self._variables[k]
 

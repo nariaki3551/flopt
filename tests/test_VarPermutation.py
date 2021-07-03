@@ -1,15 +1,17 @@
+import pytest
+
 from flopt import Variable
 
-a = Variable('a', lowBound=0, upBound=4, cat='Permutation')
-b = Variable('b', lowBound=0, upBound=4, cat='Permutation')
+@pytest.fixture(scope='function')
+def a():
+    return Variable('a', lowBound=0, upBound=4, cat='Permutation')
 
-# 四則演算
-def test_VarPermutation_hash():
+def test_VarPermutation_hash(a):
     hash(a)
 
 # base function
-def test_VarPermutation_getType():
+def test_VarPermutation_getType(a):
     assert a.getType() == 'VarPermutation'
 
-def test_VarPermutation_getVariable():
+def test_VarPermutation_getVariable(a):
     assert a.getVariables() == {a}

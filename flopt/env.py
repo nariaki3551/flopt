@@ -20,12 +20,14 @@ class Environment:
         self.root_logger = getLogger()
         self.root_logger.setLevel(0)
 
+
     def setLogLevel(self, log_level):
         if isinstance(log_level, str):
             assert log_level in log_name, \
                 f'log level {log_level} is invalid.'
             log_level = log_name[log_level]
         self.root_logger.setLevel(log_level)
+
 
     def __str__(self):
         s  = f'src_dir: {self.src_dir}\n'
