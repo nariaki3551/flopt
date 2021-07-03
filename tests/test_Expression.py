@@ -105,6 +105,21 @@ def test_Expression_maxDegree(a, b, c):
     assert (a*a*b*c).maxDegree() == 3  # a*a*(a+b)
 
 
+def test_Expression_isIsing(a, b):
+    import numpy as np
+    x = np.array([a, b])
+    J = np.array([
+        [1, 2],
+        [0, 1],
+    ])
+    h = np.array([1, 2])
+    obj = (x.T).dot(J).dot(x) + (h.T).dot(x)
+    assert obj.isIsing()
+
+    obj += a*a*a
+    assert not obj.isIsing()
+
+
 def test_Expression_toIsing(a, b):
     import numpy as np
     x = np.array([a, b])

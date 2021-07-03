@@ -1,3 +1,5 @@
+import collections
+
 from flopt.constraint import Constraint
 from flopt.env import setup_logger
 
@@ -156,6 +158,31 @@ class Expression:
         return self.elmA.hasCustomExpression() or self.elmB.hasCustomExpression()
 
 
+    def maxDegree(self):
+        """
+        Returns
+        -------
+        int
+            return the max degree of variants
+
+        Note
+        ----
+        if the CustomExpression object is in this expresson,
+        return Unknown
+        """
+        if self.hasCustomExpression():
+            return 'Unknown'
+        elif isinstance(self, ExpressionConst):
+            return 0
+        elif self.operater in {'%', '&', '|'}:
+            return 'Unknown'
+        else:
+            import sympy
+            expr = sympy.sympify(self.name)
+            poly = sympy.poly(expr)
+            return max(poly.degree_list())
+
+
     def isLinear(self):
         """
         Returns
@@ -178,33 +205,40 @@ class Expression:
         """
         if self.hasCustomExpression():
             return 'Unknown'
+        if self.maxDegree() > 1:
+            return False
         import sympy
         expr = sympy.sympify(self.name)
         variables = self.getVariables()
         return all(expr.diff(var.name).is_constant() for var in variables)
 
 
-    def maxDegree(self):
+    def isIsing(self):
         """
         Returns
         -------
-        int
-            return the max degree of variants
-
-        Note
-        ----
-        if the CustomExpression object is in this expresson,
-        return Unknown
+        bool
+            return true if this expression is linear else false
         """
         if self.hasCustomExpression():
             return 'Unknown'
-        elif self.operater in {'%', '&', '|'}:
-            return 'Unknown'
-        else:
-            import sympy
-            expr = sympy.sympify(self.name)
-            poly = sympy.poly(expr)
-            return max(poly.degree_list())
+        if self.maxDegree() > 2:
+            return False
+        import sympy
+        expr = sympy.sympify(self.name)
+        variables = self.getVariables()
+        variable_list = list(self.getVariables())
+        num_variables = len(variable_list)
+
+        for i in range(num_variables):
+            var_i = variable_list[i]
+            diff_expr = expr.diff(var_i.name)
+            for j in range(i+1, num_variables):
+                var_j = variable_list[j]
+                if not diff_expr.diff(var_j.name).is_constant():
+                    return False
+
+        return True
 
 
     def toIsing(self):
@@ -235,6 +269,11 @@ class Expression:
               Value   : 20.25
               Degree  : 2
 
+        >>> # check to be able to ising
+        >>> print(obj.isIsing())
+        >>> True
+
+        >>> obj.isIsing()
         >>> # obj to Ising model
         >>> ising = obj.toIsing()
         >>> ising.J
@@ -254,7 +293,7 @@ class Expression:
         >>> for var, value in zip(ising.variable_list, solution):
         >>>     var.setValue(value)
         """
-        import collections
+        assert self.isIsing()
         import sympy
         import numpy as np
         expr = sympy.sympify(self.name).expand()
