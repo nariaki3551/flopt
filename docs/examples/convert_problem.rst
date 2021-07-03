@@ -28,7 +28,14 @@ We can convert the expand expression to the Ising model form.
 
 
 Obj is long expression, seeing Name of obj.
-We can convert this obj to Ising model form, as follows.
+We can check the obj is able to be converted Ising form.
+
+.. code-block:: python
+
+   print(obj.isIsing())
+   >>> True
+
+And, we convert this obj to Ising model form, as follows.
 
 .. code-block:: python
 
