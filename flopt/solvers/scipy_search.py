@@ -1,6 +1,6 @@
 from time import time
 
-import scipy
+from scipy import optimize as scipy_optimize
 import numpy as np
 
 from flopt.solvers.base import BaseSearch
@@ -75,7 +75,7 @@ class ScipySearch(BaseSearch):
         # bounds
         lb = [var.lowBound for var in self.solution]
         ub = [var.upBound for var in self.solution]
-        bounds = scipy.optimize.Bounds(lb, ub, keep_feasible=False)
+        bounds = scipy_optimize.Bounds(lb, ub, keep_feasible=False)
 
         # constraints
         constraints = []
@@ -87,7 +87,7 @@ class ScipySearch(BaseSearch):
             elif const.type == 'ge':
                 ub = np.inf
             nonlinear_const = \
-                scipy.optimize.NonlinearConstraint(const_func, lb, ub)
+                scipy_optimize.NonlinearConstraint(const_func, lb, ub)
             constraints.append(nonlinear_const)
 
         # options
@@ -111,7 +111,7 @@ class ScipySearch(BaseSearch):
                 _callback([self.solution], self.best_solution, self.best_obj_value)
 
         try:
-            res = scipy.optimize.minimize(
+            res = scipy_optimize.minimize(
                 func, x0, bounds=bounds, constraints=constraints, options=options,
                 callback=callback, args=(), method=self.method,
                 jac=None, hess=None, hessp=None, tol=None,
