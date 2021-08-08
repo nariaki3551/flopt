@@ -10,7 +10,7 @@ class CustomDataset(BaseDataset):
     name : str
       dataset name
     probs : list of Problem
-      problems 
+      problems
 
     Examples
     --------
@@ -61,7 +61,7 @@ class CustomDataset(BaseDataset):
       htpe_solver = Solver('HyperoptTPESearch')
 
       logs = flopt.performance.compute(
-          cd,  # dataset or dataset list 
+          cd,  # dataset or dataset list
           [rs_solver, tpe_solver, cma_solver, htpe_solver],  # solver list
           timelimit=2,
           msg=True
@@ -69,7 +69,7 @@ class CustomDataset(BaseDataset):
 
       # visualize he performance
       log_visualizer = flopt.performance.LogVisualizer(logs)
-      lov_visualizer.plot()
+      log_visualizer.plot()
     """
     def __init__(self, name='CustomDataset', probs=[]):
         if not isinstance(probs, list):

@@ -54,7 +54,7 @@ def compute(datasets, solvers='all',
 
         # visualize the performance
         log_visualizer = flopt.performance.LogVisualizer(logs)
-        lov_visualizer.plot()
+        log_visualizer.plot()
 
 
     We can select the solver to calculate the performance.
@@ -73,7 +73,7 @@ def compute(datasets, solvers='all',
 
         # visualize the performance
         log_visualizer = flopt.performance.LogVisualizer(logs)
-        lov_visualizer.plot()
+        log_visualizer.plot()
 
 
     We can use user defined problem as dataset
