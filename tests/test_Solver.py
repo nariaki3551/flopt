@@ -19,6 +19,14 @@ def prob(variables):
     _prob += a + b + c
     return _prob
 
+
+@pytest.fixture(scope='function')
+def prob_only_continuous(variables):
+    a, b, c = variables
+    _prob = Problem(name='Test')
+    _prob += b + c
+    return _prob
+
 @pytest.fixture(scope='function')
 def prob_with_const(variables):
     # Problem with constraint
@@ -186,6 +194,21 @@ def test_ScipySearch_available(prob, prob_with_const, prob_nonlinear, prob_perm)
     assert solver.available(prob_with_const) == True
     assert solver.available(prob_nonlinear) == True
     assert solver.available(prob_perm) == False
+
+
+def test_ScipyLpSearch1(prob_only_continuous, callback):
+    solver = Solver(algo='ScipyLpSearch')
+    solver.setParams(n_trial=10, callbacks=[callback])
+    prob_only_continuous.solve(solver, timelimit=1)
+
+def test_ScipyLpSearch_available(prob, prob_only_continuous, prob_with_const, prob_nonlinear, prob_perm):
+    solver = Solver(algo='ScipyLpSearch')
+    assert solver.available(prob) == False
+    assert solver.available(prob_only_continuous) == True
+    assert solver.available(prob_with_const) == False
+    assert solver.available(prob_nonlinear) == False
+    assert solver.available(prob_perm) == False
+
 
 def test_AutoSearch1(prob, callback):
     solver = Solver(algo='auto')

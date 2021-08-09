@@ -3,6 +3,10 @@ from flopt.solvers.sequential_update_searches import(
     RandomSearch,
     TwoOpt
 )
+from flopt.solvers.scipy_searches import (
+    ScipySearch,
+    ScipyLpSearch,
+)
 from flopt.solvers.optuna_searches import (
     OptunaSearch,
     OptunaTPESearch,
@@ -11,7 +15,6 @@ from flopt.solvers.optuna_searches import (
 from flopt.solvers.hyperopt_search import HyperoptTPESearch
 from flopt.solvers.swarm_intelligence_searches import ShuffledFrogLeapingSearch
 from flopt.solvers.pulp_search import PulpSearch
-from flopt.solvers.scipy_search import ScipySearch
 from flopt.solvers.auto_search import AutoSearch
 
 
@@ -24,6 +27,7 @@ algos = {
     'SFLA'             : ShuffledFrogLeapingSearch,
     'PulpSearch'       : PulpSearch,
     'ScipySearch'      : ScipySearch,
+    'ScipyLpSearch'    : ScipyLpSearch,
     'auto'             : AutoSearch,
 }
 

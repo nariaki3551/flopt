@@ -139,6 +139,7 @@ class BaseSearch:
 
         self.best_solution = solution
         self.solution = solution.clone()
+        self.prob = prob
         self.obj = obj
         self.constraints = constraints
         self.start_time = time()
