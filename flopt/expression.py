@@ -73,18 +73,20 @@ class Expression:
         self.operater = operater
         self.var_dict = None
 
+
     def setVarDict(self, var_dict):
         self.var_dict = var_dict
 
+
     def unsetVarDict(self):
         self.var_dict = None
+
 
     def value(self, solution=None):
         if solution is None:
             return self._value()
         else:
-            var_dict = {var.name : var for var in solution}
-            self.setVarDict(var_dict)
+            self.setVarDict(solution.toDict())
             return self._value()
 
 
@@ -179,6 +181,8 @@ class Expression:
         else:
             import sympy
             expr = sympy.sympify(self.name)
+            if expr.is_constant():
+                return 0
             poly = sympy.poly(expr)
             return max(poly.degree_list())
 
@@ -227,22 +231,25 @@ class Expression:
         import sympy
         expr = sympy.sympify(self.name)
         variables = self.getVariables()
-        variable_list = list(self.getVariables())
-        num_variables = len(variable_list)
+        x = list(self.getVariables())
+        num_variables = len(x)
 
         for i in range(num_variables):
-            var_i = variable_list[i]
+            var_i = x[i]
             diff_expr = expr.diff(var_i.name)
             for j in range(i+1, num_variables):
-                var_j = variable_list[j]
+                var_j = x[j]
                 if not diff_expr.diff(var_j.name).is_constant():
                     return False
-
         return True
 
 
-    def toIsing(self):
+    def toIsing(self, x=None):
         """
+        Parameters
+        ----------
+        x : list or numpy.array or VarElement family
+
         Returns
         -------
         IsingStructure
@@ -250,78 +257,93 @@ class Expression:
         Examples
         --------
 
-        >>> a = Variable(name='a', iniValue=1, cat='Binary')
-        >>> b = Variable(name='b', iniValue=1, cat='Binary')
-        >>> c = Variable(name='c', iniValue=1, cat='Binary')
-        >>> import numpy as np
+        .. code-block :: python
 
-        >>> # make Ising model
-        >>> x = np.array([a, b, c])
-        >>> J = np.array([
-        >>>     [1, 2, 1],
-        >>>     [0, 1, 1],
-        >>>     [0, 0, 3]
-        >>> ])
-        >>> h = np.array([1, 2, 0])
-        >>> obj = (x.T).dot(J).dot(x) + (h.T).dot(x)
-        >>> Name: (((a*(((a*1)+(b*0))+(c*0)))+(b*(((a*2)+(b*1))+(c*0))))+(c*(((a*1)+(b*1))+(c*3))))+(((a*1)+(b*2))+(c*0))
-              Type    : Expression
-              Value   : 20.25
-              Degree  : 2
+            import flopt
+            a = flopt.Variable(name='a', iniValue=1, cat='Binary')
+            b = flopt.Variable(name='b', iniValue=1, cat='Binary')
+            c = flopt.Variable(name='c', iniValue=1, cat='Binary')
 
-        >>> # check to be able to ising
-        >>> print(obj.isIsing())
-        >>> True
+            # make Ising model
+            import numpy as np
+            x = np.array([a, b, c])
+            J = np.array([
+                [1, 2, 1],
+                [0, 1, 1],
+                [0, 0, 3]
+            ])
+            h = np.array([1, 2, 0])
+            obj = - (x.T).dot(J).dot(x) - (h.T).dot(x)
+            print(obj)
+            >>> Name: (0-(((a*a)+(b*(b+(a*2))))+(c*((a+b)+(c*3)))))-(a+(b*2))
+            >>>   Type    : Expression
+            >>>   Value   : -12
+            >>>   Degree  : 2
 
-        >>> obj.isIsing()
-        >>> # obj to Ising model
-        >>> ising = obj.toIsing()
-        >>> ising.J
-        >>> array([[3., 1., 1.],
-                   [0., 1., 2.],
-                   [0., 0., 1.]])
-        >>> ising.h
-        >>> array([[0.],
-                   [1.],
-                   [2.]])
-        >>> ising.variable_list
-        >>> [VarElement("c", 1, 3, 1), VarElement("a", 0, 1, -1), VarElement("b", 1, 2, 1)]
+            # check to be able to ising
+            print(obj.isIsing())
+            >>> True
+
+            # obj to Ising model
+            ising = obj.toIsing()
+            print(ising.J)
+            >>> [[1. 2. 1.]
+            >>>  [0. 1. 1.]
+            >>>  [0. 0. 3.]]
+            print(ising.h)
+            >>> [1. 2. 0.]
+            print(ising.x)
+            >>> [VarElement("a", 0, 1, 1) VarElement("b", 0, 1, 1) VarElement("c", 0, 1, 1)]
 
         We set solution by
 
-        >>> solution = [1, -1, 1]
-        >>> for var, value in zip(ising.variable_list, solution):
-        >>>     var.setValue(value)
+        .. code-block :: python
+
+            solution = [1, -1, 1]
+            for var, value in zip(ising.x, solution):
+                var.setValue(value)
         """
         assert self.isIsing()
         import sympy
         import numpy as np
+        IsingStructure = collections.namedtuple(
+            'IsingStructure',
+            'J h x'
+            )
         expr = sympy.sympify(self.name).expand()
-        IsingStructure = collections.namedtuple('IsingStructure', 'J h variable_list')
-        variable_list = list(self.getVariables())
-        num_variables = len(variable_list)
+
+        if x is None:
+            x_list = list(self.getVariables())
+            x_list.sort(key=lambda var: var.name)
+            x = np.array(x_list)
+
+        num_variables = len(x)
 
         J = np.zeros((num_variables, num_variables))
         for i in range(num_variables):
-            var_i = variable_list[i]
+            var_i = x[i]
             coeff = expr.coeff(var_i.name, 2)
-            J[i, i] = coeff
+            J[i, i] = - coeff
             for j in range(i+1, num_variables):
-                var_j = variable_list[j]
+                var_j = x[j]
                 coeff = expr.coeff(var_i.name).coeff(var_j.name)
-                J[i, j] = coeff
+                J[i, j] = - coeff
 
-        h = np.zeros((num_variables, 1))
+        h = np.zeros((num_variables, ))
         for i in range(num_variables):
-            var_i = variable_list[i]
+            var_i = x[i]
             coeff = expr.coeff(var_i.name).as_coefficients_dict()[1]
-            h[i] = coeff
+            h[i] = - coeff
+
+        return IsingStructure(J, h, x)
 
         return IsingStructure(J=J, h=h, variable_list=variable_list)
 
 
     def __add__(self, other):
         if isinstance(other, (int, float)):
+            if other == 0:
+                return self
             other = ExpressionConst(other)
             return Expression(self, other, '+')
         elif isinstance(other, Expression):
@@ -334,6 +356,8 @@ class Expression:
 
     def __sub__(self, other):
         if isinstance(other, (int, float)):
+            if other == 0:
+                return self
             other = ExpressionConst(other)
             return Expression(self, other, '-')
         elif isinstance(other, Expression):
@@ -346,6 +370,10 @@ class Expression:
 
     def __mul__(self, other):
         if isinstance(other, (int, float)):
+            if other == 0:
+                return ExpressionConst(0)
+            elif other == 1:
+                return self
             other = ExpressionConst(other)
             return Expression(self, other, '*')
         elif isinstance(other, Expression):
@@ -358,6 +386,8 @@ class Expression:
 
     def __truediv__(self, other):
         if isinstance(other, (int, float)):
+            if other == 1:
+                return self
             other = ExpressionConst(other)
             return Expression(self, other, '/')
         elif isinstance(other, Expression):
@@ -367,6 +397,8 @@ class Expression:
 
     def __rtruediv__(self, other):
         if isinstance(other, (int, float)):
+            if other == 0:
+                return ExpressionConst(0)
             other = ExpressionConst(other)
             return Expression(other, self, '/')
         elif isinstance(other, Expression):
@@ -376,6 +408,8 @@ class Expression:
 
     def __pow__(self, other):
         if isinstance(other, (int, float)):
+            if other == 1:
+                return self
             other = ExpressionConst(other)
             return Expression(self, other, '^')
         elif isinstance(other, Expression):
@@ -385,6 +419,8 @@ class Expression:
 
     def __rpow__(self, other):
         if isinstance(other, (int, float)):
+            if other == 1:
+                return ExpressionConst(1)
             other = ExpressionConst(other)
             return Expression(other, self, '^')
         elif isinstance(other, Expression):
@@ -594,6 +630,62 @@ class ExpressionConst(Expression):
         # for hasCustomExpression in Expression calss
         return False
 
+    def __add__(self, other):
+        if isinstance(other, (int, float)):
+            return ExpressionConst(self._value + other)
+        elif isinstance(other, Expression):
+            return self._value + other
+        else:
+            return NotImplemented
+
+    def __sub__(self, other):
+        if isinstance(other, (int, float)):
+            return ExpressionConst(self._value - other)
+        elif isinstance(other, Expression):
+            return self._value + other
+        else:
+            return NotImplemented
+
+    def __mul__(self, other):
+        if isinstance(other, (int, float)):
+            return ExpressionConst(self._value * other)
+        elif isinstance(other, Expression):
+            return self._value * other
+        else:
+            return NotImplemented
+
+    def __truediv__(self, other):
+        if isinstance(other, (int, float)):
+            return ExpressionConst(self._value / other)
+        elif isinstance(other, Expression):
+            return self._value / other
+        else:
+            return NotImplemented
+
+    def __rtruediv__(self, other):
+        if isinstance(other, (int, float)):
+            return ExpressionConst(other / self._value)
+        elif isinstance(other, Expression):
+            return other / self._value
+        else:
+            return NotImplemented
+
+    def __pow__(self, other):
+        if isinstance(other, (int, float)):
+            return ExpressionConst(self._value ** other)
+        elif isinstance(other, Expression):
+            return self._value ** other
+        else:
+            return NotImplemented
+
+    def __rpow__(self, other):
+        if isinstance(other, (int, float)):
+            return ExpressionConst(other ** self._value)
+        elif isinstance(other, Expression):
+            return other ** self._value
+        else:
+            return NotImplemented
+
     def __neg__(self):
         return ExpressionConst(-self._value)
 
@@ -605,18 +697,3 @@ class ExpressionConst(Expression):
         return s
 
 
-# class ExpressionNeg(Expression):
-#     def __init__(self, expression):
-#         self.name = f'-({expression.name})'
-#         self.expression = expression
-#         self.var = var
-#
-#     def value(self):
-#         return - self.expression.value()
-#
-#     def getVariables(self):
-#         """for getVariables() in Expression calss"""
-#         return self.expression.getVariables()
-#
-#     def __neg__(self):
-#         return self.expression

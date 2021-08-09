@@ -11,7 +11,7 @@ logger = setup_logger(__name__)
 
 INI_BOUND = 1e10
 
-def Variable(name, lowBound=-INI_BOUND, upBound=INI_BOUND, cat='Continuous', iniValue=None):
+def Variable(name, lowBound=None, upBound=None, cat='Continuous', iniValue=None):
     """
     Create Variable object
 
@@ -39,23 +39,28 @@ def Variable(name, lowBound=-INI_BOUND, upBound=INI_BOUND, cat='Continuous', ini
 
     >>> from flopt import Variable
     >>> a = Variable(name='a', lowBound=0, upBound=1, cat='Integer')
-    >>> b = Variable(name='b', lowBound=1, upBound=2, cat='Continuous')
-    >>> c = Variable(name='b', lowBound=-2, intValue=3, cat='Continuous')
-    >>> d = Variable(name='d', cat='Binary')
+    >>> c_1 = Variable(name='c_1', lowBound=1, upBound=2, cat='Continuous')
+    >>> c_2 = Variable(name='c_2', lowBound=-2, intValue=3, cat='Continuous')
+    >>> b = Variable(name='b', cat='Binary')
+    >>> s = Variable(name='s', cat='Spin')
 
     Create [lowBound, ..., upBound] range permutation variable
 
-    >>> e = Variable(name='e', lowBound=0, upBound=10, cat='Permutation')
+    >>> p = Variable(name='p', lowBound=0, upBound=10, cat='Permutation')
 
     We can see the data of variable, print().
 
-    >>> print(e)
-    >>> Name: e
+    >>> print(p)
+    >>> Name: p
     >>> Type    : VarPermutation
     >>> Value   : [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     >>> lowBound: 0
     >>> upBound : 10
     """
+    if lowBound is None:
+        lowBound = -INI_BOUND
+    if upBound is None:
+        upBound = INI_BOUND
     if cat == 'Continuous':
         return VarContinuous(name, lowBound, upBound, iniValue)
     elif cat == 'Integer':
@@ -81,6 +86,7 @@ class VarElement:
             iniValue = self.getIniValue()
         self._value = iniValue
 
+
     def getType(self):
         """
         Returns
@@ -90,20 +96,26 @@ class VarElement:
         """
         return self.type
 
-    def value(self):
+
+    def value(self, solution=None):
         """
         Returns
         -------
         float or int
           return value of variable
         """
-        return self._value
+        if solution is None:
+            return self._value
+        else:
+            return solution.toDict()[self.name]
+
 
     def setValue(self, value):
         """
         set the value to variable
         """
         self._value = value
+
 
     def feasible(self):
         """
@@ -113,6 +125,7 @@ class VarElement:
           return true if value of self is in between lowBound and upBound else false
         """
         return self.lowBound <= self._value <= self.upBound
+
 
     def clip(self):
         """
@@ -125,29 +138,43 @@ class VarElement:
         elif self._value > self.upBound:
             self._value = self.upBound
 
+
+    def toDict(self):
+        return {self.name: self}
+
+
     def getVariables(self):
         # for getVariables() in Expression class
         return {self}
+
 
     def hasCustomExpression(self):
         # for hasCustomExpression() in Expression class
         return False
 
+
     def isLinear(self):
         return True
+
 
     def setRandom(self):
         """
         set random value to variable
         """
-        pass  # define each VarElement family
+        raise NotImplementedError
+
 
     def maxDegree(self):
         return 1
 
+
     def __add__(self, other):
+        if isinstance(other, VarConst):
+            other = other.value()
         if isinstance(other, (int, float)):
-            other = VarConst(f'{other}', other)
+            if other == 0:
+                return self
+            other = VarConst(other)
             return Expression(self, other, '+')
         elif isinstance(other, (VarElement, Expression)):
             return Expression(self, other, '+')
@@ -158,8 +185,12 @@ class VarElement:
         return self + other
 
     def __sub__(self, other):
+        if isinstance(other, VarConst):
+            other = other.value()
         if isinstance(other, (int, float)):
-            other = VarConst(f'{other}', other)
+            if other == 0:
+                return self
+            other = VarConst(other)
             return Expression(self, other, '-')
         elif isinstance(other, (VarElement, Expression)):
             return Expression(self, other, '-')
@@ -170,8 +201,14 @@ class VarElement:
         return other + (-self)
 
     def __mul__(self, other):
+        if isinstance(other, VarConst):
+            other = other.value()
         if isinstance(other, (int, float)):
-            other = VarConst(f'{other}', other)
+            if other == 0:
+                return VarConst(other)
+            elif other == 1:
+                return self
+            other = VarConst(other)
             return Expression(self, other, '*')
         elif isinstance(other, (VarElement, Expression)):
             return Expression(self, other, '*')
@@ -182,8 +219,12 @@ class VarElement:
         return self * other
 
     def __truediv__(self, other):
+        if isinstance(other, VarConst):
+            other = other.value()
         if isinstance(other, (int, float)):
-            other = VarConst(f'{other}', other)
+            if other == 1:
+                return self
+            other = VarConst(other)
             return Expression(self, other, '/')
         elif isinstance(other, (VarElement, Expression)):
             return Expression(self, other, '/')
@@ -191,8 +232,12 @@ class VarElement:
             return NotImplemented
 
     def __rtruediv__(self, other):
+        if isinstance(other, VarConst):
+            other = other.value()
         if isinstance(other, (int, float)):
-            other = VarConst(f'{other}', other)
+            if other == 0:
+                return VarConst(0)
+            other = VarConst(other)
             return Expression(other, self, '/')
         elif isinstance(other, (VarElement, Expression)):
             return Expression(other, self, '/')
@@ -200,8 +245,10 @@ class VarElement:
             return NotImplemented
 
     def __mod__(self, other):
+        if isinstance(other, VarConst):
+            other = other.value()
         if isinstance(other, int):
-            other = VarConst(f'{other}', other)
+            other = VarConst(other)
             return Expression(self, other, '%')
         elif isinstance(other, (VarInteger, Expression)):
             return Expression(self, other, '%')
@@ -209,8 +256,14 @@ class VarElement:
             raise NotImplementedError()
 
     def __pow__(self, other):
+        if isinstance(other, VarConst):
+            other = other.value()
         if isinstance(other, (int, float)):
-            other = VarConst(f'{other}', other)
+            if other == 0:
+                return VarConst(1)
+            elif other == 1:
+                return self
+            other = VarConst(other)
             return Expression(self, other, '^')
         elif isinstance(other, (VarElement, Expression)):
             return Expression(self, other, '^')
@@ -218,8 +271,12 @@ class VarElement:
             return NotImplemented
 
     def __rpow__(self, other):
+        if isinstance(other, VarConst):
+            other = other.value()
         if isinstance(other, (int, float)):
-            other = VarConst(f'{other}', other)
+            if other == 1:
+                return VarConst(1)
+            other = VarConst(other)
             return Expression(other, self, '^')
         elif isinstance(other, (VarElement, Expression)):
             return Expression(other, self, '^')
@@ -237,7 +294,7 @@ class VarElement:
 
     def __neg__(self):
         # 0 - self
-        zero = VarConst(f'0', 0)
+        zero = VarConst(0)
         return Expression(zero, self, '-')
 
     def __pos__(self):
@@ -267,6 +324,7 @@ class VarElement:
         return f'VarElement("{self.name}", {self.lowBound}, {self.upBound}, {self.value()})'
 
 
+
 class VarInteger(VarElement):
     """
     Ingeter Variable class
@@ -275,17 +333,28 @@ class VarInteger(VarElement):
         super().__init__(name, ceil(lowBound), floor(upBound), iniValue)
         self.type = 'VarInteger'
 
+
+    def value(self, solution=None):
+        """
+        Returns
+        -------
+        float or int
+          return value of variable
+        """
+        if solution is None:
+            return int(self._value)
+        else:
+            return solution.toDict()[self.name]
+
+
+
     def getIniValue(self):
         return (self.lowBound + self.upBound) // 2
 
-    def value(self):
-        if not isinstance(self._value, int):
-            warn = f"value is not int, so output value is casted into int"
-            logger.warning(warn)
-        return int(self._value)
 
     def setRandom(self):
         self._value = random.randint(self.lowBound, self.upBound)
+
 
 
 class VarBinary(VarInteger):
@@ -316,27 +385,27 @@ class VarBinary(VarInteger):
 
     def __invert__(self):
         # (self+1)%2
-        two = VarConst(f'2', 2)
+        two = VarConst(2)
         return Expression(self+1, two, '%')
 
     def __and__(self, other):
         if isinstance(other, (int, float)):
-            other = VarConst(f'{other}', other)
+            other = VarConst(other)
         return Expression(self, other, '&')
 
     def __rand__(self, other):
         if isinstance(other, (int, float)):
-            other = VarConst(f'{other}', other)
+            other = VarConst(other)
         return Expression(other, self, '&')
 
     def __or__(self, other):
         if isinstance(other, (int, float)):
-            other = VarConst(f'{other}', other)
+            other = VarConst(other)
         return Expression(self, other, '|')
 
     def __ror__(self, other):
         if isinstance(other, (int, float)):
-            other = VarConst(f'{other}', other)
+            other = VarConst(other)
         return Expression(other, self, '|')
 
 
@@ -353,6 +422,7 @@ class VarContinuous(VarElement):
 
     def setRandom(self):
         self._value = random.uniform(self.lowBound, self.upBound)
+
 
 
 class VarPermutation(VarElement):
@@ -411,6 +481,7 @@ class VarPermutation(VarElement):
         return len(self._value)
 
 
+
 class VarConst(VarElement):
     """
     It is the variable of constant value.
@@ -419,12 +490,11 @@ class VarConst(VarElement):
 
     Parameters
     ----------
-    name : str
-      name
     const : float or int
       value
     """
-    def __init__(self, name, const):
+    def __init__(self, const):
+        name = f'{const}'
         super().__init__(name, const, const, const)
         self.type = 'VarConst'
 
@@ -434,3 +504,47 @@ class VarConst(VarElement):
 
     def maxDegree(self):
         return 0
+
+    def __add__(self, other):
+        return self._value + other
+
+    def __sub__(self, other):
+        return self._value - other
+
+    def __mul__(self, other):
+        return self._value * other
+
+    def __truediv__(self, other):
+        return self._value / other
+
+    def __rtruediv__(self, other):
+        return other / self._value
+
+    def __mod__(self, other):
+        return self._value % other
+
+    def __pow__(self, other):
+        return self._value ** other
+
+    def __rpow__(self, other):
+        return other ** self._value
+
+    def __neg__(self):
+        return - self._value
+
+    def __pos__(self):
+        return self._value
+
+    def __hash__(self):
+        return hash(self.name)
+
+    def __str__(self):
+        s  = f'Name: {self.name}\n'
+        s += f'  Type    : {self.type}\n'
+        s += f'  Value   : {self.value()}\n'
+        return s
+
+    def __repr__(self):
+        return f'VarConst("{self.name}", {self.lowBound}, {self.upBound}, {self.value()})'
+
+
