@@ -25,7 +25,7 @@ class BaseSearch:
     - `self.recordLog()` records the log (objective value, time, iteratino)
       for each time incumbent solution (`self.bset_solution`) is updated.
 
-    Parameters
+    Attributes
     ----------
     name : str
         name of solver
@@ -59,6 +59,8 @@ class BaseSearch:
         start_time of solver
     trial_ix : int
         number of trials
+    max_k : int
+        number of save solutions
     """
     def __init__(self):
         # base information
@@ -80,6 +82,8 @@ class BaseSearch:
         self.log = Log()
         self.start_time = None
         self.trial_ix = 0
+        self.max_k = 1
+        self.save_solution = False
 
 
     def setParams(self, params=None, feasible_guard=None, **kwargs):
@@ -170,18 +174,23 @@ class BaseSearch:
             self.best_obj_value = self.obj.value(solution)
         else:
             self.best_obj_value = obj_value
+            self.save_solution = True
 
 
     def recordLog(self):
         """
         write log in `self.log`
         """
-        self.log.append({
+        log_dict = {
             'obj_value': self.best_obj_value,
             'best_bd': self.best_bd,
             'time': time()-self.start_time,
             'iteration': self.trial_ix
-        })
+        }
+        if self.max_k > 1 and self.save_solution:
+            log_dict['solution'] = self.best_solution.clone()
+            self.save_solution = False
+        self.log.append(log_dict)
 
 
     def during_solver_message(self, head):
