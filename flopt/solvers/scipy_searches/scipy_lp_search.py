@@ -23,8 +23,8 @@ logger = setup_logger(__name__)
 class ScipyLpSearch(BaseSearch):
     """Scipy optimize linprog API Solver
 
-    SeeAlso
-    -------
+    See Also
+    --------
     scipy.optimize.linprog
 
     Returns

@@ -10,6 +10,7 @@ Solvers
     Basian
     Evolution
     LP
+    nonLP
 
 
 Solver Base class

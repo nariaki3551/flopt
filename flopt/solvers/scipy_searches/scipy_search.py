@@ -22,8 +22,8 @@ logger = setup_logger(__name__)
 class ScipySearch(BaseSearch):
     """scipy optimize minimize API Solver
 
-    SeeAlso
-    -------
+    See Also
+    --------
     scipy.optimize.minimize
     """
     def __init__(self):
@@ -45,7 +45,7 @@ class ScipySearch(BaseSearch):
         bool
             return true if it can solve the problem else false
         """
-        return all(not var.getType() == 'VarPermutation' for var in prob.getVariables())
+        return all(var.getType() == 'VarContinuous' for var in prob.getVariables())
 
 
     def search(self):
@@ -63,7 +63,7 @@ class ScipySearch(BaseSearch):
             def func(values):
                 variables = []
                 for var_name, value in zip(var_names, values):
-                    variables.append(VarConst(value))
+                    variables.append(VarConst(value, name=var_name))
                 solution = Solution('tmp', variables)
                 return expression.value(solution)
             return func
