@@ -15,8 +15,9 @@ def flopt_to_pulp(prob):
     lp_solution : Solution of pulp.LpVariables
     """
     assert PulpSearch().available(prob)
+    solution = Solution('s', prob.getVariables())
     lp_prob, lp_solution \
-        = PulpSearch().createLpProblem(prob.getSolution(), prob.obj, prob.constraints)
+        = PulpSearch().createLpProblem(solution, prob.obj, prob.constraints)
     return lp_prob, lp_solution
 
 
