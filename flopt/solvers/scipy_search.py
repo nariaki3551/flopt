@@ -60,7 +60,7 @@ class ScipySearch(BaseSearch):
             def func(values):
                 variables = []
                 for var_name, value in zip(var_names, values):
-                    variables.append(VarConst(var_name, value))
+                    variables.append(VarConst(value))
                 solution = Solution('tmp', variables)
                 return expression.value(solution)
             return func

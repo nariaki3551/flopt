@@ -43,6 +43,18 @@ class Solution:
         self.type = 'Solution'
         self._variables = sorted(variables, key=lambda var: var.name)
 
+
+    def toDict(self):
+        """
+        Returns
+        -------
+        dict:
+            key is name of variable,
+            value is VarElement family or Expression
+        """
+        return {variable.name: variable for variable in self._variables}
+
+
     def value(self):
         """
         Returns
@@ -53,6 +65,7 @@ class Solution:
         values = [variable.value() for variable in self._variables]
         return values
 
+
     def getVariables(self):
         """
         Returns
@@ -61,6 +74,7 @@ class Solution:
           Variable instances which belong to the Solution
         """
         return self._variables
+
 
     def clone(self):
         """
@@ -71,6 +85,7 @@ class Solution:
         """
         return +self
 
+
     def copy(self, other):
         """
         Copy the values of a Solution to itself (call by value)
@@ -78,12 +93,14 @@ class Solution:
         for vb, ovb in zip(self._variables, other._variables):
             vb.setValue(ovb.value())
 
+
     def setRandom(self):
         """
         Set the solution values uniformly random
         """
         for vb in self._variables:
             vb.setRandom()
+
 
     def feasible(self):
         """
@@ -94,12 +111,14 @@ class Solution:
         """
         return all(vb.feasible() for vb in self._variables)
 
+
     def clip(self):
         """
         Guarantee feasibility of the solution
         """
         for vb in self._variables:
             vb.clip()
+
 
     def squaredNorm(self):
         """
@@ -110,6 +129,7 @@ class Solution:
         """
         return sum(vb.value()*vb.value() for vb in self._variables)
 
+
     def norm(self):
         """
         Returns
@@ -118,6 +138,7 @@ class Solution:
           2-norm of the solution as a vector in Euclid space
         """
         return sqrt(self.squaredNorm())
+
 
     def dot(self, other):
         """
@@ -131,6 +152,7 @@ class Solution:
             inner += vb1.value()*vb2.value()
         return inner
 
+
     def floor(self):
         """
         Returns
@@ -143,6 +165,7 @@ class Solution:
             vb.setValue(floor(vb.value()))
         return Solution(f'floor({self.name})', vbs)
 
+
     def ceil(self):
         """
         Returns
@@ -154,6 +177,7 @@ class Solution:
         for vb in vbs:
             vb.setValue(ceil(vb.value()))
         return Solution(f'ceil({self.name})', vbs)
+
 
     def __pos__(self):
         vbs = deepcopy(self._variables)
@@ -266,11 +290,7 @@ class Solution:
         return self._variables[k]
 
     def __str__(self):
-        s  = f'Name: {self.name}\n'
-        s += f'  Type    : {self.type}\n'
-        for vb in self:
-            s += f'  {vb.__str__()}\n'
-        return s
+        return self.__repr__()
 
     def __repr__(self):
         return f'Solution({self.name}, [{", ".join([vb.name for vb in self._variables])}])'
