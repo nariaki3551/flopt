@@ -11,6 +11,7 @@ logger = setup_logger(__name__)
 
 INI_BOUND = 1e10
 
+
 def Variable(name, lowBound=None, upBound=None, cat='Continuous', iniValue=None):
     """
     Create Variable object
@@ -67,6 +68,8 @@ def Variable(name, lowBound=None, upBound=None, cat='Continuous', iniValue=None)
         return VarInteger(name, lowBound, upBound, iniValue)
     elif cat == 'Binary':
         return VarBinary(name, iniValue)
+    elif cat == 'Spin':
+        return VarSpin(name, iniValue)
     elif cat == 'Permutation':
         return VarPermutation(name, lowBound, upBound, iniValue)
     else:
@@ -376,12 +379,39 @@ class VarBinary(VarInteger):
       >>> (~a).value()
       >>> 0
     """
-    def __init__(self, name, iniValue):
+    def __init__(self, name, iniValue, spin=None):
         super().__init__(name, 0, 1, iniValue)
         self.type = 'VarBinary'
+        self.spin = spin
+
+
+    def setValue(self, value):
+        self._value = value
+        if self.spin is not None:
+            self.spin._value = int( 2 * value - 1 )
+
 
     def setRandom(self):
         self._value = random.randint(0, 1)
+
+
+    def toSpin(self):
+        """
+        Returns
+        -------
+        Expression
+
+        Notes
+        -----
+        to convert Spin expression
+        {0, 1} to {-1, 1}
+        """
+        if self.spin is None:
+            self.spin = VarSpin(
+                f'{self.name}_s',
+                iniValue=int(2*self._value-1), binary=self,
+            )
+        return (self.spin + 1) * 0.5
 
     def __invert__(self):
         # (self+1)%2
@@ -407,6 +437,85 @@ class VarBinary(VarInteger):
         if isinstance(other, (int, float)):
             other = VarConst(other)
         return Expression(other, self, '|')
+
+    def __repr__(self):
+        return f'Variable({self.name}, cat="Binary", iniValue={self.value()})'
+
+
+
+class VarSpin(VarElement):
+    """
+    Spin Variable class, which takes only 1 or -1
+    """
+    def __init__(self, name, iniValue, binary=None):
+        super().__init__(name, -1, 1, iniValue)
+        self.type = 'VarSpin'
+        self.binary = binary
+
+
+    def setValue(self, value):
+        self._value = value
+        if self.binary is not None:
+            self.binary._value = int( (value + 1) / 2 )
+
+
+    def feasible(self):
+        """
+        Returns
+        -------
+        bool
+          return true if value of self is 1 or -1 else false
+        """
+        return self._value in {-1, 1}
+
+
+    def clip(self):
+        """
+        map in an feasible area by clipping.
+        """
+        if self._value <= 0:
+            self._value = self.lowBound
+        else:
+            self._value = self.upBound
+
+
+    def getIniValue(self):
+        return random.choice([-1, 1])
+
+
+    def setRandom(self):
+        """
+        set random value to variable
+        """
+        self._value = random.choice([-1, 1])
+
+
+    def toBinary(self):
+        """
+        Returns
+        -------
+        Expression
+
+        Notes
+        -----
+        to convert Binary expression
+        {-1, 1} to {0, 1}
+        """
+        if self.binary is None:
+            self.binary = VarBinary(
+                f'{self.name}_b',
+                iniValue=int((self._value+1)/2), spin=self,
+            )
+        return 2 * self.binary - 1
+
+
+    def __invert__(self):
+        # -self
+        return self.__neg__()
+
+    def __repr__(self):
+        return f'Variable({self.name}, cat="Spin", iniValue={self._value})'
+
 
 
 class VarContinuous(VarElement):

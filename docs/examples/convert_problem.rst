@@ -52,7 +52,7 @@ And, we convert this obj to Ising model form, as follows.
    >>>        [1.],
    >>>        [2.]])
 
-   print(ising.variable_list)
+   print(ising.x)
    >>> [VarElement("c", 1, 3, 1), VarElement("a", 0, 1, -1), VarElement("b", 1, 2, 1)]
 
 obj = x^TJx + h^Tx, where x = variable_list.

@@ -110,6 +110,20 @@ class Problem:
         return self.variables
 
 
+    def getSolution(self, name='s'):
+        """
+        Parameters
+        ----------
+        name : str
+            name of solution
+
+        Returns
+        -------
+        Solution
+        """
+        return Solution(name, self.getVariables())
+
+
     def solve(self, solver=None, timelimit=None, msg=False):
         """solve this problem
 
@@ -134,16 +148,13 @@ class Problem:
         if timelimit is not None:
             solver.setParams(timelimit=timelimit)
 
-        # convert for solver
-        solution = Solution('s', self.variables)
-
         if self.sense == 'minimize':
             obj = self.obj
         elif self.sense == 'maximize':
             obj = -self.obj
 
         status, log, self.time = solver.solve(
-            solution, obj, self.constraints, self, msg=msg,
+            self.getSolution(), obj, self.constraints, self, msg=msg,
         )
 
         return status, log

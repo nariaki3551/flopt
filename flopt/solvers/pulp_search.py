@@ -68,7 +68,8 @@ class PulpSearch(BaseSearch):
     def search(self):
         status = flopt.constants.SOLVER_NORMAL_TERMINATE
 
-        lp_prob, lp_solution = self.createLpProblem()
+        lp_prob, lp_solution \
+            = self.createLpProblem(self.solution, self.obj, self.constraints)
 
         if self.solver is not None:
             solver = self.solver
@@ -82,7 +83,6 @@ class PulpSearch(BaseSearch):
             if var.getType() in {'VarInteger', 'VarBinary'}:
                 value = round(value)
             var.setValue(value)
-            logger.debug(f'{var.name}: {value}')
         self.updateSolution(self.solution)
 
         if lp_status in {-1, -2, -3}:
@@ -95,8 +95,14 @@ class PulpSearch(BaseSearch):
         return status
 
 
-    def createLpProblem(self):
+    def createLpProblem(self, solution, obj, constraints):
         """Convert Problem into pulp.LpProblem
+
+        Parameters
+        ----------
+        solution : Solution
+        obj : Expression or VarElement family
+        constraints : list of Expression or VarElement family
 
         Returns
         -------
@@ -104,7 +110,7 @@ class PulpSearch(BaseSearch):
         """
         # conver VarElement -> LpVariable
         lp_variables = []
-        for var in self.solution:
+        for var in solution:
             if var.getType() == 'VarContinuous':
                 cat = 'Continuous'
             elif var.getType() == 'VarInteger':
@@ -122,9 +128,9 @@ class PulpSearch(BaseSearch):
         # conver Problem -> pulp.LpProblem
         name = '' if self.name is None else self.name
         lp_prob = pulp.LpProblem(name=name)
-        lp_prob.setObjective(self.obj.value(lp_solution))
+        lp_prob.setObjective(obj.value(lp_solution))
 
-        for const in self.constraints:
+        for const in constraints:
             const_exp = const.expression
             if const.type == 'eq':
                 lp_prob.addConstraint(
@@ -143,3 +149,4 @@ class PulpSearch(BaseSearch):
                 )
 
         return lp_prob, lp_solution
+

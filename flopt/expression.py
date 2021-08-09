@@ -6,6 +6,14 @@ from flopt.env import setup_logger
 logger = setup_logger(__name__)
 
 
+class SelfReturn:
+    def __init__(self, var):
+        self.var = var
+    def value(self):
+        return self.var
+
+
+
 class Expression:
     """
 
@@ -97,6 +105,7 @@ class Expression:
         float or int
             return value of expression
         """
+        assert self.operater != '' or isinstance(self.elmB, ExpressionNull)
         elmA = self.elmA
         elmB = self.elmB
         if self.var_dict is not None:
@@ -217,6 +226,69 @@ class Expression:
         return all(expr.diff(var.name).is_constant() for var in variables)
 
 
+    def toLinear(self, x=None):
+        """
+        Parameters
+        ----------
+        x: list or numpy.array of VarElement family
+
+        Returns
+        -------
+        LpStructure
+
+        Examples
+        --------
+
+        >>> a = flopt.Variable('a', cat='Binary')
+        >>> b = flopt.Variable('b', cat='Binary')
+        >>> c = flopt.Variable('c', lowBound=-1, upBound=2, cat='Integer')
+        >>> expr = a + b + c + 4
+        >>> expr
+        >>> Name: c+(a+b)
+              Type    : Expression
+              Value   : 0
+              Degree  : 1
+
+        >>> # check to be able to linear
+        >>> expr.isLinear()
+        >>> True
+
+        >>> linear = expr.toLinear()
+        >>> linear.c
+        >>> [[1.]
+             [1.]
+             [1.]]
+        >>> linear.constant
+        >>> 4
+        >>> linear.x
+        >>> [VarElement("c", -1, 2, 0),
+             VarElement("b", 0, 1, 0),
+             VarElement("a", 0, 1, 0)]
+        """
+        assert self.isLinear()
+        import sympy
+        import numpy as np
+        expr = sympy.sympify(self.name).expand()
+        LinearStructure = collections.namedtuple(
+            'LinearStructure',
+            'c constant x'
+            )
+
+        if x is None:
+            x_list = list(self.getVariables())
+            x_list.sort(key=lambda var: var.name)
+            x = np.array(x_list)
+
+        num_variables = len(x)
+        c = np.zeros((num_variables, ))
+        for i in range(num_variables):
+            var_i = x[i]
+            coeff = expr.coeff(var_i.name).as_coefficients_dict()[1]
+            c[i] = coeff
+        constant = expr.as_coefficients_dict()[1]
+        return LinearStructure(c, constant, x)
+
+
     def isIsing(self):
         """
         Returns
@@ -224,6 +296,8 @@ class Expression:
         bool
             return true if this expression is linear else false
         """
+        if any( var.type not in {'VarSpin', 'VarBinary'} for var in self.getVariables() ):
+            return False
         if self.hasCustomExpression():
             return 'Unknown'
         if self.maxDegree() > 2:
@@ -310,10 +384,11 @@ class Expression:
             'IsingStructure',
             'J h x'
             )
-        expr = sympy.sympify(self.name).expand()
+        _expr = self.toSpin()
+        expr = sympy.sympify(_expr.name).expand()
 
         if x is None:
-            x_list = list(self.getVariables())
+            x_list = list(_expr.getVariables())
             x_list.sort(key=lambda var: var.name)
             x = np.array(x_list)
 
@@ -337,7 +412,64 @@ class Expression:
 
         return IsingStructure(J, h, x)
 
-        return IsingStructure(J=J, h=h, variable_list=variable_list)
+
+    def reform(self, reform_type='simplify'):
+        """
+        Parameters
+        ----------
+        reform_type : {'expand', 'simplify'}
+        """
+        assert reform_type in {'expand', 'simplify'}
+        import sympy
+        if reform_type == 'expand':
+            expr = sympy.sympify(self.name).expand()
+            reform_expr = eval(
+                str(expr),
+                {var.name: var for var in self.getVariables()}
+                )
+            self = reform_expr
+        else:
+            expr = sympy.sympify(self.name).simplify()
+            reform_expr = eval(
+                str(expr),
+                {var.name: var for var in self.getVariables()}
+                )
+            self = reform_expr
+        return self
+
+
+    def toBinary(self):
+        """create expression replased binary to spin
+
+        Returns
+        -------
+        Expression
+        """
+        if all( var.type == 'VarBinary' for var in self.getVariables() ):
+            return self
+        var_dict = {
+            var.name: SelfReturn(var.toBinary() if var.type == 'VarSpin' else var)
+            for var in self.getVariables()
+        }
+        self.setVarDict(var_dict)
+        return self.value()
+
+
+    def toSpin(self):
+        """create expression replased binary to spin
+
+        Returns
+        -------
+        Expression
+        """
+        if all( var.type == 'VarSpin' for var in self.getVariables() ):
+            return self
+        var_dict = {
+            var.name: SelfReturn(var.toSpin() if var.type == 'VarBinary' else var)
+            for var in self.getVariables()
+        }
+        self.setVarDict(var_dict)
+        return self.value()
 
 
     def __add__(self, other):
