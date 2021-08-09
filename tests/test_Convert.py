@@ -129,7 +129,7 @@ def test_flopt_to_pulp():
     assert flopt.Solver(algo='PulpSearch').available(prob)
 
     # convert flopt to pulp
-    from flopt.solvers.convert import flopt_to_pulp
+    from flopt.convert import flopt_to_pulp
     lp_prob, lp_solution = flopt_to_pulp(prob)
     print(lp_prob)
     print(lp_solution)

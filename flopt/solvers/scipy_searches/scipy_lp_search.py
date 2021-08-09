@@ -21,6 +21,17 @@ logger = setup_logger(__name__)
 
 
 class ScipyLpSearch(BaseSearch):
+    """Scipy optimize linprog API Solver
+
+    SeeAlso
+    -------
+    scipy.optimize.linprog
+
+    Returns
+    -------
+    status : int
+        status of solver
+    """
     def __init__(self):
         super().__init__()
         self.name = "ScipyLpSearch"
@@ -32,17 +43,13 @@ class ScipyLpSearch(BaseSearch):
         """
         Parameters
         ----------
-        obj : Expression or VarElement family
-            objective function
-        constraints : list of Constraint
-            constraints
+        prob : flopt.Problem
 
         Returns
         -------
         bool
             return true if it can solve the problem else false
         """
-        print([var.getType() == 'VarContinuous' for var in prob.getVariables()])
         return all(var.getType() == 'VarContinuous' for var in prob.getVariables())
 
 
@@ -55,7 +62,22 @@ class ScipyLpSearch(BaseSearch):
 
     def _search(self):
         status = flopt.constants.SOLVER_NORMAL_TERMINATE
-        lp = flopt_to_lp(self.prob)
+        var_names = [var.name for var in self.solution]
+
+        def gen_func(expression):
+            def func(values):
+                variables = []
+                for var_name, value in zip(var_names, values):
+                    variables.append(VarConst(value, name=var_name))
+                solution = Solution('tmp', variables)
+                return expression.value(solution)
+            return func
+
+        # function
+        func = gen_func(self.obj)
+
+        # lp structure
+        lp = flopt_to_lp(self.prob, x=self.solution.getVariables())
 
         # bounds
         bounds = [ (_lb, _ub) for _lb, _ub in zip(lp.lb, lp.ub) ]
@@ -64,10 +86,10 @@ class ScipyLpSearch(BaseSearch):
         options = {'maxiter': self.n_trial, 'disp': self.msg}
 
         # callback
-        def callback(values, **kwargs):
+        def callback(optimize_result):
             self.trial_ix += 1
-            obj_value = func(values)
-            for var, value in zip(self.solution, values):
+            obj_value = func(optimize_result.x)
+            for var, value in zip(self.solution, optimize_result.x):
                 var.setValue(value)
             if time() > self.start_time + self.timelimit:
                 raise TimeoutError

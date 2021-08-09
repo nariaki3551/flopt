@@ -602,8 +602,9 @@ class VarConst(VarElement):
     const : float or int
       value
     """
-    def __init__(self, const):
-        name = f'{const}'
+    def __init__(self, const, name=None):
+        if name is None:
+            name = f'{const}'
         super().__init__(name, const, const, const)
         self.type = 'VarConst'
 

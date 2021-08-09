@@ -3,11 +3,12 @@ import collections
 import flopt
 
 
-def flopt_to_lp(prob, eq=False):
+def flopt_to_lp(prob, x=None, eq=False):
     """
     Parameters
     ----------
     prob : Problem
+    x : vector
     eq : bool
         If it is true, then return norml equation formulation, such that Ax = b
         else inequality formulation such that Ax <= b
@@ -20,16 +21,17 @@ def flopt_to_lp(prob, eq=False):
                    lb <= x <= ub
     """
     if eq:
-        return flopt_to_lp_eq(prob)
+        return flopt_to_lp_eq(prob, x)
     else:
-        return flopt_to_lp_ineq(prob)
+        return flopt_to_lp_ineq(prob, x)
 
 
-def flopt_to_lp_eq(prob):
+def flopt_to_lp_eq(prob, x=None):
     """
     Parameters
     ----------
     prob : Problem
+    x : vector
 
     Returns
     -------
@@ -52,10 +54,9 @@ def flopt_to_lp_eq(prob):
         slack_list[i] = flopt.Variable(f'slack{i}', lowBound=0, cat='Continuous')
 
     n_variables = len(prob.variables) + n_slacks
-    x = np.hstack([
-        np.array(list(prob.variables), dtype=object),
-        slack_list
-        ])
+    if x is None:
+        x = np.array(list(prob.variables), dtype=object)
+    x = np.hstack([x, slack_list])
 
     # create A, b
     A = np.zeros((len(prob.constraints), n_variables))
@@ -90,11 +91,12 @@ def flopt_to_lp_eq(prob):
     return LpStructure(A, b, c, x, lb, ub, 'eq')
 
 
-def flopt_to_lp_ineq(prob):
+def flopt_to_lp_ineq(prob, x=None):
     """
     Parameters
     ----------
     prob : Problem
+    x : vector
 
     Returns
     -------
@@ -111,7 +113,8 @@ def flopt_to_lp_ineq(prob):
         )
 
     n_eqs = sum(const.type == 'eq' for const in prob.constraints)
-    x = np.array(list(prob.variables), dtype=object)
+    if x is None:
+        x = np.array(list(prob.variables), dtype=object)
 
     # create A, b
     A = np.zeros((len(prob.constraints) + n_eqs, len(x)))

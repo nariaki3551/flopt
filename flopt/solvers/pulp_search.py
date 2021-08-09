@@ -42,7 +42,6 @@ class PulpSearch(BaseSearch):
     status : int
         status of solver
     """
-
     def __init__(self):
         super().__init__()
         self.name = "PulpSearch"

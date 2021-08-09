@@ -20,6 +20,12 @@ logger = setup_logger(__name__)
 
 
 class ScipySearch(BaseSearch):
+    """scipy optimize minimize API Solver
+
+    SeeAlso
+    -------
+    scipy.optimize.minimize
+    """
     def __init__(self):
         super().__init__()
         self.name = "ScipySearch"
@@ -32,10 +38,7 @@ class ScipySearch(BaseSearch):
         """
         Parameters
         ----------
-        obj : Expression or VarElement family
-            objective function
-        constraints : list of Constraint
-            constraints
+        prob : flopt.Problem
 
         Returns
         -------
@@ -94,7 +97,7 @@ class ScipySearch(BaseSearch):
         options = {'maxiter': self.n_trial}
 
         # callback
-        def callback(values):
+        def callback(values, ):
             self.trial_ix += 1
             obj_value = func(values)
             for var, value in zip(self.solution, values):

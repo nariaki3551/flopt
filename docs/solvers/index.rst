@@ -9,6 +9,7 @@ Solvers
     SwarmIntelligence
     Basian
     Evolution
+    LP
 
 
 Solver Base class
