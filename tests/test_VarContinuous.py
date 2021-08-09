@@ -1,7 +1,9 @@
+import math
 import pytest
 
+import numpy as np
+
 from flopt import Variable
-import math
 
 @pytest.fixture(scope='function')
 def b():
@@ -13,30 +15,40 @@ def test_VarContinuous_add(b):
     assert (2+b).value() == 4
     assert (b+2.1).value() == 4.1
     assert (2.1+b).value() == 4.1
+    assert (b+np.float64(2.1)).value() == 4.1
+    assert (np.float64(2.1)+b).value() == 4.1
 
 def test_VarContinuous_sub(b):
     assert (b-2).value() == 0
     assert (2-b).value() == 0
     assert math.isclose((b-2.1).value(), -0.1)
     assert math.isclose((2.1-b).value(), 0.1)
+    assert math.isclose((b-np.float64(2.1)).value(), -0.1)
+    assert math.isclose((np.float64(2.1)-b).value(), 0.1)
 
 def test_VarContinuous_mul(b):
     assert (b*2).value() == 4
     assert (2*b).value() == 4
     assert (b*2.1).value() == 4.2
     assert (2.1*b).value() == 4.2
+    assert (b*np.float64(2.1)).value() == 4.2
+    assert (np.float64(2.1)*b).value() == 4.2
 
 def test_VarContinuous_div(b):
     assert (b/2).value() == 1
     assert (2/b).value() == 1
     assert (b/2.0).value() == 1
     assert (2.0/b).value() == 1
+    assert (b/np.float64(2.0)).value() == 1
+    assert (np.float64(2.0)/b).value() == 1
 
 def test_VarContinuous_pow(b):
     assert (b**2).value() == 4
     assert (2**b).value() == 4
     assert (b**2.1).value() == 2**2.1
     assert (2.1**b).value() == 2.1**2
+    assert (b**np.float64(2.1)).value() == 2**2.1
+    assert (np.float64(2.1)**b).value() == 2.1**2
 
 def test_VarInteger_mod(b):
     assert (b%2).value() == 0

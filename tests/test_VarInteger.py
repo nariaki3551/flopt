@@ -1,7 +1,9 @@
+import math
 import pytest
 
+import numpy as np
+
 from flopt import Variable
-import math
 
 @pytest.fixture(scope='function')
 def a():
@@ -13,30 +15,40 @@ def test_VarInteger_add(a):
     assert (2+a).value() == 4
     assert (a+2.1).value() == 4.1
     assert (2.1+a).value() == 4.1
+    assert (a+np.float64(2.1)).value() == 4.1
+    assert (np.float64(2.1)+a).value() == 4.1
 
 def test_VarInteger_sub(a):
     assert (a-2).value() == 0
     assert (2-a).value() == 0
     assert math.isclose((a-2.1).value(), -0.1)
     assert math.isclose((2.1-a).value(), 0.1)
+    assert math.isclose((a-np.float64(2.1)).value(), -0.1)
+    assert math.isclose((np.float64(2.1)-a).value(), 0.1)
 
 def test_VarInteger_mul(a):
     assert (a*2).value() == 4
     assert (2*a).value() == 4
     assert (a*2.1).value() == 4.2
     assert (2.1*a).value() == 4.2
+    assert (a*np.float64(2.1)).value() == 4.2
+    assert (np.float64(2.1)*a).value() == 4.2
 
 def test_VarInteger_div(a):
     assert (a/2).value() == 1
     assert (1/a).value() == 0.5
     assert (a/2.0).value() == 1
     assert (1.0/a).value() == 0.5
+    assert (a/np.float64(2.0)).value() == 1
+    assert (np.float64(1.0)/a).value() == 0.5
 
 def test_VarInteger_pow(a):
     assert (a**2).value() == 4
     assert (2**a).value() == 4
     assert (a**2.1).value() == 2**2.1
     assert (2.1**a).value() == 2.1**2
+    assert (a**np.float64(2.1)).value() == 2**2.1
+    assert (np.float64(2.1)**a).value() == 2.1**2
 
 def test_VarInteger_mod(a):
     assert (a%2).value() == 0
