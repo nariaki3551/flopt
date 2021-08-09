@@ -1,5 +1,4 @@
 import random
-from math import ceil, floor
 
 from flopt.expression import Expression
 from flopt.constraint import Constraint
@@ -57,10 +56,6 @@ def Variable(name, lowBound=None, upBound=None, cat='Continuous', iniValue=None)
     >>> lowBound: 0
     >>> upBound : 10
     """
-    if lowBound is None:
-        lowBound = -INI_BOUND
-    if upBound is None:
-        upBound = INI_BOUND
     if cat == 'Continuous':
         return VarContinuous(name, lowBound, upBound, iniValue)
     elif cat == 'Integer':
@@ -111,10 +106,15 @@ class VarElement:
 
 
     def setValue(self, value):
-        """
-        set the value to variable
-        """
         self._value = value
+
+
+    def getLb(self):
+        return self.lowBound if self.lowBound is not None else - INI_BOUND
+
+
+    def getUb(self):
+        return self.upBound if self.upBound is not None else INI_BOUND
 
 
     def feasible(self):
@@ -124,7 +124,7 @@ class VarElement:
         bool
           return true if value of self is in between lowBound and upBound else false
         """
-        return self.lowBound <= self._value <= self.upBound
+        return self.getLb() <= self._value <= self.getUb()
 
 
     def clip(self):
@@ -133,10 +133,10 @@ class VarElement:
         ex. value < lowBound -> value = lowBound,
         value > upBound  -> value = upBound
         """
-        if self._value < self.lowBound:
-            self._value = self.lowBound
-        elif self._value > self.upBound:
-            self._value = self.upBound
+        if self._value < self.getLb():
+            self._value = self.getLb()
+        elif self._value > self.getUb():
+            self._value = self.getUb()
 
 
     def toDict(self):
@@ -330,7 +330,7 @@ class VarInteger(VarElement):
     Ingeter Variable class
     """
     def __init__(self, name, lowBound, upBound, iniValue):
-        super().__init__(name, ceil(lowBound), floor(upBound), iniValue)
+        super().__init__(name, lowBound, upBound, iniValue)
         self.type = 'VarInteger'
 
 
@@ -349,11 +349,11 @@ class VarInteger(VarElement):
 
 
     def getIniValue(self):
-        return (self.lowBound + self.upBound) // 2
+        return (self.getLb() + self.getUb()) // 2
 
 
     def setRandom(self):
-        self._value = random.randint(self.lowBound, self.upBound)
+        self._value = random.randint(self.getLb(), self.getUb())
 
 
 
@@ -418,10 +418,10 @@ class VarContinuous(VarElement):
         self.type = 'VarContinuous'
 
     def getIniValue(self):
-        return (self.lowBound + self.upBound) / 2
+        return (self.getLb() + self.getUb()) / 2
 
     def setRandom(self):
-        self._value = random.uniform(self.lowBound, self.upBound)
+        self._value = random.uniform(self.getLb(), self.getUb())
 
 
 
@@ -455,7 +455,7 @@ class VarPermutation(VarElement):
         self.type = 'VarPermutation'
 
     def getIniValue(self):
-        return list(range(self.lowBound, self.upBound+1))
+        return list(range(self.getLb(), self.getUb()+1))
 
     def value(self):
         """
