@@ -7,6 +7,10 @@ from flopt.env import setup_logger
 logger = setup_logger(__name__)
 
 
+class SolverError(Exception):
+    pass
+
+
 class AutoSearch(BaseSearch):
     """Auto Solver Selector
 
@@ -82,7 +86,7 @@ class AutoSearch(BaseSearch):
         """
         from flopt import Solver, Solver_list
         return any(Solver(algo=algo).available(prob)
-                for algo in Solver_list())
+                for algo in (set(Solver_list()) - {'auto'}) )
 
 
     def select(self, prob):
@@ -104,6 +108,7 @@ class AutoSearch(BaseSearch):
                 'OptunaTPESearch',
                 'SFLA',
                 'PulpSearch',
+                'ScipyLpSearch',
                 'ScipySearch',
             ]
         elif self.timelimit < 30:
@@ -115,6 +120,7 @@ class AutoSearch(BaseSearch):
                 'OptunaTPESearch',
                 'SFLA',
                 'PulpSearch',
+                'ScipyLpSearch',
                 'ScipySearch',
             ]
         else:
@@ -126,6 +132,7 @@ class AutoSearch(BaseSearch):
                 'HyperoptTPESearch',
                 'OptunaTPESearch',
                 'PulpSearch',
+                'ScipyLpSearch',
                 'ScipySearch',
             ]
 
