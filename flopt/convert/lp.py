@@ -14,10 +14,80 @@ def flopt_to_lp(prob, eq=False):
 
     Returns
     -------
-    LpStructure
-        object     c.T.dot(x)
-        subject to A.dot(x) == b or A.dot(x) <= b
-                   lb <= x <= ub
+    collections.namedtuple
+        LpStructure = collections.namedtuple('LpStructure', 'A b c x lb ub type')
+
+        - object is c.T.dot(x),
+        - constraints are A.dot(x) == b or A.dot(x) <= l and b <= x <= ub
+
+    Examples
+    --------
+
+    .. code-block:: python
+
+        from flopt import Variable Problem
+
+        # Variables
+        a = Variable('a', cat='Binary')
+        b = Variable('b', cat='Binary')
+        c = Variable('c', lowBound=-1, upBound=2, cat='Integer')
+        d = Variable('d', lowBound=-2, upBound=1, cat='Continuous')
+
+        # Problem
+        prob = Problem()
+        prob += c + b       # set the objective function
+        prob += a + c == 0  # set the constraint
+        prob += a + b <= 1  # set the constraint
+        prob += a + d >= -1 # set the constraint
+
+    We can obtain normal equal-formulation, Ax <= b
+
+    .. code-block:: python
+
+        from flopt.convert import flopt_to_lp
+        lp = flopt_to_lp(prob)
+        print('x', lp.x)
+        print('A', lp.A)
+        print('b', lp.b.T)
+        print('c', lp.c.T)
+        print('lb', lp.lb.T)
+        print('ub', lp.ub.T)
+
+        >>> x [Variable(b, cat="Binary", iniValue=0) VarElement("c", -1, 2, 0)
+        >>>  Variable(a, cat="Binary", iniValue=0) VarElement("d", -2, 1, -0.5)]
+        >>> A [[ 0.  1.  1.  0.]
+        >>>  [-0. -1. -1. -0.]
+        >>>  [ 1.  0.  1.  0.]
+        >>>  [-0. -0. -1. -1.]]
+        >>> b [0. 0. 1. 1.]
+        >>> c [1. 1. 0. 0.]
+        >>> lb [ 0 -1  0 -2]
+        >>> ub [1 2 1 1]
+
+    and, we can obtain normal equal-formulation, Ax = b
+
+    .. code-block:: python
+
+        lp = flopt_to_lp(prob, eq=True)
+        print('x', lp.x)
+        print('A', lp.A)
+        print('b', lp.b.T)
+        print('c', lp.c.T)
+        print('lb', lp.lb.T)
+        print('ub', lp.ub.T)
+
+        >>> x [Variable(b, cat="Binary", iniValue=0) VarElement("c", -1, 2, 0)
+        >>>  Variable(a, cat="Binary", iniValue=0) VarElement("d", -2, 1, -0.5)
+        >>>  VarElement("slack0", 0, None, 5000000000.0)
+        >>>  VarElement("slack1", 0, None, 5000000000.0)]
+        >>> A [[ 0.  1.  1.  0.  0.  0.]
+        >>>  [ 1.  0.  1.  0.  1.  0.]
+        >>>  [-0. -0. -1. -1. -0.  1.]]
+        >>> b [0. 1. 1.]
+        >>> c [1. 1. 0. 0. 0. 0.]
+        >>> lb [ 0 -1  0 -2  0  0]
+        >>> ub [1 2 1 1 None None]
+
     """
     if eq:
         return flopt_to_lp_eq(prob)
@@ -163,9 +233,30 @@ def lp_to_flopt(A, b, c, lb, ub, var_types):
     Returns
     -------
     prob : flopt.Problem
-        object     c.T.dot(x)
-        subject to A.dot(x) <= b
-                   lb <= x <= ub
+
+        - object is c.T.dot(x)
+        - constraints are A.dot(x) <= b, lb <= x <= ub
+
+    Examples
+    --------
+
+    .. code-block:: python
+
+        # make Lp model
+        c = [0, 1, 2]
+        A = [[0, 1, 2],
+             [1, 2, 3],
+             [0, 1, 2]]
+        b = [0, 1, 1]
+        lb = [0, 0, 0]
+        ub = [1, 1, 1]
+        var_types=['Binary', 'Binary', 'Continuous']
+
+        from flopt.convert import lp_to_flopt
+        prob = lp_to_flopt(A, b, c, lb, ub, var_types)
+        print(prob)
+        print(prob.constraints)
+
     """
     assert len(A) == len(b)
     assert len(A[0]) == len(c) == len(lb) == len(ub) == len(var_types)

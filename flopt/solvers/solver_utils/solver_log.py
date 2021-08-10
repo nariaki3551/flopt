@@ -40,12 +40,13 @@ class Log:
         raise KeyError
 
 
-    def plot(self, show=True, title=None, label=None,
+    def plot(self, show=True, title=None,
         xitem='time', xlabel='Time [s]',
         yitem='obj_value', ylabel='Objective value',
         xscale='linear', yscale='linear',
-        linestyle='-', marker=None,
-        fig=None, ax=None):
+        fig=None, ax=None,
+        *args, **kwargs
+        ):
         import matplotlib.pyplot as plt
         if ax is None:
             fig, ax = plt.subplots()
@@ -58,7 +59,7 @@ class Log:
         X = [log[xitem] for log in self.logs]
         Y = [log[yitem] for log in self.logs]
 
-        ax.plot(X, Y, linestyle=linestyle, marker=marker, label=label)
+        ax.plot(X, Y, *args, **kwargs)
         ax.legend()
 
         if show:

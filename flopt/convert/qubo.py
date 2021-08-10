@@ -14,9 +14,44 @@ def flopt_to_qubo(prob):
 
     Returns
     -------
-    QuboStructure
-        object x.T.dot(Q).dot(x) + C
-        such that x[i] in {0, 1}
+    collections.namedtuple
+        QuboStructure = collections.namedtuple('QuboStructure', 'Q C x')
+
+        - object x.T.dot(Q).dot(x) + C
+        - such that x[i] in {0, 1}
+
+    Examples
+    -------
+
+    .. code-block:: python
+
+        from flopt import Variable, Solver
+
+        a = Variable(name='a', iniValue=1, cat='Binary')
+        b = Variable(name='b', iniValue=1, cat='Binary')
+        c = Variable(name='c', iniValue=1, cat='Binary')
+
+        # Problem
+        prob = Problem()
+
+        # make model
+        prob += - a * b - c
+
+        # convert objective function to Qubo structure
+        from flopt.convert import flopt_to_qubo
+
+        qubo = flopt_to_qubo(prob)
+        print('Q', qubo.Q)
+        print('C', qubo.C)
+        print('x', qubo.x)
+
+        >>> Q [[-0.   0.5  0.5]
+        >>>  [ 0.  -0.   0.5]
+        >>>  [ 0.   0.  -0. ]]
+        >>> C -0.75
+        >>> x [Variable(a, cat="Binary", iniValue=1)
+        >>>  Variable(b, cat="Binary", iniValue=1)
+        >>>  Variable(c, cat="Binary", iniValue=1)]
     """
     assert prob.obj.toIsing()
     assert len(prob.constraints) == 0
@@ -65,8 +100,30 @@ def qubo_to_flopt(Q, C):
     Returns
     -------
     prob : flopt.Problem
-        object x.T.dot(Q).dot(x) + C
-        such that x[i] in {0, 1}
+
+        - object x.T.dot(Q).dot(x) + C
+        - such that x[i] in {0, 1}
+
+    Examples
+    --------
+    .. code-block:: python
+
+        # make Qubo model
+        Q = [[1, 2, 1],
+             [0, 1, 1],
+             [0, 0, 3]]
+        C = 10
+
+        from flopt.convert import qubo_to_flopt
+        prob = qubo_to_flopt(Q, C)
+        print(prob)
+
+        >>> Name: None
+        >>>   Type         : Problem
+        >>>   sense        : minimize
+        >>>   objective    : Name: (((s0*s0)+(s1*(s1+(s0*2))))+(s2*((s0+s1)+(s2*3))))+10,  Type    : Expression,  Value   : 10,  Degree  : 2,
+        >>>   #constraints : 0
+        >>>   #variables   : 3
     """
     assert len(Q) == len(Q[0])
     import numpy as np
