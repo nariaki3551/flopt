@@ -13,10 +13,37 @@ def flopt_to_pulp(prob):
     -------
     lp_prob : pulp.LpProblem
     lp_solution : Solution of pulp.LpVariables
+
+    Examples
+    --------
+    .. code-block:: python
+
+        from flopt import Variable, Solver
+
+        # Variables
+        a = Variable('a', cat='Binary')
+        b = Variable('b', cat='Binary')
+        c = Variable('c', lowBound=-1, upBound=2, cat='Integer')
+        d = Variable('d', lowBound=-2, upBound=1, cat='Continuous')
+
+        # Problem
+        prob = Problem()
+        prob += c + b       # set the objective function
+        prob += a + c == 0  # set the constraint
+        prob += a + b <= 1  # set the constraint
+        prob += a + d >= -1 # set the constraint
+
+        # check wheter prob can be converted into pulp modeling
+        flopt.Solver(algo='PulpSearch').available(prob)
+
+        # convert flopt to pulp
+        from flopt.solvers.convert import flopt_to_pulp
+        lp_prob, lp_solution = flopt_to_pulp(prob)
     """
     assert PulpSearch().available(prob)
+    solution = Solution('s', prob.getVariables())
     lp_prob, lp_solution \
-        = PulpSearch().createLpProblem(prob.getSolution(), prob.obj, prob.constraints)
+        = PulpSearch().createLpProblem(solution, prob.obj, prob.constraints)
     return lp_prob, lp_solution
 
 
@@ -30,6 +57,29 @@ def pulp_to_flopt(prob):
     -------
     flopt_prob : flopt.Problem
     flopt_solution : Solution of flopt.VarElement family
+
+    Examples
+    --------
+    .. code-block:: python
+
+        import pulp
+
+        # Variables
+        a = pulp.LpVariable('a', lowBound=0, upBound=1, cat='Integer')
+        b = pulp.LpVariable('b', lowBound=1, upBound=2, cat='Continuous')
+        c = pulp.LpVariable('c', upBound=3, cat='Continuous')
+
+        # Problem
+        prob = pulp.LpProblem()
+        prob += - a - b - c  # set the objective function
+        prob += a      <= 0  # set the constraint
+        prob += a + b  == c  # set the constraint
+        prob += c      >= 0  # set the constraint
+
+        # convert pulp to flopt
+        from flopt.solvers.convert import pulp_to_flopt
+        flopt_prob, flopt_solution = pulp_to_flopt(prob)
+
     """
     # conver LpVariable -> VarElement
     flopt_variables = dict()

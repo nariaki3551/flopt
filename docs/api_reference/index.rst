@@ -8,4 +8,5 @@ API Reference
     CustomExpression
     Problem
     Solver
+    convert/index.rst
     Performance
