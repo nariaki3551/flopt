@@ -80,11 +80,11 @@ class OptunaSearch(BaseSearch):
         for var in self.solution:
             if var.getType() == 'VarInteger':
                 var._value = trial.suggest_int(
-                    var.name, var.lowBound, var.upBound
+                    var.name, var.getLb(), var.getUb()
                 )
             elif var.getType() == 'VarContinuous':
                 var._value = trial.suggest_uniform(
-                    var.name, var.lowBound, var.upBound
+                    var.name, var.getLb(), var.getUb()
                 )
 
         # get objective value by self.solution

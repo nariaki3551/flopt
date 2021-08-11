@@ -59,7 +59,6 @@ def argparser():
         '--algo',
         nargs='*',
         default=['all'],
-        choices=Solver_list()+['all'],
     )
     parser.add_argument(
         '--dataset',

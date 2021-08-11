@@ -104,9 +104,9 @@ class HyperoptTPESearch(BaseSearch):
         for var in self.solution:
             name = var.name
             if var.getType() in {name, 'VarInteger' , 'VarBinary'}:
-                var_space = hp.quniform(name, var.lowBound, var.upBound, 1)
+                var_space = hp.quniform(name, var.getLb(), var.getUb(), 1)
             elif var.getType() == 'VarContinuous':
-                var_space = hp.uniform(name, var.lowBound, var.upBound)
+                var_space = hp.uniform(name, var.getLb(), var.getUb())
             space[var.name] = var_space
         return space
 

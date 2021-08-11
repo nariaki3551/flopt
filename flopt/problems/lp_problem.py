@@ -66,7 +66,7 @@ class LpProblem(Problem):
             else:
                 raise ValueError
             lp_var = LpVariable(
-                var.name, lowBound=var.lowBound, upBound=var.upBound, cat=cat
+                var.name, lowBound=var.getLb(), upBound=var.getUb(), cat=cat
             )
             lp_variables.append(lp_var)
         lp_solution = solution.clone()
