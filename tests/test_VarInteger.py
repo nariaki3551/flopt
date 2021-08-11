@@ -78,3 +78,12 @@ def test_VarInteger_neg(a):
 def test_VarInteger_pos(a):
     assert (+a).value() == 2
 
+def test_VarInteger_colne(a):
+    from flopt.variable import VarInteger
+    _a = a.clone()
+    assert isinstance(_a, VarInteger)
+    assert _a.value() == a.value()
+    assert _a.getLb() == a.getLb()
+    assert _a.getUb() == a.getUb()
+    assert _a.getType() == a.getType()
+

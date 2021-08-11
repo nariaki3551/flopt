@@ -95,3 +95,12 @@ def test_VarBinary_toSpin2(a):
     assert a.toSpin().value() == 0
     assert a.spin.value() == -1
 
+def test_VarBinary_colne(a):
+    from flopt.variable import VarBinary
+    _a = a.clone()
+    assert isinstance(_a, VarBinary)
+    assert _a.value() == a.value()
+    assert _a.getLb() == a.getLb()
+    assert _a.getUb() == a.getUb()
+    assert _a.getType() == a.getType()
+

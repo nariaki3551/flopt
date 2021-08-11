@@ -73,7 +73,7 @@ class PulpSearch(BaseSearch):
         if self.solver is not None:
             solver = self.solver
         else:
-            solver = pulp.PULP_CBC_CMD(maxSeconds=self.timelimit, msg=self.msg)
+            solver = pulp.PULP_CBC_CMD(timeLimit=self.timelimit, msg=self.msg)
         lp_status = lp_prob.solve(solver)
 
         # get result

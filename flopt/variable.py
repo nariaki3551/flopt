@@ -171,6 +171,10 @@ class VarElement:
         return 1
 
 
+    def clone(self):
+        raise NotImplementedError()
+
+
     def __add__(self, other):
         if isinstance(other, VarConst):
             other = other.value()
@@ -350,13 +354,21 @@ class VarInteger(VarElement):
             return solution.toDict()[self.name]
 
 
-
     def getIniValue(self):
         return (self.getLb() + self.getUb()) // 2
 
 
     def setRandom(self):
         self._value = random.randint(self.getLb(), self.getUb())
+
+
+    def clone(self):
+        """
+        Returns
+        -------
+        VarInteger
+        """
+        return VarInteger(self.name, self.lowBound, self.upBound, self._value)
 
 
 
@@ -412,6 +424,16 @@ class VarBinary(VarInteger):
                 iniValue=int(2*self._value-1), binary=self,
             )
         return (self.spin + 1) * 0.5
+
+
+    def clone(self):
+        """
+        Returns
+        -------
+        VarBinary
+        """
+        return VarBinary(self.name, self._value, self.spin)
+
 
     def __invert__(self):
         # (self+1)%2
@@ -509,6 +531,15 @@ class VarSpin(VarElement):
         return 2 * self.binary - 1
 
 
+    def clone(self):
+        """
+        Returns
+        -------
+        VarSpin
+        """
+        return VarSpin(self.name, self._value, self.binary)
+
+
     def __invert__(self):
         # -self
         return self.__neg__()
@@ -526,11 +557,22 @@ class VarContinuous(VarElement):
         super().__init__(name, lowBound, upBound, iniValue)
         self.type = 'VarContinuous'
 
+
     def getIniValue(self):
         return (self.getLb() + self.getUb()) / 2
 
+
     def setRandom(self):
         self._value = random.uniform(self.getLb(), self.getUb())
+
+
+    def clone(self):
+        """
+        Returns
+        -------
+        VarContinuous
+        """
+        return VarContinuous(self.name, self.lowBound, self.upBound, self._value)
 
 
 
@@ -563,8 +605,10 @@ class VarPermutation(VarElement):
         super().__init__(name, lowBound, upBound, iniValue)
         self.type = 'VarPermutation'
 
+
     def getIniValue(self):
         return list(range(self.getLb(), self.getUb()+1))
+
 
     def value(self):
         """
@@ -574,11 +618,22 @@ class VarPermutation(VarElement):
         _value = self._value[:]  # copy
         return _value
 
+
     def setRandom(self):
         """
         shuffle the list
         """
         return random.shuffle(self._value)
+
+
+    def clone(self):
+        """
+        Returns
+        -------
+        VarPermutation
+        """
+        return VarPermutation(self.name, self.lowBound, self.upBound, self._value)
+
 
     def __iter__(self):
         return iter(self._value)
@@ -608,12 +663,22 @@ class VarConst(VarElement):
         super().__init__(name, const, const, const)
         self.type = 'VarConst'
 
+
     def getVariables(self):
         # for getVariables() in Expression class
         return set()
 
+
     def maxDegree(self):
         return 0
+
+
+    def clone(self):
+        """
+        VarConst
+        """
+        return VarConst(self._value)
+
 
     def __add__(self, other):
         return self._value + other

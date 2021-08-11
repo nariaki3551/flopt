@@ -78,3 +78,12 @@ def test_VarContinuous_neg(b):
 def test_VarContinuous_pos(b):
     assert (+b).value() == 2
 
+def test_VarContinuous_colne(b):
+    from flopt.variable import VarContinuous
+    _b = b.clone()
+    assert isinstance(_b, VarContinuous)
+    assert _b.value() == b.value()
+    assert _b.getLb() == b.getLb()
+    assert _b.getUb() == b.getUb()
+    assert _b.getType() == b.getType()
+

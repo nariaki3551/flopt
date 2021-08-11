@@ -1,6 +1,5 @@
 import random
-from math import sqrt, floor, ceil
-from copy import deepcopy
+from math import sqrt
 
 from flopt.env import setup_logger
 
@@ -153,41 +152,15 @@ class Solution:
         return inner
 
 
-    def floor(self):
-        """
-        Returns
-        -------
-        Solution
-          Solution which has values applied floor function respectively
-        """
-        vbs = deepcopy(self._variables)
-        for vb in vbs:
-            vb.setValue(floor(vb.value()))
-        return Solution(f'floor({self.name})', vbs)
-
-
-    def ceil(self):
-        """
-        Returns
-        -------
-        Solution
-          Solution which has values applied ceiling function respectively
-        """
-        vbs = deepcopy(self._variables)
-        for vb in vbs:
-            vb.setValue(ceil(vb.value()))
-        return Solution(f'ceil({self.name})', vbs)
-
-
     def __pos__(self):
-        vbs = deepcopy(self._variables)
-        return Solution(f'+({self.name})', vbs)
+        variables = [ var.clone() for var in self._variables ]
+        return Solution(f'+({self.name})', variables)
 
     def __neg__(self):
-        vbs = deepcopy(self._variables)
-        for vb in vbs:
-            vb.setValue(-vb.value())
-        return Solution(f'-({self.name})', vbs)
+        variables = [ var.clone() for var in self._variables ]
+        for var in variables:
+            var.setValue(-var.value())
+        return Solution(f'-({self.name})', variables)
 
     def __add__(self, other):
         """
@@ -195,19 +168,19 @@ class Solution:
         Solution + list
         Solutino + scalar
         """
-        vbs1 = deepcopy(self._variables)
+        variables = [ var.clone() for var in self._variables ]
         if isinstance(other, Solution):
-            for vb1, vb2 in zip(vbs1, other._variables):
-                vb1.setValue(vb1.value() + vb2.value())
-            return Solution('+Solution', vbs1)
+            for var1, var2 in zip(variables, other._variables):
+                var1.setValue(var1.value() + var2.value())
+            return Solution('+Solution', variables)
         elif isinstance(other, list):
-            for vb, v in zip(vbs1, other):
-                vb.setValue(vb.value() + v)
-            return Solution('+list', vbs1)
+            for var, v in zip(variables, other):
+                var.setValue(var.value() + v)
+            return Solution('+list', variables)
         elif isinstance(other, (int, float)):
-            for vb1 in vbs1:
-                vb1.setValue(vb1.value() + other)
-            return Solution('+scalar', vbs1)
+            for var in variables:
+                var.setValue(var.value() + other)
+            return Solution('+scalar', variables)
         else:
             return NotImplemented
 
@@ -220,13 +193,19 @@ class Solution:
         Solution - list     = (Solution + (-list))
         Solutino - scalar   = (Solution + (-scalar))
         """
+        variables = [ var.clone() for var in self._variables ]
         if isinstance(other, Solution):
-            return self + (-other)
+            for var1, var2 in zip(variables, other._variables):
+                var1.setValue(var1.value() - var2.value())
+            return Solution('+Solution', variables)
         elif isinstance(other, list):
-            minus_other = [-v for v in other]
-            return self + minus_other
+            for var, v in zip(variables, other):
+                var.setValue(var.value() - v)
+            return Solution('+list', variables)
         elif isinstance(other, (int, float)):
-            return self + (-other)
+            for var in variables:
+                var.setValue(var.value() - other)
+            return Solution('+scalar', variables)
         else:
             return NotImplemented
 
@@ -239,19 +218,19 @@ class Solution:
         Solution * list
         Solution * scalar
         """
-        vbs1 = deepcopy(self._variables)
+        variables = [ var.clone() for var in self._variables ]
         if isinstance(other, Solution):
-            for vb1, vb2 in zip(vbs1, other._variables):
-                vb1.setValue(vb1.value() * vb2.value())
-            return Solution('*Solution', vbs1)
+            for var1, var2 in zip(variables, other._variables):
+                var1.setValue(var1.value() * var2.value())
+            return Solution('*Solution', variables)
         elif isinstance(other, list):
-            for vb, v in zip(vbs1, other):
-                vb.setValue(vb.value() * v)
-            return Solution('*list', vbs1)
+            for var, v in zip(variables, other):
+                var.setValue(var.value() * v)
+            return Solution('*list', variables)
         elif isinstance(other, (int, float)):
-            for vb1 in vbs1:
-                vb1.setValue(vb1.value() * other)
-            return Solution('*scalar', vbs1)
+            for var in variables:
+                var.setValue(var.value() * other)
+            return Solution('*scalar', variables)
         else:
             return NotImplemented
 
@@ -272,10 +251,10 @@ class Solution:
             return NotImplemented
 
     def __abs__(self):
-        vbs = deepcopy(self._variables)
-        for vb in vbs:
-            vb.setValue(abs(vb.value()))
-        return Solution('abs', vbs)
+        variables = [ var.clone() for var in self._variables ]
+        for var in variables:
+            var.setValue(abs(var.value()))
+        return Solution('abs', variables)
 
     def __hash__(self):
         return hash((self.name, tuple(self._variables)))
