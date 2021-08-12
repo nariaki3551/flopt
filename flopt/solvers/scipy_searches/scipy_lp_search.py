@@ -10,6 +10,7 @@ from flopt.solvers.solver_utils import (
     during_solver_message,
     end_solver_message
 )
+from flopt.convert import flopt_to_lp
 from flopt.env import setup_logger
 from flopt.variable import VarConst
 from flopt.solution import Solution
@@ -19,30 +20,37 @@ import flopt.constants
 logger = setup_logger(__name__)
 
 
-class ScipySearch(BaseSearch):
+class ScipyLpSearch(BaseSearch):
+    """Scipy optimize linprog API Solver
+
+    See Also
+    --------
+    scipy.optimize.linprog
+
+    Returns
+    -------
+    status : int
+        status of solver
+    """
     def __init__(self):
         super().__init__()
-        self.name = "ScipySearch"
+        self.name = "ScipyLpSearch"
         self.n_trial = 1e10
-        self.method = None
-        self.can_solve_problems = ['blackbox']
+        self.method = 'simplex'
 
 
     def available(self, prob):
         """
         Parameters
         ----------
-        obj : Expression or VarElement family
-            objective function
-        constraints : list of Constraint
-            constraints
+        prob : flopt.Problem
 
         Returns
         -------
         bool
             return true if it can solve the problem else false
         """
-        return all(not var.getType() == 'VarPermutation' for var in prob.getVariables())
+        return all(var.getType() == 'VarContinuous' for var in prob.getVariables())
 
 
     def search(self):
@@ -60,7 +68,7 @@ class ScipySearch(BaseSearch):
             def func(values):
                 variables = []
                 for var_name, value in zip(var_names, values):
-                    variables.append(VarConst(var_name, value))
+                    variables.append(VarConst(value, name=var_name))
                 solution = Solution('tmp', variables)
                 return expression.value(solution)
             return func
@@ -68,36 +76,20 @@ class ScipySearch(BaseSearch):
         # function
         func = gen_func(self.obj)
 
-        # initial point
-        self.solution.setRandom()
-        x0 = [var.value() for var in self.solution]
+        # lp structure
+        lp = flopt_to_lp(self.prob, x=self.solution.getVariables())
 
         # bounds
-        lb = [var.lowBound for var in self.solution]
-        ub = [var.upBound for var in self.solution]
-        bounds = scipy_optimize.Bounds(lb, ub, keep_feasible=False)
-
-        # constraints
-        constraints = []
-        for const in self.constraints:
-            const_func = gen_func(const)
-            lb, ub = 0, 0
-            if const.type == 'le':
-                lb = -np.inf
-            elif const.type == 'ge':
-                ub = np.inf
-            nonlinear_const = \
-                scipy_optimize.NonlinearConstraint(const_func, lb, ub)
-            constraints.append(nonlinear_const)
+        bounds = [ (_lb, _ub) for _lb, _ub in zip(lp.lb, lp.ub) ]
 
         # options
-        options = {'maxiter': self.n_trial}
+        options = {'maxiter': self.n_trial, 'disp': self.msg}
 
         # callback
-        def callback(values):
+        def callback(optimize_result):
             self.trial_ix += 1
-            obj_value = func(values)
-            for var, value in zip(self.solution, values):
+            obj_value = func(optimize_result.x)
+            for var, value in zip(self.solution, optimize_result.x):
                 var.setValue(value)
             if time() > self.start_time + self.timelimit:
                 raise TimeoutError
@@ -111,11 +103,11 @@ class ScipySearch(BaseSearch):
                 _callback([self.solution], self.best_solution, self.best_obj_value)
 
         try:
-            res = scipy_optimize.minimize(
-                func, x0, bounds=bounds, constraints=constraints, options=options,
-                callback=callback, args=(), method=self.method,
-                jac=None, hess=None, hessp=None, tol=None,
-            )
+            res = scipy_optimize.linprog(
+                c=lp.c, A_ub=lp.A, b_ub=lp.b, bounds=bounds,
+                options=options,
+                callback=callback, method=self.method,
+                )
             # get result of solver
             for var, value in zip(self.solution, res.x):
                 var.setValue(value)

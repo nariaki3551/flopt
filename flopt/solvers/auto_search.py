@@ -2,6 +2,7 @@ import inspect
 
 from flopt.solvers.base import BaseSearch
 import flopt.constants
+from flopt.constants import SolverError
 from flopt.env import setup_logger
 
 logger = setup_logger(__name__)
@@ -82,7 +83,7 @@ class AutoSearch(BaseSearch):
         """
         from flopt import Solver, Solver_list
         return any(Solver(algo=algo).available(prob)
-                for algo in Solver_list())
+                for algo in (set(Solver_list()) - {'auto'}) )
 
 
     def select(self, prob):
@@ -95,38 +96,53 @@ class AutoSearch(BaseSearch):
         """
         from flopt import Solver
 
+        if self.timelimit < 1:
+            algo_lists = [
+                '2-Opt',
+                'RandomSearch',
+                'ScipySearch',
+                'HyperoptTPESearch',
+                'SFLA',
+                'OptunaCmaEsSearch',
+                'OptunaTPESearch',
+                'PulpSearch',
+                'ScipyLpSearch',
+            ]
         if self.timelimit < 5:
             algo_lists = [
                 '2-Opt',
                 'RandomSearch',
-                'HyperoptTPESearch',
-                'OptunaCmaEsSearch',
-                'OptunaTPESearch',
-                'SFLA',
-                'PulpSearch',
                 'ScipySearch',
+                'SFLA',
+                'OptunaCmaEsSearch',
+                'HyperoptTPESearch',
+                'OptunaTPESearch',
+                'PulpSearch',
+                'ScipyLpSearch',
             ]
         elif self.timelimit < 30:
             algo_lists = [
                 '2-Opt',
                 'OptunaCmaEsSearch',
                 'RandomSearch',
-                'HyperoptTPESearch',
+                'ScipySearch',
                 'OptunaTPESearch',
+                'HyperoptTPESearch',
                 'SFLA',
                 'PulpSearch',
-                'ScipySearch',
+                'ScipyLpSearch',
             ]
         else:
             algo_lists = [
                 '2-Opt',
                 'OptunaCmaEsSearch',
-                'RandomSearch',
                 'SFLA',
-                'HyperoptTPESearch',
-                'OptunaTPESearch',
-                'PulpSearch',
                 'ScipySearch',
+                'RandomSearch',
+                'OptunaTPESearch',
+                'HyperoptTPESearch',
+                'PulpSearch',
+                'ScipyLpSearch',
             ]
 
         for _algo in algo_lists:

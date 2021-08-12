@@ -20,10 +20,17 @@ class Problem:
     sense : str, optional
         minimize, maximize
         (future satisfiability is added)
+
+    Attributes
+    ----------
+    name : str
+        name of problem
+    sense : str, optional
+        minimize, maximize
+        (future satisfiability is added)
     obj : Expression family
-        objective function
     variables : set of VarElement family
-        variables
+    solver : Solver
     time : float
         solving time
     prob_type : list of str
@@ -54,6 +61,7 @@ class Problem:
         self.obj = ExpressionConst(0)
         self.constraints = []
         self.variables = set()
+        self.solver = Solver(algo='RandomSearch')
         self.time = None
         self.prob_type = ['blackbox']
 
@@ -129,24 +137,41 @@ class Problem:
         Log
             return log object
         """
-        if solver is None:
-            solver = Solver(algo='RandomSearch')
+        if solver is not None:
+            self.solver = solver
         if timelimit is not None:
             solver.setParams(timelimit=timelimit)
-
-        # convert for solver
-        solution = Solution('s', self.variables)
 
         if self.sense == 'minimize':
             obj = self.obj
         elif self.sense == 'maximize':
             obj = -self.obj
 
-        status, log, self.time = solver.solve(
+        solution = Solution('s', self.getVariables())
+
+        status, log, self.time = self.solver.solve(
             solution, obj, self.constraints, self, msg=msg,
         )
 
         return status, log
+
+
+    def getSolution(self, k=0):
+        """get the k-top solution
+        """
+        assert k < len(self.solver.log)
+        solution = self.solver.log.getSolution(k=k)
+        return solution
+
+
+    def setSolution(self, k=0):
+        """set the k-top solution to variables
+        """
+        assert k < len(self.solver.log)
+        solution = self.getSolution(k)
+        var_dict = solution.toDict()
+        for var in self.getVariables():
+            var.setValue(var_dict[var.name].value())
 
 
     def __iadd__(self, other):

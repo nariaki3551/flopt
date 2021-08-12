@@ -30,12 +30,6 @@ def test_Solution_value_1(b, c):
     assert b.value() == [1, 2, 3, 4, 5]
     assert c.value() == [0, 2, 4, 6, 8]
 
-def test_Solution_floor(b):
-    assert (b/2).floor().value() == [0, 1, 1, 2, 2]
-
-def test_Solution_ceil(b):
-    assert (b/2).ceil().value() == [1, 1, 2, 2, 3]
-
 def test_Solution_clone(b):
     assert (b.clone()).value() == [1, 2, 3, 4, 5]
 

@@ -1,5 +1,6 @@
 import os
 import pickle
+import random
 from argparse import ArgumentParser
 from itertools import product
 
@@ -80,6 +81,11 @@ def argparser():
         help='param file'
     )
     parser.add_argument(
+        '--seed',
+        default=0,
+        help='seed of random'
+    )
+    parser.add_argument(
         '--log_level',
         type=int,
         default=30,
@@ -97,6 +103,7 @@ if __name__ == '__main__':
     datasets  = args.datasets
     paramfile = args.params
     log_level = args.log_level
+    random.seed(args.seed)
 
     flopt.env.setLogLevel(log_level)
 

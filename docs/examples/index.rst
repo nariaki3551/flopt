@@ -6,3 +6,4 @@ Examples
 
    plot_search_points
    convert_problem
+   obtain_multi_solutions
