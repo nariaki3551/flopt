@@ -99,41 +99,53 @@ class AutoSearch(BaseSearch):
         """
         from flopt import Solver
 
+        if self.timelimit < 1:
+            algo_lists = [
+                '2-Opt',
+                'RandomSearch',
+                'ScipySearch',
+                'HyperoptTPESearch',
+                'SFLA',
+                'OptunaCmaEsSearch',
+                'OptunaTPESearch',
+                'PulpSearch',
+                'ScipyLpSearch',
+            ]
         if self.timelimit < 5:
             algo_lists = [
                 '2-Opt',
                 'RandomSearch',
-                'HyperoptTPESearch',
-                'OptunaCmaEsSearch',
-                'OptunaTPESearch',
+                'ScipySearch',
                 'SFLA',
+                'OptunaCmaEsSearch',
+                'HyperoptTPESearch',
+                'OptunaTPESearch',
                 'PulpSearch',
                 'ScipyLpSearch',
-                'ScipySearch',
             ]
         elif self.timelimit < 30:
             algo_lists = [
                 '2-Opt',
                 'OptunaCmaEsSearch',
                 'RandomSearch',
-                'HyperoptTPESearch',
+                'ScipySearch',
                 'OptunaTPESearch',
+                'HyperoptTPESearch',
                 'SFLA',
                 'PulpSearch',
                 'ScipyLpSearch',
-                'ScipySearch',
             ]
         else:
             algo_lists = [
                 '2-Opt',
                 'OptunaCmaEsSearch',
-                'RandomSearch',
                 'SFLA',
-                'HyperoptTPESearch',
+                'ScipySearch',
+                'RandomSearch',
                 'OptunaTPESearch',
+                'HyperoptTPESearch',
                 'PulpSearch',
                 'ScipyLpSearch',
-                'ScipySearch',
             ]
 
         for _algo in algo_lists:
