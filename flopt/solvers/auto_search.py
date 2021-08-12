@@ -2,13 +2,10 @@ import inspect
 
 from flopt.solvers.base import BaseSearch
 import flopt.constants
+from flopt.constants import SolverError
 from flopt.env import setup_logger
 
 logger = setup_logger(__name__)
-
-
-class SolverError(Exception):
-    pass
 
 
 class AutoSearch(BaseSearch):

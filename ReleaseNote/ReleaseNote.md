@@ -7,11 +7,12 @@
 **Update**
 
 1. Add convert functions between `flopt.Problem` and `Lp`, `Ising`, `Qubo`, `Pulp`
-2. Change the structure of flopt.Expression so that it is simple when it is generated
+2. Change the structure of `flopt.Expression` so that it is simple when it is generated
 3. Multiple top solutions can now be retrieved
 4. Add new solver `ScipyLpSearch ` for LP.
-5. Add simplify and expand functions for flopt.Expression
-6. fix some bugs
+5. Improve the performance of the `SFLA` solver by improving the operation functions of `flopt.Solution`
+6. Add simplify and expand functions for `flopt.Expression`
+7. Fix some bugs
 
 
 
