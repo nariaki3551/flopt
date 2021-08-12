@@ -2,6 +2,19 @@
 
 
 
+### version 0.4 (August, 2021)
+
+**Update**
+
+1. Add convert functions between `flopt.Problem` and `Lp`, `Ising`, `Qubo`, `Pulp`
+2. Change the structure of flopt.Expression so that it is simple when it is generated
+3. Multiple top solutions can now be retrieved
+4. Add new solver `ScipyLpSearch ` for LP.
+5. Add simplify and expand functions for flopt.Expression
+6. fix some bugs
+
+
+
 ### version 0.3 (3 July, 2021)
 
 **Update**
@@ -11,9 +24,9 @@
    2. `allAvailableSolvers(prob)`
 2. Add new solvers
    1. `AutoSearch`
-      1. Select appropriate solvers by givin problem and setting
+      1. Select appropriate solvers for the problem and setting
 3. Add `isLinear` `isIsing` `toIsing` `maxDegree` function in Problem
-4. `import flopt` is 4 times faster
+4. `import flopt` is about 4 times faster
 5. Fix some bugs about `view_performance.py`
 
 
