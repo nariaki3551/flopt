@@ -19,6 +19,14 @@ def prob(variables):
     _prob += a + b + c
     return _prob
 
+
+@pytest.fixture(scope='function')
+def prob_only_continuous(variables):
+    a, b, c = variables
+    _prob = Problem(name='Test')
+    _prob += b + c
+    return _prob
+
 @pytest.fixture(scope='function')
 def prob_with_const(variables):
     # Problem with constraint
@@ -133,7 +141,7 @@ def test_SFLA(prob, callback):
         n_memeplex=5, n_frog_per_memeplex=10, n_memetic_iter=100,
         n_iter=1000, max_step=0.01, msg=True, callbacks=[callback],
     )
-    prob.solve(solver=solver, timelimit=10)
+    prob.solve(solver=solver, timelimit=10, msg=True)
 
 def test_SFLA_available(prob, prob_with_const, prob_nonlinear, prob_perm):
     solver = Solver(algo='SFLA')
@@ -170,22 +178,33 @@ def test_PulpSearch_available_Error(prob_nonlinear, callback):
         assert True
 
 
-def test_ScipySearch1(prob, callback):
+def test_ScipySearch1(prob_only_continuous, callback):
     solver = Solver(algo='ScipySearch')
     solver.setParams(n_trial=10, callbacks=[callback])
-    prob.solve(solver, timelimit=1)
+    prob_only_continuous.solve(solver, timelimit=1)
 
-def test_ScipySearch2(prob_with_const, callback):
+def test_ScipySearch_available(prob, prob_only_continuous, prob_with_const, prob_nonlinear, prob_perm):
     solver = Solver(algo='ScipySearch')
-    solver.setParams(n_trial=10, callbacks=[callback])
-    prob_with_const.solve(solver, timelimit=1)
-
-def test_ScipySearch_available(prob, prob_with_const, prob_nonlinear, prob_perm):
-    solver = Solver(algo='ScipySearch')
-    assert solver.available(prob) == True
-    assert solver.available(prob_with_const) == True
-    assert solver.available(prob_nonlinear) == True
+    assert solver.available(prob) == False
+    assert solver.available(prob_only_continuous) == True
+    assert solver.available(prob_with_const) == False
+    assert solver.available(prob_nonlinear) == False
     assert solver.available(prob_perm) == False
+
+
+def test_ScipyLpSearch1(prob_only_continuous, callback):
+    solver = Solver(algo='ScipyLpSearch')
+    solver.setParams(n_trial=10, callbacks=[callback])
+    prob_only_continuous.solve(solver, timelimit=1)
+
+def test_ScipyLpSearch_available(prob, prob_only_continuous, prob_with_const, prob_nonlinear, prob_perm):
+    solver = Solver(algo='ScipyLpSearch')
+    assert solver.available(prob) == False
+    assert solver.available(prob_only_continuous) == True
+    assert solver.available(prob_with_const) == False
+    assert solver.available(prob_nonlinear) == False
+    assert solver.available(prob_perm) == False
+
 
 def test_AutoSearch1(prob, callback):
     solver = Solver(algo='auto')
@@ -197,10 +216,10 @@ def test_AutoSearch2(prob_with_const, callback):
     solver.setParams(n_trial=10, callbacks=[callback])
     prob_with_const.solve(solver, timelimit=1)
 
-def test_AutoSearch3(prob_nonlinear, callback):
-    solver = Solver(algo='auto')
-    solver.setParams(n_trial=10, callbacks=[callback])
-    prob_nonlinear.solve(solver, timelimit=1)
+# def test_AutoSearch3(prob_nonlinear, callback):
+#     solver = Solver(algo='auto')
+#     solver.setParams(n_trial=10, callbacks=[callback])
+#     prob_nonlinear.solve(solver, timelimit=1)
 
 def test_AutoSearch4(prob_with_const, callback):
     solver = Solver(algo='auto')
@@ -211,7 +230,7 @@ def test_AutoSearch_available(prob, prob_with_const, prob_nonlinear, prob_perm):
     solver = Solver(algo='auto')
     assert solver.available(prob) == True
     assert solver.available(prob_with_const) == True
-    assert solver.available(prob_nonlinear) == True
+    assert solver.available(prob_nonlinear) == False
     assert solver.available(prob_perm) == True
 
 

@@ -66,7 +66,7 @@ class LpProblem(Problem):
             else:
                 raise ValueError
             lp_var = LpVariable(
-                var.name, lowBound=var.lowBound, upBound=var.upBound, cat=cat
+                var.name, lowBound=var.getLb(), upBound=var.getUb(), cat=cat
             )
             lp_variables.append(lp_var)
         lp_solution = solution.clone()
@@ -88,9 +88,9 @@ class LpProblem(Problem):
 
         # solver
         if solver is None:
-            solver = pulp.PULP_CBC_CMD(maxSeconds=timelimit, msg=True)
+            solver = pulp.PULP_CBC_CMD(timeLimit=timelimit, msg=True)
         status = lpProb.solve(solver)
-        
+
         # get result of solver
         for lp_var, var in zip(lp_solution, solution):
             var.setValue(lp_var.getValue())

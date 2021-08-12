@@ -174,8 +174,21 @@ class LogVisualizer:
                 sorted_solver_ixs = np.argsort(obj_values)
                 win_solver_ix = sorted_solver_ixs[0]
                 stat['num_wins'][win_solver_ix] += 1
+
+                best_obj = obj_values[sorted_solver_ixs[0]]
+                n_win = 1
+                while n_win < len(obj_values):
+                    obj = obj_values[sorted_solver_ixs[n_win]]
+                    if abs(best_obj - obj) < 1e-10:
+                        stat['num_wins'][sorted_solver_ixs[n_win]] += 1
+                        n_win += 1
+                    else:
+                        break
                 for i, solver_ix in enumerate(sorted_solver_ixs):
-                    stat['score'][solver_ix] += i
+                    if i < n_win:
+                        stat['score'][solver_ix] += 0
+                    else:
+                        stat['score'][solver_ix] += i
 
 
             print("\n".join(stat_message_header))
@@ -185,6 +198,7 @@ class LogVisualizer:
             messages += stat_messages
             messages.append([''])
             messages.append(['#Win'] + list(map(str, stat['num_wins'])))
+            messages.append(['Score'] + list(map(str, stat['score'])))
             # simple ranking
             sorted_solver_ix = np.argsort(stat['score'])
             ranks = [0]*len(solvers)

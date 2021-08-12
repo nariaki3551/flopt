@@ -15,3 +15,13 @@ def test_VarPermutation_getType(a):
 
 def test_VarPermutation_getVariable(a):
     assert a.getVariables() == {a}
+
+def test_VarPermutation_colne(a):
+    from flopt.variable import VarPermutation
+    _a = a.clone()
+    assert isinstance(_a, VarPermutation)
+    assert _a.value() == a.value()
+    assert _a.getLb() == a.getLb()
+    assert _a.getUb() == a.getUb()
+    assert _a.getType() == a.getType()
+

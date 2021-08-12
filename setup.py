@@ -20,10 +20,11 @@ setup(
             "tspLib/sop/*.sop"
         ]
     },
-    version='0.2',
+    version='0.4',
     license='MIT',
     install_requires=[
         'numpy',
+        'sympy',
         'matplotlib',
         'pulp',
         'optuna',
@@ -44,5 +45,7 @@ setup(
     classifiers=[
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
     ],
 )

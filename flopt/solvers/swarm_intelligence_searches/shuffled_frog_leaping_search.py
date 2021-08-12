@@ -130,6 +130,7 @@ class ShuffledFrogLeapingSearch(BaseSearch):
                 # make sub memeplex
                 sub_mmplx_ids = random.sample(range(N), N//2)
                 sub_mmplx = [memeplex[i] for i in sorted(sub_mmplx_ids)]
+
                 # move frog which has the worst objective
                 best_frog = sub_mmplx[0]  # Solution class
                 worst_frog = sub_mmplx[-1]  # Solution class
@@ -137,33 +138,41 @@ class ShuffledFrogLeapingSearch(BaseSearch):
                 if step.norm() > self.max_step:
                     step = step * self.max_step / step.norm()
                 new_frog = worst_frog + step  # Solution class # issue34
-                ###### feasible guard ######
+
+                # feasible guard
                 if self.feasible_guard == 'clip':
                     new_frog.clip()
-                ############################
+
                 # evaluate solutions
                 fitness_best = self.obj.value(best_frog)
                 fitness_worst = self.obj.value(worst_frog)
                 fitness_new = self.obj.value(new_frog)
+
                 # if it does not improve (1)
                 if fitness_new > fitness_worst:
                     step = random.random()*(self.best_solution - worst_frog)
                     if  step.norm() > self.max_step:
                         step = step * self.max_step / step.norm()
                     new_frog = worst_frog + step
-                    ###### feasible guard ######
+
+                    # feasible guard
                     if self.feasible_guard == 'clip':
                         new_frog.clip()
-                    ############################
+
                     fitness_new = self.obj.value(new_frog)
                     # if it does not improve (2)
                     if fitness_new > fitness_worst:
                         new_frog.setRandom()
+
                 # the worst_frog is replaced to the new_frog
                 self.memeplexes[j] = sub_mmplx[:-1] + [new_frog]\
                     + [memeplex[i] for i in range(N) if i not in sub_mmplx_ids]
+
                 # evaluate and sort memeplex
-                self.memeplexes[j].sort(key=lambda frog: self.obj.value(frog))
+                for flog in self.memeplexes[j]:
+                    if not hasattr(flog, '__flog_obj'):
+                        setattr(flog, '__flog_obj', self.obj.value(flog))
+                self.memeplexes[j].sort(key=lambda frog: getattr(flog, '__flog_obj'))
 
         # sort entire memeplexes
         self.frogs = [frog for memeplex in self.memeplexes for frog in memeplex]

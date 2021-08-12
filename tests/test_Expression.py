@@ -107,13 +107,13 @@ def test_Expression_maxDegree(a, b, c):
 
 def test_Expression_isIsing(a, b):
     import numpy as np
-    x = np.array([a, b])
+    x = np.array([Variable('a', cat='Spin'), Variable('b', cat='Spin')])
     J = np.array([
         [1, 2],
         [0, 1],
     ])
     h = np.array([1, 2])
-    obj = (x.T).dot(J).dot(x) + (h.T).dot(x)
+    obj = - (x.T).dot(J).dot(x) - (h.T).dot(x)
     assert obj.isIsing()
 
     obj += a*a*a
@@ -122,11 +122,11 @@ def test_Expression_isIsing(a, b):
 
 def test_Expression_toIsing(a, b):
     import numpy as np
-    x = np.array([a, b])
+    x = np.array([Variable('a', cat='Spin'), Variable('b', cat='Spin')])
     J = np.array([
         [1, 2],
         [0, 1],
     ])
     h = np.array([1, 2])
-    obj = (x.T).dot(J).dot(x) + (h.T).dot(x)
+    obj = - (x.T).dot(J).dot(x) - (h.T).dot(x)
     obj.toIsing()

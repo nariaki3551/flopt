@@ -51,8 +51,10 @@ class OptunaSearch(BaseSearch):
         bool
             return true if it can solve the problem else false
         """
-        return all(not var.getType() == 'VarPermutation' for var in prob.getVariables())\
-                and (not prob.constraints)
+        return all(
+                var.getType() in {'VarContinuous', 'VarInteger', 'VarBinary'}
+                for var in prob.getVariables()
+                ) and (not prob.constraints)
 
 
     def search(self):
@@ -78,11 +80,11 @@ class OptunaSearch(BaseSearch):
         for var in self.solution:
             if var.getType() == 'VarInteger':
                 var._value = trial.suggest_int(
-                    var.name, var.lowBound, var.upBound
+                    var.name, var.getLb(), var.getUb()
                 )
             elif var.getType() == 'VarContinuous':
                 var._value = trial.suggest_uniform(
-                    var.name, var.lowBound, var.upBound
+                    var.name, var.getLb(), var.getUb()
                 )
 
         # get objective value by self.solution

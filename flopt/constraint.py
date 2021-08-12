@@ -13,6 +13,17 @@ class Constraint:
         expression of constraint.
     type : str
         Constraint type. We must choice from eq, le or ge.
+
+    Notes
+    -----
+    For some types, the constraint class may not be created
+    if the constant is placed on the left side.
+
+    >>> import flopt
+    >>> import numpy as np
+    >>> a = flopt.Variable('a', cat='Binary')
+    >>> np.float64(0) <= a
+    >>> True
     """
     def __init__(self, expression, _type, name=None):
         assert _type in {'eq', 'le', 'ge'},\

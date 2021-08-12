@@ -26,6 +26,8 @@ git clone https://github.com/flab-coder/flopt.git
 
 ## Formulatable problems in flopt
 
+- Linear problem
+
 - Non-Linear problem
 
   ```
@@ -94,7 +96,12 @@ print('c', c.value())
 In addition, you can represent any objective function by *CustomExpression*
 
 ```python
-from flopt import CustomExpression
+from flopt import Variable, Problem, CustomExpression
+
+# Variables
+a = Variable('a', lowBound=0, upBound=1, cat='Integer')
+b = Variable('b', lowBound=1, upBound=2, cat='Continuous')
+c = Variable('c', upBound=3, cat='Continuous')
 
 from math import sin, cos
 def user_func(a, b, c):
@@ -111,6 +118,8 @@ prob += custom_obj
 In the case you solve TSP, *Permutation Variable* is useful.
 
 ```python
+from flopt import Variable, Problem, 
+
 # Variables
 perm = Variable('perm', lowBound=0, upBound=N-1, cat='Permutation')
 
