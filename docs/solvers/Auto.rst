@@ -1,5 +1,5 @@
 Solver Selector
-----------------
+---------------
 
 AutoSearch
 ^^^^^^^^^^
@@ -17,14 +17,14 @@ The priorities are calculated using two problem sets.
 One is `tsp` and the other is `func`.
 
 tsp
----
++++
 
 For example, here are the results for tsp.
 The instance of tsp is solved by solvers, and we calculate ranking by the result, the objective values solvers found.
 
 From this result, for the permutation problem, the 2-Opt is set to have a higher priority than the RandomSearch.
 
-.. code-block::
+::
 
   tsp
   ===
@@ -60,7 +60,7 @@ This result was created by
    timelimit = 60
 
 func
-----
+++++
 
 The results of `func` problem set are here.
 We can see that RandomSearch gives better results when timelimit is short,
@@ -70,7 +70,7 @@ Based on the following ranking, we have created several solver priorities accord
 
 - timelimit = 5 sec
 
-.. code-block::
+::
 
   func
   ====
@@ -111,7 +111,7 @@ Based on the following ranking, we have created several solver priorities accord
 
 - timelimit = 30 sec
 
-.. code-block::
+::
 
   func
   ====
@@ -151,7 +151,7 @@ Based on the following ranking, we have created several solver priorities accord
 
 - timelimit = 60 sec
 
-.. code-block::
+::
 
   func
   ====
