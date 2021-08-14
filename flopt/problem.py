@@ -2,7 +2,6 @@ from flopt.variable import VarElement
 from flopt.expression import Expression, ExpressionConst, CustomExpression
 from flopt.constraint import Constraint
 from flopt.solution import Solution
-from flopt.solvers import Solver
 from flopt.env import setup_logger
 
 
@@ -30,7 +29,7 @@ class Problem:
         (future satisfiability is added)
     obj : Expression family
     variables : set of VarElement family
-    solver : Solver
+    solver : Solver or None
     time : float
         solving time
     prob_type : list of str
@@ -61,7 +60,7 @@ class Problem:
         self.obj = ExpressionConst(0)
         self.constraints = []
         self.variables = set()
-        self.solver = Solver(algo='RandomSearch')
+        self.solver = None
         self.time = None
         self.prob_type = ['blackbox']
 
@@ -80,6 +79,15 @@ class Problem:
             obj = Exprression(obj, 0, '+')
         self.obj = obj
         self.variables |= obj.getVariables()
+
+
+    def setSolver(self, solver):
+        """
+        Parameters
+        ----------
+        solver : Solver
+        """
+        self.solver = solver
 
 
     def addConstraint(self, const, name=None):
@@ -124,9 +132,7 @@ class Problem:
         Parameters
         ----------
         solver : Solver
-            solver
         timelimit : float
-            timelimit
         msg : bool
             if true, display the message from solver
 
@@ -137,6 +143,7 @@ class Problem:
         Log
             return log object
         """
+        assert solver is not None or self.solver is not None, f'solver is not specified'
         if solver is not None:
             self.solver = solver
         if timelimit is not None:
@@ -181,12 +188,20 @@ class Problem:
             self.setObjective(other)
         return self
 
+
     def __str__(self):
-        obj_str = ",".join(self.obj.__str__().split("\n"))
+        from collections import defaultdict
+        variables_dict = defaultdict(int)
+        for var in self.getVariables():
+            variables_dict[var.getType()] += 1
+        variables_str = ', '.join(
+            [f'{key.replace("Var", "")} {value}'
+                for key, value in sorted(variables_dict.items())]
+            )
         s  = f'Name: {self.name}\n'
         s += f'  Type         : {self.type}\n'
         s += f'  sense        : {self.sense}\n'
-        s += f'  objective    : {obj_str}\n'
+        s += f'  objective    : {self.obj.name}\n'
         s += f'  #constraints : {len(self.constraints)}\n'
-        s += f'  #variables   : {len(self.variables)}'
+        s += f'  #variables   : {len(self.variables)} ({variables_str})'
         return s

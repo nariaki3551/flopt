@@ -138,6 +138,7 @@ def test_flopt_to_pulp():
 def test_lp_to_flopt():
     # make Lp model
     c = [0, 1, 2]
+    C = 0
     A = [[0, 1, 2],
          [1, 2, 3],
          [0, 1, 2]]
@@ -147,7 +148,7 @@ def test_lp_to_flopt():
     var_types=['Binary', 'Binary', 'Continuous']
 
     from flopt.convert import lp_to_flopt
-    prob = lp_to_flopt(A, b, c, lb, ub, var_types)
+    prob = lp_to_flopt(A, b, c, C, lb, ub, var_types)
     print(prob)
     print(prob.constraints)
 

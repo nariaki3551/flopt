@@ -33,6 +33,10 @@ def test_VarSpin_mul(a):
     assert (a*np.float64(2.1)).value() == 2.1
     assert (np.float64(2.1)*a).value() == 2.1
 
+
+def test_VarSpin_selfmul(a):
+    assert (a * a).value() == 1
+
 def test_VarSpin_div(a):
     assert (a/2).value() == 0.5
     assert (1/a).value() == 1
@@ -48,6 +52,14 @@ def test_VarSpin_pow(a):
     assert (2.1**a).value() == 2.1
     assert (a**np.float64(2.1)).value() == 1
     assert (np.float64(2.1)**a).value() == 2.1
+
+
+def test_VarSpin_intpow(a):
+    assert (a ** 0).value() == 1
+    assert (a ** 1) == a
+    assert (a ** 2).value() == 1
+    assert (a ** 3).value() == a
+    assert (a ** 4).value() == 1
 
 def test_VarSpin_mod(a):
     assert (a%2).value() == 1

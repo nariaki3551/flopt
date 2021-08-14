@@ -80,11 +80,6 @@ class ShuffledFrogLeapingSearch(BaseSearch):
 
 
     def search(self):
-        if self.constraints:
-            logger.error("This Solver does not support the problem with constraints.")
-            status = flopt.constants.SOLVER_ABNORMAL_TERMINATE
-            return status
-
         self.startProcess()
         status = flopt.constants.SOLVER_NORMAL_TERMINATE
 
@@ -132,12 +127,12 @@ class ShuffledFrogLeapingSearch(BaseSearch):
                 sub_mmplx = [memeplex[i] for i in sorted(sub_mmplx_ids)]
 
                 # move frog which has the worst objective
-                best_frog = sub_mmplx[0]  # Solution class
-                worst_frog = sub_mmplx[-1]  # Solution class
-                step = random.random()*(best_frog - worst_frog)  # Solution class
+                best_frog = sub_mmplx[0]
+                worst_frog = sub_mmplx[-1]
+                step = random.random()*(best_frog - worst_frog)
                 if step.norm() > self.max_step:
                     step = step * self.max_step / step.norm()
-                new_frog = worst_frog + step  # Solution class # issue34
+                new_frog = worst_frog + step
 
                 # feasible guard
                 if self.feasible_guard == 'clip':

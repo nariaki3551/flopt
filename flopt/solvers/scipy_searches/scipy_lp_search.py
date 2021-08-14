@@ -102,6 +102,7 @@ class ScipyLpSearch(BaseSearch):
             for _callback in self.callbacks:
                 _callback([self.solution], self.best_solution, self.best_obj_value)
 
+        # search
         try:
             res = scipy_optimize.linprog(
                 c=lp.c, A_ub=lp.A, b_ub=lp.b, bounds=bounds,

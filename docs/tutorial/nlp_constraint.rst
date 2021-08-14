@@ -1,5 +1,5 @@
-Non Linear Problem with Constraints
-===================================
+(Non) Linear Problem with Constraints
+=====================================
 
 Overview
 --------

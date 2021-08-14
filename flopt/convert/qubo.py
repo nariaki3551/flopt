@@ -71,17 +71,17 @@ def flopt_to_qubo(prob):
     Q = np.zeros((num_x, num_x))
     for i in range(num_x):
         for j in range(i+1, num_x):
-            Q[i, j] = 2 * ( sum(J[i+1:, i]) + sum(J[i, i-1:]) + h[i] )
+            Q[i, j] = - 4 * J[i, j]
     for i in range(num_x):
-        Q[i, i] = - 4 * J[i, i]
+        Q[i, i] = 2 * ( sum(J[:i, i]) + sum(J[i, i+1:]) - h[i] )
 
     # create C
-    C = 0
+    C = ising.C
     for i in range(num_x):
         for j in range(i+1, num_x):
             C -= J[i, j]
     for i in range(num_x):
-        C -= h[i]
+        C += h[i]
 
     # create x
     list( x.toBinary() for x in ising.x )
@@ -117,16 +117,15 @@ def qubo_to_flopt(Q, C):
         from flopt.convert import qubo_to_flopt
         prob = qubo_to_flopt(Q, C)
         print(prob)
-
         >>> Name: None
         >>>   Type         : Problem
         >>>   sense        : minimize
-        >>>   objective    : Name: (((s0*s0)+(s1*(s1+(s0*2))))+(s2*((s0+s1)+(s2*3))))+10,  Type    : Expression,  Value   : 10,  Degree  : 2,
+        >>>   objective    : (2*s0)*s1+s0*s2+s0+s1*s2+s1+3*s2+10
         >>>   #constraints : 0
-        >>>   #variables   : 3
+        >>>   #variables   : 3 (Binary 3)
+
     """
     assert len(Q) == len(Q[0])
-    import numpy as np
     Q = np.array(Q)
 
     num_x = len(Q)
@@ -137,6 +136,6 @@ def qubo_to_flopt(Q, C):
     prob = flopt.Problem()
 
     # set objective
-    prob += x.T.dot(Q).dot(x) + C
+    prob += (x.T.dot(Q).dot(x) + C).expand()
 
     return prob

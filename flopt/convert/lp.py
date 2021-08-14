@@ -1,5 +1,7 @@
 import collections
 
+import numpy as np
+
 import flopt
 
 
@@ -16,9 +18,9 @@ def flopt_to_lp(prob, x=None, eq=False):
     Returns
     -------
     collections.namedtuple
-        LpStructure = collections.namedtuple('LpStructure', 'A b c x lb ub type')
+        LpStructure = collections.namedtuple('LpStructure', 'A b c C x lb ub type')
 
-        - object is c.T.dot(x),
+        - object is c.T.dot(x) + C
         - constraints are A.dot(x) == b or A.dot(x) <= l and b <= x <= ub
 
     Examples
@@ -51,6 +53,7 @@ def flopt_to_lp(prob, x=None, eq=False):
         print('A', lp.A)
         print('b', lp.b.T)
         print('c', lp.c.T)
+        print('C', lp.C)
         print('lb', lp.lb.T)
         print('ub', lp.ub.T)
 
@@ -62,6 +65,7 @@ def flopt_to_lp(prob, x=None, eq=False):
         >>>  [-0. -0. -1. -1.]]
         >>> b [0. 0. 1. 1.]
         >>> c [1. 1. 0. 0.]
+        >>> C 0
         >>> lb [ 0 -1  0 -2]
         >>> ub [1 2 1 1]
 
@@ -74,6 +78,7 @@ def flopt_to_lp(prob, x=None, eq=False):
         print('A', lp.A)
         print('b', lp.b.T)
         print('c', lp.c.T)
+        print('C', lp.C)
         print('lb', lp.lb.T)
         print('ub', lp.ub.T)
 
@@ -86,6 +91,7 @@ def flopt_to_lp(prob, x=None, eq=False):
         >>>  [-0. -0. -1. -1. -0.  1.]]
         >>> b [0. 1. 1.]
         >>> c [1. 1. 0. 0. 0. 0.]
+        >>> C 0
         >>> lb [ 0 -1  0 -2  0  0]
         >>> ub [1 2 1 1 None None]
 
@@ -106,15 +112,14 @@ def flopt_to_lp_eq(prob, x=None):
     Returns
     -------
     LpStructure
-        object     c.T.dot(x)
+        object     c.T.dot(x) + C
         subject to A.dot(x) == b
                    lb <= x <= ub
     """
-    import numpy as np
 
     LpStructure = collections.namedtuple(
         'LpStructure',
-        'A b c x lb ub type'
+        'A b c C x lb ub type'
         )
 
     # prepare slack variables
@@ -136,29 +141,32 @@ def flopt_to_lp_eq(prob, x=None):
         if const.type == 'eq':
             linear = const.expression.toLinear(x)
             A[i, :] = linear.c.T
-            b[i] = - linear.constant
+            b[i] = - linear.C
         elif const.type == 'le':
             # a_i^T x <= b_i --> a_i^T x + s_i = b_i
             linear = (const.expression + slack_list[slack_ix]).toLinear(x)
             A[i, :] = linear.c.T
-            b[i] = - linear.constant
+            b[i] = - linear.C
             slack_ix += 1
         else:
             # a_i^T x >= b_i --> -a_i^T x + s_i = -b_i
             linear = (const.expression - slack_list[slack_ix]).toLinear(x)
             A[i, :] = - linear.c.T
-            b[i] = linear.constant
+            b[i] = linear.C
             slack_ix += 1
     assert slack_ix == n_slacks
 
     # create c
     c = prob.obj.toLinear(x).c
 
+    # create C
+    C = prob.obj.constant()
+
     # create lb, ub
     lb = np.array([var.lowBound for var in x])
     ub = np.array([var.upBound  for var in x])
 
-    return LpStructure(A, b, c, x, lb, ub, 'eq')
+    return LpStructure(A, b, c, C, x, lb, ub, 'eq')
 
 
 def flopt_to_lp_ineq(prob, x=None):
@@ -175,11 +183,9 @@ def flopt_to_lp_ineq(prob, x=None):
         subject to A.dot(x) <= b
                    lb <= x <= ub
     """
-    import numpy as np
-
     LpStructure = collections.namedtuple(
         'LpStructure',
-        'A b c x lb ub type'
+        'A b c C x lb ub type'
         )
 
     n_eqs = sum(const.type == 'eq' for const in prob.constraints)
@@ -195,40 +201,44 @@ def flopt_to_lp_ineq(prob, x=None):
         if const.type == 'eq':
             # a_i^T x <= b_i && -a_i^T x <= -b_i
             A[i, :] = linear.c.T
-            b[i] = - linear.constant
+            b[i] = - linear.C
             i += 1
             A[i, :] = - linear.c.T
-            b[i] = linear.constant
+            b[i] = linear.C
             i += 1
         elif const.type == 'le':
             # a_i^T x <= b_i
             A[i, :] = linear.c.T
-            b[i] = - linear.constant
+            b[i] = - linear.C
             i += 1
         else:
             # a_i^T x >= b_i --> -a_i^T x <= -b_i
             A[i, :] = - linear.c.T
-            b[i] = linear.constant
+            b[i] = linear.C
             i += 1
 
     # create c
     c = prob.obj.toLinear(x).c
 
+    # create C
+    C = prob.obj.constant()
+
     # create lb, ub
     lb = np.array([var.lowBound for var in x])
     ub = np.array([var.upBound  for var in x])
 
-    return LpStructure(A, b, c, x, lb, ub, 'ineq')
+    return LpStructure(A, b, c, C, x, lb, ub, 'ineq')
 
 
 
-def lp_to_flopt(A, b, c, lb, ub, var_types):
+def lp_to_flopt(A, b, c, C, lb, ub, var_types):
     """
     Parameters
     ----------
     A : matrix
     b : vector
     c : vector
+    C : float or int
     lb : vector
     ub : vector
     var_types : list of {'Binary', 'Continuous', 'Integer'}
@@ -247,6 +257,7 @@ def lp_to_flopt(A, b, c, lb, ub, var_types):
 
         # make Lp model
         c = [0, 1, 2]
+        C = 0
         A = [[0, 1, 2],
              [1, 2, 3],
              [0, 1, 2]]
@@ -256,7 +267,7 @@ def lp_to_flopt(A, b, c, lb, ub, var_types):
         var_types=['Binary', 'Binary', 'Continuous']
 
         from flopt.convert import lp_to_flopt
-        prob = lp_to_flopt(A, b, c, lb, ub, var_types)
+        prob = lp_to_flopt(A, b, c, C, lb, ub, var_types)
         print(prob)
         print(prob.constraints)
 
@@ -264,10 +275,9 @@ def lp_to_flopt(A, b, c, lb, ub, var_types):
     assert len(A) == len(b)
     assert len(A[0]) == len(c) == len(lb) == len(ub) == len(var_types)
     assert all( var_type in {'Binary', 'Continuous', 'Integer'} for var_type in var_types )
-    import numpy as np
     A, b, c = np.array(A), np.array(b), np.array(c)
 
-    num_x = len(A)
+    num_x = len(A[0])
     x = np.zeros((num_x, ), dtype=object)
     for i in range(num_x):
         x[i] = flopt.Variable(f'x{i}', lb[i], ub[i], cat=var_types[i])
@@ -275,7 +285,7 @@ def lp_to_flopt(A, b, c, lb, ub, var_types):
     prob = flopt.Problem()
 
     # set objective
-    prob += c.T.dot(x)
+    prob += c.T.dot(x) + C
 
     # add constraints
     for i in range(len(A)):
