@@ -55,7 +55,7 @@ class BaseSearch:
        in this order: list of solution object, best_solution, best_obj_value
     log : Log
         Solver Log class
-    start_time : time()
+    start_time : float
         start_time of solver
     trial_ix : int
         number of trials

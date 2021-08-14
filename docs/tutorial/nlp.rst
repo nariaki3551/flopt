@@ -1,5 +1,5 @@
-Non Linear Problem
-==================
+(Non) Linear Problem
+====================
 
 Overview
 --------

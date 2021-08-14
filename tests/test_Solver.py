@@ -141,7 +141,7 @@ def test_SFLA(prob, callback):
         n_memeplex=5, n_frog_per_memeplex=10, n_memetic_iter=100,
         n_iter=1000, max_step=0.01, msg=True, callbacks=[callback],
     )
-    prob.solve(solver=solver, timelimit=10, msg=True)
+    prob.solve(solver=solver, timelimit=3, msg=True)
 
 def test_SFLA_available(prob, prob_with_const, prob_nonlinear, prob_perm):
     solver = Solver(algo='SFLA')
