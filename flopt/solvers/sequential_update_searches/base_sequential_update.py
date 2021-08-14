@@ -45,11 +45,6 @@ class SequentialUpdateSearch(BaseSearch):
         search a better solution using `self.setNewSolution()` function
         `self.setNewSolution()` generate new solution and set it into self.solution
         """
-        if self.constraints:
-            logger.error("This Solver does not support the problem with constraints.")
-            status = flopt.constants.SOLVER_ABNORMAL_TERMINATE
-            return status
-
         self.startProcess()
         status = flopt.constants.SOLVER_NORMAL_TERMINATE
 
@@ -77,6 +72,10 @@ class SequentialUpdateSearch(BaseSearch):
 
         self.closeProcess()
         return status
+
+
+    def setNewSolution(self):
+        raise NotImplementedError()
 
 
     def startProcess(self):

@@ -34,7 +34,7 @@ class OptunaSearch(BaseSearch):
 
 
     def createStudy(self):
-        raise NotImplementedError
+        raise NotImplementedError()
 
 
     def available(self, prob):
@@ -58,11 +58,6 @@ class OptunaSearch(BaseSearch):
 
 
     def search(self):
-        if self.constraints:
-            logger.error("This Solver does not support the problem with constraints.")
-            status = flopt.constants.SOLVER_ABNORMAL_TERMINATE
-            return status
-
         status = flopt.constants.SOLVER_NORMAL_TERMINATE
         self.startProcess()
         self.createStudy()
@@ -73,6 +68,7 @@ class OptunaSearch(BaseSearch):
             status = flopt.constants.SOLVER_ABNORMAL_TERMINATE
         self.closeProcess()
         return status
+
 
     def objective(self, trial):
         # set value into self.solution

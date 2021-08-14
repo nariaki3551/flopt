@@ -61,6 +61,8 @@ class BaseSearch:
         number of trials
     max_k : int
         number of save solutions
+    save_solution : bool
+        flag for coping solution to log
     """
     def __init__(self):
         # base information
@@ -107,13 +109,14 @@ class BaseSearch:
 
 
     def reset(self):
-        """
-        reset log, best_obj_value, start_time, trial_ix
+        """reset solving log and status
         """
         self.log = Log()
         self.best_obj_value = float('inf')
         self.start_time = None
         self.trial_ix = 0
+        self.max_k = 1
+        self.save_solution = False
 
 
     def solve(self, solution, obj, constraints, prob=None, msg=False):
@@ -138,6 +141,7 @@ class BaseSearch:
         status, Log
         """
         if prob is not None and not self.available(prob):
+            logger.error(f'problem can not be solved by solver {self.name}')
             status = flopt.constants.SOLVER_ABNORMAL_TERMINATE
             raise flopt.constants.SolverError
 

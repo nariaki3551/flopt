@@ -68,16 +68,20 @@ class HyperoptTPESearch(BaseSearch):
 
     def search(self):
         import hyperopt
-        if self.constraints:
-            logger.error("This Solver does not support the problem with constraints.")
-            status = flopt.constants.SOLVER_ABNORMAL_TERMINATE
-            return status
-
         self.startProcess()
         status = flopt.constants.SOLVER_NORMAL_TERMINATE
 
         # make the search space
-        space = self.gen_space()
+        space = dict()
+        for var in self.solution:
+            name = var.name
+            if var.getType() in {name, 'VarInteger', 'VarBinary'}:
+                var_space = hyperopt.hp.quniform(name, var.getLb(), var.getUb(), 1)
+            elif var.getType() == 'VarContinuous':
+                var_space = hyperopt.hp.uniform(name, var.getLb(), var.getUb())
+            space[var.name] = var_space
+
+        # for objective
         self.var_dict = {var.name: var for var in self.solution}
 
         # search
@@ -93,22 +97,6 @@ class HyperoptTPESearch(BaseSearch):
 
         self.closeProcess()
         return status
-
-
-    def gen_space(self):
-        """
-        generate search space
-        """
-        from hyperopt import hp
-        space = dict()
-        for var in self.solution:
-            name = var.name
-            if var.getType() in {name, 'VarInteger' , 'VarBinary'}:
-                var_space = hp.quniform(name, var.getLb(), var.getUb(), 1)
-            elif var.getType() == 'VarContinuous':
-                var_space = hp.uniform(name, var.getLb(), var.getUb())
-            space[var.name] = var_space
-        return space
 
 
     def objective(self, var_value_dict):
