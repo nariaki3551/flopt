@@ -7,7 +7,7 @@ def flopt_to_pulp(prob):
     """
     Parameters
     ----------
-    prob : flopt.Problem
+    prob : Problem
 
     Returns
     -------
@@ -55,7 +55,7 @@ def pulp_to_flopt(prob):
 
     Returns
     -------
-    flopt_prob : flopt.Problem
+    flopt_prob : Problem
     flopt_solution : Solution of flopt.VarElement family
 
     Examples
