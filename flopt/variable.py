@@ -73,8 +73,7 @@ def Variable(name, lowBound=None, upBound=None, cat='Continuous', iniValue=None)
 
 
 class VarElement:
-    """
-    Base Variable class
+    """Base Variable class
     """
     def __init__(self, name, lowBound, upBound, iniValue):
         self.name = name
@@ -161,10 +160,9 @@ class VarElement:
 
 
     def setRandom(self):
+        """set random value to variable
         """
-        set random value to variable
-        """
-        raise NotImplementedError
+        raise NotImplementedError()
 
 
     def maxDegree(self):
@@ -232,7 +230,7 @@ class VarElement:
             other = other.value()
         if isinstance(other, (int, float)):
             if other == 0:
-                return VarConst(other)
+                return VarConst(0)
             elif other == 1:
                 return self
             elif other == -1:
@@ -250,7 +248,7 @@ class VarElement:
             other = other.value()
         if isinstance(other, (int, float)):
             if other == 0:
-                return VarConst(other)
+                return VarConst(0)
             elif other == 1:
                 return self
             elif other == -1:
@@ -372,8 +370,7 @@ class VarElement:
 
 
 class VarInteger(VarElement):
-    """
-    Ingeter Variable class
+    """Ingeter Variable class
     """
     def __init__(self, name, lowBound, upBound, iniValue):
         super().__init__(name, lowBound, upBound, iniValue)
@@ -412,9 +409,7 @@ class VarInteger(VarElement):
 
 
 class VarBinary(VarInteger):
-    """
-    Binary Variable class
-
+    """Binary Variable class
 
     .. note::
       Binary Variable behaves differently in "-" and "~" operation.
@@ -516,13 +511,12 @@ class VarBinary(VarInteger):
         return Expression(other, self, '|')
 
     def __repr__(self):
-        return f'Variable({self.name}, cat="Binary", iniValue={self.value()})'
+        return f'Variable("{self.name}", cat="Binary", ini_value={self.value()})'
 
 
 
 class VarSpin(VarElement):
-    """
-    Spin Variable class, which takes only 1 or -1
+    """Spin Variable class, which takes only 1 or -1
     """
     def __init__(self, name, iniValue, binary=None):
         super().__init__(name, -1, 1, iniValue)
@@ -547,8 +541,7 @@ class VarSpin(VarElement):
 
 
     def clip(self):
-        """
-        map in an feasible area by clipping.
+        """map in an feasible area by clipping.
         """
         if self._value <= 0:
             self._value = self.lowBound
@@ -561,8 +554,7 @@ class VarSpin(VarElement):
 
 
     def setRandom(self):
-        """
-        set random value to variable
+        """set random value to variable
         """
         self._value = random.choice([-1, 1])
 
@@ -626,13 +618,12 @@ class VarSpin(VarElement):
         return self.__neg__()
 
     def __repr__(self):
-        return f'Variable({self.name}, cat="Spin", iniValue={self._value})'
+        return f'Variable("{self.name}", cat="Spin", ini_value={self._value})'
 
 
 
 class VarContinuous(VarElement):
-    """
-    Continuous Variable class
+    """Continuous Variable class
     """
     def __init__(self, name, lowBound, upBound, iniValue):
         super().__init__(name, lowBound, upBound, iniValue)
@@ -656,10 +647,13 @@ class VarContinuous(VarElement):
         return VarContinuous(self.name, self.lowBound, self.upBound, self._value)
 
 
+    def __repr__(self):
+        return f'Variable("{self.name}", cat="Continuous", ini_value={self._value})'
+
+
 
 class VarPermutation(VarElement):
-    """
-    Permutation Variable class
+    """Permutation Variable class
 
     This has [lowBound, ... upBound] range permutation.
 
@@ -693,16 +687,16 @@ class VarPermutation(VarElement):
 
     def value(self):
         """
+        Returns
+        -------
         list
-          return permutation
         """
         _value = self._value[:]  # copy
         return _value
 
 
     def setRandom(self):
-        """
-        shuffle the list
+        """shuffle the list
         """
         return random.shuffle(self._value)
 
@@ -753,9 +747,10 @@ class VarConst(VarElement):
     def maxDegree(self):
         return 0
 
-
     def clone(self):
         """
+        Returns
+        -------
         VarConst
         """
         return VarConst(self._value)
@@ -771,7 +766,7 @@ class VarConst(VarElement):
         return self._value - other
 
     def __rsub__(self, other):
-        return other - self.value
+        return other - self._value
 
     def __mul__(self, other):
         return self._value * other

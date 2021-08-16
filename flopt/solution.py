@@ -59,7 +59,7 @@ class Solution:
         Returns
         -------
         list
-          values of the variables in the Solution
+            values of the variables in the Solution
         """
         values = [variable.value() for variable in self._variables]
         return values

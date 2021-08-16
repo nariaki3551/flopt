@@ -38,7 +38,7 @@ class ScipySearch(BaseSearch):
         """
         Parameters
         ----------
-        prob : flopt.Problem
+        prob : Problem
 
         Returns
         -------

@@ -75,7 +75,7 @@ def ising_to_flopt(J, h, C=0):
 
     Returns
     -------
-    prob : flopt.Problem
+    prob : Problem
 
         - object - x.T.dot(J).dot(x) - h.T.dot(x) + C
         - such that x[i] in {-1, 1}
