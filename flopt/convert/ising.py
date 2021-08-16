@@ -24,9 +24,9 @@ def flopt_to_ising(prob):
         import numpy as np
 
         # Spin Variables
-        a = Variable(name='a', iniValue=1, cat='Spin')
-        b = Variable(name='b', iniValue=1, cat='Spin')
-        c = Variable(name='c', iniValue=1, cat='Spin')
+        a = Variable(name='a', ini_value=1, cat='Spin')
+        b = Variable(name='b', ini_value=1, cat='Spin')
+        c = Variable(name='c', ini_value=1, cat='Spin')
 
         # Problem
         prob = Problem()
@@ -55,8 +55,8 @@ def flopt_to_ising(prob):
         >>>  [0. 0. 3.]]
         >>> h [1. 2. 0.]
         >>> C 0
-        >>> x [Variable(a, cat="Spin", iniValue=1) Variable(b, cat="Spin", iniValue=1)
-        >>>  Variable(c, cat="Spin", iniValue=1)]
+        >>> x [Variable(a, cat="Spin", ini_value=1) Variable(b, cat="Spin", ini_value=1)
+        >>>  Variable(c, cat="Spin", ini_value=1)]
     """
     assert prob.obj.toIsing()
     assert len(prob.constraints) == 0

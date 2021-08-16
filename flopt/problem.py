@@ -182,10 +182,12 @@ class Problem:
 
 
     def __iadd__(self, other):
-        if isinstance(other, Constraint):
-            self.addConstraint(other)
+        if not isinstance(other, tuple):
+            other = (other, )
+        if isinstance(other[0], Constraint):
+            self.addConstraint(*other)
         else:
-            self.setObjective(other)
+            self.setObjective(*other)
         return self
 
 
@@ -205,3 +207,11 @@ class Problem:
         s += f'  #constraints : {len(self.constraints)}\n'
         s += f'  #variables   : {len(self.variables)} ({variables_str})'
         return s
+
+
+    def show(self):
+        s = str(self) + '\n\n'
+        for ix, const in enumerate(self.constraints):
+            s += f'  C {ix}, name {const.name}, {str(const)}\n'
+        return s
+
