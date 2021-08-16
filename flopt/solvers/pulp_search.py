@@ -8,6 +8,7 @@ from flopt.solvers.solver_utils import (
     during_solver_message,
     end_solver_message
 )
+from flopt.expression import ExpressionConst
 from flopt.solution import Solution
 from flopt.env import setup_logger
 import flopt.constants
@@ -53,7 +54,7 @@ class PulpSearch(BaseSearch):
         """
         Parameters
         ----------
-        prob : flopt.Problem
+        prob : Problem
 
         Returns
         -------
@@ -127,7 +128,8 @@ class PulpSearch(BaseSearch):
         # conver Problem -> pulp.LpProblem
         name = '' if self.name is None else self.name
         lp_prob = pulp.LpProblem(name=name)
-        lp_prob.setObjective(obj.value(lp_solution))
+        if not isinstance(obj, ExpressionConst):
+            lp_prob.setObjective(obj.value(lp_solution))
 
         for const in constraints:
             const_exp = const.expression
