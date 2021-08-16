@@ -16,3 +16,11 @@ to flopt
     :maxdepth: 1
 
     to_flopt
+
+linearize
+^^^^^^^^^
+
+.. toctree::
+    :maxdepth: 1
+
+    linearize

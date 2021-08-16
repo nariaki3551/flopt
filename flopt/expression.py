@@ -109,6 +109,13 @@ class Expression:
         self.var_dict = None
         self.expr = None
 
+        # update parents
+        self.parents = list()
+        if isinstance(self.elmA, Expression):
+            self.elmA.parents.append(self)
+        if isinstance(self.elmB, Expression):
+            self.elmB.parents.append(self)
+
 
     def setVarDict(self, var_dict):
         self.var_dict = var_dict
@@ -546,6 +553,36 @@ class Expression:
         return self.value()
 
 
+    def traverse(self):
+        """traverse Expression tree as root is self
+
+        Yield
+        -----
+        Expression or VarElement
+        """
+        yield self
+        if isinstance(self.elmA, Expression):
+            for x in self.elmA.traverse():
+                yield x
+        if isinstance(self.elmB, Expression):
+            for x in self.elmB.traverse():
+                yield x
+
+
+    def traverseAncestors(self):
+        """traverse ancestors of self
+
+        Yield
+        -----
+        Expression or VarElement
+        """
+        for parent in self.parents:
+            yield parent
+            if isinstance(parent, Expression):
+                for x in parent.traverseAncestors():
+                    yield x
+
+
     def __add__(self, other):
         if isinstance(other, ExpressionConst):
             other = other.value()
@@ -809,6 +846,11 @@ class CustomExpression(Expression):
         self.variables = variables
         self.type = 'CustomExpression'
         self.var_dict = None
+<<<<<<< Updated upstream
+=======
+        self.operater = None
+        self.parents = list()
+>>>>>>> Stashed changes
 
         res = (func(*variables))
         if isinstance(res, (int, float)):
@@ -841,6 +883,16 @@ class CustomExpression(Expression):
         """
         return True
 
+
+    def traverse(self):
+        """traverse Expression tree as root is self
+
+        Yield
+        -----
+        Expression or VarElement
+        """
+        yield self
+
     def __hash__(self):
         tmp = [hash(self.func)]
         for var in self.variables:
@@ -851,7 +903,7 @@ class CustomExpression(Expression):
         return 'CustomExpression'
 
 
-class ExpressionConst(Expression):
+class ExpressionConst:
     """
     It is the expression of constant value.
     We use it the operation including constant value.
@@ -867,7 +919,13 @@ class ExpressionConst(Expression):
         self.name = f'{value}'
         self._value = value
         self.type = 'ExpressionConst'
+<<<<<<< Updated upstream
         self.expr = None
+=======
+        self.parents = list()   # dummy
+        self.operater = None    # dummy
+        self.expr = None        # dummy
+>>>>>>> Stashed changes
 
     def getType(self):
         return self.type
@@ -882,6 +940,24 @@ class ExpressionConst(Expression):
     def hasCustomExpression(self):
         # for hasCustomExpression in Expression calss
         return False
+
+    def maxDegree(self):
+        return 0
+
+    def isLinear(self):
+        return True
+
+    def isIsing(self):
+        return True
+
+    def clone(self):
+        return ExpressionConst(self._value)
+
+    def simplify(self):
+        return self.clone()
+
+    def expand(self):
+        return self.clone()
 
     def __add__(self, other):
         return self._value + other

@@ -375,6 +375,7 @@ class VarInteger(VarElement):
     def __init__(self, name, lowBound, upBound, iniValue):
         super().__init__(name, lowBound, upBound, iniValue)
         self.type = 'VarInteger'
+        self.binarized = None
 
 
     def value(self, solution=None):
@@ -396,6 +397,14 @@ class VarInteger(VarElement):
 
     def setRandom(self):
         self._value = random.randint(self.getLb(), self.getUb())
+
+
+    def toBinary(self):
+        if self.binarized is None:
+            l, u = int(self.getLb()), int(self.getUb())
+            binaries = Variable.array(f'bin_{self.name}', u-l+1, cat='Binary')
+            self.binarized = sum(VarConstRemain(i) * var_bin for i, var_bin in zip(range(l, u+1), binaries))
+        return self.binarized
 
 
     def clone(self):
@@ -721,7 +730,7 @@ class VarPermutation(VarElement):
 
 
 
-class VarConst(VarElement):
+class VarConst:
     """
     It is the variable of constant value.
     We use it the operation including constant value.
@@ -735,14 +744,25 @@ class VarConst(VarElement):
     def __init__(self, const, name=None):
         if name is None:
             name = f'{const}'
-        super().__init__(name, const, const, const)
+        self.name = name
+        self.lowBound = const
+        self.upBound = const
+        self._value = const
         self.type = 'VarConst'
 
+    def getType(self):
+        return self.type
+
+    def value(self):
+        return self._value
 
     def getVariables(self):
         # for getVariables() in Expression class
         return set()
 
+    def hasCustomExpression(self):
+        # for hasCustomExpression() in Expression class
+        return False
 
     def maxDegree(self):
         return 0
