@@ -4,11 +4,11 @@ from flopt import Variable, CustomExpression
 
 @pytest.fixture(scope='function')
 def a():
-    return Variable('a', lowBound=1, upBound=3, iniValue=2, cat='Integer')
+    return Variable('a', lowBound=1, upBound=3, ini_value=2, cat='Integer')
 
 @pytest.fixture(scope='function')
 def b():
-    return Variable('b', lowBound=1, upBound=3, iniValue=2, cat='Continuous')
+    return Variable('b', lowBound=1, upBound=3, ini_value=2, cat='Continuous')
 
 @pytest.fixture(scope='function')
 def obj():

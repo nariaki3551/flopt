@@ -61,7 +61,7 @@ It contains a list of [lowBound, ... , upBound].
   >> perm.value()
   >> [3, 1, 2, 0]  # permutation is shuffled
 
-  perm = Variable('perm', lowBound=0, upBound=3, iniValue=list(range(0, 4)), cat='Permutation')
+  perm = Variable('perm', lowBound=0, upBound=3, ini_value=list(range(0, 4)), cat='Permutation')
   >> perm.value()
   >> [0, 1, 2, 3]
 

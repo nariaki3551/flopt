@@ -57,8 +57,8 @@ def flopt_to_lp(prob, x=None, eq=False):
         print('lb', lp.lb.T)
         print('ub', lp.ub.T)
 
-        >>> x [Variable(b, cat="Binary", iniValue=0) VarElement("c", -1, 2, 0)
-        >>>  Variable(a, cat="Binary", iniValue=0) VarElement("d", -2, 1, -0.5)]
+        >>> x [Variable(b, cat="Binary", ini_value=0) VarElement("c", -1, 2, 0)
+        >>>  Variable(a, cat="Binary", ini_value=0) VarElement("d", -2, 1, -0.5)]
         >>> A [[ 0.  1.  1.  0.]
         >>>  [-0. -1. -1. -0.]
         >>>  [ 1.  0.  1.  0.]
@@ -82,8 +82,8 @@ def flopt_to_lp(prob, x=None, eq=False):
         print('lb', lp.lb.T)
         print('ub', lp.ub.T)
 
-        >>> x [Variable(b, cat="Binary", iniValue=0) VarElement("c", -1, 2, 0)
-        >>>  Variable(a, cat="Binary", iniValue=0) VarElement("d", -2, 1, -0.5)
+        >>> x [Variable(b, cat="Binary", ini_value=0) VarElement("c", -1, 2, 0)
+        >>>  Variable(a, cat="Binary", ini_value=0) VarElement("d", -2, 1, -0.5)
         >>>  VarElement("slack0", 0, None, 5000000000.0)
         >>>  VarElement("slack1", 0, None, 5000000000.0)]
         >>> A [[ 0.  1.  1.  0.  0.  0.]

@@ -7,11 +7,11 @@ from flopt.expression import Expression
 
 @pytest.fixture(scope='function')
 def a():
-    return Variable('a', lowBound=1, upBound=3, iniValue=2, cat='Integer')
+    return Variable('a', lowBound=1, upBound=3, ini_value=2, cat='Integer')
 
 @pytest.fixture(scope='function')
 def b():
-    return Variable('b', lowBound=1, upBound=3, iniValue=2, cat='Continuous')
+    return Variable('b', lowBound=1, upBound=3, ini_value=2, cat='Continuous')
 
 def test_Constraint_type(a, b):
     assert (a == 0).type == 'eq'

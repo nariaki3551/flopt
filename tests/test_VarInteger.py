@@ -7,7 +7,12 @@ from flopt import Variable
 
 @pytest.fixture(scope='function')
 def a():
-    return Variable('a', lowBound=1, upBound=3, iniValue=2, cat='Integer')
+    return Variable('a', lowBound=1, upBound=3, ini_value=2, cat='Integer')
+
+@pytest.fixture(scope='function')
+def b():
+    return Variable('b', lowBound=1, upBound=3, ini_value=2, cat='Integer')
+
 
 # add, sub, mul, div and pow
 def test_VarInteger_add(a):
@@ -26,13 +31,17 @@ def test_VarInteger_sub(a):
     assert math.isclose((a-np.float64(2.1)).value(), -0.1)
     assert math.isclose((np.float64(2.1)-a).value(), 0.1)
 
-def test_VarInteger_mul(a):
+def test_VarInteger_mul1(a):
     assert (a*2).value() == 4
     assert (2*a).value() == 4
     assert (a*2.1).value() == 4.2
     assert (2.1*a).value() == 4.2
     assert (a*np.float64(2.1)).value() == 4.2
     assert (np.float64(2.1)*a).value() == 4.2
+
+def test_VarBinary_mul2(a, b):
+    assert ((-a)*b).name == (a*(-b)).name
+    assert (a*b).name == ((-a)*(-b)).name
 
 def test_VarInteger_div(a):
     assert (a/2).value() == 1

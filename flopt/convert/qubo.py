@@ -27,9 +27,9 @@ def flopt_to_qubo(prob):
 
         from flopt import Variable, Solver
 
-        a = Variable(name='a', iniValue=1, cat='Binary')
-        b = Variable(name='b', iniValue=1, cat='Binary')
-        c = Variable(name='c', iniValue=1, cat='Binary')
+        a = Variable(name='a', ini_value=1, cat='Binary')
+        b = Variable(name='b', ini_value=1, cat='Binary')
+        c = Variable(name='c', ini_value=1, cat='Binary')
 
         # Problem
         prob = Problem()
@@ -49,9 +49,9 @@ def flopt_to_qubo(prob):
         >>>  [ 0.  -0.   0.5]
         >>>  [ 0.   0.  -0. ]]
         >>> C -0.75
-        >>> x [Variable(a, cat="Binary", iniValue=1)
-        >>>  Variable(b, cat="Binary", iniValue=1)
-        >>>  Variable(c, cat="Binary", iniValue=1)]
+        >>> x [Variable(a, cat="Binary", ini_value=1)
+        >>>  Variable(b, cat="Binary", ini_value=1)
+        >>>  Variable(c, cat="Binary", ini_value=1)]
     """
     assert prob.obj.toIsing()
     assert len(prob.constraints) == 0

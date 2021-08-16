@@ -50,7 +50,7 @@ We can convert this into Ising form as follows.
   print(ising.C)
   >>> 1.0
   print(ising.x)
-  >>> [Variable(a, cat="Spin", iniValue=-1) Variable(b, cat="Spin", iniValue=-1)]
+  >>> [Variable(a, cat="Spin", ini_value=-1) Variable(b, cat="Spin", ini_value=-1)]
 
 
 We can convert evan problem includes `Binary` variables.
@@ -98,8 +98,8 @@ By `.toSpin()`, we can see the objective function when all the variables are tra
   print(ising.C)
   >>> 1.0
   print(ising.x)
-  >>> [Variable(a, cat="Spin", iniValue=-1)
-  >>>  Variable(b_s, cat="Spin", iniValue=-1)]
+  >>> [Variable(a, cat="Spin", ini_value=-1)
+  >>>  Variable(b_s, cat="Spin", ini_value=-1)]
 
 
 Ising to flopt

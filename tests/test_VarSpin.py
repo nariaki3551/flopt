@@ -6,7 +6,11 @@ from flopt import Variable
 
 @pytest.fixture(scope='function')
 def a():
-    return Variable('a', iniValue=1, cat='Spin')
+    return Variable('a', ini_value=1, cat='Spin')
+
+@pytest.fixture(scope='function')
+def b():
+    return Variable('b', ini_value=1, cat='Spin')
 
 
 def test_VarSpin_add(a):
@@ -25,7 +29,7 @@ def test_VarSpin_sub(a):
     assert (a-np.float64(2.1)).value() == -1.1
     assert (np.float64(2.1)-a).value() == 1.1
 
-def test_VarSpin_mul(a):
+def test_VarSpin_mul1(a):
     assert (a*2).value() == 2
     assert (2*a).value() == 2
     assert (a*2.1).value() == 2.1
@@ -33,6 +37,9 @@ def test_VarSpin_mul(a):
     assert (a*np.float64(2.1)).value() == 2.1
     assert (np.float64(2.1)*a).value() == 2.1
 
+def test_VarBinary_mul2(a, b):
+    assert ((-a)*b).name == (a*(-b)).name
+    assert (a*b).name == ((-a)*(-b)).name
 
 def test_VarSpin_selfmul(a):
     assert (a * a).value() == 1

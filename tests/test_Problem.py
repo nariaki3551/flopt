@@ -4,11 +4,11 @@ from flopt import Variable, Problem, CustomExpression
 
 @pytest.fixture(scope='function')
 def a():
-    return Variable('a', iniValue=0, cat='Binary')
+    return Variable('a', ini_value=0, cat='Binary')
 
 @pytest.fixture(scope='function')
 def b():
-    return Variable('b', iniValue=2, cat='Continuous')
+    return Variable('b', ini_value=2, cat='Continuous')
 
 def test_Problem_obj(a, b):
     prob = Problem()

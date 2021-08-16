@@ -5,11 +5,11 @@ from flopt.expression import ExpressionConst
 
 @pytest.fixture(scope='function')
 def a():
-    return Variable(name='a', lowBound=1, upBound=5, iniValue=2, cat='Continuous')
+    return Variable(name='a', lowBound=1, upBound=5, ini_value=2, cat='Continuous')
 
 @pytest.fixture(scope='function')
 def b():
-    return Variable(name='b', lowBound=1, upBound=5, iniValue=3, cat='Continuous')
+    return Variable(name='b', lowBound=1, upBound=5, ini_value=3, cat='Continuous')
 
 @pytest.fixture(scope='function')
 def c(a, b):

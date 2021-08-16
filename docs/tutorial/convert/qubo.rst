@@ -48,8 +48,8 @@ We can convert this into QUBO form as follows.
   print(qubo.C)
   >>> 1.00000000000000
   print(qubo.x)
-  >>> [Variable(a, cat="Binary", iniValue=0)
-  >>>  Variable(b, cat="Binary", iniValue=0)]
+  >>> [Variable(a, cat="Binary", ini_value=0)
+  >>>  Variable(b, cat="Binary", ini_value=0)]
 
 
 We can convert evan problem includes `Spin` variables.
@@ -95,8 +95,8 @@ By `.toBinary()`, we can see the objective function when all the variables are t
   print(qubo.C)
   >>> 1.00000000000000
   print(qubo.x)
-  >>> [Variable(a, cat="Binary", iniValue=0)
-  >>>  Variable(b_b, cat="Binary", iniValue=0)]
+  >>> [Variable(a, cat="Binary", ini_value=0)
+  >>>  Variable(b_b, cat="Binary", ini_value=0)]
 
 
 
