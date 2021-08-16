@@ -51,8 +51,8 @@ class Expression:
     Examples
     --------
 
-    >>> a = Variable(name='a', iniValue=1, cat='Integer')
-    >>> b = Variable(name='b', iniValue=2, cat='Continuous')
+    >>> a = Variable(name='a', ini_value=1, cat='Integer')
+    >>> b = Variable(name='b', ini_value=2, cat='Continuous')
     >>> c = Expression(a, b, '+')
     >>> print(c)
     >>> Name: a+b
@@ -66,8 +66,8 @@ class Expression:
     operater "+", "-", "*", "/", "^" and "%" are supported for Integer, Binary and
     Continuous Variables.
 
-    >>> a = Variable(name='a', iniValue=1, cat='Integer')  # a.value() is 1
-    >>> b = Variable(name='b', iniValue=2, cat='Continuous')  # b.value() is 2
+    >>> a = Variable(name='a', ini_value=1, cat='Integer')  # a.value() is 1
+    >>> b = Variable(name='b', ini_value=2, cat='Continuous')  # b.value() is 2
     >>> Expression(a, b, '+').value()  # a+b addition
     >>> 3
     >>> Expression(a, b, '-').value()  # a-b substraction
@@ -83,8 +83,8 @@ class Expression:
 
     operater "&", "|" are supported for Binary Variable.
 
-    >>> a = Variable(name='a', iniValue=1, cat='Binary')
-    >>> b = Variable(name='b', iniValue=0, cat='Binary')
+    >>> a = Variable(name='a', ini_value=1, cat='Binary')
+    >>> b = Variable(name='b', ini_value=0, cat='Binary')
     >>> Expression(a, b, '&').value().value()  # a&b bitwise and
     >>> 0
     >>> Expression(a, b, '|').value().value()  # a&b bitwise or
@@ -248,8 +248,8 @@ class Expression:
         Examples
         --------
         >>> import flopt
-        >>> a = flopt.Variable('a', iniValue=3)
-        >>> b = flopt.Variable('b', iniValue=3)
+        >>> a = flopt.Variable('a', ini_value=3)
+        >>> b = flopt.Variable('b', ini_value=3)
         >>> (a+b).isLinear()
         >>> True
         >>> (a*b).isLinear()
@@ -393,9 +393,9 @@ class Expression:
         .. code-block :: python
 
             import flopt
-            a = flopt.Variable(name='a', iniValue=1, cat='Binary')
-            b = flopt.Variable(name='b', iniValue=1, cat='Binary')
-            c = flopt.Variable(name='c', iniValue=1, cat='Binary')
+            a = flopt.Variable(name='a', ini_value=1, cat='Binary')
+            b = flopt.Variable(name='b', ini_value=1, cat='Binary')
+            c = flopt.Variable(name='c', ini_value=1, cat='Binary')
 
             # make Ising model
             import numpy as np
@@ -785,14 +785,14 @@ class CustomExpression(Expression):
 
     >>> def user_func(x):
     >>>     return x
-    >>> a = Variable('a', iniValue=3)
+    >>> a = Variable('a', ini_value=3)
     >>> obj = CustomExpression(user_func, [a])
     >>> obj.value()
     >>> 3
 
     For example,
 
-    >>> b = Variable('b', iniValue=1)
+    >>> b = Variable('b', ini_value=1)
     >>> obj_b = obj + b  # 3+1
     >>> obj_b.value()
     >>> 4

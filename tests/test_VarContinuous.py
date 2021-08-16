@@ -5,9 +5,14 @@ import numpy as np
 
 from flopt import Variable
 
+
+@pytest.fixture(scope='function')
+def a():
+    return Variable('a', lowBound=1, upBound=3, ini_value=2, cat='Continuous')
+
 @pytest.fixture(scope='function')
 def b():
-    return Variable('b', lowBound=1, upBound=3, iniValue=2, cat='Continuous')
+    return Variable('b', lowBound=1, upBound=3, ini_value=2, cat='Continuous')
 
 # add, sub, mul and div
 def test_VarContinuous_add(b):
@@ -26,7 +31,7 @@ def test_VarContinuous_sub(b):
     assert math.isclose((b-np.float64(2.1)).value(), -0.1)
     assert math.isclose((np.float64(2.1)-b).value(), 0.1)
 
-def test_VarContinuous_mul(b):
+def test_VarContinuous_mul1(b):
     assert (b*2).value() == 4
     assert (2*b).value() == 4
     assert (b*2.1).value() == 4.2

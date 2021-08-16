@@ -6,7 +6,11 @@ from flopt import Variable
 
 @pytest.fixture(scope='function')
 def a():
-    return Variable('a', iniValue=1, cat='Binary')
+    return Variable('a', ini_value=1, cat='Binary')
+
+@pytest.fixture(scope='function')
+def b():
+    return Variable('b', ini_value=1, cat='Binary')
 
 
 def test_VarBinary_add(a):
@@ -25,7 +29,7 @@ def test_VarBinary_sub(a):
     assert (a-np.float64(2.1)).value() == -1.1
     assert (np.float64(2.1)-a).value() == 1.1
 
-def test_VarBinary_mul(a):
+def test_VarBinary_mul1(a):
     assert (a*2).value() == 2
     assert (2*a).value() == 2
     assert (a*2.1).value() == 2.1

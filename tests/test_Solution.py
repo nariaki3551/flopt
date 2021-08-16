@@ -5,12 +5,12 @@ from flopt import Variable, Solution
 
 @pytest.fixture(scope='function')
 def b():
-    _b = [Variable(f'b{i}', lowBound=0, upBound=10, iniValue=i+1, cat='Continuous') for i in range(5)]
+    _b = [Variable(f'b{i}', lowBound=0, upBound=10, ini_value=i+1, cat='Continuous') for i in range(5)]
     return Solution('b', _b )
 
 @pytest.fixture(scope='function')
 def c():
-    _c = [Variable(f'c{i}', lowBound=0, upBound=10, iniValue=2*i, cat='Continuous') for i in range(5)]
+    _c = [Variable(f'c{i}', lowBound=0, upBound=10, ini_value=2*i, cat='Continuous') for i in range(5)]
     return Solution('c', _c )
 
 @pytest.fixture(scope='function')
@@ -19,7 +19,7 @@ def d():
 
 @pytest.fixture(scope='function')
 def f():
-    _f = [Variable(f'f{i}', lowBound=0, upBound=10, iniValue=2*i, cat='Integer') for i in range(5)]
+    _f = [Variable(f'f{i}', lowBound=0, upBound=10, ini_value=2*i, cat='Integer') for i in range(5)]
     return Solution('f', _f )
 
 @pytest.fixture(scope='function')

@@ -3,7 +3,8 @@
 Variable
 ========
 
-.. autofunction:: flopt.Variable
+.. autoclass:: VariableFactory
+  :members:
 
 .. autoclass:: VarElement
   :members:

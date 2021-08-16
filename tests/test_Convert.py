@@ -38,9 +38,9 @@ def test_flopt_to_lp():
 
 
 def test_flopt_to_ising1():
-    a = flopt.Variable(name='a', iniValue=1, cat='Spin')
-    b = flopt.Variable(name='b', iniValue=1, cat='Spin')
-    c = flopt.Variable(name='c', iniValue=1, cat='Spin')
+    a = flopt.Variable(name='a', ini_value=1, cat='Spin')
+    b = flopt.Variable(name='b', ini_value=1, cat='Spin')
+    c = flopt.Variable(name='c', ini_value=1, cat='Spin')
 
     # Problem
     prob = flopt.Problem()
@@ -67,9 +67,9 @@ def test_flopt_to_ising1():
 
 
 def test_flopt_to_ising2():
-    a = flopt.Variable(name='a', iniValue=1, cat='Binary')
-    b = flopt.Variable(name='b', iniValue=1, cat='Binary')
-    c = flopt.Variable(name='c', iniValue=1, cat='Binary')
+    a = flopt.Variable(name='a', ini_value=1, cat='Binary')
+    b = flopt.Variable(name='b', ini_value=1, cat='Binary')
+    c = flopt.Variable(name='c', ini_value=1, cat='Binary')
 
     # Problem
     prob = flopt.Problem()
@@ -88,9 +88,9 @@ def test_flopt_to_ising2():
 
 
 def test_flopt_to_qubo():
-    a = flopt.Variable(name='a', iniValue=1, cat='Binary')
-    b = flopt.Variable(name='b', iniValue=1, cat='Binary')
-    c = flopt.Variable(name='c', iniValue=1, cat='Binary')
+    a = flopt.Variable(name='a', ini_value=1, cat='Binary')
+    b = flopt.Variable(name='b', ini_value=1, cat='Binary')
+    c = flopt.Variable(name='c', ini_value=1, cat='Binary')
 
     # Problem
     prob = flopt.Problem()

@@ -8,80 +8,295 @@ from flopt.env import setup_logger
 logger = setup_logger(__name__)
 
 
+
+# -------------------------------------------------------
+#   Variable Utils
+# -------------------------------------------------------
+
+
 INI_BOUND = 1e10
 
 
-def Variable(name, lowBound=None, upBound=None, cat='Continuous', iniValue=None):
+class VariableFactory:
+    """API of variable generation
     """
-    Create Variable object
+    def checkName(self, name):
+        assert '+'   not in name, f'The + character cannot be used in the name.'
+        assert '-'   not in name, f'The - character cannot be used in the name.'
+        assert '*'   not in name, f'The * character cannot be used in the name.'
+        assert '/'   not in name, f'The / character cannot be used in the name.'
+        assert '%'   not in name, f'The % character cannot be used in the name.'
+        assert '^'   not in name, f'The ^ character cannot be used in the name.'
+        assert '('   not in name, f'The ( character cannot be used in the name.'
+        assert ')'   not in name, f'The ) character cannot be used in the name.'
 
+
+    def __call__(self, name, lowBound=None, upBound=None, cat='Continuous', ini_value=None):
+        """Create Variable object
+
+        Parameters
+        ----------
+        name : str
+          name of variable
+        lowBound : float, optional
+          lowBound
+        upBound : float, optional
+          upBound
+        cat : str, optional
+          category of variable
+        ini_value : float, optional
+          set value to variable
+
+        Returns
+        -------
+        Variable Family
+          return Variable Family
+
+        Examples
+        --------
+        Create Integer, Continuous and Binary Variable
+
+        >>> from flopt import Variable
+        >>> a = Variable(name='a', lowBound=0, upBound=1, cat='Integer')
+        >>> c = Variable(name='c', lowBound=1, upBound=2, cat='Continuous')
+        >>> b = Variable(name='b', cat='Binary')
+        >>> s = Variable(name='s', cat='Spin')
+
+        Create [lowBound, ..., upBound] range permutation variable
+
+        >>> p = Variable(name='p', lowBound=0, upBound=10, cat='Permutation')
+
+        We can see the data of variable, print().
+
+        >>> print(p)
+        >>> Name: p
+        >>> Type    : VarPermutation
+        >>> Value   : [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        >>> lowBound: 0
+        >>> upBound : 10
+        """
+        self.checkName(name)
+        if cat == 'Continuous':
+            return VarContinuous(name, lowBound, upBound, ini_value)
+        elif cat == 'Integer':
+            return VarInteger(name, lowBound, upBound, ini_value)
+        elif cat == 'Binary':
+            return VarBinary(name, ini_value)
+        elif cat == 'Spin':
+            return VarSpin(name, ini_value)
+        elif cat == 'Permutation':
+            return VarPermutation(name, lowBound, upBound, ini_value)
+        else:
+            raise ValueError(f"cat {cat} cannot be used")
+
+
+    def dict(self, name, keys, lowBound=None, upBound=None, cat='Continuous', ini_value=None):
+        """
+        Parameters
+        ----------
+        name : str
+          name of variable
+        keys : tuple or generator
+            keys of variable dictionary
+        lowBound : float, optional
+          lowBound
+        upBound : float, optional
+          upBound
+        cat : str, optional
+          category of variable
+        ini_value : float, optional
+          set value to variable
+
+        Returns
+        -------
+        dict
+
+        Examples
+        --------
+
+        >>> Variable.dict('x', [0, 1])
+        >>> {0: Variable(x_0, cat="Continuous", ini_value=0.0),
+        >>>  1: Variable(x_1, cat="Continuous", ini_value=0.0)}
+
+        >>> Variable.dict('x', range(2), cat='Binary')
+        >>> {0: Variable(x_0, cat="Binary", ini_value=0),
+        >>>  1: Variable(x_1, cat="Binary", ini_value=0)}
+
+        >>> Variable.dict('x', (range(2), range(2)), cat='Binary')
+        >>> {(0, 0): Variable(x_0_0, cat="Binary", ini_value=0),
+             (0, 1): Variable(x_0_1, cat="Binary", ini_value=0),
+             (1, 0): Variable(x_1_0, cat="Binary", ini_value=0),
+             (1, 1): Variable(x_1_1, cat="Binary", ini_value=0)}
+
+        >>> Variable.dict('x', (range(2), range(2), range(2)), cat='Binary)
+        >>> {(0, 0, 0): Variable(x_0_0_0, cat="Binary", ini_value=0),
+             (0, 0, 1): Variable(x_0_0_1, cat="Binary", ini_value=0),
+             (0, 1, 0): Variable(x_0_1_0, cat="Binary", ini_value=0),
+             (0, 1, 1): Variable(x_0_1_1, cat="Binary", ini_value=0),
+             (1, 0, 0): Variable(x_1_0_0, cat="Binary", ini_value=0),
+             (1, 0, 1): Variable(x_1_0_1, cat="Binary", ini_value=0),
+             (1, 1, 0): Variable(x_1_1_0, cat="Binary", ini_value=0),
+             (1, 1, 1): Variable(x_1_1_1, cat="Binary", ini_value=0)}
+
+        >>> # not work
+        >>> # Variable.dict('x', [range(2), range(2)], cat='Binary')
+
+        """
+        if not isinstance(keys, tuple):
+            iterator = keys
+        else:
+            iterator = itertools.product(*keys)
+        variables = dict()
+        for key in iterator:
+            if isinstance(key, (range, types.GeneratorType)):
+                raise ValueError(f'key must not be generator')
+            if isinstance(key, (list, tuple)):
+                var_name = f'{name}_' + '_'.join(map(str, key))
+            else:
+                var_name = f'{name}_{key}'
+            variables[key] = self(var_name, lowBound, upBound, cat, ini_value)
+        return variables
+
+
+    def array(self, name, shape, lowBound=None, upBound=None, cat='Continuous', ini_value=None):
+        """
+        Parameters
+        ----------
+        name : str
+          name of variable
+        shape : int of tuple of int
+            shape of array
+        lowBound : float, optional
+          lowBound
+        upBound : float, optional
+          upBound
+        cat : str, optional
+          category of variable
+        ini_value : float, optional
+          set value to variable
+
+        Returns
+        -------
+        numpy.array
+
+        Examples
+        --------
+
+        >>> Variable.array('x', 2, cat='Binary')
+        >>> array([Variable(x_0, cat="Binary", ini_value=0),
+        >>>        Variable(x_1, cat="Binary", ini_value=0)], dtype=object)
+
+        >>> Variable.array('x', (2, 2), cat='Binary')
+        >>> array([[Variable(x_0_0, cat="Binary", ini_value=0),
+        >>>         Variable(x_0_1, cat="Binary", ini_value=0)],
+        >>>        [Variable(x_1_0, cat="Binary", ini_value=0),
+        >>>         Variable(x_1_1, cat="Binary", ini_value=0)]], dtype=object)
+
+        >>> Variable.array('x', (2, 2, 2), cat='Binary')
+        >>> array([[[Variable(x_0_0_0, cat="Binary", ini_value=0),
+        >>>          Variable(x_0_0_1, cat="Binary", ini_value=0)],
+        >>>         [Variable(x_0_1_0, cat="Binary", ini_value=0),
+        >>>          Variable(x_0_1_1, cat="Binary", ini_value=0)]],
+        >>>
+        >>>        [[Variable(x_1_0_0, cat="Binary", ini_value=0),
+        >>>          Variable(x_1_0_1, cat="Binary", ini_value=0)],
+        >>>         [Variable(x_1_1_0, cat="Binary", ini_value=0),
+        >>>          Variable(x_1_1_1, cat="Binary", ini_value=0)]]], dtype=object)
+
+        """
+        if isinstance(shape, int):
+            shape = (shape, )
+        iterator = itertools.product(*map(range, shape))
+        variables = np.empty(shape, dtype=object)
+        for i in iterator:
+            var_name = f'{name}_' + '_'.join(map(str, i))
+            variables[i] = self(var_name, lowBound, upBound, cat, ini_value)
+        return variables
+
+
+    def matrix(self, name, n_row, n_col, lowBound=None, upBound=None, cat='Continuous', ini_value=None):
+        """Overwrap of VariableFactory.array
+
+        Parameters
+        ----------
+        name : str
+          name of variable
+        n_row : int
+            number of rows
+        n_col : int
+            number of columns
+        lowBound : float, optional
+          lowBound
+        upBound : float, optional
+          upBound
+        cat : str, optional
+          category of variable
+        ini_value : float, optional
+          set value to variable
+
+        Returns
+        -------
+        numpy.array
+
+        Examples
+        --------
+
+        >>> Variable.matrix('x', 2, 2, cat='Binary')
+        >>> array([[Variable(x_0_0, cat="Binary", ini_value=0),
+        >>>         Variable(x_0_1, cat="Binary", ini_value=0)],
+        >>>        [Variable(x_1_0, cat="Binary", ini_value=0),
+        >>>         Variable(x_1_1, cat="Binary", ini_value=0)]], dtype=object)
+
+        """
+        return self.array(name, (n_row, n_col), lowBound, upBound, cat, ini_value)
+
+
+def value(x):
+    """
     Parameters
     ----------
-    name : str
-      name of variable
-    lowBound : float, optional
-      lowBound
-    upBound : float, optional
-      upBound
-    cat : str, optional
-      category of variable
-    iniValue : float, optional
-      set value to variable
-
-    Returns
-    -------
-    Variable Family
-      return Variable Family
+    x : VarElement or array of VarElement
 
     Examples
     --------
-    Create Integer, Continuous and Binary Variable
 
-    >>> from flopt import Variable
-    >>> a = Variable(name='a', lowBound=0, upBound=1, cat='Integer')
-    >>> c_1 = Variable(name='c_1', lowBound=1, upBound=2, cat='Continuous')
-    >>> c_2 = Variable(name='c_2', lowBound=-2, intValue=3, cat='Continuous')
-    >>> b = Variable(name='b', cat='Binary')
-    >>> s = Variable(name='s', cat='Spin')
-
-    Create [lowBound, ..., upBound] range permutation variable
-
-    >>> p = Variable(name='p', lowBound=0, upBound=10, cat='Permutation')
-
-    We can see the data of variable, print().
-
-    >>> print(p)
-    >>> Name: p
-    >>> Type    : VarPermutation
-    >>> Value   : [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-    >>> lowBound: 0
-    >>> upBound : 10
+    >>> from flopt import Variable, value
+    >>>
+    >>> y = Variable('y', ini_value=1)
+    >>> value(y)
+    >>> 1
+    >>>
+    >>> x = Variable.array('x', 3, cat='Binary', ini_value=0)
+    >>> value(x)
+    >>> [0 0 0]
     """
-    if cat == 'Continuous':
-        return VarContinuous(name, lowBound, upBound, iniValue)
-    elif cat == 'Integer':
-        return VarInteger(name, lowBound, upBound, iniValue)
-    elif cat == 'Binary':
-        return VarBinary(name, iniValue)
-    elif cat == 'Spin':
-        return VarSpin(name, iniValue)
-    elif cat == 'Permutation':
-        return VarPermutation(name, lowBound, upBound, iniValue)
-    else:
-        raise ValueError(f"cat {cat} cannot be used")
+    if isinstance(x, VarElement):
+        return x.value()
+    elif isinstance(x, (list, tuple)):
+        cast = type(x)
+        return cast([var.value() for var in x])
+    elif isinstance(x, np.ndarray):
+        def to_value(x):
+            return x.value()
+        cast = np.frompyfunc(to_value, 1, 1)
+        return cast(x)
 
 
+
+# -------------------------------------------------------
+#   Variable Classes
+# -------------------------------------------------------
 
 class VarElement:
     """Base Variable class
     """
-    def __init__(self, name, lowBound, upBound, iniValue):
+    def __init__(self, name, lowBound, upBound, ini_value):
         self.name = name
         self.lowBound = lowBound
         self.upBound = upBound
-        if iniValue is None:
-            iniValue = self.getIniValue()
-        self._value = iniValue
+        if ini_value is None:
+            ini_value = self.getIniValue()
+        self._value = ini_value
 
 
     def getType(self):
@@ -372,8 +587,8 @@ class VarElement:
 class VarInteger(VarElement):
     """Ingeter Variable class
     """
-    def __init__(self, name, lowBound, upBound, iniValue):
-        super().__init__(name, lowBound, upBound, iniValue)
+    def __init__(self, name, lowBound, upBound, ini_value):
+        super().__init__(name, lowBound, upBound, ini_value)
         self.type = 'VarInteger'
 
 
@@ -425,8 +640,8 @@ class VarBinary(VarInteger):
       >>> (~a).value()
       >>> 0
     """
-    def __init__(self, name, iniValue, spin=None):
-        super().__init__(name, 0, 1, iniValue)
+    def __init__(self, name, ini_value, spin=None):
+        super().__init__(name, 0, 1, ini_value)
         self.type = 'VarBinary'
         self.spin = spin
 
@@ -455,7 +670,7 @@ class VarBinary(VarInteger):
         if self.spin is None:
             self.spin = VarSpin(
                 f'{self.name}_s',
-                iniValue=int(2*self._value-1), binary=self,
+                ini_value=int(2*self._value-1), binary=self,
             )
         return (self.spin + 1) * 0.5
 
@@ -518,8 +733,8 @@ class VarBinary(VarInteger):
 class VarSpin(VarElement):
     """Spin Variable class, which takes only 1 or -1
     """
-    def __init__(self, name, iniValue, binary=None):
-        super().__init__(name, -1, 1, iniValue)
+    def __init__(self, name, ini_value, binary=None):
+        super().__init__(name, -1, 1, ini_value)
         self.type = 'VarSpin'
         self.binary = binary
 
@@ -573,7 +788,7 @@ class VarSpin(VarElement):
         if self.binary is None:
             self.binary = VarBinary(
                 f'{self.name}_b',
-                iniValue=int((self._value+1)/2), spin=self,
+                ini_value=int((self._value+1)/2), spin=self,
             )
         return 2 * self.binary - 1
 
@@ -625,8 +840,8 @@ class VarSpin(VarElement):
 class VarContinuous(VarElement):
     """Continuous Variable class
     """
-    def __init__(self, name, lowBound, upBound, iniValue):
-        super().__init__(name, lowBound, upBound, iniValue)
+    def __init__(self, name, lowBound, upBound, ini_value):
+        super().__init__(name, lowBound, upBound, ini_value)
         self.type = 'VarContinuous'
 
 
@@ -663,7 +878,7 @@ class VarPermutation(VarElement):
     >>> a = Variable('a', lowBound=0, upBound=3, cat='Permutation')
     >>> a.value()
     >>> [2, 1, 3, 0]   # randomized
-    >>> b = Variable('b', lowBound=0, upBound=3, iniValue=[0,1,2,3], cat='Permutation')
+    >>> b = Variable('b', lowBound=0, upBound=3, ini_value=[0,1,2,3], cat='Permutation')
     >>> b.value()
     >>> [0, 1, 2, 3]
 
@@ -676,8 +891,8 @@ class VarPermutation(VarElement):
     >>> b[1:3]
     >>> [1, 2]
     """
-    def __init__(self, name, lowBound, upBound, iniValue):
-        super().__init__(name, lowBound, upBound, iniValue)
+    def __init__(self, name, lowBound, upBound, ini_value):
+        super().__init__(name, lowBound, upBound, ini_value)
         self.type = 'VarPermutation'
 
 
