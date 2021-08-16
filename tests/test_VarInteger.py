@@ -39,6 +39,10 @@ def test_VarInteger_mul1(a):
     assert (a*np.float64(2.1)).value() == 4.2
     assert (np.float64(2.1)*a).value() == 4.2
 
+def test_VarBinary_mul2(a, b):
+    assert ((-a)*b).name == (a*(-b)).name
+    assert (a*b).name == ((-a)*(-b)).name
+
 def test_VarInteger_div(a):
     assert (a/2).value() == 1
     assert (1/a).value() == 0.5

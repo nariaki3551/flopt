@@ -393,21 +393,22 @@ class VarElement:
 
 
     def __add__(self, other):
-        if isinstance(other, (VarConst, ExpressionConst)):
-            other = other.value()
         if isinstance(other, (int, float)):
             if other == 0:
                 return self
             other = VarConst(other)
             return Expression(self, other, '+')
-        elif isinstance(other, (VarElement, Expression)):
+        elif isinstance(other, VarElement):
+            return Expression(self, other, '+')
+        elif isinstance(other, Expression):
+            if other.isNeg():
+                # self + (0-other) -> self - other
+                return Expression(self, other.elmB, '-')
             return Expression(self, other, '+')
         else:
             return NotImplemented
 
     def __radd__(self, other):
-        if isinstance(other, (VarConst, ExpressionConst)):
-            other = other.value()
         if isinstance(other, (int, float)):
             if other == 0:
                 return self
@@ -419,22 +420,23 @@ class VarElement:
             return NotImplemented
 
     def __sub__(self, other):
-        if isinstance(other, (VarConst, ExpressionConst)):
-            other = other.value()
         if isinstance(other, (int, float)):
             if other == 0:
                 return self
             other = VarConst(other)
             return Expression(self, other, '-')
-        elif isinstance(other, (VarElement, Expression)):
+        elif isinstance(other, VarElement):
+            return Expression(self, other, '-')
+        elif isinstance(other, Expression):
+            if other.isNeg():
+                # self - (0-other) -> self + other
+                return Expression(self, other.elmB, '+')
             return Expression(self, other, '-')
         else:
             return NotImplemented
 
     def __rsub__(self, other):
         # other - self
-        if isinstance(other, (VarConst, ExpressionConst)):
-            other = other.value()
         if isinstance(other, (int, float)):
             name = f'-{self.name}' if other == 0 else None
             other = VarConst(other)
@@ -445,8 +447,6 @@ class VarElement:
             return NotImplemented
 
     def __mul__(self, other):
-        if isinstance(other, (VarConst, ExpressionConst)):
-            other = other.value()
         if isinstance(other, (int, float)):
             if other == 0:
                 return VarConst(0)
@@ -456,15 +456,25 @@ class VarElement:
                 return -self
             other = VarConst(other)
             return Expression(other, self, '*')
-        elif isinstance(other, (VarElement, Expression)):
+        elif isinstance(other, VarElement):
             return Expression(self, other, '*')
+        elif isinstance(other, Expression):
+            if other.isNeg():
+                # self * (0-other) -> - (self*other)
+                return - Expression(self, other.elmB, '*')
+            elif other.operater == '*' and isinstance(other.elmA, VarConst):
+                # self * (a*other) -> a * (self * other)
+                return other.elmA * Expression(self, other.elmB, '*')
+            elif other.operater == '*' and isinstance(other.elmB, VarConst):
+                # self * (other*a) -> a * (self * other)
+                return other.elmB * Expression(self, other.elmA, '*')
+            else:
+                return Expression(other, self, '*')
         else:
             return NotImplemented
 
     def __rmul__(self, other):
         # other * self
-        if isinstance(other, (VarConst, ExpressionConst)):
-            other = other.value()
         if isinstance(other, (int, float)):
             if other == 0:
                 return VarConst(0)
@@ -474,14 +484,24 @@ class VarElement:
                 return -self
             other = VarConst(other)
             return Expression(other, self, '*')
-        elif isinstance(other, (VarElement, Expression)):
+        elif isinstance(other, VarElement):
             return Expression(other, self, '*')
+        elif isinstance(other, Expression):
+            if other.isNeg():
+                # (0-other) * self -> - (other*self)
+                return - Expression(other.elmB, self, '*')
+            elif other.operater == '*' and isinstance(other.elmA, VarConst):
+                # self * (a*other) -> a * (self * other)
+                return other.elmA * Expression(other.elmB, self, '*')
+            elif other.operater == '*' and isinstance(other.elmB, VarConst):
+                # self * (other*a) -> a * (self * other)
+                return other.elmB * Expression(other.elmA, self, '*')
+            else:
+                return Expression(other, self, '*')
         else:
             return NotImplemented
 
     def __truediv__(self, other):
-        if isinstance(other, (VarConst, ExpressionConst)):
-            other = other.value()
         if isinstance(other, (int, float)):
             if other == 1:
                 return self
@@ -495,8 +515,6 @@ class VarElement:
             return NotImplemented
 
     def __rtruediv__(self, other):
-        if isinstance(other, (VarConst, ExpressionConst)):
-            other = other.value()
         if isinstance(other, (int, float)):
             if other == 0:
                 return VarConst(0)
@@ -508,8 +526,6 @@ class VarElement:
             return NotImplemented
 
     def __mod__(self, other):
-        if isinstance(other, (VarConst, ExpressionConst)):
-            other = other.value()
         if isinstance(other, int):
             other = VarConst(other)
             return Expression(self, other, '%')
@@ -519,8 +535,6 @@ class VarElement:
             raise NotImplementedError()
 
     def __pow__(self, other):
-        if isinstance(other, (VarConst, ExpressionConst)):
-            other = other.value()
         if isinstance(other, (int, float)):
             if other == 0:
                 return VarConst(1)
@@ -534,8 +548,6 @@ class VarElement:
             return NotImplemented
 
     def __rpow__(self, other):
-        if isinstance(other, (VarConst, ExpressionConst)):
-            other = other.value()
         if isinstance(other, (int, float)):
             if other == 1:
                 return VarConst(1)
@@ -567,13 +579,13 @@ class VarElement:
         return hash(self.name)
 
     def __eq__(self, other):
-        return Constraint(self-other, 'eq')
+        return Constraint(self, other, 'eq')
 
     def __le__(self, other):
-        return Constraint(self-other, 'le')
+        return Constraint(self, other, 'le')
 
     def __ge__(self, other):
-        return Constraint(self-other, 'ge')
+        return Constraint(self, other, 'ge')
 
     def __str__(self):
         s  = f'Name: {self.name}\n'
@@ -973,7 +985,6 @@ class VarConst(VarElement):
         VarConst
         """
         return VarConst(self._value)
-
 
     def __add__(self, other):
         return self._value + other

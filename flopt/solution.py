@@ -18,6 +18,16 @@ class Solution:
     variables : list of VarElement family
       variables which has no duplicate
 
+    Attributes
+    ----------
+    name : str
+        name of solution
+    type : str
+    _variables : list of varElement
+        variable array
+    _var_dict : dict
+        key is name of variable, key is variable
+
     Examples
     ----------
     Create a Solution which has Integer, Continuous and Binary Variables
@@ -41,6 +51,7 @@ class Solution:
         self.name = name
         self.type = 'Solution'
         self._variables = sorted(variables, key=lambda var: var.name)
+        self._var_dict = None
 
 
     def toDict(self):
@@ -51,7 +62,9 @@ class Solution:
             key is name of variable,
             value is VarElement family or Expression
         """
-        return {variable.name: variable for variable in self._variables}
+        if self._var_dict is None:
+            self._var_dict = {variable.name: variable for variable in self._variables}
+        return self._var_dict
 
 
     def value(self):
@@ -61,8 +74,7 @@ class Solution:
         list
             values of the variables in the Solution
         """
-        values = [variable.value() for variable in self._variables]
-        return values
+        return [variable.value() for variable in self._variables]
 
 
     def getVariables(self):

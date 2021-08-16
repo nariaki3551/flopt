@@ -39,6 +39,10 @@ def test_VarContinuous_mul1(b):
     assert (b*np.float64(2.1)).value() == 4.2
     assert (np.float64(2.1)*b).value() == 4.2
 
+def test_VarBinary_mul2(a, b):
+    assert ((-a)*b).name == (a*(-b)).name
+    assert (a*b).name == ((-a)*(-b)).name
+
 def test_VarContinuous_div(b):
     assert (b/2).value() == 1
     assert (2/b).value() == 1

@@ -37,6 +37,10 @@ def test_VarBinary_mul1(a):
     assert (a*np.float64(2.1)).value() == 2.1
     assert (np.float64(2.1)*a).value() == 2.1
 
+def test_VarBinary_mul2(a, b):
+    assert ((-a)*b).name == (a*(-b)).name
+    assert (a*b).name == ((-a)*(-b)).name
+
 def test_VarBinary_selfmul(a):
     assert a * a == a
 
