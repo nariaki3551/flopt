@@ -19,6 +19,12 @@ def prob(variables):
     _prob += a + b + c
     return _prob
 
+@pytest.fixture(scope='function')
+def prob_no_obj(variables):
+    a, b, c = variables
+    _prob = Problem(name='Test')
+    _prob += a + b + c <= 0
+    return _prob
 
 @pytest.fixture(scope='function')
 def prob_only_continuous(variables):
@@ -68,12 +74,12 @@ def test_Solver_list():
 def test_RandomSearch(prob, callback):
     solver = Solver(algo='RandomSearch')
     solver.setParams(n_trial=10, callbacks=[callback])
-    prob.solve(solver, timelimit=1)
+    prob.solve(solver, timelimit=0.5)
 
 def test_RandomSearch2(prob_perm, callback):
     solver = Solver(algo='RandomSearch')
     solver.setParams(n_trial=10, callbacks=[callback])
-    prob_perm.solve(solver, timelimit=1)
+    prob_perm.solve(solver, timelimit=0.5)
 
 def test_RandomSearch_available(prob, prob_with_const, prob_nonlinear, prob_perm):
     solver = Solver(algo='RandomSearch')
@@ -86,7 +92,7 @@ def test_RandomSearch_available(prob, prob_with_const, prob_nonlinear, prob_perm
 def test_2Opt(prob_perm, callback):
     solver = Solver(algo='2-Opt')
     solver.setParams(n_trial=10, callbacks=[callback])
-    prob_perm.solve(solver, timelimit=1)
+    prob_perm.solve(solver, timelimit=0.5)
 
 def test_2Opt_available(prob, prob_with_const, prob_nonlinear, prob_perm):
     solver = Solver(algo='2-Opt')
@@ -99,7 +105,7 @@ def test_2Opt_available(prob, prob_with_const, prob_nonlinear, prob_perm):
 def test_OptunaTPESearch(prob, callback):
     solver = Solver(algo='OptunaTPESearch')
     solver.setParams(n_trial=10, callbacks=[callback])
-    prob.solve(solver, timelimit=1)
+    prob.solve(solver, timelimit=0.5)
 
 def test_OptunaTPESearch_available(prob, prob_with_const, prob_nonlinear, prob_perm):
     solver = Solver(algo='OptunaTPESearch')
@@ -112,7 +118,7 @@ def test_OptunaTPESearch_available(prob, prob_with_const, prob_nonlinear, prob_p
 def test_OptunaCmaEsSearch(prob, callback):
     solver = Solver(algo='OptunaCmaEsSearch')
     solver.setParams(n_trial=10, callbacks=[callback])
-    prob.solve(solver, timelimit=1)
+    prob.solve(solver, timelimit=0.5)
 
 def test_OptunaCmaEsSearch_available(prob, prob_with_const, prob_nonlinear, prob_perm):
     solver = Solver(algo='OptunaCmaEsSearch')
@@ -125,7 +131,7 @@ def test_OptunaCmaEsSearch_available(prob, prob_with_const, prob_nonlinear, prob
 def test_HyperoptTPESearch(prob, callback):
     solver = Solver(algo='HyperoptTPESearch')
     solver.setParams(n_trial=10, callbacks=[callback])
-    prob.solve(solver, timelimit=1)
+    prob.solve(solver, timelimit=0.5)
 
 def test_HyperoptTPESearch_available(prob, prob_with_const, prob_nonlinear, prob_perm):
     solver = Solver(algo='HyperoptTPESearch')
@@ -141,7 +147,7 @@ def test_SFLA(prob, callback):
         n_memeplex=5, n_frog_per_memeplex=10, n_memetic_iter=100,
         n_iter=1000, max_step=0.01, msg=True, callbacks=[callback],
     )
-    prob.solve(solver=solver, timelimit=3, msg=True)
+    prob.solve(solver=solver, timelimit=2, msg=True)
 
 def test_SFLA_available(prob, prob_with_const, prob_nonlinear, prob_perm):
     solver = Solver(algo='SFLA')
@@ -154,12 +160,17 @@ def test_SFLA_available(prob, prob_with_const, prob_nonlinear, prob_perm):
 def test_PulpSearch1(prob, callback):
     solver = Solver(algo='PulpSearch')
     solver.setParams(n_trial=10, callbacks=[callback])
-    prob.solve(solver, timelimit=1)
+    prob.solve(solver, timelimit=0.5)
 
 def test_PulpSearch2(prob_with_const, callback):
     solver = Solver(algo='PulpSearch')
     solver.setParams(n_trial=10, callbacks=[callback])
-    prob_with_const.solve(solver, timelimit=1)
+    prob_with_const.solve(solver, timelimit=0.5)
+
+def test_PulpSearch2(prob_no_obj, callback):
+    solver = Solver(algo='PulpSearch')
+    solver.setParams(n_trial=10, callbacks=[callback])
+    prob_no_obj.solve(solver, timelimit=0.5)
 
 def test_PulpSearch_available(prob, prob_with_const, prob_nonlinear, prob_perm):
     solver = Solver(algo='PulpSearch')
@@ -172,7 +183,7 @@ def test_PulpSearch_available_Error(prob_nonlinear, callback):
     solver = Solver(algo='PulpSearch')
     solver.setParams(n_trial=10, callbacks=[callback])
     try:
-        prob_nonlinear.solve(solver, timelimit=1)
+        prob_nonlinear.solve(solver, timelimit=0.5)
         assert False
     except flopt.constants.SolverError:
         assert True
@@ -181,7 +192,7 @@ def test_PulpSearch_available_Error(prob_nonlinear, callback):
 def test_ScipySearch1(prob_only_continuous, callback):
     solver = Solver(algo='ScipySearch')
     solver.setParams(n_trial=10, callbacks=[callback])
-    prob_only_continuous.solve(solver, timelimit=1)
+    prob_only_continuous.solve(solver, timelimit=0.5)
 
 def test_ScipySearch_available(prob, prob_only_continuous, prob_with_const, prob_nonlinear, prob_perm):
     solver = Solver(algo='ScipySearch')
@@ -195,7 +206,7 @@ def test_ScipySearch_available(prob, prob_only_continuous, prob_with_const, prob
 def test_ScipyLpSearch1(prob_only_continuous, callback):
     solver = Solver(algo='ScipyLpSearch')
     solver.setParams(n_trial=10, callbacks=[callback])
-    prob_only_continuous.solve(solver, timelimit=1)
+    prob_only_continuous.solve(solver, timelimit=0.5)
 
 def test_ScipyLpSearch_available(prob, prob_only_continuous, prob_with_const, prob_nonlinear, prob_perm):
     solver = Solver(algo='ScipyLpSearch')
@@ -209,22 +220,22 @@ def test_ScipyLpSearch_available(prob, prob_only_continuous, prob_with_const, pr
 def test_AutoSearch1(prob, callback):
     solver = Solver(algo='auto')
     solver.setParams(n_trial=10, callbacks=[callback])
-    prob.solve(solver, timelimit=1)
+    prob.solve(solver, timelimit=0.5)
 
 def test_AutoSearch2(prob_with_const, callback):
     solver = Solver(algo='auto')
     solver.setParams(n_trial=10, callbacks=[callback])
-    prob_with_const.solve(solver, timelimit=1)
+    prob_with_const.solve(solver, timelimit=0.5)
 
 # def test_AutoSearch3(prob_nonlinear, callback):
 #     solver = Solver(algo='auto')
 #     solver.setParams(n_trial=10, callbacks=[callback])
-#     prob_nonlinear.solve(solver, timelimit=1)
+#     prob_nonlinear.solve(solver, timelimit=0.5)
 
 def test_AutoSearch4(prob_with_const, callback):
     solver = Solver(algo='auto')
     solver.setParams(n_trial=10, callbacks=[callback])
-    prob_with_const.solve(solver, timelimit=1)
+    prob_with_const.solve(solver, timelimit=0.5)
 
 def test_AutoSearch_available(prob, prob_with_const, prob_nonlinear, prob_perm):
     solver = Solver(algo='auto')
