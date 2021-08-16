@@ -1,4 +1,4 @@
-from flopt.variable import VarElement
+from flopt.variable import VarElement, VarConst
 from flopt.expression import Expression, ExpressionConst, CustomExpression
 from flopt.constraint import Constraint
 from flopt.solution import Solution
@@ -76,7 +76,7 @@ class Problem:
         if isinstance(obj, (int, float)):
             obj = ExpressionConst(obj)
         elif isinstance(obj, VarElement):
-            obj = Exprression(obj, 0, '+')
+            obj = Expression(obj, VarConst(0), '+')
         self.obj = obj
         self.variables |= obj.getVariables()
 

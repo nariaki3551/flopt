@@ -99,7 +99,7 @@ def qubo_to_flopt(Q, C):
 
     Returns
     -------
-    prob : flopt.Problem
+    prob : Problem
 
         - object x.T.dot(Q).dot(x) + C
         - such that x[i] in {0, 1}

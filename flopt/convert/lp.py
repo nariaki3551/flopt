@@ -245,7 +245,7 @@ def lp_to_flopt(A, b, c, C, lb, ub, var_types):
 
     Returns
     -------
-    prob : flopt.Problem
+    prob : Problem
 
         - object is c.T.dot(x)
         - constraints are A.dot(x) <= b, lb <= x <= ub

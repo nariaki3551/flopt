@@ -501,10 +501,14 @@ class Expression:
             str(self.expr.expand()),
             {var.name: var for var in self.getVariables()}
             )
-        expr = eval(
-            str(sympy.sympify(expr.name).expand()),
-            {var.name: var for var in self.getVariables()}
-            )
+        if isinstance(expr, (int, float)):
+            expr = ExpressionConst(expr)
+        else:
+            import sympy
+            expr = eval(
+                str(sympy.sympify(expr.name).expand()),
+                {var.name: var for var in self.getVariables()}
+                )
         return expr
 
 
@@ -737,7 +741,7 @@ class Expression:
         return s
 
     def __repr__(self):
-        s = f'Expression({self.elmA_name}, {self.elmB_name}, {self.operater})'
+        s = f'Expression({self.elmA.name}, {self.elmB.name}, {self.operater})'
         return s
 
 
@@ -880,60 +884,34 @@ class ExpressionConst(Expression):
         return False
 
     def __add__(self, other):
-        if isinstance(other, (int, float)):
-            return ExpressionConst(self._value + other)
-        elif isinstance(other, Expression):
-            return self._value + other
-        else:
-            return NotImplemented
+        return self._value + other
+
+    def __radd__(self, other):
+        return other + self._value
 
     def __sub__(self, other):
-        if isinstance(other, (int, float)):
-            return ExpressionConst(self._value - other)
-        elif isinstance(other, Expression):
-            return self._value + other
-        else:
-            return NotImplemented
+        return self._value - other
+
+    def __rsub__(self, other):
+        return other - self._value
 
     def __mul__(self, other):
-        if isinstance(other, (int, float)):
-            return ExpressionConst(self._value * other)
-        elif isinstance(other, Expression):
-            return self._value * other
-        else:
-            return NotImplemented
+        return self._value * other
+
+    def __rmul__(self, other):
+        return other * self._value
 
     def __truediv__(self, other):
-        if isinstance(other, (int, float)):
-            return ExpressionConst(self._value / other)
-        elif isinstance(other, Expression):
-            return self._value / other
-        else:
-            return NotImplemented
+        return self._value / other
 
     def __rtruediv__(self, other):
-        if isinstance(other, (int, float)):
-            return ExpressionConst(other / self._value)
-        elif isinstance(other, Expression):
-            return other / self._value
-        else:
-            return NotImplemented
+        return other / self._value
 
     def __pow__(self, other):
-        if isinstance(other, (int, float)):
-            return ExpressionConst(self._value ** other)
-        elif isinstance(other, Expression):
-            return self._value ** other
-        else:
-            return NotImplemented
+        return self._value ** other
 
     def __rpow__(self, other):
-        if isinstance(other, (int, float)):
-            return ExpressionConst(other ** self._value)
-        elif isinstance(other, Expression):
-            return other ** self._value
-        else:
-            return NotImplemented
+        return other ** self._value
 
     def __neg__(self):
         return ExpressionConst(-self._value)
