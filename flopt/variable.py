@@ -1,4 +1,8 @@
+import types
 import random
+import itertools
+
+import numpy as np
 
 from flopt.expression import Expression, ExpressionConst
 from flopt.constraint import Constraint
@@ -1023,3 +1027,32 @@ class VarConst(VarElement):
         return f'VarConst("{self.name}", {self.lowBound}, {self.upBound}, {self.value()})'
 
 
+class VarConstRemain(VarConst):
+    """
+    It is the variable of constant value.
+    We use it the operation including constant value.
+    See VarElement class `__add__`, `__sub__`, and so on.
+
+    Parameters
+    ----------
+    const : float or int
+      value
+    """
+    def __init__(self, const, name=None):
+        super().__init__(const, name)
+
+    def __mul__(self, other):
+        if isinstance(other, VarElement):
+            return Expression(self, other, '*')
+        elif isinstance(other, Expression):
+            if other.operater == '-' and other.elmA.value() == 0:
+                # self * (0-other) -> - (self*other)
+                return - Expression(self, other.elmB, '*')
+            else:
+                return Expression(self, other, '*')
+        else:
+            return super().__mul__(self, other)
+
+
+# Variable
+Variable = VariableFactory()
