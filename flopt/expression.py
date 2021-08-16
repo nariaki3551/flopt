@@ -872,7 +872,7 @@ class ExpressionConst(Expression):
     def getType(self):
         return self.type
 
-    def value(self):
+    def value(self, *args, **kwargs):
         return self._value
 
     def getVariables(self):
