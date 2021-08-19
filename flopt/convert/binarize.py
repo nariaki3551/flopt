@@ -75,15 +75,15 @@ def binarize(prob):
           C 10, name for_mul_2_3, mul_2-(bin_y_0_2+x_0-1) >= 0
     """
     binarizes = dict()
-    prob.obj = prob.obj.expand()
-    binarize_expression(prob.obj, binarizes)
+    prob.obj = binarize_expression(prob.obj, binarizes)
     for const in prob.constraints:
-        const.expression = const.expression.expand()
-        binarize_expression(const.expression, binarizes)
+        const.expression = binarize_expression(const.expression, binarizes)
 
     for source, binaries in binarizes.items():
         prob += sum(binaries) == 1, f'for_bin_{source.name}_sum'
         prob += source == source.toBinary(), f'for_bin_{source.name}_eq'
+    
+    prob.resetVariables()
 
 
 def binarize_expression(e, binarizes):
@@ -96,10 +96,12 @@ def binarize_expression(e, binarizes):
         binarizes[var] = binaries, where var = sum(i*var_bin)
     """
     if isinstance(e, (VarElement, VarConst, ExpressionConst)):
-        return
+        return e
+    e = e.expand()
     finish = False
     while not finish:
         finish = not binarize_traverse(e, binarizes)
+    return e
 
 
 def binarize_traverse(e, binarizes):
@@ -117,27 +119,31 @@ def binarize_traverse(e, binarizes):
         return true if a expession is linearized else false
     """
     assert isinstance(e, Expression)
-    convert = False
     for node in e.traverse():
         if isinstance(node, Expression):
-            expand = False
+            update = False
             if node.elmA.getType() == 'VarInteger':
                 if node.elmA not in binarizes:
                     binarizes[node.elmA] = list(node.elmA.toBinary().getVariables())
                 node.elmA = node.elmA.toBinary()
                 node.elmA.parents.append(node)
-                expand = True
+                update = True
+            elif node.elmA.getType() == 'VarSpin':
+                node.elmA = node.elmA.toBinary()
+                update = True
             if node.elmB.getType() == 'VarInteger':
                 if node.elmB not in binarizes:
                     binarizes[node.elmB] = list(node.elmB.toBinary().getVariables())
                 node.elmB = node.elmB.toBinary()
                 node.elmB.parents.append(node)
-                expand = True
-            if expand:
-                convert = True
+                update = True
+            elif node.elmB.getType() == 'VarSpin':
+                node.elmB = node.elmB.toBinary()
+                update = True
+            if update:
                 node.setName()
                 for parent in node.traverseAncestors():
                     parent.setName()
-                return convert
-    return convert
+                return True
+    return False
 

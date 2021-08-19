@@ -195,6 +195,7 @@ def flopt_to_lp_ineq(prob, x=None):
     # create A, b
     A = np.zeros((len(prob.constraints) + n_eqs, len(x)))
     b = np.zeros((len(prob.constraints) + n_eqs, ))
+
     i = 0
     for const in prob.constraints:
         linear = const.expression.toLinear(x)

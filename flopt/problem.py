@@ -126,6 +126,12 @@ class Problem:
         return self.variables
 
 
+    def resetVariables(self):
+        self.variables = self.obj.getVariables()
+        for const in self.constraints:
+            self.variables |= const.getVariables()
+
+
     def solve(self, solver=None, timelimit=None, msg=False):
         """solve this problem
 

@@ -14,7 +14,7 @@ logger = setup_logger(__name__)
 
 
 # -------------------------------------------------------
-#   Variable Utils
+#   Variable Factory
 # -------------------------------------------------------
 
 
@@ -255,37 +255,6 @@ class VariableFactory:
         return self.array(name, (n_row, n_col), lowBound, upBound, cat, ini_value)
 
 
-def value(x):
-    """
-    Parameters
-    ----------
-    x : VarElement or array of VarElement
-
-    Examples
-    --------
-
-    >>> from flopt import Variable, value
-    >>>
-    >>> y = Variable('y', ini_value=1)
-    >>> value(y)
-    >>> 1
-    >>>
-    >>> x = Variable.array('x', 3, cat='Binary', ini_value=0)
-    >>> value(x)
-    >>> [0 0 0]
-    """
-    if isinstance(x, VarElement):
-        return x.value()
-    elif isinstance(x, (list, tuple)):
-        cast = type(x)
-        return cast([var.value() for var in x])
-    elif isinstance(x, np.ndarray):
-        def to_value(x):
-            return x.value()
-        cast = np.frompyfunc(to_value, 1, 1)
-        return cast(x)
-
-
 
 # -------------------------------------------------------
 #   Variable Classes
@@ -384,10 +353,6 @@ class VarElement:
         raise NotImplementedError()
 
 
-    def maxDegree(self):
-        return 1
-
-
     def clone(self):
         raise NotImplementedError()
 
@@ -401,9 +366,6 @@ class VarElement:
         elif isinstance(other, VarElement):
             return Expression(self, other, '+')
         elif isinstance(other, Expression):
-            if other.isNeg():
-                # self + (0-other) -> self - other
-                return Expression(self, other.elmB, '-')
             return Expression(self, other, '+')
         else:
             return NotImplemented
@@ -429,18 +391,19 @@ class VarElement:
             return Expression(self, other, '-')
         elif isinstance(other, Expression):
             if other.isNeg():
-                # self - (0-other) -> self + other
+                # self - (-1*other) --> self + other
                 return Expression(self, other.elmB, '+')
             return Expression(self, other, '-')
         else:
             return NotImplemented
 
     def __rsub__(self, other):
-        # other - self
         if isinstance(other, (int, float)):
-            name = f'-{self.name}' if other == 0 else None
-            other = VarConst(other)
-            return Expression(other, self, '-', name=name)
+            if other == 0:
+                # 0 - self --> -1 * self
+                return Expression(VarConst(-1), self, '*', name=f'-{self.name}')
+            else:
+                return Expression(VarConst(other), self, '-')
         elif isinstance(other, (VarElement, Expression)):
             return Expression(other, self, '-')
         else:
@@ -459,22 +422,15 @@ class VarElement:
         elif isinstance(other, VarElement):
             return Expression(self, other, '*')
         elif isinstance(other, Expression):
-            if other.isNeg():
-                # self * (0-other) -> - (self*other)
-                return - Expression(self, other.elmB, '*')
-            elif other.operater == '*' and isinstance(other.elmA, VarConst):
+            if other.operater == '*' and other.elmA_is_constant():
                 # self * (a*other) -> a * (self * other)
                 return other.elmA * Expression(self, other.elmB, '*')
-            elif other.operater == '*' and isinstance(other.elmB, VarConst):
-                # self * (other*a) -> a * (self * other)
-                return other.elmB * Expression(self, other.elmA, '*')
             else:
                 return Expression(other, self, '*')
         else:
             return NotImplemented
 
     def __rmul__(self, other):
-        # other * self
         if isinstance(other, (int, float)):
             if other == 0:
                 return VarConst(0)
@@ -487,15 +443,9 @@ class VarElement:
         elif isinstance(other, VarElement):
             return Expression(other, self, '*')
         elif isinstance(other, Expression):
-            if other.isNeg():
-                # (0-other) * self -> - (other*self)
-                return - Expression(other.elmB, self, '*')
-            elif other.operater == '*' and isinstance(other.elmA, VarConst):
-                # self * (a*other) -> a * (self * other)
+            if other.operater == '*' and other.elmA_is_constant():
+                # (a*other) * self -> a * (self * other)
                 return other.elmA * Expression(other.elmB, self, '*')
-            elif other.operater == '*' and isinstance(other.elmB, VarConst):
-                # self * (other*a) -> a * (self * other)
-                return other.elmB * Expression(other.elmA, self, '*')
             else:
                 return Expression(other, self, '*')
         else:
@@ -568,9 +518,8 @@ class VarElement:
         return float(self._value)
 
     def __neg__(self):
-        # 0 - self
-        zero = VarConst(0)
-        return Expression(zero, self, '-', name=f'-{self.name}')
+        # -1 * self
+        return Expression(VarConst(-1), self, '*', name=f'-{self.name}')
 
     def __pos__(self):
         return self
@@ -645,6 +594,10 @@ class VarInteger(VarElement):
         VarInteger
         """
         return VarInteger(self.name, self.lowBound, self.upBound, self._value)
+
+
+    def __repr__(self):
+        return f'VarInteger("{self.name}", {self.lowBound}, {self.upBound}, {self.value()})'
 
 
 
@@ -995,9 +948,6 @@ class VarConst:
         # for hasCustomExpression() in Expression class
         return False
 
-    def maxDegree(self):
-        return 0
-
     def clone(self):
         """
         Returns
@@ -1076,9 +1026,9 @@ class VarConstRemain(VarConst):
         if isinstance(other, VarElement):
             return Expression(self, other, '*')
         elif isinstance(other, Expression):
-            if other.operater == '-' and other.elmA.value() == 0:
-                # self * (0-other) -> - (self*other)
-                return - Expression(self, other.elmB, '*')
+            if other.operater == '*' and other.elmA_is_constant():
+                # self * (a*other) -> a * (self*other)
+                return other.elmA * Expression(self, other.elmB, '*')
             else:
                 return Expression(self, other, '*')
         else:

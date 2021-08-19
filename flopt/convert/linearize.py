@@ -1,10 +1,19 @@
 from flopt import Variable
 from flopt.variable import VarElement, VarBinary, VarInteger, VarContinuous, VarConst
-from flopt.expression import Expression, ExpressionConst, CustomExpression
+from flopt.expression import Expression, ExpressionConst
+from flopt.convert.binarize import binarize
+from flopt.env import setup_logger
+
+logger = setup_logger(__name__)
 
 
 class LinearizeError(Exception):
     pass
+
+
+class NeedBinarize(Exception):
+    pass
+
 
 
 def linearize(prob):
@@ -60,20 +69,25 @@ def linearize(prob):
           C 5, name for_mul_1_3, mul_1-(mul_0+x_2-1) >= 0
 
     """
-    mul_vars = dict()
-    prob.obj = prob.obj.expand()
-    linearize_expression(prob.obj, mul_vars)
-    for const in prob.constraints:
-        const.expression = const.expression.expand()
-        linearize_expression(const.expression, mul_vars)
+    try:
+        var_muls = dict()
+        prob.obj = linearize_expression(prob.obj, var_muls)
+        for const in prob.constraints:
+            const.expression = linearize_expression(const.expression, var_muls)
+    except NeedBinarize:
+        logger.info(f'Binarize')
+        return linearize( binarize(prob) )
+    except Exception as e:
+        raise e
+
 
     # add constraints for variable-multipry
-    for (var_a, var_b), mul_var in mul_vars.items():
+    for (var_a, var_b), var_mul in var_muls.items():
         # (Binary, Binary)
         if {type(var_a), type(var_b)} == {VarBinary}:
-            prob += mul_var <= var_a,               f'for_{mul_var.name}_1'
-            prob += mul_var <= var_b,               f'for_{mul_var.name}_2'
-            prob += mul_var >= var_a + var_b - 1,   f'for_{mul_var.name}_3'
+            prob += var_mul <= var_a,               f'for_{var_mul.name}_1'
+            prob += var_mul <= var_b,               f'for_{var_mul.name}_2'
+            prob += var_mul >= var_a + var_b - 1,   f'for_{var_mul.name}_3'
         # (Binary, Integer)
         elif {type(var_a), type(var_b)} == {VarBinary, VarInteger}:
             if isinstance(var_a, VarBinary):
@@ -81,10 +95,10 @@ def linearize(prob):
             else:
                 var_bin, var_int = var_b, var_a
             l, u = var_int.getLb(), var_int.getUb()
-            prob += mul_var >= l * var_bin,                 f'for_{mul_var.name}_1'
-            prob += mul_var <= u * var_bin,                 f'for_{mul_var.name}_2'
-            prob += mul_var >= var_int - u * (1 - var_bin), f'for_{mul_var.name}_3'
-            prob += mul_var <= var_int - l * (1 - var_bin), f'for_{mul_var.name}_4'
+            prob += var_mul >= l * var_bin,                 f'for_{var_mul.name}_1'
+            prob += var_mul <= u * var_bin,                 f'for_{var_mul.name}_2'
+            prob += var_mul >= var_int - u * (1 - var_bin), f'for_{var_mul.name}_3'
+            prob += var_mul <= var_int - l * (1 - var_bin), f'for_{var_mul.name}_4'
         #  (Binary, Continuous)
         elif {type(var_a), type(var_b)} == {VarBinary, VarContinuous}:
             if isinstance(var_a, VarBinary):
@@ -92,36 +106,41 @@ def linearize(prob):
             else:
                 var_bin, var_con = var_b, var_a
             l, u = var_con.getLb(), var_con.getUb()
-            prob += mul_var >= l * var_bin,                 f'for_{mul_var.name}_1'
-            prob += mul_var <= u * var_bin,                 f'for_{mul_var.name}_1'
-            prob += mul_var >= var_con - l * (1 - var_bin), f'for_{mul_var.name}_1'
-            prob += mul_var <= var_con - u * (1 - var_bin), f'for_{mul_var.name}_1'
+            prob += var_mul >= l * var_bin,                 f'for_{var_mul.name}_1'
+            prob += var_mul <= u * var_bin,                 f'for_{var_mul.name}_2'
+            prob += var_mul >= var_con - l * (1 - var_bin), f'for_{var_mul.name}_3'
+            prob += var_mul <= var_con - u * (1 - var_bin), f'for_{var_mul.name}_4'
+
+    prob.resetVariables()
 
 
-def linearize_expression(e, mul_vars):
+
+def linearize_expression(e, var_muls):
     """linearize a expression
 
     Parameters
     ----------
     e : Expresson or VarElement
-    mul_vars : dict
-        mul_vars[var_a, var_b] = var_c, where var_c = var_a * var_b
+    var_muls : dict
+        var_muls[var_a, var_b] = var_c, where var_c = var_a * var_b
     """
     if isinstance(e, (VarElement, VarConst, ExpressionConst)):
-        return
+        return e
+    e = e.expand()
     finish = False
     while not finish:
-        finish = not linearize_traverse(e, mul_vars)
+        finish = not linearize_traverse(e, var_muls)
+    return e
 
 
-def linearize_traverse(e, mul_vars):
+def linearize_traverse(e, var_muls):
     """subroutine of linearize_expression
 
     Parameters
     ----------
     e : Expresson or VarElement
-    mul_vars : dict
-        mul_vars[var_a, var_b] = var_c, where var_c = var_a * var_b
+    var_muls : dict
+        var_muls[var_a, var_b] = var_c, where var_c = var_a * var_b
 
     Returns
     -------
@@ -129,61 +148,109 @@ def linearize_traverse(e, mul_vars):
         return true if a expession is linearized else false
     """
     assert isinstance(e, Expression)
-    convert = False
+    if is_var_mul(e):
+       if not is_linearable(e):
+           raise LinearizeError()
+       elif need_binarize(e):
+           raise NeedBinarize()
+       e = create_var_mul(e, var_muls)
+       return True
+
     for node in e.traverse():
         if isinstance(node, Expression):
-            reduced = False
-            if is_mul_var(node.elmA):
-                if not is_linearable_mul_var(node.elmA):
+            update = False
+            if is_var_mul(node.elmA):
+                if not is_linearable(node.elmA):
                     raise LinearizeError()
-                node.elmA = create_mul_var(node.elmA, mul_vars)
-                reduced = True
-            if is_mul_var(node.elmB):
-                if not is_linearable_mul_var(node.elmB):
+                elif need_binarize(node.elmA):
+                    raise NeedBinarize()
+                node.elmA = create_var_mul(node.elmA, var_muls)
+                update = True
+            if is_var_mul(node.elmB):
+                if not is_linearable(node.elmB):
                     raise LinearizeError()
-                node.elmB = create_mul_var(node.elmB, mul_vars)
-                reduced = True
-            if reduced:
+                elif need_binarize(node.elmB):
+                    raise NeedBinarize()
+                node.elmB = create_var_mul(node.elmB, var_muls)
+                update = True
+            if update:
                 node.setName()
                 for parent in node.traverseAncestors():
                     parent.setName()
-                convert = True
-    return convert
+                return True
+    return False
 
 
-def create_mul_var(node, mul_vars):
+def create_var_mul(node, var_muls):
     """create new variable and replace variable-multiply to it
     Parameters
     ----------
     node : Expression
-    mul_vars : dict
+    var_muls : dict
         stocked multiplized variables
     """
     var_a, var_b = sorted([node.elmA, node.elmB], key=lambda x: x.name)
-    if (var_a, var_b) not in mul_vars:
+    if (var_a, var_b) not in var_muls:
         if {var_a.getType(), var_b.getType()} == {'VarBinary'}:
-            mul_var = Variable(
-                f'mul_{len(mul_vars)}',
-                cat='Binary',
+            var_mul = VarBinary(
+                f'mul_{len(var_muls)}',
                 ini_value=var_a.value() * var_b.value(),
             )
         elif {var_a.getType(), var_b.getType()} == {'VarBinary', 'VarInteger'}:
-            mul_var = Variable(
-                f'mul_{len(mul_vars)}',
-                cat='Integer',
-                ini_value=var_a.value() * var_b.value(),
-            )
+                var_mul = VarInteger(
+                    f'mul_{len(var_muls)}',
+                    lowBound=get_lower_bound(var_a, var_b),
+                    upBound=get_upper_bound(var_a, var_b),
+                    ini_value=var_a.value() * var_b.value(),
+                )
         elif {var_a.getType(), var_b.getType()} == {'VarBinary', 'VarContinuous'}:
-            mul_var = Variable(
-                f'mul_{len(mul_vars)}',
-                cat='Continuous',
+            var_mul = VarContinuous(
+                f'mul_{len(var_muls)}',
+                lowBound=get_lower_bound(var_a, var_b),
+                upBound=get_upper_bound(var_a, var_b),
                 ini_value=var_a.value() * var_b.value(),
             )
-        mul_vars[var_a, var_b] = mul_var
-    return mul_vars[var_a, var_b]
+        var_muls[var_a, var_b] = var_mul
+    return var_muls[var_a, var_b]
 
 
-def is_mul_var(node):
+def get_lower_bound(var_a, var_b):
+    """calculate lower bound of var_a * var_b
+
+    Notes
+    -----
+    pair of var_a and var_b type is only ('VarBinary', 'VarInteger') or ('VarBinary', 'VarContinuous'
+    """
+    assert {var_a.getType(), var_b.getType()} == {'VarBinary', 'VarInteger'}\
+        or {var_a.getType(), var_b.getType()} == {'VarBinary', 'VarContinuous'}
+    if isinstance(var_a, VarBinary):
+        var_binary, var_other = var_a, var_b
+    else:
+        var_binary, var_other = var_b, var_a
+    if var_other.lowBound is None:
+        return None
+    return min(0, var_other.lowBound)
+
+
+def get_upper_bound(var_a, var_b):
+    """calculate upper bound of var_a * var_b
+
+    Notes
+    -----
+    pair of var_a and var_b type is only ('VarBinary', 'VarInteger') or ('VarBinary', 'VarContinuous'
+    """
+    assert {var_a.getType(), var_b.getType()} == {'VarBinary', 'VarInteger'}\
+        or {var_a.getType(), var_b.getType()} == {'VarBinary', 'VarContinuous'}
+    if isinstance(var_a, VarBinary):
+        var_binary, var_other = var_a, var_b
+    else:
+        var_binary, var_other = var_b, var_a
+    if var_other.upBound is None:
+        return None
+    return max(0, var_other.upBound)
+
+
+def is_var_mul(node):
     """
     Parameters
     ----------
@@ -200,7 +267,7 @@ def is_mul_var(node):
         and isinstance(node.elmB, VarElement)
 
 
-def is_linearable_mul_var(node):
+def is_linearable(node):
     """
     Parameters
     ----------
@@ -211,15 +278,32 @@ def is_linearable_mul_var(node):
     bool
         return true if node is Expression and variable-multiply
     """
-    if is_mul_var(node):
-        linearable_pairs = [
-            {'VarBinary',  'VarBinary'},
-            {'VarBinary',  'VarInteger'},
-            {'VarBinary',  'VarContinuous'},
-            {'VarInteger', 'VarInteger'},
-            {'VarInteger', 'VarContinuous'},
-        ]
-        return {node.elmA.getType(), node.elmB.getType()} in linearable_pairs
-    else:
-        return False
+    assert is_var_mul(node)
+    linearable_pairs = [
+        {'VarBinary',  'VarBinary'},
+        {'VarBinary',  'VarInteger'},
+        {'VarBinary',  'VarContinuous'},
+        {'VarInteger', 'VarInteger'},
+        {'VarInteger', 'VarContinuous'},
+    ]
+    return {node.elmA.getType(), node.elmB.getType()} in linearable_pairs
+
+
+def need_binarize(node):
+    """
+    Parameters
+    ----------
+    node : Expression or VarElement
+
+    Returns
+    -------
+    bool
+        return true if node must be binarized for linearize else false
+    """
+    assert is_var_mul(node)
+    need_binarize_pairs = [
+        {'VarInteger', 'VarInteger'},
+        {'VarInteger', 'VarContinuous'},
+    ]
+    return {node.elmA.getType(), node.elmB.getType()} in need_binarize_pairs
 

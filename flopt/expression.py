@@ -110,18 +110,13 @@ class Expression:
         elmA_name = self.elmA.name
         elmB_name = self.elmB.name
         if self.elmA.getType() == 'Expression':
-            if self.operater in {'/', '^', '%'}:
+            if self.operater in {'*', '/', '^', '%'}:
                 elmA_name = f'({elmA_name})'
-            elif self.operater == '*':
-                if not isinstance(self.elmA, Expression) or not self.elmA.operater == '*':
-                    elmA_name = f'({elmA_name})'
         if self.elmB.getType() == 'Expression':
-            if self.operater == '*':
-                if not isinstance(self.elmB, Expression) or not self.elmB.operater == '*':
-                    elmB_name = f'({elmB_name})'
-            elif self.elmB.name.startswith('-'):
+            if not self.elmB.operater == '+' or not self.elmB.name.startswith('-'):
                 elmB_name = f'({elmB_name})'
         self.name = f'{elmA_name}{self.operater}{elmB_name}'
+        self.expr = None
 
 
     def setSympyExpr(self):
@@ -216,32 +211,6 @@ class Expression:
         return self.elmA.hasCustomExpression() or self.elmB.hasCustomExpression()
 
 
-    def maxDegree(self):
-        """
-        Returns
-        -------
-        int
-            return the max degree of variants
-
-        Note
-        ----
-        if the CustomExpression object is in this expresson,
-        return Unknown
-        """
-        if self.hasCustomExpression():
-            return 'Unknown'
-        elif self.operater in {'%', '&', '|'}:
-            return 'Unknown'
-        else:
-            if self.expr is None:
-                self.setSympyExpr()
-            if self.expr.is_constant():
-                return 0
-            import sympy
-            poly = sympy.poly(self.expr)
-            return max(poly.degree_list())
-
-
     def constant(self):
         """
         Returns
@@ -254,6 +223,16 @@ class Expression:
         return float(self.expr.expand().as_coefficients_dict()[1])
 
 
+    def elmA_is_constant(self):
+        """
+        Returns
+        -------
+        bool
+            return true if elmA is constant else false
+        """
+        return self.elmA.getType() == 'VarConst' or self.elmA.getType() == 'ExpressionConst'
+
+
     def isNeg(self):
         """
         Returns
@@ -261,11 +240,9 @@ class Expression:
         bool
             return if it is 0 - value form else false
         """
-        if self.operater == '-'\
-            and (self.elmA.getType() == 'VarConst' or self.elmA.getType() == 'ExpressionConst')\
-            and self.elmA.value() == 0:
-                return True
-        return False
+        return self.operater == '*'\
+                and self.elmA_is_constant() \
+                and self.elmA.value() == -1
 
 
     def isLinear(self):
@@ -290,8 +267,6 @@ class Expression:
         """
         if self.hasCustomExpression():
             return 'Unknown'
-        if self.maxDegree() > 1:
-            return False
         if self.expr is None:
             self.setSympyExpr()
         variables = self.getVariables()
@@ -350,8 +325,18 @@ class Expression:
             'LinearStructure',
             'c C x'
             )
-        ising = self.toIsing(x)
-        return LinearStructure(ising.h, ising.C, ising.x)
+        if self.expr is None:
+            self.setSympyExpr()
+        if x is None:
+            x = np.array(
+                sorted(self.getVariables(), key=lambda var: var.name)
+            )
+        num_variables = len(x)
+        c = np.zeros((num_variables, ))
+        for i in range(num_variables):
+            c[i] = self.expr.coeff(x[i].name).as_coefficients_dict()[1]
+        C = self.expr.as_coefficients_dict()[1]
+        return LinearStructure(c, C, x)
 
 
     def isIsing(self):
@@ -365,8 +350,6 @@ class Expression:
             return False
         if self.hasCustomExpression():
             return 'Unknown'
-        if self.maxDegree() > 2:
-            return False
         if self.expr is None:
             self.setSympyExpr()
         variables = self.getVariables()
@@ -374,11 +357,9 @@ class Expression:
         num_variables = len(x)
 
         for i in range(num_variables):
-            var_i = x[i]
-            diff_expr = self.expr.diff(var_i.name)
+            diff_expr = self.expr.diff(x[i].name)
             for j in range(i+1, num_variables):
-                var_j = x[j]
-                if not diff_expr.diff(var_j.name).is_constant():
+                if not diff_expr.diff(x[j].name).is_constant():
                     return False
         return True
 
@@ -455,29 +436,23 @@ class Expression:
         expr = sympy.sympify(_expr.name).expand()
 
         if x is None:
-            x_list = list(_expr.getVariables())
-            x_list.sort(key=lambda var: var.name)
-            x = np.array(x_list)
+            x = np.array(
+                sorted(_expr.getVariables(), key=lambda var: var.name)
+            )
 
         num_variables = len(x)
         J = np.zeros((num_variables, num_variables))
         for i in range(num_variables):
-            var_i = x[i]
-            coeff = expr.coeff(var_i.name, 2)
-            J[i, i] = - coeff
+            J[i, i] = - expr.coeff(x[i].name, 2)  # coeff x_i * x_i
             for j in range(i+1, num_variables):
-                var_j = x[j]
-                coeff = expr.coeff(var_i.name).coeff(var_j.name)
-                J[i, j] = - coeff
+                J[i, j] = - expr.coeff(x[i].name).coeff(x[j].name)  # coeff x_i * x_j
 
         h = np.zeros((num_variables, ))
         for i in range(num_variables):
-            var_i = x[i]
-            coeff = expr.coeff(var_i.name).as_coefficients_dict()[1]
+            coeff = expr.coeff(x[i].name).as_coefficients_dict()[1]
             h[i] = - coeff
 
         C = expr.as_coefficients_dict()[1]
-
         return IsingStructure(J, h, C, x)
 
 
@@ -493,6 +468,7 @@ class Expression:
             str(self.expr.simplify()),
             {var.name: var for var in self.getVariables()}
             )
+        expr.parents += self.parents
         return expr
 
 
@@ -510,12 +486,14 @@ class Expression:
             )
         if isinstance(expr, (int, float)):
             expr = ExpressionConst(expr)
+            expr.parents += self.parents
         else:
             import sympy
             expr = eval(
                 str(sympy.sympify(expr.name).expand()),
                 {var.name: var for var in self.getVariables()}
                 )
+            expr.parents += self.parents
         return expr
 
 
@@ -590,9 +568,6 @@ class Expression:
             other = ExpressionConst(other)
             return Expression(self, other, '+')
         elif isinstance(other, Expression):
-            if other.isNeg():
-                # self + (0-other) -> self - other
-                return Expression(self, other.elmB, '-')
             return Expression(self, other, '+')
         else:
             return NotImplemented
@@ -604,9 +579,6 @@ class Expression:
             other = ExpressionConst(other)
             return Expression(other, self, '+')
         elif isinstance(other, Expression):
-            if self.isNeg():
-                # other + (0-self) -> other - self
-                return Expression(other, self.elmB, '-')
             return Expression(other, self, '+')
         else:
             return NotImplemented
@@ -619,21 +591,22 @@ class Expression:
             return Expression(self, other, '-')
         elif isinstance(other, Expression):
             if other.isNeg():
-                # self - (0-other) -> self + other
+                # self - (-1*other) -> self + other
                 return Expression(self, other.elmB, '+')
             return Expression(self, other, '-')
         else:
             return NotImplemented
 
     def __rsub__(self, other):
-        # other - self
         if isinstance(other, (int, float)):
-            name = f'-{self.name}' if other == 0 else None
-            other = ExpressionConst(other)
-            return Expression(other, self, '-')
+            if other == 0:
+                # 0 - self --> -1 * self
+                return Expression(ExpressionConst(-1), self, '*', name=f'-{self.name}')
+            else:
+                return Expression(ExpressionConst(other), self, '-')
         elif isinstance(other, Expression):
             if self.isNeg():
-                # other - (0-self) -> other + self
+                # other - (-1*self) -> other + self
                 return Expression(other, self.elmB, '+')
             return Expression(other, self, '-')
         else:
@@ -645,17 +618,24 @@ class Expression:
                 return ExpressionConst(0)
             elif other == 1:
                 return self
+            elif other == -1:
+                return -self
             other = ExpressionConst(other)
             return Expression(other, self, '*')
         elif isinstance(other, Expression):
-            if other.isNeg():
-                if self.isNeg():
-                    # (0-self) * (0-other) -> self * other
-                    return Expression(self.elmB, other.elmB, '*')
+            if self.operater == '*' and self.elmA_is_constant():
+                if other.operater == '*' and other.elmA_is_constant():
+                    # (a*self) * (b*other) --> a * b * (self*other)
+                    return self.elmA * other.elmA * Expression(self.elmB, other.elmB, '*')
                 else:
-                    # self * (0-other) --> - self * other
-                    return - Expression(self, other.elmB, '*')
-            return Expression(self, other, '*')
+                    # (a*self) * other --> a * (self*other)
+                    return self.elmA * Expression(self.elmB, other, '*')
+            else:
+                if other.operater == '*' and other.elmA_is_constant():
+                    # self * (b*other) --> b * (self*other)
+                    return other.elmA * Expression(self, other.elmB, '*')
+                else:
+                    return Expression(self, other, '*')
         else:
             return NotImplemented
 
@@ -668,14 +648,19 @@ class Expression:
             other = ExpressionConst(other)
             return Expression(other, self, '*')
         elif isinstance(other, Expression):
-            if other.isNeg():
-                if self.isNeg():
-                    # (0-other) * (0-self) -> other * self
-                    return Expression(other.elmB, self.elmB, '*')
+            if self.operater == '*' and self.elmA_is_constant():
+                if other.operater == '*' and other.elmA_is_constant():
+                    # (b*other) * (a*self) --> a * b * (other*self)
+                    return self.elmA * other.elmA * Expression(other.elmB, self.elmB, '*')
                 else:
-                    # other * (0-self) --> - other * self
-                    return - Expression(other, self.elmB, '*')
-            return Expression(other, self, '*')
+                    # other * (a*self) --> a * (other*self)
+                    return self.elmA * Expression(other, self.elmB, '*')
+            else:
+                if other.operater == '*' and other.elmA_is_constant():
+                    # (b*other) * self --> b * (other*self)
+                    return other.elmA * Expression(other.elmB, self, '*')
+                else:
+                    return Expression(other, self, '*')
         else:
             return NotImplemented
 
@@ -748,9 +733,8 @@ class Expression:
         return self or other
 
     def __neg__(self):
-        # 0 - self
-        zero = ExpressionConst(0)
-        return Expression(zero, self, '-', name=f'-{self.name}')
+        # -1 * self
+        return Expression(ExpressionConst(-1), self, '*', name=f'-{self.name}')
 
     def __abs__(self):
         return abs(self.value())
@@ -780,7 +764,6 @@ class Expression:
         s  = f'Name: {self.name}\n'
         s += f'  Type    : {self.type}\n'
         s += f'  Value   : {self.value()}\n'
-        s += f'  Degree  : {self.maxDegree()}\n'
         return s
 
     def __repr__(self):
@@ -847,19 +830,14 @@ class CustomExpression(Expression):
     --------
     flopt.expression.Expression
     """
-    def __init__(self, func, variables):
+    def __init__(self, func, variables, name=None):
         self.func = func
         self.variables = variables
+        self.operater = None
+        self.name = name
         self.type = 'CustomExpression'
         self.var_dict = None
-        self.operater = None
-        self.parents = list()s
-
-        res = (func(*variables))
-        if isinstance(res, (int, float)):
-            self.name = f'{res}'
-        else:
-            self.name = res.name
+        self.parents = list()
 
     def _value(self):
         if self.var_dict is None:
@@ -868,7 +846,7 @@ class CustomExpression(Expression):
             variables = [self.var_dict[var.name] for var in self.variables]
 
         value = self.func(*variables)
-        if not isinstance(value, (int, float)):
+        if not isinstance(value, (int, float, np.number)):
             value = value.value()
 
         self.unsetVarDict()
@@ -941,9 +919,6 @@ class ExpressionConst:
         # for hasCustomExpression in Expression calss
         return False
 
-    def maxDegree(self):
-        return 0
-
     def isLinear(self):
         return True
 
@@ -956,7 +931,7 @@ class ExpressionConst:
     def simplify(self):
         return self.clone()
 
-    def expand(self):
+    def expand(self, *args, **kwargs):
         return self.clone()
 
     def __add__(self, other):
