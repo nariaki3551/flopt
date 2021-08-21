@@ -2,7 +2,7 @@ import inspect
 
 from flopt.solvers.base import BaseSearch
 import flopt.constants
-from flopt.constants import SolverError
+import flopt.error
 from flopt.env import setup_logger
 
 logger = setup_logger(__name__)
@@ -150,7 +150,7 @@ class AutoSearch(BaseSearch):
                 algo = _algo
                 break
         else:
-            raise SolverError
+            raise flopt.error.SolverError
 
         solver = Solver(algo=algo)
         # set params

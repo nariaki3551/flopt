@@ -1,7 +1,7 @@
 import pytest
 
 from flopt import Variable
-from flopt.expression import ExpressionConst
+from flopt.expression import Const
 
 @pytest.fixture(scope='function')
 def a():
@@ -88,14 +88,14 @@ def test_Expression_isLinear(a, b, c):
     assert (a*b).isLinear() == False
 
 
-def test_ExpressionConst_hash():
-    hash(ExpressionConst(0))
+def test_Const_hash():
+    hash(Const(0))
 
-def test_ExpressionConst_hasCustomExpression():
-    assert ExpressionConst(0).hasCustomExpression() == False
+def test_Const_hasCustomExpression():
+    assert Const(0).hasCustomExpression() == False
 
-def test_ExpressionConst_isLinear():
-    assert ExpressionConst(0).isLinear() == True
+def test_Const_isLinear():
+    assert Const(0).isLinear() == True
 
 def test_Expression_isIsing(a, b):
     import numpy as np

@@ -15,9 +15,12 @@ class SelfReturn:
         return self.var
 
 
+# ------------------------------------------------
+#   Expression Base Class
+# ------------------------------------------------
 
 class Expression:
-    """
+    """Expression Base Class
 
     This represents the operation of two items
     elmA (operater) elmB
@@ -223,16 +226,6 @@ class Expression:
         return float(self.expr.expand().as_coefficients_dict()[1])
 
 
-    def elmA_is_constant(self):
-        """
-        Returns
-        -------
-        bool
-            return true if elmA is constant else false
-        """
-        return self.elmA.getType() == 'VarConst' or self.elmA.getType() == 'ExpressionConst'
-
-
     def isNeg(self):
         """
         Returns
@@ -241,7 +234,7 @@ class Expression:
             return if it is 0 - value form else false
         """
         return self.operater == '*'\
-                and self.elmA_is_constant() \
+                and isinstance(self.elmA, Const) \
                 and self.elmA.value() == -1
 
 
@@ -485,7 +478,7 @@ class Expression:
             {var.name: var for var in self.getVariables()}
             )
         if isinstance(expr, (int, float)):
-            expr = ExpressionConst(expr)
+            expr = Const(expr)
             expr.parents += self.parents
         else:
             import sympy
@@ -565,7 +558,7 @@ class Expression:
         if isinstance(other, (int, float)):
             if other == 0:
                 return self
-            other = ExpressionConst(other)
+            other = Const(other)
             return Expression(self, other, '+')
         elif isinstance(other, Expression):
             return Expression(self, other, '+')
@@ -576,7 +569,7 @@ class Expression:
         if isinstance(other, (int, float)):
             if other == 0:
                 return self
-            other = ExpressionConst(other)
+            other = Const(other)
             return Expression(other, self, '+')
         elif isinstance(other, Expression):
             return Expression(other, self, '+')
@@ -587,7 +580,7 @@ class Expression:
         if isinstance(other, (int, float)):
             if other == 0:
                 return self
-            other = ExpressionConst(other)
+            other = Const(other)
             return Expression(self, other, '-')
         elif isinstance(other, Expression):
             if other.isNeg():
@@ -601,9 +594,9 @@ class Expression:
         if isinstance(other, (int, float)):
             if other == 0:
                 # 0 - self --> -1 * self
-                return Expression(ExpressionConst(-1), self, '*', name=f'-{self.name}')
+                return Expression(Const(-1), self, '*', name=f'-{self.name}')
             else:
-                return Expression(ExpressionConst(other), self, '-')
+                return Expression(Const(other), self, '-')
         elif isinstance(other, Expression):
             if self.isNeg():
                 # other - (-1*self) -> other + self
@@ -615,23 +608,23 @@ class Expression:
     def __mul__(self, other):
         if isinstance(other, (int, float)):
             if other == 0:
-                return ExpressionConst(0)
+                return Const(0)
             elif other == 1:
                 return self
             elif other == -1:
                 return -self
-            other = ExpressionConst(other)
+            other = Const(other)
             return Expression(other, self, '*')
         elif isinstance(other, Expression):
-            if self.operater == '*' and self.elmA_is_constant():
-                if other.operater == '*' and other.elmA_is_constant():
+            if self.operater == '*' and isinstance(self.elmA, Const):
+                if other.operater == '*' and isinstance(other.elmA, Const):
                     # (a*self) * (b*other) --> a * b * (self*other)
                     return self.elmA * other.elmA * Expression(self.elmB, other.elmB, '*')
                 else:
                     # (a*self) * other --> a * (self*other)
                     return self.elmA * Expression(self.elmB, other, '*')
             else:
-                if other.operater == '*' and other.elmA_is_constant():
+                if other.operater == '*' and isinstance(other.elmA, Const):
                     # self * (b*other) --> b * (self*other)
                     return other.elmA * Expression(self, other.elmB, '*')
                 else:
@@ -642,21 +635,21 @@ class Expression:
     def __rmul__(self, other):
         if isinstance(other, (int, float)):
             if other == 0:
-                return ExpressionConst(0)
+                return Const(0)
             elif other == 1:
                 return self
-            other = ExpressionConst(other)
+            other = Const(other)
             return Expression(other, self, '*')
         elif isinstance(other, Expression):
-            if self.operater == '*' and self.elmA_is_constant():
-                if other.operater == '*' and other.elmA_is_constant():
+            if self.operater == '*' and isinstance(self.elmA, Const):
+                if other.operater == '*' and isinstance(other.elmA, Const):
                     # (b*other) * (a*self) --> a * b * (other*self)
                     return self.elmA * other.elmA * Expression(other.elmB, self.elmB, '*')
                 else:
                     # other * (a*self) --> a * (other*self)
                     return self.elmA * Expression(other, self.elmB, '*')
             else:
-                if other.operater == '*' and other.elmA_is_constant():
+                if other.operater == '*' and isinstance(other.elmA, Const):
                     # (b*other) * self --> b * (other*self)
                     return other.elmA * Expression(other.elmB, self, '*')
                 else:
@@ -668,7 +661,7 @@ class Expression:
         if isinstance(other, (int, float)):
             if other == 1:
                 return self
-            other = ExpressionConst(other)
+            other = Const(other)
             return Expression(self, other, '/')
         elif isinstance(other, Expression):
             return Expression(self, other, '/')
@@ -678,8 +671,8 @@ class Expression:
     def __rtruediv__(self, other):
         if isinstance(other, (int, float)):
             if other == 0:
-                return ExpressionConst(0)
-            other = ExpressionConst(other)
+                return Const(0)
+            other = Const(other)
             return Expression(other, self, '/')
         elif isinstance(other, Expression):
             return Expression(other, self, '/')
@@ -690,7 +683,7 @@ class Expression:
         if isinstance(other, (int, float)):
             if other == 1:
                 return self
-            other = ExpressionConst(other)
+            other = Const(other)
             return Expression(self, other, '^')
         elif isinstance(other, Expression):
             return Expression(self, other, '^')
@@ -700,8 +693,8 @@ class Expression:
     def __rpow__(self, other):
         if isinstance(other, (int, float)):
             if other == 1:
-                return ExpressionConst(1)
-            other = ExpressionConst(other)
+                return Const(1)
+            other = Const(other)
             return Expression(other, self, '^')
         elif isinstance(other, Expression):
             return Expression(other, self, '^')
@@ -710,7 +703,7 @@ class Expression:
 
     def __and__(self, other):
         if isinstance(other, (int, float)):
-            other = ExpressionConst(other)
+            other = Const(other)
             return Expression(self, other, '&')
         elif isinstance(other, Expression):
             return Expression(self, other, '&')
@@ -722,7 +715,7 @@ class Expression:
 
     def __or__(self, other):
         if isinstance(other, (int, float)):
-            other = ExpressionConst(other)
+            other = Const(other)
             return Expression(self, other, '|')
         elif isinstance(other, Expression):
             return Expression(self, other, '|')
@@ -734,7 +727,7 @@ class Expression:
 
     def __neg__(self):
         # -1 * self
-        return Expression(ExpressionConst(-1), self, '*', name=f'-{self.name}')
+        return Expression(Const(-1), self, '*', name=f'-{self.name}')
 
     def __abs__(self):
         return abs(self.value())
@@ -884,22 +877,23 @@ class CustomExpression(Expression):
         return 'CustomExpression'
 
 
-class ExpressionConst:
+class Const:
     """
     It is the expression of constant value.
-    We use it the operation including constant value.
-    See Expression class `__add__`, `__sub__`, and so on.
 
     Parameters
     ----------
     value : int or float
       value
-
+    name : str or None
+        name of constant
     """
-    def __init__(self, value):
-        self.name = f'{value}'
+    def __init__(self, value, name=None):
+        if name is None:
+            name = f'{value}'
+        self.name = name
         self._value = value
-        self.type = 'ExpressionConst'
+        self.type = 'Const'
         self.parents = list()   # dummy
         self.operater = None    # dummy
         self.expr = None        # dummy
@@ -926,7 +920,7 @@ class ExpressionConst:
         return True
 
     def clone(self):
-        return ExpressionConst(self._value)
+        return Const(self._value)
 
     def simplify(self):
         return self.clone()
@@ -965,12 +959,13 @@ class ExpressionConst:
         return other ** self._value
 
     def __neg__(self):
-        return ExpressionConst(-self._value)
+        return Const(-self._value)
 
     def __hash__(self):
         return hash((self._value, self.type))
 
     def __repr__(self):
-        s = f'ExpressionConst({self._value})'
+        s = f'Const({self._value})'
         return s
+
 

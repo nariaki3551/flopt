@@ -1,6 +1,6 @@
 from flopt import Variable
-from flopt.variable import VarElement, VarBinary, VarInteger, VarContinuous, VarConst
-from flopt.expression import Expression, ExpressionConst
+from flopt.variable import VarElement, VarBinary, VarInteger, VarContinuous
+from flopt.expression import Expression, Const
 from flopt.convert.binarize import binarize
 from flopt.env import setup_logger
 
@@ -112,7 +112,7 @@ def linearize(prob):
             prob += var_mul <= var_con - u * (1 - var_bin), f'for_{var_mul.name}_4'
 
     prob.resetVariables()
-
+    return prob
 
 
 def linearize_expression(e, var_muls):
@@ -124,7 +124,7 @@ def linearize_expression(e, var_muls):
     var_muls : dict
         var_muls[var_a, var_b] = var_c, where var_c = var_a * var_b
     """
-    if isinstance(e, (VarElement, VarConst, ExpressionConst)):
+    if isinstance(e, (VarElement, Const)):
         return e
     e = e.expand()
     finish = False

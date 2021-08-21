@@ -1,6 +1,7 @@
 import pytest
 
 import flopt
+import flopt.error
 from flopt import Variable, Problem, Solver, Solver_list, CustomExpression
 
 @pytest.fixture(scope='function')
@@ -185,7 +186,7 @@ def test_PulpSearch_available_Error(prob_nonlinear, callback):
     try:
         prob_nonlinear.solve(solver, timelimit=0.5)
         assert False
-    except flopt.constants.SolverError:
+    except flopt.error.SolverError:
         assert True
 
 

@@ -9,6 +9,7 @@ from flopt.solvers.solver_utils import (
 )
 from flopt.env import setup_logger
 import flopt.constants
+import flopt.error
 
 
 logger = setup_logger(__name__)
@@ -143,7 +144,7 @@ class BaseSearch:
         if prob is not None and not self.available(prob):
             logger.error(f'problem can not be solved by solver {self.name}')
             status = flopt.constants.SOLVER_ABNORMAL_TERMINATE
-            raise flopt.constants.SolverError
+            raise flopt.error.SolverError
 
         self.best_solution = solution
         self.solution = solution.clone()

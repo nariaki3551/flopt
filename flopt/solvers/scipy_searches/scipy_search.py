@@ -11,7 +11,7 @@ from flopt.solvers.solver_utils import (
     end_solver_message
 )
 from flopt.env import setup_logger
-from flopt.variable import VarConst
+from flopt.expression import Const
 from flopt.solution import Solution
 import flopt.constants
 
@@ -63,7 +63,7 @@ class ScipySearch(BaseSearch):
             def func(values):
                 variables = []
                 for var_name, value in zip(var_names, values):
-                    variables.append(VarConst(value, name=var_name))
+                    variables.append(Const(value, name=var_name))
                 solution = Solution('tmp', variables)
                 return expression.value(solution)
             return func

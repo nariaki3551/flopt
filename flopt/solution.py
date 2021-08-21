@@ -60,7 +60,7 @@ class Solution:
         -------
         dict:
             key is name of variable,
-            value is VarElement family or Expression
+            value is VarElement family or Expression or Const
         """
         if self._var_dict is None:
             self._var_dict = {variable.name: variable for variable in self._variables}

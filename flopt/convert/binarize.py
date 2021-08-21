@@ -1,6 +1,6 @@
 from flopt import Variable
-from flopt.variable import VarElement, VarBinary, VarInteger, VarContinuous, VarConst
-from flopt.expression import Expression, ExpressionConst, CustomExpression
+from flopt.variable import VarElement, VarBinary, VarInteger, VarContinuous
+from flopt.expression import Expression, Const, CustomExpression
 
 
 def binarize(prob):
@@ -82,8 +82,9 @@ def binarize(prob):
     for source, binaries in binarizes.items():
         prob += sum(binaries) == 1, f'for_bin_{source.name}_sum'
         prob += source == source.toBinary(), f'for_bin_{source.name}_eq'
-    
+
     prob.resetVariables()
+    return prob
 
 
 def binarize_expression(e, binarizes):
@@ -95,7 +96,7 @@ def binarize_expression(e, binarizes):
     binarizes : dict
         binarizes[var] = binaries, where var = sum(i*var_bin)
     """
-    if isinstance(e, (VarElement, VarConst, ExpressionConst)):
+    if isinstance(e, (VarElement, Const)):
         return e
     e = e.expand()
     finish = False

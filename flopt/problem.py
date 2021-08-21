@@ -1,5 +1,5 @@
-from flopt.variable import VarElement, VarConst
-from flopt.expression import Expression, ExpressionConst, CustomExpression
+from flopt.variable import VarElement
+from flopt.expression import Expression, Const
 from flopt.constraint import Constraint
 from flopt.solution import Solution
 from flopt.env import setup_logger
@@ -57,7 +57,7 @@ class Problem:
         self.type = 'Problem'
         self.name = name
         self.sense = sense
-        self.obj = ExpressionConst(0)
+        self.obj = Const(0)
         self.constraints = []
         self.variables = set()
         self.solver = None
@@ -74,9 +74,9 @@ class Problem:
             objective function
         """
         if isinstance(obj, (int, float)):
-            obj = ExpressionConst(obj)
+            obj = Const(obj)
         elif isinstance(obj, VarElement):
-            obj = Expression(obj, VarConst(0), '+')
+            obj = Expression(obj, Const(0), '+')
         self.obj = obj
         self.variables |= obj.getVariables()
 
