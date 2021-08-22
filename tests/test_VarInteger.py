@@ -74,8 +74,8 @@ def test_VarInteger_hash(a):
     hash(a)
 
 # base function
-def test_VarInteger_getType(a):
-    assert a.getType() == 'VarInteger'
+def test_VarInteger_type(a):
+    assert a.type() == 'VarInteger'
 
 def test_VarInteger_getVariable(a):
     assert a.getVariables() == {a}
@@ -94,5 +94,5 @@ def test_VarInteger_colne(a):
     assert _a.value() == a.value()
     assert _a.getLb() == a.getLb()
     assert _a.getUb() == a.getUb()
-    assert _a.getType() == a.getType()
+    assert _a.type() == a.type()
 

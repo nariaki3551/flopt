@@ -62,7 +62,7 @@ class PulpSearch(BaseSearch):
             return true if objective and constraint functions are linear else false
         """
         return all( expr.isLinear() for expr in [prob.obj] + prob.constraints )\
-                and all(not var.getType() == 'VarPermutation' for var in prob.getVariables())
+                and all(not var.type() == 'VarPermutation' for var in prob.getVariables())
 
 
     def search(self):
@@ -80,7 +80,7 @@ class PulpSearch(BaseSearch):
         # get result
         for lp_var, var in zip(lp_solution, self.solution):
             value = lp_var.getValue()
-            if var.getType() in {'VarInteger', 'VarBinary'}:
+            if var.type() in {'VarInteger', 'VarBinary'}:
                 value = round(value)
             var.setValue(value)
         self.updateSolution(self.solution)
@@ -111,11 +111,11 @@ class PulpSearch(BaseSearch):
         # conver VarElement -> LpVariable
         lp_variables = []
         for var in solution:
-            if var.getType() == 'VarContinuous':
+            if var.type() == 'VarContinuous':
                 cat = 'Continuous'
-            elif var.getType() == 'VarInteger':
+            elif var.type() == 'VarInteger':
                 cat = 'Integer'
-            elif var.getType() == 'VarBinary':
+            elif var.type() == 'VarBinary':
                 cat = 'Binary'
             else:
                 raise ValueError

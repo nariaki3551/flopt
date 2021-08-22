@@ -9,24 +9,24 @@ def start_solver_message(algo_name, param_str, solution):
     # stat about variables
     n_var = len(solution)
     n_binary_var = sum(
-        var.getType() == 'VarBinary'
+        var.type() == 'VarBinary'
         for var in solution
     )
     n_int_var = sum(
-        var.getType() == 'VarInteger'
+        var.type() == 'VarInteger'
         for var in solution)
     n_cont_var = sum(
-        var.getType() == 'VarContinuous'
+        var.type() == 'VarContinuous'
         for var in solution
     )
     n_perm_var = sum(
-        var.getType() == 'VarPermutation'
+        var.type() == 'VarPermutation'
         for var in solution
     )
     n_perm_var_elm = sum(
         len(var)
         for var in solution
-        if var.getType() == 'VarPermutation'
+        if var.type() == 'VarPermutation'
     )
 
     message = (

@@ -62,12 +62,12 @@ We can convert this into Lp form as follows.
   >>> [VarElement("b", 1, 2, 1.5) VarElement("c", 1, 3, 2.0)
   >>>  VarElement("a", 0, 1, 0)]
 
-To obtain the variable type, we use `.getType()` function.
+To obtain the variable type, we use `.type()` function.
 
 .. code-block:: python
 
   for var in lp.x:
-      print(var.getType())
+      print(var.type())
   >>> VarInteger
   >>> VarContinuous
   >>> VarContinuous

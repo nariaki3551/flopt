@@ -75,7 +75,7 @@ class ShuffledFrogLeapingSearch(BaseSearch):
         bool
             return true if it can solve the problem else false
         """
-        return all(not var.getType() == 'VarPermutation' for var in prob.getVariables())\
+        return all(not var.type() == 'VarPermutation' for var in prob.getVariables())\
                 and (not prob.constraints)
 
 

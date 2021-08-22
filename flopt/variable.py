@@ -272,14 +272,14 @@ class VarElement:
         self._value = ini_value
 
 
-    def getType(self):
+    def type(self):
         """
         Returns
         -------
         str
           return variable type
         """
-        return self.type
+        return self._type
 
 
     def value(self, solution=None):
@@ -361,8 +361,7 @@ class VarElement:
         if isinstance(other, (int, float)):
             if other == 0:
                 return self
-            other = Const(other)
-            return Expression(self, other, '+')
+            return Expression(self, Const(other), '+')
         elif isinstance(other, VarElement):
             return Expression(self, other, '+')
         elif isinstance(other, Expression):
@@ -374,8 +373,7 @@ class VarElement:
         if isinstance(other, (int, float)):
             if other == 0:
                 return self
-            other = Const(other)
-            return Expression(other, self, '+')
+            return Expression(Const(other), self, '+')
         elif isinstance(other, (VarElement, Expression)):
             return Expression(other, self, '+')
         else:
@@ -385,8 +383,7 @@ class VarElement:
         if isinstance(other, (int, float)):
             if other == 0:
                 return self
-            other = Const(other)
-            return Expression(self, other, '-')
+            return Expression(self, Const(other), '-')
         elif isinstance(other, VarElement):
             return Expression(self, other, '-')
         elif isinstance(other, Expression):
@@ -417,8 +414,7 @@ class VarElement:
                 return self
             elif other == -1:
                 return -self
-            other = Const(other)
-            return Expression(other, self, '*')
+            return Expression(Const(other), self, '*')
         elif isinstance(other, VarElement):
             return Expression(self, other, '*')
         elif isinstance(other, Expression):
@@ -438,8 +434,7 @@ class VarElement:
                 return self
             elif other == -1:
                 return -self
-            other = Const(other)
-            return Expression(other, self, '*')
+            return Expression(Const(other), self, '*')
         elif isinstance(other, VarElement):
             return Expression(other, self, '*')
         elif isinstance(other, Expression):
@@ -457,8 +452,7 @@ class VarElement:
                 return self
             elif other == -1:
                 return -self
-            other = Const(other)
-            return Expression(self, other, '/')
+            return Expression(self, Const(other), '/')
         elif isinstance(other, (VarElement, Expression)):
             return Expression(self, other, '/')
         else:
@@ -468,8 +462,7 @@ class VarElement:
         if isinstance(other, (int, float)):
             if other == 0:
                 return Const(0)
-            other = Const(other)
-            return Expression(other, self, '/')
+            return Expression(Const(other), self, '/')
         elif isinstance(other, (VarElement, Expression)):
             return Expression(other, self, '/')
         else:
@@ -477,8 +470,7 @@ class VarElement:
 
     def __mod__(self, other):
         if isinstance(other, int):
-            other = Const(other)
-            return Expression(self, other, '%')
+            return Expression(self, Const(other), '%')
         elif isinstance(other, (VarInteger, Expression)):
             return Expression(self, other, '%')
         else:
@@ -490,8 +482,7 @@ class VarElement:
                 return Const(1)
             elif other == 1:
                 return self
-            other = Const(other)
-            return Expression(self, other, '^')
+            return Expression(self, Const(other), '^')
         elif isinstance(other, (VarElement, Expression)):
             return Expression(self, other, '^')
         else:
@@ -501,8 +492,7 @@ class VarElement:
         if isinstance(other, (int, float)):
             if other == 1:
                 return Const(1)
-            other = Const(other)
-            return Expression(other, self, '^')
+            return Expression(Const(other), self, '^')
         elif isinstance(other, (VarElement, Expression)):
             return Expression(other, self, '^')
         else:
@@ -538,7 +528,7 @@ class VarElement:
 
     def __str__(self):
         s  = f'Name: {self.name}\n'
-        s += f'  Type    : {self.type}\n'
+        s += f'  Type    : {self._type}\n'
         s += f'  Value   : {self.value()}\n'
         s += f'  lowBound: {self.lowBound}\n'
         s += f'  upBound : {self.upBound}'
@@ -554,7 +544,7 @@ class VarInteger(VarElement):
     """
     def __init__(self, name, lowBound, upBound, ini_value):
         super().__init__(name, lowBound, upBound, ini_value)
-        self.type = 'VarInteger'
+        self._type = 'VarInteger'
         self.binarized = None
 
 
@@ -620,7 +610,7 @@ class VarBinary(VarInteger):
     """
     def __init__(self, name, ini_value, spin=None):
         super().__init__(name, 0, 1, ini_value)
-        self.type = 'VarBinary'
+        self._type = 'VarBinary'
         self.spin = spin
 
 
@@ -713,7 +703,7 @@ class VarSpin(VarElement):
     """
     def __init__(self, name, ini_value, binary=None):
         super().__init__(name, -1, 1, ini_value)
-        self.type = 'VarSpin'
+        self._type = 'VarSpin'
         self.binary = binary
 
 
@@ -820,7 +810,7 @@ class VarContinuous(VarElement):
     """
     def __init__(self, name, lowBound, upBound, ini_value):
         super().__init__(name, lowBound, upBound, ini_value)
-        self.type = 'VarContinuous'
+        self._type = 'VarContinuous'
 
 
     def getIniValue(self):
@@ -871,7 +861,7 @@ class VarPermutation(VarElement):
     """
     def __init__(self, name, lowBound, upBound, ini_value):
         super().__init__(name, lowBound, upBound, ini_value)
-        self.type = 'VarPermutation'
+        self._type = 'VarPermutation'
 
 
     def getIniValue(self):

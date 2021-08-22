@@ -123,22 +123,22 @@ def binarize_traverse(e, binarizes):
     for node in e.traverse():
         if isinstance(node, Expression):
             update = False
-            if node.elmA.getType() == 'VarInteger':
+            if node.elmA.type() == 'VarInteger':
                 if node.elmA not in binarizes:
                     binarizes[node.elmA] = list(node.elmA.toBinary().getVariables())
                 node.elmA = node.elmA.toBinary()
                 node.elmA.parents.append(node)
                 update = True
-            elif node.elmA.getType() == 'VarSpin':
+            elif node.elmA.type() == 'VarSpin':
                 node.elmA = node.elmA.toBinary()
                 update = True
-            if node.elmB.getType() == 'VarInteger':
+            if node.elmB.type() == 'VarInteger':
                 if node.elmB not in binarizes:
                     binarizes[node.elmB] = list(node.elmB.toBinary().getVariables())
                 node.elmB = node.elmB.toBinary()
                 node.elmB.parents.append(node)
                 update = True
-            elif node.elmB.getType() == 'VarSpin':
+            elif node.elmB.type() == 'VarSpin':
                 node.elmB = node.elmB.toBinary()
                 update = True
             if update:

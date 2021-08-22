@@ -30,7 +30,7 @@ class TwoOpt(SequentialUpdateSearch):
         bool
             return true if it can solve the problem else false
         """
-        return all(var.getType() == 'VarPermutation' for var in prob.getVariables())
+        return all(var.type() == 'VarPermutation' for var in prob.getVariables())
 
 
     def setNewSolution(self, *args, **kwargs):

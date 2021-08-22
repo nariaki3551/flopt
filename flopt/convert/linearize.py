@@ -191,19 +191,19 @@ def create_var_mul(node, var_muls):
     """
     var_a, var_b = sorted([node.elmA, node.elmB], key=lambda x: x.name)
     if (var_a, var_b) not in var_muls:
-        if {var_a.getType(), var_b.getType()} == {'VarBinary'}:
+        if {var_a.type(), var_b.type()} == {'VarBinary'}:
             var_mul = VarBinary(
                 f'mul_{len(var_muls)}',
                 ini_value=var_a.value() * var_b.value(),
             )
-        elif {var_a.getType(), var_b.getType()} == {'VarBinary', 'VarInteger'}:
+        elif {var_a.type(), var_b.type()} == {'VarBinary', 'VarInteger'}:
                 var_mul = VarInteger(
                     f'mul_{len(var_muls)}',
                     lowBound=get_lower_bound(var_a, var_b),
                     upBound=get_upper_bound(var_a, var_b),
                     ini_value=var_a.value() * var_b.value(),
                 )
-        elif {var_a.getType(), var_b.getType()} == {'VarBinary', 'VarContinuous'}:
+        elif {var_a.type(), var_b.type()} == {'VarBinary', 'VarContinuous'}:
             var_mul = VarContinuous(
                 f'mul_{len(var_muls)}',
                 lowBound=get_lower_bound(var_a, var_b),
@@ -221,8 +221,8 @@ def get_lower_bound(var_a, var_b):
     -----
     pair of var_a and var_b type is only ('VarBinary', 'VarInteger') or ('VarBinary', 'VarContinuous'
     """
-    assert {var_a.getType(), var_b.getType()} == {'VarBinary', 'VarInteger'}\
-        or {var_a.getType(), var_b.getType()} == {'VarBinary', 'VarContinuous'}
+    assert {var_a.type(), var_b.type()} == {'VarBinary', 'VarInteger'}\
+        or {var_a.type(), var_b.type()} == {'VarBinary', 'VarContinuous'}
     if isinstance(var_a, VarBinary):
         var_binary, var_other = var_a, var_b
     else:
@@ -239,8 +239,8 @@ def get_upper_bound(var_a, var_b):
     -----
     pair of var_a and var_b type is only ('VarBinary', 'VarInteger') or ('VarBinary', 'VarContinuous'
     """
-    assert {var_a.getType(), var_b.getType()} == {'VarBinary', 'VarInteger'}\
-        or {var_a.getType(), var_b.getType()} == {'VarBinary', 'VarContinuous'}
+    assert {var_a.type(), var_b.type()} == {'VarBinary', 'VarInteger'}\
+        or {var_a.type(), var_b.type()} == {'VarBinary', 'VarContinuous'}
     if isinstance(var_a, VarBinary):
         var_binary, var_other = var_a, var_b
     else:
@@ -286,7 +286,7 @@ def is_linearable(node):
         {'VarInteger', 'VarInteger'},
         {'VarInteger', 'VarContinuous'},
     ]
-    return {node.elmA.getType(), node.elmB.getType()} in linearable_pairs
+    return {node.elmA.type(), node.elmB.type()} in linearable_pairs
 
 
 def need_binarize(node):
@@ -305,5 +305,5 @@ def need_binarize(node):
         {'VarInteger', 'VarInteger'},
         {'VarInteger', 'VarContinuous'},
     ]
-    return {node.elmA.getType(), node.elmB.getType()} in need_binarize_pairs
+    return {node.elmA.type(), node.elmB.type()} in need_binarize_pairs
 

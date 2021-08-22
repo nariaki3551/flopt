@@ -83,8 +83,8 @@ def test_VarSpin_hash(a):
     hash(a)
 
 # base function
-def test_VarSpin_getType(a):
-    assert a.getType() == 'VarSpin'
+def test_VarSpin_type(a):
+    assert a.type() == 'VarSpin'
 
 def test_VarSpin_getVariable(a):
     assert a.getVariables() == {a}
@@ -121,5 +121,5 @@ def test_VarSpin_colne(a):
     assert _a.value() == a.value()
     assert _a.getLb() == a.getLb()
     assert _a.getUb() == a.getUb()
-    assert _a.getType() == a.getType()
+    assert _a.type() == a.type()
 

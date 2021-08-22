@@ -50,7 +50,7 @@ class ScipyLpSearch(BaseSearch):
         bool
             return true if it can solve the problem else false
         """
-        return all(var.getType() == 'VarContinuous' for var in prob.getVariables())
+        return all(var.type() == 'VarContinuous' for var in prob.getVariables())
 
 
     def search(self):

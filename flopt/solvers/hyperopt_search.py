@@ -61,7 +61,7 @@ class HyperoptTPESearch(BaseSearch):
             return true if it can solve the problem else false
         """
         return all(
-                var.getType() in {'VarContinuous', 'VarInteger', 'VarBinary'}
+                var.type() in {'VarContinuous', 'VarInteger', 'VarBinary'}
                 for var in prob.getVariables()
                 ) and ( not prob.constraints )
 
@@ -75,9 +75,9 @@ class HyperoptTPESearch(BaseSearch):
         space = dict()
         for var in self.solution:
             name = var.name
-            if var.getType() in {name, 'VarInteger', 'VarBinary'}:
+            if var.type() in {name, 'VarInteger', 'VarBinary'}:
                 var_space = hyperopt.hp.quniform(name, var.getLb(), var.getUb(), 1)
-            elif var.getType() == 'VarContinuous':
+            elif var.type() == 'VarContinuous':
                 var_space = hyperopt.hp.uniform(name, var.getLb(), var.getUb())
             space[var.name] = var_space
 

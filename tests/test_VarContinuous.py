@@ -74,8 +74,8 @@ def test_VarInteger_hash(b):
     hash(b)
 
 # base function
-def test_VarContinuous_getType(b):
-    assert b.getType() == 'VarContinuous'
+def test_VarContinuous_type(b):
+    assert b.type() == 'VarContinuous'
 
 def test_VarContinuous_getvariable(b):
     assert b.getVariables() == {b}
@@ -94,5 +94,5 @@ def test_VarContinuous_colne(b):
     assert _b.value() == b.value()
     assert _b.getLb() == b.getLb()
     assert _b.getUb() == b.getUb()
-    assert _b.getType() == b.getType()
+    assert _b.type() == b.type()
 

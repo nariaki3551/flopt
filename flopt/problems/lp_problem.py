@@ -57,11 +57,11 @@ class LpProblem(Problem):
         # conver VarElement -> LpVariable
         lp_variables = []
         for var in solution:
-            if var.getType() == 'VarContinuous':
+            if var.type() == 'VarContinuous':
                 cat = 'Continuous'
-            elif var.getType() == 'VarInteger':
+            elif var.type() == 'VarInteger':
                 cat = 'Integer'
-            elif var.getType() == 'VarBinary':
+            elif var.type() == 'VarBinary':
                 car = 'Binary'
             else:
                 raise ValueError

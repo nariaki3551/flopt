@@ -10,8 +10,8 @@ def test_VarPermutation_hash(a):
     hash(a)
 
 # base function
-def test_VarPermutation_getType(a):
-    assert a.getType() == 'VarPermutation'
+def test_VarPermutation_type(a):
+    assert a.type() == 'VarPermutation'
 
 def test_VarPermutation_getVariable(a):
     assert a.getVariables() == {a}
@@ -23,5 +23,5 @@ def test_VarPermutation_colne(a):
     assert _a.value() == a.value()
     assert _a.getLb() == a.getLb()
     assert _a.getUb() == a.getUb()
-    assert _a.getType() == a.getType()
+    assert _a.type() == a.type()
 

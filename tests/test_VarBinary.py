@@ -81,8 +81,8 @@ def test_VarBinary_hash(a):
     hash(a)
 
 # base function
-def test_VarBinary_getType(a):
-    assert a.getType() == 'VarBinary'
+def test_VarBinary_type(a):
+    assert a.type() == 'VarBinary'
 
 def test_VarBinary_getVariable(a):
     assert a.getVariables() == {a}
@@ -119,5 +119,5 @@ def test_VarBinary_colne(a):
     assert _a.value() == a.value()
     assert _a.getLb() == a.getLb()
     assert _a.getUb() == a.getUb()
-    assert _a.getType() == a.getType()
+    assert _a.type() == a.type()
 

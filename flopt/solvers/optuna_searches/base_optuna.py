@@ -52,7 +52,7 @@ class OptunaSearch(BaseSearch):
             return true if it can solve the problem else false
         """
         return all(
-                var.getType() in {'VarContinuous', 'VarInteger', 'VarBinary'}
+                var.type() in {'VarContinuous', 'VarInteger', 'VarBinary'}
                 for var in prob.getVariables()
                 ) and (not prob.constraints)
 
@@ -74,11 +74,11 @@ class OptunaSearch(BaseSearch):
         # set value into self.solution
         self.trial_ix += 1
         for var in self.solution:
-            if var.getType() == 'VarInteger':
+            if var.type() == 'VarInteger':
                 var._value = trial.suggest_int(
                     var.name, var.getLb(), var.getUb()
                 )
-            elif var.getType() == 'VarContinuous':
+            elif var.type() == 'VarContinuous':
                 var._value = trial.suggest_uniform(
                     var.name, var.getLb(), var.getUb()
                 )

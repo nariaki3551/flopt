@@ -201,7 +201,7 @@ class Problem:
         from collections import defaultdict
         variables_dict = defaultdict(int)
         for var in self.getVariables():
-            variables_dict[var.getType()] += 1
+            variables_dict[var.type()] += 1
         variables_str = ', '.join(
             [f'{key.replace("Var", "")} {value}'
                 for key, value in sorted(variables_dict.items())]

@@ -97,7 +97,7 @@ class Expression:
             self.name = name
         else:
             self.setName()
-        self.type = 'Expression'
+        self._type = 'Expression'
         self.var_dict = None
         self.expr = None
 
@@ -112,10 +112,10 @@ class Expression:
     def setName(self):
         elmA_name = self.elmA.name
         elmB_name = self.elmB.name
-        if self.elmA.getType() == 'Expression':
+        if self.elmA.type() == 'Expression':
             if self.operater in {'*', '/', '^', '%'}:
                 elmA_name = f'({elmA_name})'
-        if self.elmB.getType() == 'Expression':
+        if self.elmB.type() == 'Expression':
             if not self.elmB.operater == '+' or not self.elmB.name.startswith('-'):
                 elmB_name = f'({elmB_name})'
         self.name = f'{elmA_name}{self.operater}{elmB_name}'
@@ -183,14 +183,14 @@ class Expression:
         self.unsetVarDict()
 
 
-    def getType(self):
+    def type(self):
         """
         Returns
         -------
         str
           return type of expressiono
         """
-        return self.type
+        return self._type
 
 
     def getVariables(self):
@@ -259,7 +259,7 @@ class Expression:
         >>> 'Unknown'
         """
         if self.hasCustomExpression():
-            return 'Unknown'
+            return False
         if self.expr is None:
             self.setSympyExpr()
         variables = self.getVariables()
@@ -339,10 +339,10 @@ class Expression:
         bool
             return true if this expression is linear else false
         """
-        if any( var.type not in {'VarSpin', 'VarBinary'} for var in self.getVariables() ):
+        if any( var.type() not in {'VarSpin', 'VarBinary'} for var in self.getVariables() ):
             return False
         if self.hasCustomExpression():
-            return 'Unknown'
+            return False
         if self.expr is None:
             self.setSympyExpr()
         variables = self.getVariables()
@@ -514,10 +514,10 @@ class Expression:
         -------
         Expression
         """
-        if all( var.type == 'VarSpin' for var in self.getVariables() ):
+        if all( var.type() == 'VarSpin' for var in self.getVariables() ):
             return self
         var_dict = {
-            var.name: SelfReturn(var.toSpin() if var.type == 'VarBinary' else var)
+            var.name: SelfReturn(var.toSpin() if var.type() == 'VarBinary' else var)
             for var in self.getVariables()
         }
         self.setVarDict(var_dict)
@@ -755,7 +755,7 @@ class Expression:
 
     def __str__(self):
         s  = f'Name: {self.name}\n'
-        s += f'  Type    : {self.type}\n'
+        s += f'  Type    : {self._type}\n'
         s += f'  Value   : {self.value()}\n'
         return s
 
@@ -828,7 +828,7 @@ class CustomExpression(Expression):
         self.variables = variables
         self.operater = None
         self.name = name
-        self.type = 'CustomExpression'
+        self._type = 'CustomExpression'
         self.var_dict = None
         self.parents = list()
 
@@ -893,14 +893,14 @@ class Const:
             name = f'{value}'
         self.name = name
         self._value = value
-        self.type = 'Const'
+        self._type = 'Const'
         self.parents = list()   # dummy
         self.operater = None    # dummy
         self.expr = None        # dummy
         self.parents = list()   # dummy
 
-    def getType(self):
-        return self.type
+    def type(self):
+        return self._type
 
     def value(self, *args, **kwargs):
         return self._value
@@ -962,7 +962,7 @@ class Const:
         return Const(-self._value)
 
     def __hash__(self):
-        return hash((self._value, self.type))
+        return hash((self._value, self._type))
 
     def __repr__(self):
         s = f'Const({self._value})'
