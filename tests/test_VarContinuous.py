@@ -4,6 +4,7 @@ import pytest
 import numpy as np
 
 from flopt import Variable
+from flopt.constants import VariableType
 
 
 @pytest.fixture(scope='function')
@@ -75,7 +76,7 @@ def test_VarInteger_hash(b):
 
 # base function
 def test_VarContinuous_type(b):
-    assert b.type() == 'VarContinuous'
+    assert b.type() == VariableType.Continuous
 
 def test_VarContinuous_getvariable(b):
     assert b.getVariables() == {b}

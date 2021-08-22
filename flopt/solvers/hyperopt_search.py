@@ -8,7 +8,7 @@ from flopt.solvers.solver_utils import (
     end_solver_message
 )
 from flopt.env import setup_logger
-import flopt.constants
+from flopt.constants import VariableType, SolverTerminateState
 
 
 logger = setup_logger(__name__)
@@ -61,7 +61,7 @@ class HyperoptTPESearch(BaseSearch):
             return true if it can solve the problem else false
         """
         return all(
-                var.type() in {'VarContinuous', 'VarInteger', 'VarBinary'}
+                var.type() in {VariableType.Continuous, VariableType.Integer, VariableType.Binary}
                 for var in prob.getVariables()
                 ) and ( not prob.constraints )
 
@@ -69,15 +69,15 @@ class HyperoptTPESearch(BaseSearch):
     def search(self):
         import hyperopt
         self.startProcess()
-        status = flopt.constants.SOLVER_NORMAL_TERMINATE
+        status = SolverTerminateState.Normal
 
         # make the search space
         space = dict()
         for var in self.solution:
             name = var.name
-            if var.type() in {name, 'VarInteger', 'VarBinary'}:
+            if var.type() in {name, VariableType.Integer, VariableType.Binary}:
                 var_space = hyperopt.hp.quniform(name, var.getLb(), var.getUb(), 1)
-            elif var.type() == 'VarContinuous':
+            elif var.type() == VariableType.Continuous:
                 var_space = hyperopt.hp.uniform(name, var.getLb(), var.getUb())
             space[var.name] = var_space
 
@@ -93,7 +93,7 @@ class HyperoptTPESearch(BaseSearch):
                 show_progressbar=self.show_progressbar,
             )
         except TimeoutError:
-            status = flopt.constants.SOLVER_TIMELIMIT_TERMINATE
+            status = SolverTerminateState.Timelimit
 
         self.closeProcess()
         return status

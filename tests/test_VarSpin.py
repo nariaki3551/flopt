@@ -3,6 +3,7 @@ import pytest
 import numpy as np
 
 from flopt import Variable
+from flopt.constants import VariableType
 
 @pytest.fixture(scope='function')
 def a():
@@ -84,7 +85,7 @@ def test_VarSpin_hash(a):
 
 # base function
 def test_VarSpin_type(a):
-    assert a.type() == 'VarSpin'
+    assert a.type() == VariableType.Spin
 
 def test_VarSpin_getVariable(a):
     assert a.getVariables() == {a}

@@ -11,7 +11,7 @@ from flopt.solvers.solver_utils import (
 from flopt.expression import Const
 from flopt.solution import Solution
 from flopt.env import setup_logger
-import flopt.constants
+from flopt.constants import VariableType, SolverTerminateState
 
 
 logger = setup_logger(__name__)
@@ -62,11 +62,11 @@ class PulpSearch(BaseSearch):
             return true if objective and constraint functions are linear else false
         """
         return all( expr.isLinear() for expr in [prob.obj] + prob.constraints )\
-                and all(not var.type() == 'VarPermutation' for var in prob.getVariables())
+                and all(not var.type() == VariableType.Permutation for var in prob.getVariables())
 
 
     def search(self):
-        status = flopt.constants.SOLVER_NORMAL_TERMINATE
+        status = SolverTerminateState.Normal
 
         lp_prob, lp_solution \
             = self.createLpProblem(self.solution, self.obj, self.constraints)
@@ -80,7 +80,7 @@ class PulpSearch(BaseSearch):
         # get result
         for lp_var, var in zip(lp_solution, self.solution):
             value = lp_var.getValue()
-            if var.type() in {'VarInteger', 'VarBinary'}:
+            if var.type() in {VariableType.Integer, VariableType.Binary}:
                 value = round(value)
             var.setValue(value)
         self.updateSolution(self.solution)
@@ -89,7 +89,7 @@ class PulpSearch(BaseSearch):
             # -1: infeasible
             # -2: unbounded
             # -3: undefined
-            status = flopt.constants.SOLVER_ABNORMAL_TERMINATE
+            status = SolverTerminateState.Abnormal
             logger.info(f'PuLP LpStatus {pulp.constants.LpStatus[lp_status]}')
 
         return status
@@ -111,11 +111,11 @@ class PulpSearch(BaseSearch):
         # conver VarElement -> LpVariable
         lp_variables = []
         for var in solution:
-            if var.type() == 'VarContinuous':
+            if var.type() == VariableType.Continuous:
                 cat = 'Continuous'
-            elif var.type() == 'VarInteger':
+            elif var.type() == VariableType.Integer:
                 cat = 'Integer'
-            elif var.type() == 'VarBinary':
+            elif var.type() == VariableType.Binary:
                 cat = 'Binary'
             else:
                 raise ValueError

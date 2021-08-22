@@ -4,6 +4,7 @@ import pytest
 import numpy as np
 
 from flopt import Variable
+from flopt.constants import VariableType
 
 @pytest.fixture(scope='function')
 def a():
@@ -75,7 +76,7 @@ def test_VarInteger_hash(a):
 
 # base function
 def test_VarInteger_type(a):
-    assert a.type() == 'VarInteger'
+    assert a.type() == VariableType.Integer
 
 def test_VarInteger_getVariable(a):
     assert a.getVariables() == {a}

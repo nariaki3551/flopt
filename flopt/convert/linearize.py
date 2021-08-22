@@ -1,7 +1,7 @@
-from flopt import Variable
 from flopt.variable import VarElement, VarBinary, VarInteger, VarContinuous
 from flopt.expression import Expression, Const
 from flopt.convert.binarize import binarize
+from flopt.constants import VariableType
 from flopt.env import setup_logger
 
 logger = setup_logger(__name__)
@@ -84,13 +84,13 @@ def linearize(prob):
     # add constraints for variable-multipry
     for (var_a, var_b), var_mul in var_muls.items():
         # (Binary, Binary)
-        if {type(var_a), type(var_b)} == {VarBinary}:
+        if {var_a.type(), var_b.type()} == {VariableType.Binary}:
             prob += var_mul <= var_a,               f'for_{var_mul.name}_1'
             prob += var_mul <= var_b,               f'for_{var_mul.name}_2'
             prob += var_mul >= var_a + var_b - 1,   f'for_{var_mul.name}_3'
         # (Binary, Integer)
-        elif {type(var_a), type(var_b)} == {VarBinary, VarInteger}:
-            if isinstance(var_a, VarBinary):
+        elif {var_a.type(), var_b.type()} == {VariableType.Binary, VariableType.Integer}:
+            if var_a.type() == VariableType.Binary:
                 var_bin, var_int = var_a, var_b
             else:
                 var_bin, var_int = var_b, var_a
@@ -100,8 +100,8 @@ def linearize(prob):
             prob += var_mul >= var_int - u * (1 - var_bin), f'for_{var_mul.name}_3'
             prob += var_mul <= var_int - l * (1 - var_bin), f'for_{var_mul.name}_4'
         #  (Binary, Continuous)
-        elif {type(var_a), type(var_b)} == {VarBinary, VarContinuous}:
-            if isinstance(var_a, VarBinary):
+        elif {var_a.type(), var_b.type()} == {VariableType.Binary, VariableType.Continuous}:
+            if var_a.type() == VariableType.Binary:
                 var_bin, var_con = var_a, var_b
             else:
                 var_bin, var_con = var_b, var_a
@@ -191,19 +191,22 @@ def create_var_mul(node, var_muls):
     """
     var_a, var_b = sorted([node.elmA, node.elmB], key=lambda x: x.name)
     if (var_a, var_b) not in var_muls:
-        if {var_a.type(), var_b.type()} == {'VarBinary'}:
+        # (Binary, Binary)
+        if {var_a.type(), var_b.type()} == {VariableType.Binary}:
             var_mul = VarBinary(
                 f'mul_{len(var_muls)}',
                 ini_value=var_a.value() * var_b.value(),
             )
-        elif {var_a.type(), var_b.type()} == {'VarBinary', 'VarInteger'}:
+        # (Binary, Integer)
+        elif {var_a.type(), var_b.type()} == {VariableType.Binary, VariableType.Integer}:
                 var_mul = VarInteger(
                     f'mul_{len(var_muls)}',
                     lowBound=get_lower_bound(var_a, var_b),
                     upBound=get_upper_bound(var_a, var_b),
                     ini_value=var_a.value() * var_b.value(),
                 )
-        elif {var_a.type(), var_b.type()} == {'VarBinary', 'VarContinuous'}:
+        #  (Binary, Continuous)
+        elif {var_a.type(), var_b.type()} == {VariableType.Binary, VariableType.Continuous}:
             var_mul = VarContinuous(
                 f'mul_{len(var_muls)}',
                 lowBound=get_lower_bound(var_a, var_b),
@@ -219,10 +222,10 @@ def get_lower_bound(var_a, var_b):
 
     Notes
     -----
-    pair of var_a and var_b type is only ('VarBinary', 'VarInteger') or ('VarBinary', 'VarContinuous'
+    pair of var_a and var_b type is only (VariableType.Binary, VariableType.Integer) or (VariableType.Binary, VariableType.Continuous)
     """
-    assert {var_a.type(), var_b.type()} == {'VarBinary', 'VarInteger'}\
-        or {var_a.type(), var_b.type()} == {'VarBinary', 'VarContinuous'}
+    assert {var_a.type(), var_b.type()} == {VariableType.Binary, VariableType.Integer}\
+        or {var_a.type(), var_b.type()} == {VariableType.Binary, VariableType.Continuous}
     if isinstance(var_a, VarBinary):
         var_binary, var_other = var_a, var_b
     else:
@@ -237,10 +240,10 @@ def get_upper_bound(var_a, var_b):
 
     Notes
     -----
-    pair of var_a and var_b type is only ('VarBinary', 'VarInteger') or ('VarBinary', 'VarContinuous'
+    pair of var_a and var_b type is only (VariableType.Binary, VariableType.Integer) or (VariableType.Binary, VariableType.Continuous)
     """
-    assert {var_a.type(), var_b.type()} == {'VarBinary', 'VarInteger'}\
-        or {var_a.type(), var_b.type()} == {'VarBinary', 'VarContinuous'}
+    assert {var_a.type(), var_b.type()} == {VariableType.Binary, VariableType.Integer}\
+        or {var_a.type(), var_b.type()} == {VariableType.Binary, VariableType.Continuous}
     if isinstance(var_a, VarBinary):
         var_binary, var_other = var_a, var_b
     else:
@@ -280,11 +283,11 @@ def is_linearable(node):
     """
     assert is_var_mul(node)
     linearable_pairs = [
-        {'VarBinary',  'VarBinary'},
-        {'VarBinary',  'VarInteger'},
-        {'VarBinary',  'VarContinuous'},
-        {'VarInteger', 'VarInteger'},
-        {'VarInteger', 'VarContinuous'},
+        {VariableType.Binary,   VariableType.Binary},
+        {VariableType.Binary,   VariableType.Integer},
+        {VariableType.Binary,   VariableType.Continuous},
+        {VariableType.Integer,  VariableType.Integer},
+        {VariableType.Integer,  VariableType.Continuous},
     ]
     return {node.elmA.type(), node.elmB.type()} in linearable_pairs
 
@@ -302,8 +305,8 @@ def need_binarize(node):
     """
     assert is_var_mul(node)
     need_binarize_pairs = [
-        {'VarInteger', 'VarInteger'},
-        {'VarInteger', 'VarContinuous'},
+        {VariableType.Integer, VariableType.Integer},
+        {VariableType.Integer, VariableType.Continuous},
     ]
     return {node.elmA.type(), node.elmB.type()} in need_binarize_pairs
 

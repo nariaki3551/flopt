@@ -3,6 +3,7 @@ import collections
 import numpy as np
 
 from flopt.constraint import Constraint
+from flopt.constants import VariableType, ExpressionType
 from flopt.env import setup_logger
 
 logger = setup_logger(__name__)
@@ -97,7 +98,7 @@ class Expression:
             self.name = name
         else:
             self.setName()
-        self._type = 'Expression'
+        self._type = ExpressionType.Normal
         self.var_dict = None
         self.expr = None
 
@@ -112,10 +113,10 @@ class Expression:
     def setName(self):
         elmA_name = self.elmA.name
         elmB_name = self.elmB.name
-        if self.elmA.type() == 'Expression':
+        if isinstance(self.elmA, Expression):
             if self.operater in {'*', '/', '^', '%'}:
                 elmA_name = f'({elmA_name})'
-        if self.elmB.type() == 'Expression':
+        if isinstance(self.elmB, Expression):
             if not self.elmB.operater == '+' or not self.elmB.name.startswith('-'):
                 elmB_name = f'({elmB_name})'
         self.name = f'{elmA_name}{self.operater}{elmB_name}'
@@ -231,7 +232,7 @@ class Expression:
         Returns
         -------
         bool
-            return if it is 0 - value form else false
+            return if it is - value form else false
         """
         return self.operater == '*'\
                 and isinstance(self.elmA, Const) \
@@ -256,7 +257,7 @@ class Expression:
         >>> False
         >>> ce = flopt.CustomExpression(lambda x: x, [a])
         >>> ce.isLinear()
-        >>> 'Unknown'
+        >>> False
         """
         if self.hasCustomExpression():
             return False
@@ -339,7 +340,7 @@ class Expression:
         bool
             return true if this expression is linear else false
         """
-        if any( var.type() not in {'VarSpin', 'VarBinary'} for var in self.getVariables() ):
+        if any( var.type() not in {VariableType.Spin, VariableType.Binary} for var in self.getVariables() ):
             return False
         if self.hasCustomExpression():
             return False
@@ -497,10 +498,10 @@ class Expression:
         -------
         Expression
         """
-        if all( var.type == 'VarBinary' for var in self.getVariables() ):
+        if all( var.type() == VariableType.Binary for var in self.getVariables() ):
             return self
         var_dict = {
-            var.name: SelfReturn(var.toBinary() if var.type == 'VarSpin' else var)
+            var.name: SelfReturn(var.toBinary() if var.type() == VariableType.Spin else var)
             for var in self.getVariables()
         }
         self.setVarDict(var_dict)
@@ -514,10 +515,10 @@ class Expression:
         -------
         Expression
         """
-        if all( var.type() == 'VarSpin' for var in self.getVariables() ):
+        if all( var.type() == VariableType.Spin for var in self.getVariables() ):
             return self
         var_dict = {
-            var.name: SelfReturn(var.toSpin() if var.type() == 'VarBinary' else var)
+            var.name: SelfReturn(var.toSpin() if var.type() == VariableType.Binary else var)
             for var in self.getVariables()
         }
         self.setVarDict(var_dict)
@@ -558,8 +559,7 @@ class Expression:
         if isinstance(other, (int, float)):
             if other == 0:
                 return self
-            other = Const(other)
-            return Expression(self, other, '+')
+            return Expression(self, Const(other), '+')
         elif isinstance(other, Expression):
             return Expression(self, other, '+')
         else:
@@ -569,8 +569,7 @@ class Expression:
         if isinstance(other, (int, float)):
             if other == 0:
                 return self
-            other = Const(other)
-            return Expression(other, self, '+')
+            return Expression(Const(other), self, '+')
         elif isinstance(other, Expression):
             return Expression(other, self, '+')
         else:
@@ -580,8 +579,7 @@ class Expression:
         if isinstance(other, (int, float)):
             if other == 0:
                 return self
-            other = Const(other)
-            return Expression(self, other, '-')
+            return Expression(self, Const(other), '-')
         elif isinstance(other, Expression):
             if other.isNeg():
                 # self - (-1*other) -> self + other
@@ -613,8 +611,7 @@ class Expression:
                 return self
             elif other == -1:
                 return -self
-            other = Const(other)
-            return Expression(other, self, '*')
+            return Expression(Const(other), self, '*')
         elif isinstance(other, Expression):
             if self.operater == '*' and isinstance(self.elmA, Const):
                 if other.operater == '*' and isinstance(other.elmA, Const):
@@ -638,8 +635,7 @@ class Expression:
                 return Const(0)
             elif other == 1:
                 return self
-            other = Const(other)
-            return Expression(other, self, '*')
+            return Expression(Const(other), self, '*')
         elif isinstance(other, Expression):
             if self.operater == '*' and isinstance(self.elmA, Const):
                 if other.operater == '*' and isinstance(other.elmA, Const):
@@ -661,8 +657,7 @@ class Expression:
         if isinstance(other, (int, float)):
             if other == 1:
                 return self
-            other = Const(other)
-            return Expression(self, other, '/')
+            return Expression(self, Const(other), '/')
         elif isinstance(other, Expression):
             return Expression(self, other, '/')
         else:
@@ -672,8 +667,7 @@ class Expression:
         if isinstance(other, (int, float)):
             if other == 0:
                 return Const(0)
-            other = Const(other)
-            return Expression(other, self, '/')
+            return Expression(Const(other), self, '/')
         elif isinstance(other, Expression):
             return Expression(other, self, '/')
         else:
@@ -683,8 +677,7 @@ class Expression:
         if isinstance(other, (int, float)):
             if other == 1:
                 return self
-            other = Const(other)
-            return Expression(self, other, '^')
+            return Expression(self, Const(other), '^')
         elif isinstance(other, Expression):
             return Expression(self, other, '^')
         else:
@@ -694,8 +687,7 @@ class Expression:
         if isinstance(other, (int, float)):
             if other == 1:
                 return Const(1)
-            other = Const(other)
-            return Expression(other, self, '^')
+            return Expression(Const(other), self, '^')
         elif isinstance(other, Expression):
             return Expression(other, self, '^')
         else:
@@ -703,8 +695,7 @@ class Expression:
 
     def __and__(self, other):
         if isinstance(other, (int, float)):
-            other = Const(other)
-            return Expression(self, other, '&')
+            return Expression(self, Const(other), '&')
         elif isinstance(other, Expression):
             return Expression(self, other, '&')
         else:
@@ -715,8 +706,7 @@ class Expression:
 
     def __or__(self, other):
         if isinstance(other, (int, float)):
-            other = Const(other)
-            return Expression(self, other, '|')
+            return Expression(self, Const(other), '|')
         elif isinstance(other, Expression):
             return Expression(self, other, '|')
         else:
@@ -828,7 +818,7 @@ class CustomExpression(Expression):
         self.variables = variables
         self.operater = None
         self.name = name
-        self._type = 'CustomExpression'
+        self._type = ExpressionType.Custom
         self.var_dict = None
         self.parents = list()
 
@@ -893,7 +883,7 @@ class Const:
             name = f'{value}'
         self.name = name
         self._value = value
-        self._type = 'Const'
+        self._type = ExpressionType.Const
         self.parents = list()   # dummy
         self.operater = None    # dummy
         self.expr = None        # dummy

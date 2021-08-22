@@ -1,5 +1,5 @@
 from flopt.env import setup_logger
-import flopt.constants
+from flopt.constants import VERSION, DATE, VariableType, SolverTerminateState
 
 
 logger = setup_logger(__name__)
@@ -9,31 +9,31 @@ def start_solver_message(algo_name, param_str, solution):
     # stat about variables
     n_var = len(solution)
     n_binary_var = sum(
-        var.type() == 'VarBinary'
+        var.type() == VariableType.Binary
         for var in solution
     )
     n_int_var = sum(
-        var.type() == 'VarInteger'
+        var.type() == VariableType.Integer
         for var in solution)
     n_cont_var = sum(
-        var.type() == 'VarContinuous'
+        var.type() == VariableType.Continuous
         for var in solution
     )
     n_perm_var = sum(
-        var.type() == 'VarPermutation'
+        var.type() == VariableType.Permutation
         for var in solution
     )
     n_perm_var_elm = sum(
         len(var)
         for var in solution
-        if var.type() == 'VarPermutation'
+        if var.type() == VariableType.Permutation
     )
 
     message = (
         "\n",
         "Welcome to the flopt Solver\n",
-        f"Version {flopt.constants.VERSION}\n",
-        f"Date: {flopt.constants.DATE}\n",
+        f"Version {VERSION}\n",
+        f"Date: {DATE}\n",
         "\n",
         f"Algorithm: {algo_name}\n",
         f"Params: {param_str}\n",
@@ -94,10 +94,10 @@ def during_solver_message(head, obj_value, best_bd, time, iteration):
 
 def end_solver_message(status, obj_value, time):
     status_str = {
-        flopt.constants.SOLVER_NORMAL_TERMINATE:    'normal termination',
-        flopt.constants.SOLVER_TIMELIMIT_TERMINATE: 'timelimit termination',
-        flopt.constants.SOLVER_INTERRUPT_TERMINATE: 'Ctrl-C termination',
-        flopt.constants.SOLVER_ABNORMAL_TERMINATE:  'abnormal termination'
+        SolverTerminateState.Normal:    'normal termination',
+        SolverTerminateState.Timelimit: 'timelimit termination',
+        SolverTerminateState.Interrupt: 'Ctrl-C termination',
+        SolverTerminateState.Abnormal:  'abnormal termination'
     }
 
     message = (

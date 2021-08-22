@@ -1,6 +1,7 @@
 import pytest
 
 from flopt import Variable
+from flopt.constants import VariableType
 
 @pytest.fixture(scope='function')
 def a():
@@ -11,7 +12,7 @@ def test_VarPermutation_hash(a):
 
 # base function
 def test_VarPermutation_type(a):
-    assert a.type() == 'VarPermutation'
+    assert a.type() == VariableType.Permutation
 
 def test_VarPermutation_getVariable(a):
     assert a.getVariables() == {a}

@@ -3,6 +3,7 @@ import pytest
 import numpy as np
 
 from flopt import Variable
+from flopt.constants import VariableType
 
 @pytest.fixture(scope='function')
 def a():
@@ -82,7 +83,7 @@ def test_VarBinary_hash(a):
 
 # base function
 def test_VarBinary_type(a):
-    assert a.type() == 'VarBinary'
+    assert a.type() == VariableType.Binary
 
 def test_VarBinary_getVariable(a):
     assert a.getVariables() == {a}

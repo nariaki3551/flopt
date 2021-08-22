@@ -6,6 +6,7 @@ import numpy as np
 
 from flopt.expression import Expression, Const
 from flopt.constraint import Constraint
+from flopt.constants import VariableType
 from flopt.env import setup_logger
 
 
@@ -540,11 +541,11 @@ class VarElement:
 
 
 class VarInteger(VarElement):
-    """Ingeter Variable class
+    """Integer Variable class
     """
     def __init__(self, name, lowBound, upBound, ini_value):
         super().__init__(name, lowBound, upBound, ini_value)
-        self._type = 'VarInteger'
+        self._type = VariableType.Integer
         self.binarized = None
 
 
@@ -578,11 +579,6 @@ class VarInteger(VarElement):
 
 
     def clone(self):
-        """
-        Returns
-        -------
-        VarInteger
-        """
         return VarInteger(self.name, self.lowBound, self.upBound, self._value)
 
 
@@ -610,7 +606,7 @@ class VarBinary(VarInteger):
     """
     def __init__(self, name, ini_value, spin=None):
         super().__init__(name, 0, 1, ini_value)
-        self._type = 'VarBinary'
+        self._type = VariableType.Binary
         self.spin = spin
 
 
@@ -644,11 +640,6 @@ class VarBinary(VarInteger):
 
 
     def clone(self):
-        """
-        Returns
-        -------
-        VarBinary
-        """
         return VarBinary(self.name, self._value, self.spin)
 
 
@@ -703,7 +694,7 @@ class VarSpin(VarElement):
     """
     def __init__(self, name, ini_value, binary=None):
         super().__init__(name, -1, 1, ini_value)
-        self._type = 'VarSpin'
+        self._type = VariableType.Spin
         self.binary = binary
 
 
@@ -762,11 +753,6 @@ class VarSpin(VarElement):
 
 
     def clone(self):
-        """
-        Returns
-        -------
-        VarSpin
-        """
         return VarSpin(self.name, self._value, self.binary)
 
 
@@ -810,7 +796,7 @@ class VarContinuous(VarElement):
     """
     def __init__(self, name, lowBound, upBound, ini_value):
         super().__init__(name, lowBound, upBound, ini_value)
-        self._type = 'VarContinuous'
+        self._type = VariableType.Continuous
 
 
     def getIniValue(self):
@@ -822,11 +808,6 @@ class VarContinuous(VarElement):
 
 
     def clone(self):
-        """
-        Returns
-        -------
-        VarContinuous
-        """
         return VarContinuous(self.name, self.lowBound, self.upBound, self._value)
 
 
@@ -850,7 +831,7 @@ class VarPermutation(VarElement):
     >>> b.value()
     >>> [0, 1, 2, 3]
 
-    We can use list operation to Peramutation Variable
+    We can use list operation to Permutation Variable
 
     >>> b[1]
     >>> 1
@@ -861,7 +842,7 @@ class VarPermutation(VarElement):
     """
     def __init__(self, name, lowBound, upBound, ini_value):
         super().__init__(name, lowBound, upBound, ini_value)
-        self._type = 'VarPermutation'
+        self._type = VariableType.Permutation
 
 
     def getIniValue(self):
@@ -885,11 +866,6 @@ class VarPermutation(VarElement):
 
 
     def clone(self):
-        """
-        Returns
-        -------
-        VarPermutation
-        """
         return VarPermutation(self.name, self.lowBound, self.upBound, self._value)
 
 

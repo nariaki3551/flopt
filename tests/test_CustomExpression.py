@@ -117,6 +117,6 @@ def test_CustomExpression_hasCustomExpression(custom_obj, a):
     assert (custom_obj + a).hasCustomExpression() == True
 
 def test_CustomExpression_isLinear(custom_obj, a):
-    assert (custom_obj).isLinear() == 'Unknown'
-    assert (custom_obj+a).isLinear() == 'Unknown'
+    assert (custom_obj).isLinear() == False
+    assert (custom_obj+a).isLinear() == False
 

@@ -12,7 +12,7 @@ from flopt.solvers.solver_utils import (
     end_solver_message
 )
 from flopt.env import setup_logger
-import flopt.constants
+from flopt.constants import VariableType, SolverTerminateState
 
 
 logger = setup_logger(__name__)
@@ -75,13 +75,13 @@ class ShuffledFrogLeapingSearch(BaseSearch):
         bool
             return true if it can solve the problem else false
         """
-        return all(not var.type() == 'VarPermutation' for var in prob.getVariables())\
+        return all(not var.type() == VariableType.Permutation for var in prob.getVariables())\
                 and (not prob.constraints)
 
 
     def search(self):
         self.startProcess()
-        status = flopt.constants.SOLVER_NORMAL_TERMINATE
+        status = SolverTerminateState.Normal
 
         for i in range(self.n_trial):
             self.trial_ix += 1
@@ -89,7 +89,7 @@ class ShuffledFrogLeapingSearch(BaseSearch):
             # check time limit
             if time.time() > self.start_time + self.timelimit:
                 self.closeProcess()
-                status = flopt.constants.SOLVER_TIMELIMIT_TERMINATE
+                status = SolverTerminateState.Timelimit
                 return status
 
             self._memetic_evolution()

@@ -3,6 +3,7 @@ from copy import deepcopy
 import pulp
 from pulp import LpMinimize, LpMaximize
 from flopt import Problem, Solution
+from flopt.constants import VariableType
 from flopt.env import setup_logger
 
 
@@ -57,11 +58,11 @@ class LpProblem(Problem):
         # conver VarElement -> LpVariable
         lp_variables = []
         for var in solution:
-            if var.type() == 'VarContinuous':
+            if var.type() == VariableType.Continuous:
                 cat = 'Continuous'
-            elif var.type() == 'VarInteger':
+            elif var.type() == VariableType.Integer:
                 cat = 'Integer'
-            elif var.type() == 'VarBinary':
+            elif var.type() == VariableType.Binary:
                 car = 'Binary'
             else:
                 raise ValueError

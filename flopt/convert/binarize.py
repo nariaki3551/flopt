@@ -1,6 +1,7 @@
 from flopt import Variable
 from flopt.variable import VarElement, VarBinary, VarInteger, VarContinuous
 from flopt.expression import Expression, Const, CustomExpression
+from flopt.constants import VariableType
 
 
 def binarize(prob):
@@ -123,22 +124,22 @@ def binarize_traverse(e, binarizes):
     for node in e.traverse():
         if isinstance(node, Expression):
             update = False
-            if node.elmA.type() == 'VarInteger':
+            if node.elmA.type() == VariableType.Integer:
                 if node.elmA not in binarizes:
                     binarizes[node.elmA] = list(node.elmA.toBinary().getVariables())
                 node.elmA = node.elmA.toBinary()
                 node.elmA.parents.append(node)
                 update = True
-            elif node.elmA.type() == 'VarSpin':
+            elif node.elmA.type() == VariableType.Spin:
                 node.elmA = node.elmA.toBinary()
                 update = True
-            if node.elmB.type() == 'VarInteger':
+            if node.elmB.type() == VariableType.Integer:
                 if node.elmB not in binarizes:
                     binarizes[node.elmB] = list(node.elmB.toBinary().getVariables())
                 node.elmB = node.elmB.toBinary()
                 node.elmB.parents.append(node)
                 update = True
-            elif node.elmB.type() == 'VarSpin':
+            elif node.elmB.type() == VariableType.Spin:
                 node.elmB = node.elmB.toBinary()
                 update = True
             if update:

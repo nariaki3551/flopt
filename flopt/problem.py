@@ -203,7 +203,7 @@ class Problem:
         for var in self.getVariables():
             variables_dict[var.type()] += 1
         variables_str = ', '.join(
-            [f'{key.replace("Var", "")} {value}'
+            [f'{str(key).replace("VariableType.", "")} {value}'
                 for key, value in sorted(variables_dict.items())]
             )
         s  = f'Name: {self.name}\n'

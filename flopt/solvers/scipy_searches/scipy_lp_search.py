@@ -14,7 +14,7 @@ from flopt.convert import flopt_to_lp
 from flopt.env import setup_logger
 from flopt.expression import Const
 from flopt.solution import Solution
-import flopt.constants
+from flopt.constants import VariableType, SolverTerminateState
 
 
 logger = setup_logger(__name__)
@@ -50,7 +50,7 @@ class ScipyLpSearch(BaseSearch):
         bool
             return true if it can solve the problem else false
         """
-        return all(var.type() == 'VarContinuous' for var in prob.getVariables())
+        return all(var.type() == VariableType.Continuous for var in prob.getVariables())
 
 
     def search(self):
@@ -61,7 +61,7 @@ class ScipyLpSearch(BaseSearch):
 
 
     def _search(self):
-        status = flopt.constants.SOLVER_NORMAL_TERMINATE
+        status = SolverTerminateState.Normal
         var_names = [var.name for var in self.solution]
 
         def gen_func(expression):
@@ -114,7 +114,7 @@ class ScipyLpSearch(BaseSearch):
                 var.setValue(value)
             self.updateSolution(self.solution, obj_value=None)
         except TimeoutError:
-            status = flopt.constants.SOLVER_TIMELIMIT_TERMINATE
+            status = SolverTerminateState.Timelimit
 
         return status
 

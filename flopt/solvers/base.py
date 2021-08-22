@@ -8,7 +8,7 @@ from flopt.solvers.solver_utils import (
     end_solver_message,
 )
 from flopt.env import setup_logger
-import flopt.constants
+from flopt.constants import SolverTerminateState
 import flopt.error
 
 
@@ -143,7 +143,7 @@ class BaseSearch:
         """
         if prob is not None and not self.available(prob):
             logger.error(f'problem can not be solved by solver {self.name}')
-            status = flopt.constants.SOLVER_ABNORMAL_TERMINATE
+            status = SolverTerminateState.Abnormal
             raise flopt.error.SolverError
 
         self.best_solution = solution
@@ -162,7 +162,7 @@ class BaseSearch:
             status = self.search()
         except KeyboardInterrupt:
             print('Get user ctrl-cuser ctrl-c')
-            status = flopt.constants.SOLVER_INTERRUPT_TERMINATE
+            status = SolverTerminateState.Interrupt
 
         if msg:
             obj_value = self.obj.value(self.best_solution)
