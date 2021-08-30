@@ -6,7 +6,7 @@ import numpy as np
 
 from flopt.expression import Expression, Const
 from flopt.constraint import Constraint
-from flopt.constants import VariableType
+from flopt.constants import VariableType, number_classes, array_classes, np_float
 from flopt.env import setup_logger
 
 
@@ -155,7 +155,7 @@ class VariableFactory:
         for key in iterator:
             if isinstance(key, (range, types.GeneratorType)):
                 raise ValueError(f'key must not be generator')
-            if isinstance(key, (list, tuple)):
+            if isinstance(key, array_classes):
                 var_name = f'{name}_' + '_'.join(map(str, key))
             else:
                 var_name = f'{name}_{key}'
@@ -171,13 +171,13 @@ class VariableFactory:
           name of variable
         shape : int of tuple of int
             shape of array
-        lowBound : float, optional
+        lowBound : number class or array of number class
           lowBound
-        upBound : float, optional
+        upBound : number class or array of number class
           upBound
-        cat : str, optional
+        cat : str or array of cat
           category of variable
-        ini_value : float, optional
+        ini_value : number class or array of number class
           set value to variable
 
         Returns
@@ -199,11 +199,23 @@ class VariableFactory:
         """
         if isinstance(shape, int):
             shape = (shape, )
+        if isinstance(lowBound, array_classes):
+            lowBound = np.array(lowBound, dtype=np_float)
+        if isinstance(upBound, array_classes):
+            upBound = np.array(upBound, dtype=np_float)
+        if isinstance(cat, array_classes):
+            cat = np.array(cat, dtype=str)
+        if isinstance(ini_value, array_classes):
+            ini_value = np.array(ini_value, dtype=np_float)
         iterator = itertools.product(*map(range, shape))
         variables = np.empty(shape, dtype=object)
         for i in iterator:
             var_name = f'{name}_' + '_'.join(map(str, i))
-            variables[i] = self(var_name, lowBound, upBound, cat, ini_value)
+            _lowBound  = lowBound[i]  if isinstance(lowBound,  array_classes) else lowBound
+            _upBound   = upBound[i]   if isinstance(upBound,   array_classes) else upBound
+            _cat       = cat[i]       if isinstance(cat,       array_classes) else cat
+            _ini_value = ini_value[i] if isinstance(ini_value, array_classes) else ini_value
+            variables[i] = self(var_name, _lowBound, _upBound, _cat, _ini_value)
         return variables
 
 
@@ -218,13 +230,13 @@ class VariableFactory:
             number of rows
         n_col : int
             number of columns
-        lowBound : float, optional
+        lowBound : number class or array of number class
           lowBound
-        upBound : float, optional
+        upBound : number class or array of number class
           upBound
-        cat : str, optional
+        cat : str or array of cat
           category of variable
-        ini_value : float, optional
+        ini_value : number class or array of number class
           set value to variable
 
         Returns
@@ -349,7 +361,7 @@ class VarElement:
 
 
     def __add__(self, other):
-        if isinstance(other, (int, float)):
+        if isinstance(other, number_classes):
             if other == 0:
                 return self
             return Expression(self, Const(other), '+')
@@ -365,7 +377,7 @@ class VarElement:
             return NotImplemented
 
     def __radd__(self, other):
-        if isinstance(other, (int, float)):
+        if isinstance(other, number_classes):
             if other == 0:
                 return self
             return Expression(Const(other), self, '+')
@@ -375,7 +387,7 @@ class VarElement:
             return NotImplemented
 
     def __sub__(self, other):
-        if isinstance(other, (int, float)):
+        if isinstance(other, number_classes):
             if other == 0:
                 return self
             return Expression(self, Const(other), '-')
@@ -390,7 +402,7 @@ class VarElement:
             return NotImplemented
 
     def __rsub__(self, other):
-        if isinstance(other, (int, float)):
+        if isinstance(other, number_classes):
             if other == 0:
                 # 0 - self --> -1 * self
                 return Expression(Const(-1), self, '*', name=f'-{self.name}')
@@ -402,7 +414,7 @@ class VarElement:
             return NotImplemented
 
     def __mul__(self, other):
-        if isinstance(other, (int, float)):
+        if isinstance(other, number_classes):
             if other == 0:
                 return Const(0)
             elif other == 1:
@@ -422,7 +434,7 @@ class VarElement:
             return NotImplemented
 
     def __rmul__(self, other):
-        if isinstance(other, (int, float)):
+        if isinstance(other, number_classes):
             if other == 0:
                 return Const(0)
             elif other == 1:
@@ -442,7 +454,7 @@ class VarElement:
             return NotImplemented
 
     def __truediv__(self, other):
-        if isinstance(other, (int, float)):
+        if isinstance(other, number_classes):
             if other == 1:
                 return self
             elif other == -1:
@@ -454,7 +466,7 @@ class VarElement:
             return NotImplemented
 
     def __rtruediv__(self, other):
-        if isinstance(other, (int, float)):
+        if isinstance(other, number_classes):
             if other == 0:
                 return Const(0)
             return Expression(Const(other), self, '/')
@@ -472,7 +484,7 @@ class VarElement:
             raise NotImplementedError()
 
     def __pow__(self, other):
-        if isinstance(other, (int, float)):
+        if isinstance(other, number_classes):
             if other == 0:
                 return Const(1)
             elif other == 1:
@@ -484,7 +496,7 @@ class VarElement:
             return NotImplemented
 
     def __rpow__(self, other):
-        if isinstance(other, (int, float)):
+        if isinstance(other, number_classes):
             if other == 1:
                 return Const(1)
             return Expression(Const(other), self, '^')
@@ -667,22 +679,22 @@ class VarBinary(VarInteger):
         return Expression(self+1, two, '%')
 
     def __and__(self, other):
-        if isinstance(other, (int, float)):
+        if isinstance(other, number_classes):
             other = Const(other)
         return Expression(self, other, '&')
 
     def __rand__(self, other):
-        if isinstance(other, (int, float)):
+        if isinstance(other, number_classes):
             other = Const(other)
         return Expression(other, self, '&')
 
     def __or__(self, other):
-        if isinstance(other, (int, float)):
+        if isinstance(other, number_classes):
             other = Const(other)
         return Expression(self, other, '|')
 
     def __ror__(self, other):
-        if isinstance(other, (int, float)):
+        if isinstance(other, number_classes):
             other = Const(other)
         return Expression(other, self, '|')
 
@@ -767,14 +779,32 @@ class VarSpin(VarElement):
             return Const(1)
         elif isinstance(other, Expression) and other.operater == '*':
             if id(other.elmA) == id(self):
+                # a * (a * b) = b
+                if isinstance(other.elmB, number_classes):
+                    return Const(other.elmB)
+                else:
+                    return other.elmB
+            elif id(other.elmB) == id(self):
+                # a * (b * a) = b
+                if isinstance(other.elmA, number_classes):
+                    return Const(other.elmA)
+                else:
+                    return other.elmA
+        return super().__mul__(other)
+
+    def __rmul__(self, other):
+        if id(other) == id(self):
+            return Const(1)
+        elif isinstance(other, Expression) and other.operater == '*':
+            if id(other.elmA) == id(self):
                 # (a * b) * a = b
-                if isinstance(other.elmB, (int, float)):
+                if isinstance(other.elmB, number_classes):
                     return Const(other.elmB)
                 else:
                     return other.elmB
             elif id(other.elmB) == id(self):
                 # (b * a) * a = b
-                if isinstance(other.elmA, (int, float)):
+                if isinstance(other.elmA, number_classes):
                     return Const(other.elmA)
                 else:
                     return other.elmA

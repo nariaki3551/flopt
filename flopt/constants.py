@@ -1,7 +1,21 @@
 import enum
 
+import numpy as np
+
 VERSION = '0.4'
 DATE = 'August 12, 2021'
+
+
+# number classes
+number_classes = (int, float, np.number)
+
+
+# array classes
+array_classes = (list, tuple, np.ndarray)
+
+
+# numpy floating point
+np_float = np.float64
 
 
 # termination state
