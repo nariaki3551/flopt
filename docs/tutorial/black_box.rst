@@ -35,7 +35,7 @@ This problem can be formulated using `flopt` as follows,
   # solver
   solver = Solver(algo='RandomSearch')
   solver.setParams(timelimit=60)
-  prob.solve(solver, msg=true)
+  prob.solve(solver, msg=True)
 
 
   # get best solution

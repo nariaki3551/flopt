@@ -196,18 +196,6 @@ class VariableFactory:
         >>>         Variable(x_0_1, cat="Binary", ini_value=0)],
         >>>        [Variable(x_1_0, cat="Binary", ini_value=0),
         >>>         Variable(x_1_1, cat="Binary", ini_value=0)]], dtype=object)
-
-        >>> Variable.array('x', (2, 2, 2), cat='Binary')
-        >>> array([[[Variable(x_0_0_0, cat="Binary", ini_value=0),
-        >>>          Variable(x_0_0_1, cat="Binary", ini_value=0)],
-        >>>         [Variable(x_0_1_0, cat="Binary", ini_value=0),
-        >>>          Variable(x_0_1_1, cat="Binary", ini_value=0)]],
-        >>>
-        >>>        [[Variable(x_1_0_0, cat="Binary", ini_value=0),
-        >>>          Variable(x_1_0_1, cat="Binary", ini_value=0)],
-        >>>         [Variable(x_1_1_0, cat="Binary", ini_value=0),
-        >>>          Variable(x_1_1_1, cat="Binary", ini_value=0)]]], dtype=object)
-
         """
         if isinstance(shape, int):
             shape = (shape, )
@@ -254,6 +242,8 @@ class VariableFactory:
 
         """
         return self.array(name, (n_row, n_col), lowBound, upBound, cat, ini_value)
+
+
 
 
 
@@ -366,7 +356,11 @@ class VarElement:
         elif isinstance(other, VarElement):
             return Expression(self, other, '+')
         elif isinstance(other, Expression):
-            return Expression(self, other, '+')
+            if other.isNeg():
+                # self + (-other) --> self - other
+                return Expression(self, other.elmB, '-')
+            else:
+                return Expression(self, other, '+')
         else:
             return NotImplemented
 
@@ -519,13 +513,13 @@ class VarElement:
         return hash(self.name)
 
     def __eq__(self, other):
-        return Constraint(self, other, 'eq')
+        return Constraint(Expression(self, Const(0), '+', name=self.name), other, 'eq')
 
     def __le__(self, other):
-        return Constraint(self, other, 'le')
+        return Constraint(Expression(self, Const(0), '+', name=self.name), other, 'le')
 
     def __ge__(self, other):
-        return Constraint(self, other, 'ge')
+        return Constraint(Expression(self, Const(0), '+', name=self.name), other, 'ge')
 
     def __str__(self):
         s  = f'Name: {self.name}\n'
@@ -578,12 +572,16 @@ class VarInteger(VarElement):
         return self.binarized
 
 
+    def toSpin(self):
+        return self.toBinary().toSpin()
+
+
     def clone(self):
         return VarInteger(self.name, self.lowBound, self.upBound, self._value)
 
 
     def __repr__(self):
-        return f'VarInteger("{self.name}", {self.lowBound}, {self.upBound}, {self.value()})'
+        return f'Variable("{self.name}", {self.lowBound}, {self.upBound}, "Integer", {self.value()})'
 
 
 
@@ -618,6 +616,10 @@ class VarBinary(VarInteger):
 
     def setRandom(self):
         self._value = random.randint(0, 1)
+
+
+    def toBinary(self):
+        return self
 
 
     def toSpin(self):
@@ -752,6 +754,10 @@ class VarSpin(VarElement):
         return 2 * self.binary - 1
 
 
+    def toSpin(self):
+        return self
+
+
     def clone(self):
         return VarSpin(self.name, self._value, self.binary)
 
@@ -772,7 +778,8 @@ class VarSpin(VarElement):
                     return Const(other.elmA)
                 else:
                     return other.elmA
-        return super().__mul__(other)
+        return super().__rmul__(other)
+
 
     def __pow__(self, other):
         if isinstance(other, int):
@@ -812,7 +819,7 @@ class VarContinuous(VarElement):
 
 
     def __repr__(self):
-        return f'Variable("{self.name}", cat="Continuous", ini_value={self._value})'
+        return f'Variable("{self.name}", {self.lowBound}, {self.upBound}, "Continuous", {self._value})'
 
 
 

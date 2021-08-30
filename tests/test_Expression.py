@@ -61,6 +61,12 @@ def test_Expression_pow(c, a):
 def test_Expression_getVariable(a, b, c):
     assert c.getVariables() == {a, b}
 
+def test_Expression_constant1(a):
+    assert (a+1).constant() == 1
+
+def test_Expression_constant2(a, b):
+    assert (a/b+1).constant() == 1
+
 def test_Expression_neg(c):
     assert (-c).value() == -5
 
@@ -75,7 +81,7 @@ def test_Expression_cas(c):
     assert isinstance(int(c), int)
     assert isinstance(float(c), float)
 
-def test_Expression_hashc(c):
+def test_Expression_hash(c):
     hash(c)
 
 def test_Expression_hasCustomExpression(c, a):
@@ -86,7 +92,6 @@ def test_Expression_isLinear(a, b, c):
     assert a.isLinear() == True
     assert c.isLinear() == True
     assert (a*b).isLinear() == False
-
 
 def test_Const_hash():
     hash(Const(0))
@@ -107,10 +112,6 @@ def test_Expression_isIsing(a, b):
     h = np.array([1, 2])
     obj = - (x.T).dot(J).dot(x) - (h.T).dot(x)
     assert obj.isIsing()
-
-    # obj += a*a*a
-    # assert not obj.isIsing()
-
 
 def test_Expression_toIsing(a, b):
     import numpy as np

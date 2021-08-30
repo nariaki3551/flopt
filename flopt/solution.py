@@ -77,6 +77,16 @@ class Solution:
         return [variable.value() for variable in self._variables]
 
 
+    def setValue(self, name, value):
+        """
+        Parameters
+        ----------
+        name: str
+        value: int or float
+        """
+        self.toDict()[name].setValue(value)
+
+
     def getVariables(self):
         """
         Returns

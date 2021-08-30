@@ -59,6 +59,21 @@ def test_convert_linearize4():
 
 
 def test_convert_binarize1():
+    x = Variable.array('x', 1, lowBound=1, upBound=3, cat='Integer')
+
+    prob = Problem()
+    prob += x[0]
+    print('[ original ]\n', prob.show())
+
+    binarize(prob)
+    print('[ binarized ]\n', prob.show())
+
+    linearize(prob)
+    print(prob.show())
+    print('[ linearized ]\n', prob.show())
+
+
+def test_convert_binarize2():
     x = Variable.array('x', 2, cat='Binary')
     y = Variable.array('y', 1, lowBound=1, upBound=3, cat='Integer')
     x = np.hstack([x, y])
@@ -75,8 +90,25 @@ def test_convert_binarize1():
     print('[ linearized ]\n', prob.show())
 
 
-def test_convert_binarize2():
-    x = Variable.array('x', 2, cat='Binary')
+def test_convert_binarize3():
+    x = Variable.array('x', 2, cat='Continuous')
+    y = Variable.array('y', 1, lowBound=1, upBound=3, cat='Integer')
+    x = np.hstack([x, y])
+
+    prob = Problem()
+    prob += x[2] * x[0] + x[1]
+    print('[ original ]\n', prob.show())
+
+    binarize(prob)
+    print('[ binarized ]\n', prob.show())
+
+    linearize(prob)
+    print(prob.show())
+    print('[ linearized ]\n', prob.show())
+
+
+def test_convert_binarize4():
+    x = Variable.array('x', 2, cat='Spin')
     y = Variable.array('y', 1, lowBound=1, upBound=3, cat='Integer')
     x = np.hstack([x, y])
 

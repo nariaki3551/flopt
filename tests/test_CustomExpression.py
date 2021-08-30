@@ -99,6 +99,9 @@ def test_CustomExpression_getVariable_Variable(custom_obj, a, b):
     assert (custom_obj+a).getVariables() == {a, b}
     assert (custom_obj+(a+b)).getVariables() == {a,b}
 
+def test_CustomExpression_traverse(custom_obj):
+    assert len(list(custom_obj.traverse())) == 1
+
 def test_CustomExpression_neg(custom_obj):
     assert (-custom_obj).value() == -6
 
@@ -115,6 +118,8 @@ def test_CustomExpression_hash(custom_obj):
 def test_CustomExpression_hasCustomExpression(custom_obj, a):
     assert custom_obj.hasCustomExpression() == True
     assert (custom_obj + a).hasCustomExpression() == True
+def test_CustomExpression_repr(custom_obj):
+    repr(custom_obj)
 
 def test_CustomExpression_isLinear(custom_obj, a):
     assert (custom_obj).isLinear() == False

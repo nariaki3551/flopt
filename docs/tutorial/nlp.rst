@@ -63,15 +63,15 @@ In flopt, we denote these as
 
 .. code-block:: python
 
-  a = Variable(name='a', 0, 1, 'Integer')
-  b = Variable(name='b', 1, 2, 'Continuous')
-  c = Variable(name='c', 1, 3, 'Continuous')
+  a = Variable('a', 0, 1, 'Integer')
+  b = Variable('b', 1, 2, 'Continuous')
+  c = Variable('c', 1, 3, 'Continuous')
 
 If we want to set an initial value into each variable, we use `ini_value` option.
 
 .. code-block:: python
 
-  b = Variable(name='b', 1, 2, 'Continuous', ini_value=1.5)
+  b = Variable('b', 1, 2, 'Continuous', ini_value=1.5)
 
 
 Problem
