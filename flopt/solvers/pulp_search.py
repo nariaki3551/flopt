@@ -2,12 +2,6 @@ from time import time
 import pulp
 
 from flopt.solvers.base import BaseSearch
-from flopt.solvers.solver_utils import (
-    Log, start_solver_message,
-    during_solver_message_header,
-    during_solver_message,
-    end_solver_message
-)
 from flopt.expression import Const
 from flopt.solution import Solution
 from flopt.env import setup_logger

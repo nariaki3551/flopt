@@ -5,11 +5,7 @@ import numpy as np
 
 from flopt.solvers.base import BaseSearch
 from flopt.solvers.solver_utils import (
-    Log,
-    start_solver_message,
-    during_solver_message_header,
     during_solver_message,
-    end_solver_message
 )
 from flopt.env import setup_logger
 from flopt.constants import VariableType, SolverTerminateState
@@ -80,7 +76,6 @@ class ShuffledFrogLeapingSearch(BaseSearch):
 
 
     def search(self):
-        self.startProcess()
         status = SolverTerminateState.Normal
 
         for i in range(self.n_trial):
@@ -88,7 +83,6 @@ class ShuffledFrogLeapingSearch(BaseSearch):
 
             # check time limit
             if time.time() > self.start_time + self.timelimit:
-                self.closeProcess()
                 status = SolverTerminateState.Timelimit
                 return status
 
@@ -109,7 +103,6 @@ class ShuffledFrogLeapingSearch(BaseSearch):
             for callback in self.callbacks:
                 callback(self.frogs, self.best_solution, self.best_obj_value)
 
-        self.closeProcess()
         return status
 
 
@@ -176,6 +169,7 @@ class ShuffledFrogLeapingSearch(BaseSearch):
                                               for j in range(M)]
 
     def startProcess(self):
+        super().startProcess()
         M = self.n_memeplex
         N = self.n_frog_per_memeplex
         self.frogs = [self.solution.clone() for _ in range(M*N)]
@@ -185,12 +179,4 @@ class ShuffledFrogLeapingSearch(BaseSearch):
         self.memeplexes=[[self.frogs[i*M+j] for i in range(N)]
                                             for j in range(M)]
         self.updateSolution(self.frogs[0])
-        self.best_obj_value = self.obj.value(self.best_solution)
-        self.recordLog()
-        if self.msg:
-            during_solver_message_header()
-            self.during_solver_message('S')
 
-
-    def closeProcess(self):
-        self.recordLog()

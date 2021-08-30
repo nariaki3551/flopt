@@ -2,16 +2,9 @@ from time import time
 
 from flopt.solvers.base import BaseSearch
 from flopt.solvers.solver_utils import (
-    Log, start_solver_message,
-    during_solver_message_header,
     during_solver_message,
-    end_solver_message
 )
-from flopt.env import setup_logger
 from flopt.constants import VariableType, SolverTerminateState
-
-
-logger = setup_logger(__name__)
 
 
 import logging
@@ -68,7 +61,6 @@ class HyperoptTPESearch(BaseSearch):
 
     def search(self):
         import hyperopt
-        self.startProcess()
         status = SolverTerminateState.Normal
 
         # make the search space
@@ -95,7 +87,6 @@ class HyperoptTPESearch(BaseSearch):
         except TimeoutError:
             status = SolverTerminateState.Timelimit
 
-        self.closeProcess()
         return status
 
 
@@ -124,14 +115,3 @@ class HyperoptTPESearch(BaseSearch):
         return {'loss': obj_value, 'status': self.hyperopt_STATUS_OK}
 
 
-    def startProcess(self):
-        self.best_obj_value = self.obj.value(self.best_solution)
-        self.recordLog()
-
-        if self.msg:
-            during_solver_message_header()
-            self.during_solver_message('S')
-
-
-    def closeProcess(self):
-        self.recordLog()

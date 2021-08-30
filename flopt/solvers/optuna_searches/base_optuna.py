@@ -2,10 +2,7 @@ from time import time
 
 from flopt.solvers.base import BaseSearch
 from flopt.solvers.solver_utils import (
-    Log, start_solver_message,
-    during_solver_message_header,
     during_solver_message,
-    end_solver_message
 )
 from flopt.env import setup_logger
 from flopt.constants import VariableType, SolverTerminateState
@@ -59,14 +56,12 @@ class OptunaSearch(BaseSearch):
 
     def search(self):
         status = SolverTerminateState.Normal
-        self.startProcess()
         self.createStudy()
         try:
             self.study.optimize(self.objective, self.n_trial, timeout=self.timelimit)
         except Exception as e:
             logger.info(f'Exception {e}')
             status = flopt.constants.SolverTerminateState.Abnormal
-        self.closeProcess()
         return status
 
 
@@ -99,16 +94,4 @@ class OptunaSearch(BaseSearch):
 
         return obj_value
 
-
-    def startProcess(self):
-        self.best_obj_value = self.obj.value(self.best_solution)
-        self.recordLog()
-
-        if self.msg:
-            during_solver_message_header()
-            self.during_solver_message('S')
-
-
-    def closeProcess(self):
-        self.recordLog()
 

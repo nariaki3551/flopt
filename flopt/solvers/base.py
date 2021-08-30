@@ -16,8 +16,7 @@ logger = setup_logger(__name__)
 
 
 class BaseSearch:
-    """
-    Base Search Class
+    """Base Search Class
 
     For developer;
 
@@ -90,8 +89,7 @@ class BaseSearch:
 
 
     def setParams(self, params=None, feasible_guard=None, **kwargs):
-        """
-        set some parameters
+        """set some parameters
 
         Parameters
         ----------
@@ -121,8 +119,7 @@ class BaseSearch:
 
 
     def solve(self, solution, obj, constraints, prob=None, msg=False):
-        """
-        solve the problem of (solution, obj)
+        """solve the problem of (solution, obj)
 
         Parameters
         ----------
@@ -146,20 +143,22 @@ class BaseSearch:
             status = SolverTerminateState.Abnormal
             raise flopt.error.SolverError
 
-        self.best_solution = solution
         self.solution = solution.clone()
         self.prob = prob
         self.obj = obj
         self.constraints = constraints
         self.start_time = time()
         self.msg = msg
+        self.best_solution = solution
 
         if msg:
             params = {'timelimit': self.timelimit}
             start_solver_message(self.name, params, solution)
 
         try:
+            self.startProcess()
             status = self.search()
+            self.closeProcess()
         except KeyboardInterrupt:
             print('Get user ctrl-cuser ctrl-c')
             status = SolverTerminateState.Interrupt
@@ -172,8 +171,7 @@ class BaseSearch:
 
 
     def updateSolution(self, solution, obj_value=None):
-        """
-        update self.best_solution
+        """update self.best_solution
         """
         self.best_solution.copy(solution)
         if obj_value is None:
@@ -184,8 +182,7 @@ class BaseSearch:
 
 
     def recordLog(self):
-        """
-        write log in `self.log`
+        """write log in `self.log`
         """
         log_dict = {
             'obj_value': self.best_obj_value,
@@ -212,16 +209,21 @@ class BaseSearch:
         raise NotImplementedError
 
 
-    def __str__(self):
-        s  = f'Name: Solver\n'
-        s += f'  Type : {self.name}\n'
-        attrobjs = [
-            (attr, obj) for (attr, obj) in inspect.getmembers(self)
-            if not callable(obj) and attr[:2] != "__" and attr[-2:] != "__" and attr != 'name'
-        ]
-        for attr, obj in attrobjs:
-            s += f'  {attr} : {obj}\n'
-        s += '\n'
-        return s
+    def startProcess(self):
+        """process of beginning of search
+        """
+        if all(const.feasible(self.best_solution) for const in self.constraints):
+            self.best_obj_value = self.obj.value(self.best_solution)
+        else:
+            self.best_obj_value = float('inf')
+        self.recordLog()
+
+        if self.msg:
+            during_solver_message_header()
+            self.during_solver_message('S')
 
 
+    def closeProcess(self):
+        """process of ending of search
+        """
+        self.recordLog()

@@ -5,10 +5,7 @@ import numpy as np
 
 from flopt.solvers.base import BaseSearch
 from flopt.solvers.solver_utils import (
-    Log, start_solver_message,
-    during_solver_message_header,
     during_solver_message,
-    end_solver_message
 )
 from flopt.env import setup_logger
 from flopt.expression import Const
@@ -49,13 +46,6 @@ class ScipySearch(BaseSearch):
 
 
     def search(self):
-        self.startProcess()
-        status = self._search()
-        self.closeProcess()
-        return status
-
-
-    def _search(self):
         status = SolverTerminateState.Normal
         var_names = [var.name for var in self.solution]
 
@@ -128,15 +118,3 @@ class ScipySearch(BaseSearch):
 
         return status
 
-
-    def startProcess(self):
-        self.best_obj_value = self.obj.value(self.best_solution)
-        self.recordLog()
-
-        if self.msg:
-            during_solver_message_header()
-            self.during_solver_message('S')
-
-
-    def closeProcess(self):
-        self.recordLog()
