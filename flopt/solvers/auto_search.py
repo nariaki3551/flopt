@@ -106,6 +106,7 @@ class AutoSearch(BaseSearch):
                 'OptunaCmaEsSearch',
                 'OptunaTPESearch',
                 'PulpSearch',
+                'CvxoptQpSearch',
                 'ScipyLpSearch',
             ]
         if self.timelimit < 5:
@@ -118,6 +119,7 @@ class AutoSearch(BaseSearch):
                 'HyperoptTPESearch',
                 'OptunaTPESearch',
                 'PulpSearch',
+                'CvxoptQpSearch',
                 'ScipyLpSearch',
             ]
         elif self.timelimit < 30:
@@ -130,6 +132,7 @@ class AutoSearch(BaseSearch):
                 'HyperoptTPESearch',
                 'SFLA',
                 'PulpSearch',
+                'CvxoptQpSearch',
                 'ScipyLpSearch',
             ]
         else:
@@ -142,6 +145,7 @@ class AutoSearch(BaseSearch):
                 'OptunaTPESearch',
                 'HyperoptTPESearch',
                 'PulpSearch',
+                'CvxoptQpSearch',
                 'ScipyLpSearch',
             ]
 
