@@ -8,7 +8,7 @@ from flopt.solvers.solver_utils import (
     during_solver_message,
     end_solver_message
 )
-from flopt.convert import flopt_to_lp
+from flopt.convert import LpStructure
 from flopt.env import setup_logger
 from flopt.expression import Const
 from flopt.solution import Solution
@@ -48,7 +48,12 @@ class ScipyLpSearch(BaseSearch):
         bool
             return true if it can solve the problem else false
         """
-        return all(var.type() == VariableType.Continuous for var in prob.getVariables())
+        if prob.obj.isLinear()\
+            and all(const.expression.isLinear() for const in prob.constraints)\
+            and all(var.type() == VariableType.Continuous for var in prob.getVariables()):
+            return True
+        else:
+            return False
 
 
     def search(self):
@@ -68,7 +73,7 @@ class ScipyLpSearch(BaseSearch):
         func = gen_func(self.obj)
 
         # lp structure
-        lp = flopt_to_lp(self.prob, x=self.solution.getVariables())
+        lp = LpStructure.fromFlopt(self.prob, x=self.solution.getVariables())
 
         # bounds
         bounds = [ (_lb, _ub) for _lb, _ub in zip(lp.lb, lp.ub) ]
@@ -96,7 +101,10 @@ class ScipyLpSearch(BaseSearch):
         # search
         try:
             res = scipy_optimize.linprog(
-                c=lp.c, A_ub=lp.A, b_ub=lp.b, bounds=bounds,
+                c=lp.c,
+                A_ub=lp.A, b_ub=lp.b,
+                A_eq=lp.G, b_eq=lp.h,
+                bounds=bounds,
                 options=options,
                 callback=callback, method=self.method,
                 )

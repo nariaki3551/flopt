@@ -2,48 +2,150 @@ import pytest
 
 import numpy as np
 
-import flopt
+from flopt import Variable, Problem, Solver
 
-def test_flopt_to_lp():
+
+def test_flopt_to_qp1():
     # Variables
-    a = flopt.Variable('a', cat='Binary')
-    b = flopt.Variable('b', cat='Binary')
-    c = flopt.Variable('c', lowBound=-1, upBound=2, cat='Integer')
-    d = flopt.Variable('d', lowBound=-2, upBound=1, cat='Continuous')
+    a = Variable('a', cat='Binary')
+    b = Variable('b', cat='Binary')
+    c = Variable('c', lowBound=-1, upBound=2, cat='Integer')
+    d = Variable('d', lowBound=-2, upBound=1, cat='Continuous')
 
     # Problem
-    prob = flopt.Problem()
+    prob = Problem()
+    prob += a * a + c * b  # set the objective function
+    prob += a + c == 0     # set the constraint
+    prob += a + b <= 1     # set the constraint
+    prob += a + d >= -1    # set the constraint
+    print(prob)
+
+    from flopt.convert import QpStructure
+    qp = QpStructure.fromFlopt(prob)
+    print(qp)
+
+    qp.toAllEq()
+    qp.toAllNeq()
+
+
+def test_flopt_to_qp2():
+    # Variables
+    a = Variable('a', cat='Binary')
+    b = Variable('b', cat='Binary')
+
+    # Problem
+    prob = Problem()
+    prob += a + b       # set the objective function
+    print(prob)
+
+    from flopt.convert import QpStructure
+    qp = QpStructure.fromFlopt(prob)
+    print(qp)
+
+    qp.toAllEq()
+    qp.toAllNeq()
+    qp.toLp()
+    qp.toIsing()
+    qp.toQubo()
+
+
+def test_flopt_to_lp1():
+    # Variables
+    a = Variable('a', cat='Binary')
+    b = Variable('b', cat='Binary')
+    c = Variable('c', lowBound=-1, upBound=2, cat='Integer')
+    d = Variable('d', lowBound=-2, upBound=1, cat='Continuous')
+
+    # Problem
+    prob = Problem()
     prob += c + b       # set the objective function
     prob += a + c == 0  # set the constraint
     prob += a + b <= 1  # set the constraint
     prob += a + d >= -1 # set the constraint
     print(prob)
 
-    from flopt.convert import flopt_to_lp
-    lp = flopt_to_lp(prob)
-    print('x', lp.x)
-    print('A', lp.A)
-    print('b', lp.b.T)
-    print('c', lp.c.T)
-    print('lb', lp.lb.T)
-    print('ub', lp.ub.T)
+    from flopt.convert import LpStructure
+    lp = LpStructure.fromFlopt(prob)
+    print(lp)
 
-    lp = flopt_to_lp(prob, eq=True)
-    print('x', lp.x)
-    print('A', lp.A)
-    print('b', lp.b.T)
-    print('c', lp.c.T)
-    print('lb', lp.lb.T)
-    print('ub', lp.ub.T)
+    lp.toAllEq()
+    lp.toAllNeq()
+    lp.toQp()
+
+
+def test_flopt_to_lp2():
+    # Variables
+    a = Variable('a', cat='Binary')
+    b = Variable('b', cat='Binary')
+
+    # Problem
+    prob = Problem()
+    prob += a + b       # set the objective function
+    print(prob)
+
+    from flopt.convert import LpStructure
+    lp = LpStructure.fromFlopt(prob)
+    print(lp)
+
+    lp.toAllEq()
+    lp.toAllNeq()
+    lp.toQp()
+    lp.toIsing()
+    lp.toQubo()
+
+
+def test_flopt_to_lp1():
+    # Variables
+    a = Variable('a', cat='Binary')
+    b = Variable('b', cat='Binary')
+    c = Variable('c', lowBound=-1, upBound=2, cat='Integer')
+    d = Variable('d', lowBound=-2, upBound=1, cat='Continuous')
+
+    # Problem
+    prob = Problem()
+    prob += c + b       # set the objective function
+    prob += a + c == 0  # set the constraint
+    prob += a + b <= 1  # set the constraint
+    prob += a + d >= -1 # set the constraint
+    print(prob)
+
+    from flopt.convert import LpStructure
+    lp = LpStructure.fromFlopt(prob)
+    print(lp)
+
+    lp.toAllEq()
+    lp.toAllNeq()
+    lp.toQp()
+
+
+def test_flopt_to_lp1():
+    # Variables
+    a = Variable('a', cat='Binary')
+    b = Variable('b', cat='Binary')
+
+    # Problem
+    prob = Problem()
+    prob += a + b       # set the objective function
+    print(prob)
+
+    from flopt.convert import LpStructure
+    lp = LpStructure.fromFlopt(prob)
+    print(lp)
+
+    lp.toAllEq()
+    lp.toAllNeq()
+    lp.toQp()
+    lp.toIsing()
+    lp.toQubo()
 
 
 def test_flopt_to_ising1():
-    a = flopt.Variable(name='a', ini_value=1, cat='Spin')
-    b = flopt.Variable(name='b', ini_value=1, cat='Spin')
-    c = flopt.Variable(name='c', ini_value=1, cat='Spin')
+    a = Variable(name='a', ini_value=1, cat='Spin')
+    b = Variable(name='b', ini_value=1, cat='Spin')
+    c = Variable(name='c', ini_value=1, cat='Spin')
 
     # Problem
-    prob = flopt.Problem()
+    prob = Problem()
 
     # make Ising model
     import numpy as np
@@ -59,41 +161,42 @@ def test_flopt_to_ising1():
     print(prob)
 
     # convert objective function to Ising structure
-    from flopt.convert import flopt_to_ising
-    ising = flopt_to_ising(prob)
-    print('J', ising.J)
-    print('h', ising.h)
-    print('x', ising.x)
+    from flopt.convert import IsingStructure
+    ising = IsingStructure.fromFlopt(prob)
+    print(ising)
 
+    ising.toQp()
+    ising.toQubo()
 
 def test_flopt_to_ising2():
-    a = flopt.Variable(name='a', ini_value=1, cat='Binary')
-    b = flopt.Variable(name='b', ini_value=1, cat='Binary')
-    c = flopt.Variable(name='c', ini_value=1, cat='Binary')
+    a = Variable(name='a', ini_value=1, cat='Binary')
+    b = Variable(name='b', ini_value=1, cat='Binary')
+    c = Variable(name='c', ini_value=1, cat='Binary')
 
     # Problem
-    prob = flopt.Problem()
+    prob = Problem()
 
     # make model
-    prob += - a * b - c
+    prob += - a - b - c
 
     print(prob)
 
     # convert objective function to Ising structure
-    from flopt.convert import flopt_to_ising
-    ising = flopt_to_ising(prob)
-    print('J', ising.J)
-    print('h', ising.h)
-    print('x', ising.x)
+    from flopt.convert import IsingStructure
+    ising = IsingStructure.fromFlopt(prob)
+
+    ising.toQp()
+    ising.toLp()
+    ising.toQubo()
 
 
-def test_flopt_to_qubo():
-    a = flopt.Variable(name='a', ini_value=1, cat='Binary')
-    b = flopt.Variable(name='b', ini_value=1, cat='Binary')
-    c = flopt.Variable(name='c', ini_value=1, cat='Binary')
+def test_flopt_to_qubo1():
+    a = Variable(name='a', ini_value=1, cat='Binary')
+    b = Variable(name='b', ini_value=1, cat='Binary')
+    c = Variable(name='c', ini_value=1, cat='Binary')
 
     # Problem
-    prob = flopt.Problem()
+    prob = Problem()
 
     # make model
     prob += - a * b - c
@@ -101,23 +204,46 @@ def test_flopt_to_qubo():
     print(prob)
 
     # convert objective function to Qubo structure
-    from flopt.convert import flopt_to_qubo
-    qubo = flopt_to_qubo(prob)
-    print('Q', qubo.Q)
-    print('C', qubo.C)
-    print('x', qubo.x)
+    from flopt.convert import QuboStructure
+    qubo = QuboStructure.fromFlopt(prob)
+    print(qubo)
 
+    qubo.toQp()
+    qubo.toIsing()
+
+
+def test_flopt_to_qubo2():
+    a = Variable(name='a', ini_value=1, cat='Binary')
+    b = Variable(name='b', ini_value=1, cat='Binary')
+    c = Variable(name='c', ini_value=1, cat='Binary')
+
+    # Problem
+    prob = Problem()
+
+    # make model
+    prob += - a - b - c
+
+    print(prob)
+
+    # convert objective function to Qubo structure
+    from flopt.convert import QuboStructure
+    qubo = QuboStructure.fromFlopt(prob)
+    print(qubo)
+
+    qubo.toQp()
+    qubo.toLp()
+    qubo.toIsing()
 
 
 def test_flopt_to_pulp():
     # Variables
-    a = flopt.Variable('a', cat='Binary')
-    b = flopt.Variable('b', cat='Binary')
-    c = flopt.Variable('c', lowBound=-1, upBound=2, cat='Integer')
-    d = flopt.Variable('d', lowBound=-2, upBound=1, cat='Continuous')
+    a = Variable('a', cat='Binary')
+    b = Variable('b', cat='Binary')
+    c = Variable('c', lowBound=-1, upBound=2, cat='Integer')
+    d = Variable('d', lowBound=-2, upBound=1, cat='Continuous')
 
     # Problem
-    prob = flopt.Problem()
+    prob = Problem()
     prob += c + b       # set the objective function
     prob += a + c == 0  # set the constraint
     prob += a + b <= 1  # set the constraint
@@ -126,7 +252,7 @@ def test_flopt_to_pulp():
     print(prob)
 
     # check wheter prob can be converted into pulp modeling
-    assert flopt.Solver(algo='PulpSearch').available(prob)
+    assert Solver(algo='PulpSearch').available(prob)
 
     # convert flopt to pulp
     from flopt.convert import flopt_to_pulp
@@ -147,10 +273,9 @@ def test_lp_to_flopt():
     ub = [1, 1, 1]
     var_types=['Binary', 'Binary', 'Continuous']
 
-    from flopt.convert import lp_to_flopt
-    prob = lp_to_flopt(A, b, c, C, lb, ub, var_types)
-    print(prob)
-    print(prob.constraints)
+    from flopt.convert import LpStructure
+    prob = LpStructure(c, C, A=A, b=b, lb=lb, ub=ub, types=var_types).toFlopt()
+    print(prob.show())
 
 
 def test_ising_to_flopt():
@@ -159,21 +284,22 @@ def test_ising_to_flopt():
          [0, 1, 1],
          [0, 0, 3]]
     h = [1, 2, 0]
+    C = 0
 
-    from flopt.convert import ising_to_flopt
-    prob = ising_to_flopt(J, h)
-    print(prob)
+    from flopt.convert import IsingStructure
+    prob = IsingStructure(J, h, C).toFlopt()
+    print(prob.show())
 
 
-def test_qubo_tto_flopt():
+def test_qubo_to_flopt():
     # make Qubo model
     Q = [[1, 2, 1],
          [0, 1, 1],
          [0, 0, 3]]
     C = 10
 
-    from flopt.convert import qubo_to_flopt
-    prob = qubo_to_flopt(Q, C)
+    from flopt.convert import QuboStructure
+    prob = QuboStructure(Q, C).toFlopt()
     print(prob)
 
 
@@ -187,9 +313,13 @@ def test_pulp_to_flopt():
 
     # Problem
     prob = pulp.LpProblem()
-    prob += - a - b - c  # set the objective function
-    prob += a      <= 0  # set the constraint
-    prob += a + b  == c  # set the constraint
-    prob += c      >= 0  # set the constraint
+    prob += - a - b - c # set the objective function
+    prob += a <= 0      # set the constraint
+    prob += a + b == c  # set the constraint
+    prob += c >= 0      # set the constraint
 
     print(prob)
+
+    from flopt.convert import pulp_to_flopt
+    flopt_prob = pulp_to_flopt(prob)
+    print(flopt_prob.show())

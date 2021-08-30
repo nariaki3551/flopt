@@ -4,6 +4,7 @@ import itertools
 
 import numpy as np
 
+from flopt.polynominal import Monomial, Polynominal
 from flopt.expression import Expression, Const
 from flopt.constraint import Constraint
 from flopt.constants import VariableType, number_classes, array_classes, np_float
@@ -273,6 +274,7 @@ class VarElement:
         if ini_value is None:
             ini_value = self.getIniValue()
         self._value = ini_value
+        self.monomial = Monomial({self: 1})
 
 
     def type(self):
@@ -341,12 +343,23 @@ class VarElement:
         return {self}
 
 
-    def hasCustomExpression(self):
-        # for hasCustomExpression() in Expression class
-        return False
+    def isPolynominal(self):
+        return True
+
+
+    def toMonomial(self):
+        return self.monomial
+
+
+    def toPolynominal(self):
+        return Polynominal({self.monomial: 1})
 
 
     def isLinear(self):
+        return True
+
+
+    def isQuadratic(self):
         return True
 
 
@@ -900,6 +913,18 @@ class VarPermutation(VarElement):
         """shuffle the list
         """
         return random.shuffle(self._value)
+
+
+    def isPolynominal(self):
+        return False
+
+
+    def isLinear(self):
+        return False
+
+
+    def isQuadratic(self):
+        return False
 
 
     def clone(self):

@@ -115,9 +115,6 @@ def test_CustomExpression_abs(custom_obj):
 def test_CustomExpression_hash(custom_obj):
     hash(custom_obj)
 
-def test_CustomExpression_hasCustomExpression(custom_obj, a):
-    assert custom_obj.hasCustomExpression() == True
-    assert (custom_obj + a).hasCustomExpression() == True
 def test_CustomExpression_repr(custom_obj):
     repr(custom_obj)
 

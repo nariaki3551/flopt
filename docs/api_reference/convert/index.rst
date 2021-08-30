@@ -1,21 +1,13 @@
 Convert
 -------
 
-flopt to
-^^^^^^^^
+Structure
+^^^^^^^^^
 
 .. toctree::
-    :maxdepth: 1
+   :maxdepth: 1
 
-    flopt_to
-
-to flopt
-^^^^^^^^
-
-.. toctree::
-    :maxdepth: 1
-
-    to_flopt
+   structure
 
 linearize
 ^^^^^^^^^

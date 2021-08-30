@@ -67,6 +67,40 @@ def test_Expression_constant1(a):
 def test_Expression_constant2(a, b):
     assert (a/b+1).constant() == 1
 
+def test_Expression_isMonomial1(a, b):
+    assert (2*a).isMonomial() == True
+    assert (2*a*b).isMonomial() == True
+    assert (a+1).isMonomial() == False
+    assert (a/b).isMonomial() == False
+
+def test_Expression_isMonomial2(a, b):
+    (2*a).toMonomial()
+    (2*a*b).toMonomial()
+
+def test_Expression_simplify(a, b):
+    (a+1-a).simplify()
+    (a*a+a*b+a).simplify()
+
+def test_Expression_expand(a, b):
+    (a+1-a).expand()
+    (a*a+a*b+a).expand()
+
+def test_Expression_toBinary():
+    b = Variable('bb', cat='Binary')
+    s = Variable('ss', cat='Spin')
+    i = Variable('ii', lowBound=-1, upBound=1, cat='Integer')
+    print((b+1).toBinary())
+    print((s+1).toBinary())
+    print((i+1).toBinary())
+
+def test_Expression_toSpin():
+    b = Variable('bb', cat='Binary')
+    s = Variable('ss', cat='Spin')
+    i = Variable('ii', lowBound=-1, upBound=1, cat='Integer')
+    print((b+1).toSpin())
+    print((s+1).toSpin())
+    print((i+1).toSpin())
+
 def test_Expression_neg(c):
     assert (-c).value() == -5
 
@@ -84,10 +118,6 @@ def test_Expression_cas(c):
 def test_Expression_hash(c):
     hash(c)
 
-def test_Expression_hasCustomExpression(c, a):
-    assert a.hasCustomExpression() == False
-    assert c.hasCustomExpression() == False
-
 def test_Expression_isLinear(a, b, c):
     assert a.isLinear() == True
     assert c.isLinear() == True
@@ -95,9 +125,6 @@ def test_Expression_isLinear(a, b, c):
 
 def test_Const_hash():
     hash(Const(0))
-
-def test_Const_hasCustomExpression():
-    assert Const(0).hasCustomExpression() == False
 
 def test_Const_isLinear():
     assert Const(0).isLinear() == True

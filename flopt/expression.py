@@ -2,6 +2,7 @@ import collections
 
 import numpy as np
 
+from flopt.polynominal import Monomial, Polynominal
 from flopt.constraint import Constraint
 from flopt.constants import VariableType, ExpressionType, number_classes, np_float
 from flopt.env import setup_logger
@@ -100,7 +101,10 @@ class Expression:
             self.setName()
         self._type = ExpressionType.Normal
         self.var_dict = None
-        self.expr = None
+        self.polynominal = None
+
+        # set polynominal
+        self.setPolynominal()
 
         # update parents
         self.parents = list()
@@ -120,12 +124,20 @@ class Expression:
             if not self.operater == '+' or not self.elmB.name.startswith('-'):
                 elmB_name = f'({elmB_name})'
         self.name = f'{elmA_name}{self.operater}{elmB_name}'
-        self.expr = None
 
 
-    def setSympyExpr(self):
-        import sympy
-        self.expr = sympy.sympify(self.name)
+    def setPolynominal(self):
+        if self.elmA.isPolynominal() and self.elmB.isPolynominal():
+            if self.operater in {'+', '-', '*'}:
+                if self.operater == '+':
+                    self.polynominal = self.elmA.toPolynominal() + self.elmB.toPolynominal()
+                elif self.operater == '-':
+                    self.polynominal = self.elmA.toPolynominal() - self.elmB.toPolynominal()
+                elif self.operater == '*':
+                    self.polynominal = self.elmA.toPolynominal() * self.elmB.toPolynominal()
+            elif self.operater == '^' and isinstance(self.elmB, Const) and isinstance(self.elmB.value(), int):
+                self.polynominal = self.elmA.toPolynominal() ** self.elmB.value()
+        self._polynominal = None
 
 
     def setVarDict(self, var_dict):
@@ -205,16 +217,6 @@ class Expression:
         return variables
 
 
-    def hasCustomExpression(self):
-        """
-        Returns
-        -------
-        bool
-            return true if CustomExpression object is in this expression else false
-        """
-        return self.elmA.hasCustomExpression() or self.elmB.hasCustomExpression()
-
-
     def constant(self):
         """
         Returns
@@ -222,9 +224,11 @@ class Expression:
         float
             constant value
         """
-        if self.expr is None:
-            self.setSympyExpr()
-        return float(self.expr.expand().as_coefficients_dict()[1])
+        if self.isPolynominal():
+            return self.polynominal.constant()
+        else:
+            import sympy
+            return float(sympy.sympify(self.name).expand().as_coefficients_dict()[1])
 
 
     def isNeg(self):
@@ -237,6 +241,71 @@ class Expression:
         return self.operater == '*'\
                 and isinstance(self.elmA, Const) \
                 and self.elmA.value() == -1
+
+
+    def isMonomial(self):
+        return self.isPolynominal() and self.polynominal.isMonomial()
+
+
+    def toMonomial(self):
+        return self.polynominal.toMonomial()
+
+
+    def isPolynominal(self):
+        return self.polynominal is not None
+
+
+    def toPolynominal(self):
+        return self.polynominal
+
+
+    def isQuadratic(self):
+        """
+        Returns
+        -------
+        bool
+            return true if this expression is quadratic else false
+        """
+        if not self.isPolynominal():
+            return False
+        return self.polynominal.isQuadratic() or self.polynominal.simplify().isQuadratic()
+
+
+    def toQuadratic(self, x=None):
+        """
+        Parameters
+        ----------
+        x : list or numpy.array or VarElement family
+
+        Returns
+        -------
+        collections.namedtuple
+            QuadraticStructure('QuadraticStructure', 'Q c C x'),
+            such that 1/2 x^T Q x + c^T x + C,
+                      Q^T = Q
+        """
+        assert self.isQuadratic()
+        from flopt.convert import QuadraticStructure
+        polynominal = self.polynominal.simplify()
+        if x is None:
+            x = np.array(
+                sorted(self.getVariables(), key=lambda var: var.name)
+            )
+        num_variables = len(x)
+
+        Q = np.zeros((num_variables, num_variables), dtype=np_float)
+        if not polynominal.isLinear():
+            for i in range(num_variables):
+                Q[i, i] = 2 * polynominal.coeff(x[i], x[i])
+                for j in range(i+1, num_variables):
+                    Q[i, j] = Q[j, i] = polynominal.coeff(x[i], x[j])
+
+        c = np.zeros((num_variables, ))
+        for i in range(num_variables):
+            c[i] = polynominal.coeff(x[i])
+
+        C = polynominal.constant()
+        return QuadraticStructure(Q, c, C, x=x)
 
 
     def isLinear(self):
@@ -255,16 +324,10 @@ class Expression:
         >>> True
         >>> (a*b).isLinear()
         >>> False
-        >>> ce = flopt.CustomExpression(lambda x: x, [a])
-        >>> ce.isLinear()
-        >>> False
         """
-        if self.hasCustomExpression():
+        if not self.isPolynominal():
             return False
-        if self.expr is None:
-            self.setSympyExpr()
-        variables = self.getVariables()
-        return all(self.expr.diff(var.name).is_constant() for var in variables)
+        return self.polynominal.isLinear() or self.polynominal.simplify().isLinear()
 
 
     def toLinear(self, x=None):
@@ -278,59 +341,10 @@ class Expression:
         collections.namedtuple
             LinearStructure = collections.namedtuple('LinearStructure', 'c C x'),
             where c.T.dot(x) + C
-
-        Examples
-        --------
-
-        .. code-block:: python
-
-            a = flopt.Variable('a', cat='Binary')
-            b = flopt.Variable('b', cat='Binary')
-            c = flopt.Variable('c', lowBound=-1, upBound=2, cat='Integer')
-            expr = a + b + c + 4
-            print(expr)
-            >>> a = flopt.Variable('a', cat='Binary')
-            >>> b = flopt.Variable('b', cat='Binary')
-            >>> c = flopt.Variable('c', lowBound=-1, upBound=2, cat='Integer')
-            >>> expr = a + b + c + 4
-
-        .. code-block:: python
-
-            # check to be able to linear
-            print(expr.isLinear())
-            >>> True
-
-        .. code-block:: python
-
-            linear = expr.toLinear()
-            print(linear.c)
-            >>> [[1.]
-            >>>  [1.]
-            >>>  [1.]]
-            print(linear.C)
-            >>> 4
-            print(linear.x)
-            >>> [VarElement("c", -1, 2, 0),
-            >>>  VarElement("b", 0, 1, 0),
-            >>>  VarElement("a", 0, 1, 0)]
-
         """
-        LinearStructure = collections.namedtuple(
-            'LinearStructure',
-            'c C x'
-            )
-        if self.expr is None:
-            self.setSympyExpr()
-        if x is None:
-            x = np.array(
-                sorted(self.getVariables(), key=lambda var: var.name)
-            )
-        num_variables = len(x)
-        c = np.zeros((num_variables, ))
-        for i in range(num_variables):
-            c[i] = self.expr.coeff(x[i].name).as_coefficients_dict()[1]
-        C = self.expr.as_coefficients_dict()[1]
-        return LinearStructure(c, C, x)
+        assert self.isLinear()
+        quadratic = self.toQuadratic(x)
+        return self.toQuadratic(x).toLinear()
 
 
     def isIsing(self):
@@ -338,24 +352,12 @@ class Expression:
         Returns
         -------
         bool
-            return true if this expression is linear else false
+            return true if this expression is ising else false
         """
-        if any( var.type() not in {VariableType.Spin, VariableType.Binary} for var in self.getVariables() ):
+        if any( var.type() not in {VariableType.Spin, VariableType.Binary}
+                for var in self.getVariables() ):
             return False
-        if self.hasCustomExpression():
-            return False
-        if self.expr is None:
-            self.setSympyExpr()
-        variables = self.getVariables()
-        x = list(self.getVariables())
-        num_variables = len(x)
-
-        for i in range(num_variables):
-            diff_expr = self.expr.diff(x[i].name)
-            for j in range(i+1, num_variables):
-                if not diff_expr.diff(x[j].name).is_constant():
-                    return False
-        return True
+        return self.isQuadratic()
 
 
     def toIsing(self, x=None):
@@ -371,83 +373,15 @@ class Expression:
             converted from sum(a_ij x_i x_j; i >= j) + sum(b_i x_i) + c
             = sum(a_ij x_i x_j; i >= j) + sum(b_i x_i) + sum(c/n x_i x_i),
             as J_ij = a_ij (i != j), a_ii + c/n (i == j), h_i = b_i
-
-        Examples
-        --------
-
-        .. code-block :: python
-
-            import flopt
-            a = flopt.Variable(name='a', ini_value=1, cat='Binary')
-            b = flopt.Variable(name='b', ini_value=1, cat='Binary')
-            c = flopt.Variable(name='c', ini_value=1, cat='Binary')
-
-            # make Ising model
-            import numpy as np
-            x = np.array([a, b, c])
-            J = np.array([
-                [1, 2, 1],
-                [0, 1, 1],
-                [0, 0, 3]
-            ])
-            h = np.array([1, 2, 0])
-            obj = - (x.T).dot(J).dot(x) - (h.T).dot(x)
-            print(obj)
-            >>> Name: (-a+(a*2+b+0)*b+(a+b+c*3)*c)-(a+2*b+0)
-            >>>   Type    : Expression
-            >>>   Value   : -12
-            >>>   Degree  : 2
-
-            # check to be able to ising
-            print(obj.isIsing())
-            >>> True
-
-            # obj to Ising model
-            ising = obj.toIsing()
-            print(ising.J)
-            >>> [[1. 2. 1.]
-            >>>  [0. 1. 1.]
-            >>>  [0. 0. 3.]]
-            print(ising.h)
-            >>> [1. 2. 0.]
-            print(ising.x)
-            >>> [VarElement("a", 0, 1, 1) VarElement("b", 0, 1, 1) VarElement("c", 0, 1, 1)]
-
-        We set solution by
-
-        .. code-block :: python
-
-            solution = [1, -1, 1]
-            for var, value in zip(ising.x, solution):
-                var.setValue(value)
         """
-        import sympy
-        IsingStructure = collections.namedtuple(
-            'IsingStructure',
-            'J h C x'
-            )
-        _expr = self.toSpin()
-        expr = sympy.sympify(_expr.name).expand()
-
-        if x is None:
-            x = np.array(
-                sorted(_expr.getVariables(), key=lambda var: var.name)
-            )
-
-        num_variables = len(x)
-        J = np.zeros((num_variables, num_variables))
-        for i in range(num_variables):
-            J[i, i] = - expr.coeff(x[i].name, 2)  # coeff x_i * x_i
-            for j in range(i+1, num_variables):
-                J[i, j] = - expr.coeff(x[i].name).coeff(x[j].name)  # coeff x_i * x_j
-
-        h = np.zeros((num_variables, ))
-        for i in range(num_variables):
-            coeff = expr.coeff(x[i].name).as_coefficients_dict()[1]
-            h[i] = - coeff
-
-        C = expr.as_coefficients_dict()[1]
-        return IsingStructure(J, h, C, x)
+        assert self.isIsing()
+        from flopt.convert import IsingStructure
+        if any( var.type() == VariableType.Binary for var in self.getVariables() ):
+            return self.toSpin().toIsing()
+        quadratic = self.toQuadratic(x)
+        J = - np.triu(quadratic.Q)
+        np.fill_diagonal(J, 0.5*np.diag(J))
+        return IsingStructure(J, -quadratic.c, quadratic.C, quadratic.x)
 
 
     def simplify(self):
@@ -856,15 +790,11 @@ class CustomExpression(Expression):
     def getVariables(self):
         return set(self.variables)
 
-    def hasCustomExpression(self):
-        """
-        Returns
-        -------
-        bool
-            return true if CustomExpression object is in this expression else false
-        """
-        return True
+    def isPolynominal(self):
+        return False
 
+    def isLinear(self):
+        return False
 
     def traverse(self):
         """traverse Expression tree as root is self
@@ -904,7 +834,6 @@ class Const:
         self._type = ExpressionType.Const
         self.parents = list()   # dummy
         self.operater = None    # dummy
-        self.expr = None        # dummy
         self.parents = list()   # dummy
 
     def type(self):
@@ -920,12 +849,26 @@ class Const:
         # for getVariables() in Expression calss
         return set()
 
-    def hasCustomExpression(self):
-        # for hasCustomExpression in Expression calss
-        return False
+    def isPolynominal(self):
+        return True
+
+    def toMonomial(self):
+        return Monomial(coeff=self._value)
+
+    def toPolynominal(self):
+        return Polynominal(constant=self._value)
+
+    def isQuadratic(self):
+        return True
+
+    def toQuadratic(self, x=None):
+        return Expression(Const(0), Const(0), '+').toQuadratic(x)
 
     def isLinear(self):
         return True
+
+    def toLinear(self, x=None):
+        return Expression(Const(0), Const(0), '+').toLinear(x)
 
     def isIsing(self):
         return True
