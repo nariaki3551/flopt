@@ -35,6 +35,7 @@ class ScipyLpSearch(BaseSearch):
         self.name = "ScipyLpSearch"
         self.n_trial = 1e10
         self.method = 'simplex'
+        self.can_solve_problems = ['lp']
 
 
     def available(self, prob):
@@ -70,7 +71,7 @@ class ScipyLpSearch(BaseSearch):
             return func
 
         # function
-        func = gen_func(self.obj)
+        func = gen_func(self.prob.obj)
 
         # lp structure
         lp = LpStructure.fromFlopt(self.prob, x=self.solution.getVariables())

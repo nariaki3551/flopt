@@ -132,13 +132,15 @@ class Problem:
             self.variables |= const.getVariables()
 
 
-    def solve(self, solver=None, timelimit=None, msg=False):
+    def solve(self, solver=None, timelimit=None, lowerbound=None, msg=False):
         """solve this problem
 
         Parameters
         ----------
         solver : Solver
         timelimit : float
+        lowerbound : float
+            solver terminates when it obtains the solution whose objective value is lower than this
         msg : bool
             if true, display the message from solver
 
@@ -154,17 +156,20 @@ class Problem:
             self.solver = solver
         if timelimit is not None:
             solver.setParams(timelimit=timelimit)
+        if lowerbound is not None:
+            solver.setParams(lowerbound=lowerbound)
 
-        if self.sense == 'minimize':
-            obj = self.obj
-        elif self.sense == 'maximize':
-            obj = -self.obj
+        if self.sense == 'maximize':
+            self.obj = -self.obj
 
         solution = Solution('s', self.getVariables())
 
         status, log, self.time = self.solver.solve(
-            solution, obj, self.constraints, self, msg=msg,
+            solution, self, msg=msg,
         )
+
+        if self.sense == 'maximize':
+            self.obj = -self.obj
 
         return status, log
 

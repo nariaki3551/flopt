@@ -62,8 +62,7 @@ class PulpSearch(BaseSearch):
     def search(self):
         status = SolverTerminateState.Normal
 
-        lp_prob, lp_solution \
-            = self.createLpProblem(self.solution, self.obj, self.constraints)
+        lp_prob, lp_solution = self.createLpProblem(self.solution, self.prob)
 
         if self.solver is not None:
             solver = self.solver
@@ -89,14 +88,13 @@ class PulpSearch(BaseSearch):
         return status
 
 
-    def createLpProblem(self, solution, obj, constraints):
+    def createLpProblem(self, solution, prob):
         """Convert Problem into pulp.LpProblem
 
         Parameters
         ----------
         solution : Solution
-        obj : Expression or VarElement family
-        constraints : list of Expression or VarElement family
+        prob : Problem
 
         Returns
         -------
@@ -112,7 +110,7 @@ class PulpSearch(BaseSearch):
             elif var.type() == VariableType.Binary:
                 cat = 'Binary'
             else:
-                raise ValueError
+                raise ValueError(var.type())
             lp_var = LpVariable(
                 var.name, lowBound=var.lowBound, upBound=var.upBound, cat=cat
             )
@@ -122,10 +120,10 @@ class PulpSearch(BaseSearch):
         # conver Problem -> pulp.LpProblem
         name = '' if self.name is None else self.name
         lp_prob = pulp.LpProblem(name=name)
-        if not isinstance(obj, Const):
-            lp_prob.setObjective(obj.value(lp_solution))
+        if not isinstance(prob.obj, Const):
+            lp_prob.setObjective(prob.obj.value(lp_solution))
 
-        for const in constraints:
+        for const in prob.constraints:
             const_exp = const.expression
             if const.type == 'eq':
                 lp_prob.addConstraint(

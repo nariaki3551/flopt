@@ -59,7 +59,7 @@ class ScipySearch(BaseSearch):
             return func
 
         # function
-        func = gen_func(self.obj)
+        func = gen_func(self.prob.obj)
 
         # initial point
         self.solution.setRandom()
@@ -72,7 +72,7 @@ class ScipySearch(BaseSearch):
 
         # constraints
         constraints = []
-        for const in self.constraints:
+        for const in self.prob.constraints:
             const_func = gen_func(const)
             lb, ub = 0, 0
             if const.type == 'le':

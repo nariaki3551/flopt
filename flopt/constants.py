@@ -22,8 +22,9 @@ np_float = np.float64
 class SolverTerminateState(enum.IntEnum):
     Normal      = 0
     Timelimit   = 1
-    Interrupt   = 2
-    Abnormal    = 3
+    Lowerbound  = 2
+    Interrupt   = 3
+    Abnormal    = 4
 
     def __str__(self):
         return self.name

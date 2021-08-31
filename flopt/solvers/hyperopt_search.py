@@ -99,7 +99,7 @@ class HyperoptTPESearch(BaseSearch):
         self.trial_ix += 1
         for name, value in var_value_dict.items():
             self.var_dict[name].setValue(value)
-        obj_value = self.obj.value(self.solution)
+        obj_value = self.getObjValue(self.solution)
 
         # check whether update or not
         if obj_value < self.best_obj_value:

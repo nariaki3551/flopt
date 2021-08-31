@@ -132,6 +132,7 @@ def binarize_traverse(e, binarizes):
                 update = True
             elif node.elmA.type() == VariableType.Spin:
                 node.elmA = node.elmA.toBinary()
+                node.elmA.parents.append(node)
                 update = True
             if node.elmB.type() == VariableType.Integer:
                 if node.elmB not in binarizes:
@@ -141,6 +142,7 @@ def binarize_traverse(e, binarizes):
                 update = True
             elif node.elmB.type() == VariableType.Spin:
                 node.elmB = node.elmB.toBinary()
+                node.elmB.parents.append(node)
                 update = True
             if update:
                 node.setName()

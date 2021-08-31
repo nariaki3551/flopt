@@ -168,7 +168,7 @@ class AutoSearch(BaseSearch):
         return solver
 
 
-    def solve(self, solution, obj, constraints, prob, msg=False):
+    def solve(self, solution, prob, *args, **kwargs):
         """
         select solver and solve the problem of (solution, obj)
 
@@ -176,20 +176,14 @@ class AutoSearch(BaseSearch):
         ----------
         solution : Solution
             solution object
-        obj : expression or VarElement family
-            objective function
-        constraints : list of Constraint
-            constraints
         prob : Problem
             problem
-        msg : bool
-            if true, then display logs
 
         Returns
         -------
         status, Log
         """
         solver = self.select(prob)
-        return solver.solve(solution, obj, constraints, prob, msg)
+        return solver.solve(solution, prob, *args, **kwargs)
 
 

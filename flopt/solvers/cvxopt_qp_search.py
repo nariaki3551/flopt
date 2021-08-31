@@ -11,6 +11,7 @@ class CvxoptQpSearch(BaseSearch):
         super().__init__()
         self.name = 'CvxoptQpSearch'
         self.n_trial = None
+        self.can_solve_problems = ['lp', 'qp']
 
 
     def available(self, prob):
@@ -41,7 +42,7 @@ class CvxoptQpSearch(BaseSearch):
             self.solution.setValue(var.name, value)
 
         # check whether update or not
-        obj_value = self.obj.value(self.solution)
+        obj_value = self.getObjValue(self.solution)
         if obj_value < self.best_obj_value:
             self.updateSolution(self.solution, obj_value)
             self.recordLog()
@@ -93,8 +94,8 @@ class CvxoptQpSearch(BaseSearch):
     def startProcess(self):
         """process of beginning of search
         """
-        if all(const.feasible(self.best_solution) for const in self.constraints):
-            self.best_obj_value = self.obj.value(self.best_solution)
+        if all(const.feasible(self.best_solution) for const in self.prob.constraints):
+            self.best_obj_value = self.getObjValue(self.best_solution)
         else:
             self.best_obj_value = float('inf')
         self.recordLog()

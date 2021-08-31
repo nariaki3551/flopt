@@ -1,10 +1,10 @@
-from math import sqrt
+import math
 from itertools import combinations, product
 
 import numpy as np
 from tqdm import tqdm
 
-from flopt import Variable, Problem, CustomExpression
+from flopt import Variable, Const, CustomExpression, Problem, Sum
 from flopt import env as flopt_env
 from .base_dataset import BaseDataset, BaseInstance
 from flopt.env import setup_logger
@@ -15,15 +15,15 @@ logger = setup_logger(__name__)
 # instance problems
 tsp_storage = f'{flopt_env.datasets_dir}/tspLib/tsp'
 
+
 class TSPDataset(BaseDataset):
-    """
-    TSP Benchmark Instance Set
+    """TSP Benchmark Instance Set
 
     Parameters
     ----------
     instance_names : list
       instance name list
-    """    
+    """
     def __init__(self):
         self.name = 'tsp'
         self.instance_names = [
@@ -32,6 +32,7 @@ class TSPDataset(BaseDataset):
             'fri26', 'fl3795',
             'gr120', 'rl5915'
         ]
+
 
     def createInstance(self, instance_name):
         """
@@ -42,6 +43,7 @@ class TSPDataset(BaseDataset):
 
         tspfile = f'{tsp_storage}/{instance_name}.tsp'
         return read_instance_file(tspfile)
+
 
 
 def read_instance_file(tspfile):
@@ -79,6 +81,7 @@ def read_instance_file(tspfile):
     return tsp_instance
 
 
+
 def read_edge_weight(f, edge_weight_format, dim):
     D = np.zeros((dim, dim))
     if edge_weight_format == 'LOWER_DIAG_ROW':
@@ -110,15 +113,14 @@ def read_node_coord(f, edge_weight_type, dim, D):
         for i in range(dim):
             for j in range(dim):
                 ii, jj = N[i+1], N[j+1]
-                dist = sqrt((ii[0]-jj[0])**2+(ii[1]-jj[1])**2)
+                dist = math.sqrt((ii[0]-jj[0])**2+(ii[1]-jj[1])**2)
                 D[i, j] = D[j, i] = dist
     return N, D
 
 
 
 class TSPInstance(BaseInstance):
-    """
-    TSP Instance
+    """TSP Instance
 
     Parameters
     ----------
@@ -137,6 +139,13 @@ class TSPInstance(BaseInstance):
         self.D = D  # Distance matrix
         self.C = C  # Node Coordinate data
         logger.debug(self.__str__(detail=True))
+
+
+    def getBestValue(self):
+        """return the optimal value of objective function
+        """
+        return None
+
 
     def createProblem(self, solver):
         """
@@ -158,8 +167,9 @@ class TSPInstance(BaseInstance):
         elif 'lp' in solver.can_solve_problems:
             return True, self.createLpProblem()
         else:
-            print('this instance only can be `permutation` formulation')
+            logger.info('this instance only can be `permutation` formulation')
             return False, None
+
 
     def createPermProblem(self):
         # Variables
@@ -178,31 +188,34 @@ class TSPInstance(BaseInstance):
         prob += tsp_obj
         return prob
 
+
     def createLpProblem(self):
         # Variables
         cities = list(range(self.dim))
-        x = {(i, j):Variable(f'x{i}_{j}', cat='Binary') for i, j in product(cities, cities)}
+        x = Variable.matrix('x', len(cities), len(cities), cat='Binary')
+        np.fill_diagonal(x, Const(0))
 
         # Problem
         prob = Problem(name=f'TSP(LP):{self.name}')
 
         # Objective
-        tsp_obj = sum(self.D[i][j]*x[i, j] for i, j in product(cities, cities) if i != j)
+        tsp_obj = Sum(self.D * x)  # sum(D[i, j] * x[i, j] for all i, j)
         prob += tsp_obj
 
         # Constants (flow condition)
         for i in cities:
-            prob += sum(x[i, j] for j in cities if j != i) == 1
-            prob += sum(x[j, i] for j in cities if j != i) == 1
+            prob += Sum(x[i, :]) == 1
+            prob += Sum(x[:, i]) == 1
 
         # Connstants (remove subtour)
-        subsets = []
-        for n_cities in range(2, self.dim-1):
-            for subset in combinations(cities, n_cities):
-                subsets.append(subset)
+        subsets = [
+            subset for subset in combinations(cities, n_cities)
+            for n_cities in range(2, self.dim-1)
+        ]
         for subset in tqdm(subsets):
-            prob += sum(x[i, j] for i, j in product(subset, subset)) <= n_cities - 1
+            prob += Sum(x[subset, subset]) <= n_cities - 1
         return prob
+
 
     def __str__(self, detail=False):
         s  = f'NAME: {self.name}\n'

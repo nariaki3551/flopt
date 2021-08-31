@@ -21,7 +21,7 @@ class BaseSearch:
     For developer;
 
     - `self.best_solution` has references to variables defined by the user
-    - `self.obj.value(solution)` returns the objective value by the solution
+    - `self.getObjValue(solution)` returns the objective value by the solution
     - `self.recordLog()` records the log (objective value, time, iteratino)
       for each time incumbent solution (`self.bset_solution`) is updated.
 
@@ -31,7 +31,7 @@ class BaseSearch:
         name of solver
     feasible_guard : str
         type of guarder to keep feasibility of solution
-    can_solve_problems : list of str
+    can_solve_problems : list of {'blackbox', 'lp', 'qp', 'permutation'}
         problem names can be solved by this solver
     best_solution : Solution
         best solution
@@ -47,6 +47,8 @@ class BaseSearch:
         type of guarder to keep feasibility of solution
     timelimit : float
         timelimit, unit is second
+    lowerbound : float
+        solver terminates when it obtains the solution whose objective value is lower than this
     msg : bool
         if true, then display logs
     callbacks : list of function
@@ -75,9 +77,10 @@ class BaseSearch:
         self.best_obj_value = float('inf')
         self.best_bd = None
         self.solution = None
-        self.obj = None
         # parameters
         self.timelimit = float('inf')
+        self.lowerbound = -float('inf')
+        self.tol = 1e-10
         self.msg = False
         self.callbacks = []
         # for log
@@ -118,17 +121,13 @@ class BaseSearch:
         self.save_solution = False
 
 
-    def solve(self, solution, obj, constraints, prob=None, msg=False):
+    def solve(self, solution, prob, msg=False):
         """solve the problem of (solution, obj)
 
         Parameters
         ----------
         solution : Solution
             solution object
-        obj : expression or VarElement family
-            objective function
-        constraints : list of Constraint
-            constraints
         prob : Problem
             problem
         msg : bool
@@ -138,15 +137,13 @@ class BaseSearch:
         -------
         status, Log
         """
-        if prob is not None and not self.available(prob):
+        if not self.available(prob):
             logger.error(f'problem can not be solved by solver {self.name}')
             status = SolverTerminateState.Abnormal
             raise flopt.error.SolverError
 
         self.solution = solution.clone()
         self.prob = prob
-        self.obj = obj
-        self.constraints = constraints
         self.start_time = time()
         self.msg = msg
         self.best_solution = solution
@@ -159,12 +156,14 @@ class BaseSearch:
             self.startProcess()
             status = self.search()
             self.closeProcess()
+        except flopt.error.RearchLowerbound:
+            status = SolverTerminateState.Lowerbound
         except KeyboardInterrupt:
             print('Get user ctrl-cuser ctrl-c')
             status = SolverTerminateState.Interrupt
 
         if msg:
-            obj_value = self.obj.value(self.best_solution)
+            obj_value = self.prob.obj.value(self.best_solution)
             end_solver_message(status, obj_value, time()-self.start_time)
 
         return status, self.log, time()-self.start_time
@@ -175,7 +174,7 @@ class BaseSearch:
         """
         self.best_solution.copy(solution)
         if obj_value is None:
-            self.best_obj_value = self.obj.value(solution)
+            self.best_obj_value = self.prob.obj.value(solution)
         else:
             self.best_obj_value = obj_value
             self.save_solution = True
@@ -194,6 +193,10 @@ class BaseSearch:
             log_dict['solution'] = self.best_solution.clone()
             self.save_solution = False
         self.log.append(log_dict)
+        if self.best_obj_value < self.lowerbound + self.tol:
+            if self.msg:
+                self.during_solver_message('*')
+            raise flopt.error.RearchLowerbound()
 
 
     def during_solver_message(self, head):
@@ -202,21 +205,37 @@ class BaseSearch:
 
 
     def search(self):
-        raise NotImplementedError
+        raise NotImplementedError()
 
 
     def available(self, prob):
-        raise NotImplementedError
+        raise NotImplementedError()
+
+
+    def getObjValue(self, solution):
+        """calculate objective value
+
+        Parameters
+        ----------
+        solution : Solution
+
+        Returns
+        -------
+        int or float
+        """
+        return self.prob.obj.value(solution)
 
 
     def startProcess(self):
         """process of beginning of search
         """
-        if all(const.feasible(self.best_solution) for const in self.constraints):
-            self.best_obj_value = self.obj.value(self.best_solution)
+        if all(const.feasible(self.best_solution) for const in self.prob.constraints):
+            self.best_obj_value = self.prob.obj.value(self.best_solution)
         else:
             self.best_obj_value = float('inf')
         self.recordLog()
+        if self.best_obj_value < self.lowerbound + self.tol:
+            raise flopt.error.RearchLowerbound()
 
         if self.msg:
             during_solver_message_header()

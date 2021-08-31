@@ -46,7 +46,7 @@ class TwoOpt(SequentialUpdateSearch):
             # 2-opt
             new_perm = perm[:i] + perm[i:j][::-1] + perm[j:]
             var.setValue(new_perm)
-            if self.obj.value(self.solution) >= self.best_obj_value:
+            if self.getObjValue(self.solution) >= self.best_obj_value:
                 var.setValue(perm)
 
 

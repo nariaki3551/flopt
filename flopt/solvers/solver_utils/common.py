@@ -94,10 +94,11 @@ def during_solver_message(head, obj_value, best_bd, time, iteration):
 
 def end_solver_message(status, obj_value, time):
     status_str = {
-        SolverTerminateState.Normal:    'normal termination',
-        SolverTerminateState.Timelimit: 'timelimit termination',
-        SolverTerminateState.Interrupt: 'Ctrl-C termination',
-        SolverTerminateState.Abnormal:  'abnormal termination'
+        SolverTerminateState.Normal:        'normal termination',
+        SolverTerminateState.Timelimit:     'timelimit termination',
+        SolverTerminateState.Lowerbound:    'lowerbound termination',
+        SolverTerminateState.Interrupt:     'Ctrl-C termination',
+        SolverTerminateState.Abnormal:      'abnormal termination'
     }
 
     message = (

@@ -1,8 +1,12 @@
 import numpy as np
 
 from flopt import Variable, Problem
+from flopt.convert.linearize import linearize
 from flopt.constants import VariableType, np_float
 from flopt.error import ConversionError
+from flopt.env import setup_logger
+
+logger = setup_logger(__name__)
 
 
 def merge(func, arrays):
@@ -84,7 +88,8 @@ class LinearStructure:
 
 class QpStructure:
     """Quadratic Programming Structure
-    ..
+
+    ::
 
       obj  1/2 x.T.dot(Q).dot(x) + c.T.dot(x) + C
       s.t. Gx <= h
@@ -305,7 +310,13 @@ class QpStructure:
 
     def toLp(self):
         if self.Q is not None and not np.all(self.Q == 0):
-            raise ConversionError()
+            logger.info(f'linearization will be done because it is not linearize')
+            prob = self.toFlopt()
+            linearize(prob)
+            if prob.obj.isLinear() and all(const.isLinear() for const in prob.constraints):
+                return LpStructure.fromFlopt(prob)
+            else:
+                raise ConversionError()
         return LpStructure(self.c, self.C,
                 self.G, self.h, self.A, self.b,
                 self.lb, self.ub, self.types, self.x)
@@ -321,7 +332,11 @@ class QpStructure:
 
     def show(self):
         s =  f'QpStructure\n'
-        s += f'#variable {self.numVariables()}\n\n'
+        s += f'obj  1/2 x.T.dot(Q).dot(x) + c.T.dot(x) + C\n'
+        s += f's.t. Gx <= h\n'
+        s += f'     Ax == b\n'
+        s += f'     lb <= x <= ub\n\n'
+        s += f'#x\n{self.numVariables()}\n\n'
         s += f'Q\n{self.Q}\n\n'
         s += f'c\n{self.c}\n\n'
         s += f'C\n{self.C}\n\n'
@@ -341,7 +356,7 @@ class QpStructure:
 
     def __str__(self):
         s =  f'QpStructure\n'
-        s += f'  #variable {self.numVariables()}\n'
+        s += f'  #x  {self.numVariables()}\n'
         s += f'  #Q  {shape(self.Q)}  (0-element {zero_percentage(self.Q)} %)\n'
         s += f'  #c  {shape(self.c)}\n'
         s += f'  #C  {self.C}\n'
@@ -358,7 +373,7 @@ class QpStructure:
 class LpStructure:
     """Linear Programming Structure
 
-    ..
+    ::
 
       obj  c.T.dot(x) + C
       s.t. Gx <= h
@@ -423,7 +438,11 @@ class LpStructure:
 
     def show(self):
         s =  f'LpStructure\n'
-        s += f'#variable {self.numVariables()}\n\n'
+        s += f'obj  c.T.dot(x) + C\n'
+        s += f's.t. Gx <= h\n'
+        s += f'     Ax == b\n'
+        s += f'     lb <= x <= ub\n\n'
+        s += f'#x\n{self.numVariables()}\n\n'
         s += f'c\n{self.c}\n\n'
         s += f'C\n{self.C}\n\n'
         s += f'G\n{self.G}\n\n'
@@ -442,7 +461,7 @@ class LpStructure:
 
     def __str__(self):
         s =  f'LpStructure\n'
-        s += f'  #variable {self.numVariables()}\n'
+        s += f'  #x  {self.numVariables()}\n'
         s += f'  #c  {shape(self.c)}\n'
         s += f'  #C  {self.C}\n'
         s += f'  #G  {shape(self.G)}  (0-element {zero_percentage(self.G)} %)\n'
@@ -527,7 +546,8 @@ class IsingStructure:
 
     def show(self):
         s =  f'IsingStructure\n'
-        s += f'#variable {self.numVariables()}\n\n'
+        s += f'- x.T.dot(J).dot(x) - h.T.dot(x) + C\n\n'
+        s += f'#x\n{self.numVariables()}\n\n'
         s += f'J\n{self.J}\n\n'
         s += f'h\n{self.h}\n\n'
         s += f'C\n{self.C}\n\n'
@@ -541,7 +561,7 @@ class IsingStructure:
 
     def __str__(self):
         s =  f'IsingStructure\n'
-        s += f'  #variable {self.numVariables()}\n'
+        s += f'  #x  {self.numVariables()}\n'
         s += f'  #J  {shape(self.J)}  (0-element {zero_percentage(self.J)} %)\n'
         s += f'  #h  {shape(self.h)}\n'
         s += f'  #C  {self.C}\n'
@@ -598,7 +618,9 @@ class QuboStructure:
 
     def show(self):
         s =  f'QuboStructure\n'
-        s += f'#variable {self.numVariables()}\n\n'
+        s += f'x.T.dot(Q).dot(x) + C\n\n'
+        s += f'#x\n{self.numVariables()}\n\n'
+        s += f'Q\n{self.Q}\n\n'
         s += f'C\n{self.C}\n\n'
         s += f'x\n{self.x}'
         return s
@@ -610,9 +632,8 @@ class QuboStructure:
 
     def __str__(self):
         s =  f'QuboStructure\n'
-        s += f'  #variable {self.numVariables()}\n'
+        s += f'  #x  {self.numVariables()}\n'
         s += f'  #Q  {shape(self.Q)}  (0-element {zero_percentage(self.Q)} %)\n'
-        s += f'  #h  {shape(self.h)}\n'
         s += f'  #C  {self.C}\n'
         return s
 

@@ -1,4 +1,4 @@
-from flopt.variable import VarElement, VarBinary, VarInteger, VarContinuous
+from flopt.variable import Variable, VarElement
 from flopt.expression import Expression, Const
 from flopt.convert.binarize import binarize
 from flopt.constants import VariableType
@@ -75,7 +75,7 @@ def linearize(prob):
         for const in prob.constraints:
             const.expression = linearize_expression(const.expression, var_muls)
     except NeedBinarize:
-        logger.info(f'Binarize')
+        logger.info(f'problem will be binarized because it includes dislinearable multipry')
         return linearize( binarize(prob) )
     except Exception as e:
         raise e
@@ -195,24 +195,27 @@ def create_var_mul(node, var_muls):
     if (var_a, var_b) not in var_muls:
         # (Binary, Binary)
         if {var_a.type(), var_b.type()} == {VariableType.Binary}:
-            var_mul = VarBinary(
+            var_mul = Variable(
                 f'mul_{len(var_muls)}',
+                cat='Binary',
                 ini_value=var_a.value() * var_b.value(),
             )
         # (Binary, Integer)
         elif {var_a.type(), var_b.type()} == {VariableType.Binary, VariableType.Integer}:
-                var_mul = VarInteger(
+                var_mul = Variable(
                     f'mul_{len(var_muls)}',
                     lowBound=get_lower_bound(var_a, var_b),
                     upBound=get_upper_bound(var_a, var_b),
+                    cat='Integer',
                     ini_value=var_a.value() * var_b.value(),
                 )
         #  (Binary, Continuous)
         elif {var_a.type(), var_b.type()} == {VariableType.Binary, VariableType.Continuous}:
-            var_mul = VarContinuous(
+            var_mul = Variable(
                 f'mul_{len(var_muls)}',
                 lowBound=get_lower_bound(var_a, var_b),
                 upBound=get_upper_bound(var_a, var_b),
+                cat='Continuous',
                 ini_value=var_a.value() * var_b.value(),
             )
         var_muls[var_a, var_b] = var_mul
@@ -228,7 +231,7 @@ def get_lower_bound(var_a, var_b):
     """
     assert {var_a.type(), var_b.type()} == {VariableType.Binary, VariableType.Integer}\
         or {var_a.type(), var_b.type()} == {VariableType.Binary, VariableType.Continuous}
-    if isinstance(var_a, VarBinary):
+    if var_a.type() == VariableType.Binary:
         var_binary, var_other = var_a, var_b
     else:
         var_binary, var_other = var_b, var_a
@@ -246,7 +249,7 @@ def get_upper_bound(var_a, var_b):
     """
     assert {var_a.type(), var_b.type()} == {VariableType.Binary, VariableType.Integer}\
         or {var_a.type(), var_b.type()} == {VariableType.Binary, VariableType.Continuous}
-    if isinstance(var_a, VarBinary):
+    if var_a.type() == VariableType.Binary:
         var_binary, var_other = var_a, var_b
     else:
         var_binary, var_other = var_b, var_a
@@ -288,6 +291,10 @@ def is_linearable(node):
         {VariableType.Binary,   VariableType.Binary},
         {VariableType.Binary,   VariableType.Integer},
         {VariableType.Binary,   VariableType.Continuous},
+        {VariableType.Binary,   VariableType.Spin},
+        {VariableType.Spin,     VariableType.Spin},
+        {VariableType.Spin,     VariableType.Integer},
+        {VariableType.Spin,     VariableType.Continuous},
         {VariableType.Integer,  VariableType.Integer},
         {VariableType.Integer,  VariableType.Continuous},
     ]
@@ -307,8 +314,12 @@ def need_binarize(node):
     """
     assert is_var_mul(node)
     need_binarize_pairs = [
-        {VariableType.Integer, VariableType.Integer},
-        {VariableType.Integer, VariableType.Continuous},
+        {VariableType.Binary,   VariableType.Spin},
+        {VariableType.Spin,     VariableType.Spin},
+        {VariableType.Spin,     VariableType.Integer},
+        {VariableType.Spin,     VariableType.Continuous},
+        {VariableType.Integer,  VariableType.Integer},
+        {VariableType.Integer,  VariableType.Continuous},
     ]
     return {node.elmA.type(), node.elmB.type()} in need_binarize_pairs
 

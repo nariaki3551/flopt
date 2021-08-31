@@ -88,7 +88,7 @@ class ShuffledFrogLeapingSearch(BaseSearch):
 
             self._memetic_evolution()
 
-            obj_value = self.obj.value(self.frogs[0])
+            obj_value = self.getObjValue(self.frogs[0])
             if obj_value < self.best_obj_value:
                 self.updateSolution(self.frogs[0])
                 self.best_obj_value = obj_value
@@ -132,9 +132,9 @@ class ShuffledFrogLeapingSearch(BaseSearch):
                     new_frog.clip()
 
                 # evaluate solutions
-                fitness_best = self.obj.value(best_frog)
-                fitness_worst = self.obj.value(worst_frog)
-                fitness_new = self.obj.value(new_frog)
+                fitness_best = self.getObjValue(best_frog)
+                fitness_worst = self.getObjValue(worst_frog)
+                fitness_new = self.getObjValue(new_frog)
 
                 # if it does not improve (1)
                 if fitness_new > fitness_worst:
@@ -147,7 +147,7 @@ class ShuffledFrogLeapingSearch(BaseSearch):
                     if self.feasible_guard == 'clip':
                         new_frog.clip()
 
-                    fitness_new = self.obj.value(new_frog)
+                    fitness_new = self.getObjValue(new_frog)
                     # if it does not improve (2)
                     if fitness_new > fitness_worst:
                         new_frog.setRandom()
@@ -159,12 +159,12 @@ class ShuffledFrogLeapingSearch(BaseSearch):
                 # evaluate and sort memeplex
                 for flog in self.memeplexes[j]:
                     if not hasattr(flog, '__flog_obj'):
-                        setattr(flog, '__flog_obj', self.obj.value(flog))
+                        setattr(flog, '__flog_obj', self.getObjValue(flog))
                 self.memeplexes[j].sort(key=lambda frog: getattr(flog, '__flog_obj'))
 
         # sort entire memeplexes
         self.frogs = [frog for memeplex in self.memeplexes for frog in memeplex]
-        self.frogs.sort(key=lambda frog: self.obj.value(frog))
+        self.frogs.sort(key=lambda frog: self.getObjValue(frog))
         self.memeplexes = [[self.frogs[i*M+j] for i in range(N)]
                                               for j in range(M)]
 
@@ -175,7 +175,7 @@ class ShuffledFrogLeapingSearch(BaseSearch):
         self.frogs = [self.solution.clone() for _ in range(M*N)]
         for frog in self.frogs:
             frog.setRandom()
-        self.frogs.sort(key=lambda frog: self.obj.value(frog))
+        self.frogs.sort(key=lambda frog: self.getObjValue(frog))
         self.memeplexes=[[self.frogs[i*M+j] for i in range(N)]
                                             for j in range(M)]
         self.updateSolution(self.frogs[0])

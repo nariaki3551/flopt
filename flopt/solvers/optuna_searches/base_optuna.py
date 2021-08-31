@@ -79,7 +79,7 @@ class OptunaSearch(BaseSearch):
                 )
 
         # get objective value by self.solution
-        obj_value = self.obj.value(self.solution)
+        obj_value = self.getObjValue(self.solution)
 
         # check whether update or not
         if obj_value < self.best_obj_value:
