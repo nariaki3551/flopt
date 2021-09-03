@@ -100,16 +100,16 @@ class Monomial:
         return sum(self.terms.values()) <= 2
 
 
-    def toPolynominal(self):
+    def toPolynomial(self):
         """
         Returns
         -------
-        Polynominal
+        Polynomial
         """
         if self.terms:
-            return Polynominal({Monomial(self.terms): self.coeff})
+            return Polynomial({Monomial(self.terms): self.coeff})
         else:
-            return Polynominal(constant=self.coeff)
+            return Polynomial(constant=self.coeff)
 
 
     def simplify(self):
@@ -199,14 +199,14 @@ class Monomial:
 
 
 
-class Polynominal:
+class Polynomial:
     """
     Parameters
     ----------
     terms : dict(Monomial=coeff)
         sum( coeff_i * mono_i for mono_i, coeff_i in terms.items() ) + constant
     constant : int of float
-        constant of polynominal
+        constant of polynomial
     """
     def __init__(self, terms=dict(), constant=0):
         self.terms = terms
@@ -238,28 +238,28 @@ class Polynominal:
             x = Variable('x')
             y = Variable('y')
             e = x ** 2 + 3 * y ** 3
-            e.polynominal
+            e.polynomial
             >>> x^2+3*y^3+0
 
         get coefficient of `x^2` term
 
         .. code-block:: python
 
-            e.polynominal.coeff(x, x)
+            e.polynomial.coeff(x, x)
             >>> 1
 
         get coefficient of `x` term, it is 0
 
         .. code-block:: python
 
-            e.polynominal.coeff(x)
+            e.polynomial.coeff(x)
             >>> 0
 
         get coefficient of `y^3` term, it is 0
 
         .. code-block:: python
 
-            e.polynominal.coeff(y**3)
+            e.polynomial.coeff(y**3)
             >>> 3
         """
         if isinstance(args[0], Monomial):
@@ -325,10 +325,10 @@ class Polynominal:
         """
         Returns
         -------
-        Polynominal
-            return polynominal differentiated by x
+        Polynomial
+            return polynomial differentiated by x
         """
-        poly = Polynominal(constant=0)
+        poly = Polynomial(constant=0)
         for mono, coeff in self:
             poly += mono.diff(x)
         return poly
@@ -367,10 +367,10 @@ class Polynominal:
         """
         Returns
         -------
-        Polynominal
-            return simplified polynominal
+        Polynomial
+            return simplified polynomial
         """
-        poly = Polynominal(constant=self._constant)
+        poly = Polynomial(constant=self._constant)
         for mono, coeff in self:
             poly += coeff * mono.simplify()
         return poly
@@ -378,10 +378,10 @@ class Polynominal:
 
     def __add__(self, other):
         if isinstance(other, (int, float)):
-            return Polynominal(self.terms, self._constant + other)
+            return Polynomial(self.terms, self._constant + other)
         elif isinstance(other, Monomial):
-            return self + other.toPolynominal()
-        elif isinstance(other, Polynominal):
+            return self + other.toPolynomial()
+        elif isinstance(other, Polynomial):
             terms = collections.defaultdict(int, self.terms)
             for mono, coeff in other:
                 terms[mono] += coeff
@@ -390,7 +390,7 @@ class Polynominal:
             for mono in list(terms.keys()):
                 if isinstance(mono, Monomial) and terms[mono] == 0:
                     del terms[mono]
-            return Polynominal(dict(terms), constant)
+            return Polynomial(dict(terms), constant)
         else:
             return NotImplemented
 
@@ -406,10 +406,10 @@ class Polynominal:
     def __mul__(self, other):
         if isinstance(other, (int, float)):
             terms = {mono: coeff * other for mono, coeff in self}
-            return Polynominal(terms, self._constant * other)
+            return Polynomial(terms, self._constant * other)
         elif isinstance(other, Monomial):
-            return self * other.toPolynominal()
-        elif isinstance(other, Polynominal):
+            return self * other.toPolynomial()
+        elif isinstance(other, Polynomial):
             terms = dict()
             for mono, coeff in other:
                 for mono_, coeff_ in self:
@@ -433,7 +433,7 @@ class Polynominal:
             for mono in list(terms.keys()):
                 if isinstance(mono, Monomial) and terms[mono] == 0:
                     del terms[mono]
-            return Polynominal(terms, constant)
+            return Polynomial(terms, constant)
         else:
             return NotImpremented
 
@@ -442,14 +442,14 @@ class Polynominal:
 
     def __pow__(self, other):
         assert isinstance(other, int)
-        poly = Polynominal(constant=1)
+        poly = Polynomial(constant=1)
         for _ in range(other):
             poly *= self
         return poly
 
     def __neg__(self):
         terms = {mono: -coeff for mono, coeff in self.terms.items()}
-        return Polynominal(terms, -self._constant)
+        return Polynomial(terms, -self._constant)
 
     def __iter__(self):
         return iter(self.terms.items())
@@ -461,7 +461,7 @@ class Polynominal:
         return hash(tuple(sorted([(hash(x), coeff) for x, coeff in self.terms.items()])))
 
     def __eq__(self, other):
-        if isinstance(other, Polynominal):
+        if isinstance(other, Polynomial):
             return hash(self) == hash(other)
 
     def __str__(self):

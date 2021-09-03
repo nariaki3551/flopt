@@ -6,6 +6,6 @@ Internal Reference
 
     Solver
     Solution
-    Polynominal
+    Polynomial
     Expression
     Constraint

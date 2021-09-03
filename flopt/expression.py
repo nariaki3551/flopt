@@ -2,7 +2,7 @@ import collections
 
 import numpy as np
 
-from flopt.polynominal import Monomial, Polynominal
+from flopt.polynomial import Monomial, Polynomial
 from flopt.constraint import Constraint
 from flopt.constants import VariableType, ExpressionType, number_classes, np_float
 from flopt.env import setup_logger
@@ -101,10 +101,10 @@ class Expression:
             self.setName()
         self._type = ExpressionType.Normal
         self.var_dict = None
-        self.polynominal = None
+        self.polynomial = None
 
-        # set polynominal
-        self.setPolynominal()
+        # set polynomial
+        self.setPolynomial()
 
         # update parents
         self.parents = list()
@@ -126,21 +126,21 @@ class Expression:
         self.name = f'{elmA_name}{self.operater}{elmB_name}'
 
 
-    def setPolynominal(self):
-        if self.elmA.isPolynominal() and self.elmB.isPolynominal():
+    def setPolynomial(self):
+        if self.elmA.isPolynomial() and self.elmB.isPolynomial():
             if self.operater in {'+', '-', '*'}:
                 if self.operater == '+':
-                    self.polynominal = self.elmA.toPolynominal() + self.elmB.toPolynominal()
+                    self.polynomial = self.elmA.toPolynomial() + self.elmB.toPolynomial()
                 elif self.operater == '-':
-                    self.polynominal = self.elmA.toPolynominal() - self.elmB.toPolynominal()
+                    self.polynomial = self.elmA.toPolynomial() - self.elmB.toPolynomial()
                 else:
-                    self.polynominal = self.elmA.toPolynominal() * self.elmB.toPolynominal()
+                    self.polynomial = self.elmA.toPolynomial() * self.elmB.toPolynomial()
             elif self.operater == '^' and isinstance(self.elmB, Const) and isinstance(self.elmB.value(), int):
-                self.polynominal = self.elmA.toPolynominal() ** self.elmB.value()
+                self.polynomial = self.elmA.toPolynomial() ** self.elmB.value()
             else:
-                self.polynominal = None
+                self.polynomial = None
         else:
-            self.polynominal = None
+            self.polynomial = None
 
 
     def setVarDict(self, var_dict):
@@ -227,8 +227,8 @@ class Expression:
         float
             constant value
         """
-        if self.isPolynominal():
-            return self.polynominal.constant()
+        if self.isPolynomial():
+            return self.polynomial.constant()
         else:
             import sympy
             return float(sympy.sympify(self.name).expand().as_coefficients_dict()[1])
@@ -247,19 +247,19 @@ class Expression:
 
 
     def isMonomial(self):
-        return self.isPolynominal() and self.polynominal.isMonomial()
+        return self.isPolynomial() and self.polynomial.isMonomial()
 
 
     def toMonomial(self):
-        return self.polynominal.toMonomial()
+        return self.polynomial.toMonomial()
 
 
-    def isPolynominal(self):
-        return self.polynominal is not None
+    def isPolynomial(self):
+        return self.polynomial is not None
 
 
-    def toPolynominal(self):
-        return self.polynominal
+    def toPolynomial(self):
+        return self.polynomial
 
 
     def isQuadratic(self):
@@ -269,9 +269,9 @@ class Expression:
         bool
             return true if this expression is quadratic else false
         """
-        if not self.isPolynominal():
+        if not self.isPolynomial():
             return False
-        return self.polynominal.isQuadratic() or self.polynominal.simplify().isQuadratic()
+        return self.polynomial.isQuadratic() or self.polynomial.simplify().isQuadratic()
 
 
     def toQuadratic(self, x=None):
@@ -288,23 +288,23 @@ class Expression:
         """
         assert self.isQuadratic()
         from flopt.convert import QuadraticStructure
-        polynominal = self.polynominal.simplify()
+        polynomial = self.polynomial.simplify()
         if x is None:
             x = np.array(sorted(self.getVariables(), key=lambda var: var.name))
         num_variables = len(x)
 
         Q = np.zeros((num_variables, num_variables), dtype=np_float)
-        if not polynominal.isLinear():
+        if not polynomial.isLinear():
             for i in range(num_variables):
-                Q[i, i] = 2 * polynominal.coeff(x[i], x[i])
+                Q[i, i] = 2 * polynomial.coeff(x[i], x[i])
                 for j in range(i+1, num_variables):
-                    Q[i, j] = Q[j, i] = polynominal.coeff(x[i], x[j])
+                    Q[i, j] = Q[j, i] = polynomial.coeff(x[i], x[j])
 
         c = np.zeros((num_variables, ), dtype=np_float)
         for i in range(num_variables):
-            c[i] = polynominal.coeff(x[i])
+            c[i] = polynomial.coeff(x[i])
 
-        C = polynominal.constant()
+        C = polynomial.constant()
         return QuadraticStructure(Q, c, C, x=x)
 
 
@@ -325,9 +325,9 @@ class Expression:
         >>> (a*b).isLinear()
         >>> False
         """
-        if not self.isPolynominal():
+        if not self.isPolynomial():
             return False
-        return self.polynominal.isLinear() or self.polynominal.simplify().isLinear()
+        return self.polynomial.isLinear() or self.polynomial.simplify().isLinear()
 
 
     def toLinear(self, x=None):
@@ -793,7 +793,7 @@ class CustomExpression(Expression):
     def getVariables(self):
         return set(self.variables)
 
-    def isPolynominal(self):
+    def isPolynomial(self):
         return False
 
     def isLinear(self):
@@ -846,14 +846,14 @@ class Const:
         # for getVariables() in Expression calss
         return set()
 
-    def isPolynominal(self):
+    def isPolynomial(self):
         return True
 
     def toMonomial(self):
         return Monomial(coeff=self._value)
 
-    def toPolynominal(self):
-        return Polynominal(constant=self._value)
+    def toPolynomial(self):
+        return Polynomial(constant=self._value)
 
     def isQuadratic(self):
         return True

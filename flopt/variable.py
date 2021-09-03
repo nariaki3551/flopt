@@ -4,7 +4,7 @@ import itertools
 
 import numpy as np
 
-from flopt.polynominal import Monomial, Polynominal
+from flopt.polynomial import Monomial, Polynomial
 from flopt.expression import Expression, Const
 from flopt.constraint import Constraint
 from flopt.constants import VariableType, number_classes, array_classes, np_float
@@ -333,7 +333,7 @@ class VarElement:
         return {self}
 
 
-    def isPolynominal(self):
+    def isPolynomial(self):
         return True
 
 
@@ -341,8 +341,8 @@ class VarElement:
         return self.monomial
 
 
-    def toPolynominal(self):
-        return Polynominal({self.monomial: 1})
+    def toPolynomial(self):
+        return Polynomial({self.monomial: 1})
 
 
     def isLinear(self):
@@ -908,7 +908,7 @@ class VarPermutation(VarElement):
         return random.shuffle(self._value)
 
 
-    def isPolynominal(self):
+    def isPolynomial(self):
         return False
 
 

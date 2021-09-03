@@ -1,6 +1,6 @@
 def pytest_addoption(parser):
     parser.addoption(
         '--amplify_token',
-        default=False,
+        default=None,
         help='token of amplify'
     )

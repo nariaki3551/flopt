@@ -175,10 +175,10 @@ def linearize_traverse(e, var_muls):
                 update = True
             if update:
                 node.setName()
-                node.setPolynominal()
+                node.setPolynomial()
                 for parent in node.traverseAncestors():
                     parent.setName()
-                    parent.setPolynominal()
+                    parent.setPolynomial()
                 return True
     return False
 
