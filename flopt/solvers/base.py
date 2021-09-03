@@ -1,5 +1,5 @@
-import inspect
-from time import time
+import time
+
 import flopt
 from flopt.solvers.solver_utils import (
     Log, start_solver_message,
@@ -138,16 +138,16 @@ class BaseSearch:
         status, Log
         """
         if not self.available(prob):
-            logger.error(f'problem can not be solved by solver {self.name}')
+            logger.error(f'Problem can not be solved by solver {self.name}.')
             status = SolverTerminateState.Abnormal
             raise flopt.error.SolverError
 
         self.solution = solution.clone()
         self.prob = prob
-        self.start_time = time()
         self.msg = msg
         self.best_solution = solution
 
+        self.start_time = time.time()
         if msg:
             params = {'timelimit': self.timelimit}
             start_solver_message(self.name, params, solution)
@@ -164,9 +164,9 @@ class BaseSearch:
 
         if msg:
             obj_value = self.prob.obj.value(self.best_solution)
-            end_solver_message(status, obj_value, time()-self.start_time)
+            end_solver_message(status, obj_value, time.time()-self.start_time)
 
-        return status, self.log, time()-self.start_time
+        return status, self.log, time.time()-self.start_time
 
 
     def updateSolution(self, solution, obj_value=None):
@@ -186,7 +186,7 @@ class BaseSearch:
         log_dict = {
             'obj_value': self.best_obj_value,
             'best_bd': self.best_bd,
-            'time': time()-self.start_time,
+            'time': time.time()-self.start_time,
             'iteration': self.trial_ix
         }
         if self.max_k > 1 and self.save_solution:
@@ -201,7 +201,7 @@ class BaseSearch:
 
     def during_solver_message(self, head):
         during_solver_message(head, self.best_obj_value,
-            self.best_bd, time()-self.start_time, self.trial_ix)
+            self.best_bd, time.time()-self.start_time, self.trial_ix)
 
 
     def search(self):

@@ -1,0 +1,12 @@
+Quantum Annealing Search
+------------------------
+
+AmplifySolver
+^^^^^^^^^^^^^
+
+.. image:: https://img.shields.io/badge/Variable-Spin-blue.svg
+.. image:: https://img.shields.io/badge/Objective-Ising-orange.svg
+.. image:: https://img.shields.io/badge/Constraints-Ising-green.svg
+
+.. autoclass:: flopt.solvers.AmplifySearch
+

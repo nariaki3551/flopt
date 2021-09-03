@@ -4,69 +4,85 @@ import flopt
 import flopt.error
 from flopt import Variable, Problem, Solver, Solver_list, CustomExpression
 
-@pytest.fixture(scope='function')
-def variables():
-    vals = [
-        Variable('a', 0, 1, 'Integer'),
-        Variable('b', 1, 2, 'Continuous'),
-        Variable('c', 1, 3, 'Continuous'),
-    ]
-    return vals
 
 @pytest.fixture(scope='function')
-def prob(variables):
-    a, b, c = variables
+def prob():
+    a = Variable('a', 0, 1, 'Integer')
     _prob = Problem(name='Test')
-    _prob += a + b + c
+    _prob += a
     return _prob
 
 @pytest.fixture(scope='function')
-def prob_no_obj(variables):
-    a, b, c = variables
+def prob_no_obj():
+    a = Variable('a', 0, 1, 'Integer')
     _prob = Problem(name='Test')
-    _prob += a + b + c <= 0
+    _prob += a <= 0
     return _prob
 
 @pytest.fixture(scope='function')
-def prob_only_continuous(variables):
-    a, b, c = variables
+def prob_only_continuous():
+    b = Variable('b', 1, 2, 'Continuous')
+    c = Variable('c', 1, 3, 'Continuous')
     _prob = Problem(name='Test')
     _prob += b + c
     return _prob
 
 @pytest.fixture(scope='function')
-def prob_with_const(variables):
+def prob_with_const():
     # Problem with constraint
-    a, b, c = variables
+    a = Variable('a', 0, 1, 'Integer')
+    b = Variable('b', 1, 2, 'Continuous')
+    c = Variable('c', 1, 3, 'Continuous')
     _prob = Problem(name='TestC')
     _prob += a + b + c
     _prob += a + b >= 2
     return _prob
 
 @pytest.fixture(scope='function')
-def prob_qp(variables):
+def prob_qp():
     # Problem with constraint
-    a, b, c = variables
+    a = Variable('a', 0, 1, 'Integer')
+    b = Variable('b', 1, 2, 'Continuous')
+    c = Variable('c', 1, 3, 'Continuous')
     _prob = Problem(name='TestC')
     _prob += 2*b*b + b*c + b + c
     _prob += b + c == 1
     return _prob
 
 @pytest.fixture(scope='function')
-def prob_nonlinear(variables):
+def prob_nonlinear():
     # Non-Linear problem
-    a, b, c = variables
+    a = Variable('a', 0, 1, 'Integer')
+    b = Variable('b', 1, 2, 'Continuous')
+    c = Variable('c', 1, 3, 'Continuous')
     _prob = Problem('Non-Linear')
     _prob += a*b*c
     _prob += a + b >= 2
     return _prob
 
 @pytest.fixture(scope='function')
-def prob_perm(variables):
+def prob_ising():
+    a = Variable('a', cat='Spin')
+    b = Variable('b', cat='Spin')
+    _prob = Problem('ising')
+    _prob += 1 - a * b - a
+    return _prob
+
+@pytest.fixture(scope='function')
+def prob_ising_const():
+    a = Variable('a', cat='Spin')
+    b = Variable('b', cat='Spin')
+    _prob = Problem('ising')
+    _prob += 1 - a * b - a
+    _prob += a * b == 1
+    _prob += a + b <= 0
+    return _prob
+
+@pytest.fixture(scope='function')
+def prob_perm():
     # Permutation Problem
-    a, b, c = variables
-    p = Variable('p', 0, 4, 'Permutation')
     _prob = Problem('TestP')
+    p = Variable('p', 0, 4, 'Permutation')
     def obj(p):
         return p[-1] - p[0]
     _prob +=  CustomExpression(obj, [p])
@@ -246,6 +262,45 @@ def test_CvxoptQpSearch2(prob_qp, callback):
     solver = Solver(algo='CvxoptQpSearch')
     solver.setParams(n_trial=10, callbacks=[callback])
     prob_qp.solve(solver, timelimit=0.5)
+
+
+def test_AmplifySearch_available(
+        prob, prob_only_continuous, prob_with_const,
+        prob_qp, prob_nonlinear,
+        prob_ising, prob_ising_const,
+        prob_perm,
+        ):
+    solver = Solver(algo='AmplifySearch')
+    assert solver.available(prob) == False
+    assert solver.available(prob_only_continuous) == False
+    assert solver.available(prob_with_const) == False
+    assert solver.available(prob_qp) == False
+    assert solver.available(prob_nonlinear) == False
+    assert solver.available(prob_ising) == True
+    assert solver.available(prob_ising_const) == True
+    assert solver.available(prob_perm) == False
+
+def test_AmplifySearch1(prob_ising, callback):
+    solver = Solver(algo='AmplifySearch')
+    solver.setParams(token="Z9KtZmRAxfeS3qtif2DYdi9OF8iWWbYE")
+    prob_ising.solve(solver, timelimit=0.5)
+
+def test_AmplifySearch2(prob_ising_const, callback):
+    solver = Solver(algo='AmplifySearch')
+    solver.setParams(token="Z9KtZmRAxfeS3qtif2DYdi9OF8iWWbYE")
+    prob_ising_const.solve(solver, timelimit=0.5)
+
+
+def test_CvxoptQpSearch1(prob_only_continuous, callback):
+    solver = Solver(algo='CvxoptQpSearch')
+    solver.setParams(n_trial=10, callbacks=[callback])
+    prob_only_continuous.solve(solver, timelimit=0.5)
+
+def test_CvxoptQpSearch2(prob_qp, callback):
+    solver = Solver(algo='CvxoptQpSearch')
+    solver.setParams(n_trial=10, callbacks=[callback])
+    prob_qp.solve(solver, timelimit=0.5)
+
 
 def test_ScipyLpSearch_available(prob, prob_only_continuous, prob_with_const, prob_qp, prob_nonlinear, prob_perm):
     solver = Solver(algo='ScipyLpSearch')

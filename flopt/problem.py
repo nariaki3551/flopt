@@ -192,6 +192,11 @@ class Problem:
             var.setValue(var_dict[var.name].value())
 
 
+    def toSpin(self):
+        self.obj = self.obj.toSpin()
+
+
+
     def __iadd__(self, other):
         if not isinstance(other, tuple):
             other = (other, )

@@ -42,8 +42,6 @@ We represent this problem as following dictionary.
 
     # A list of number sequence
     Sequence = list(range(9))
-
-    # The Vals, Rows and Cols sequences all follow this form
     Vals = Sequence
     Rows = Sequence
     Cols = Sequence
@@ -67,7 +65,7 @@ Following given hints, we replace some variable for constants.
     from flopt import Const
 
     # The starting numbers are entered as constant
-    for value, row, col in sudoku:
+    for value, row, col in hints:
         x[value-1, row, col] = Const(1)
 
 
@@ -82,7 +80,7 @@ Then, we create Problem.
     # A constraint ensuring that only one value can be in each piece
     for r in Rows:
         for c in Cols:
-            prob += Sum(x[:, r, c]) == 1  # is equal Sum(x[i, r, c] for i in Vals) == 1
+            prob += Sum(x[:, r, c]) == 1  # is equal to Sum(x[i, r, c] for i in Vals) == 1
 
     # The row, column and box constraints are added for each value
     for v in Vals:
@@ -97,7 +95,7 @@ Then, we create Problem.
                 prob += Sum(x[v, r:r+3, c:c+3]) == 1
 
 
-We solve this problem.
+We solve this problem using `AutoSolver`.
 
 .. code-block:: python
 
@@ -126,7 +124,7 @@ We solve this problem.
     >>>  <flopt.solvers.solver_utils.solver_log.Log at 0x12b42de20>)
 
 
-See the result
+The result is as follows.
 
 .. code-block:: python
 
@@ -180,8 +178,8 @@ In addition, you can obtain the objective vector and constraints matrix of this 
 .. code-block:: python
 
     from flopt.convert import LpStructure
-
     lp = LpStructure.fromFlopt(prob)
+
     print(lp)
     >>> LpStructure
     >>>   #variable 712

@@ -21,10 +21,7 @@ class RandomSearch(SequentialUpdateSearch):
         """
         Parameters
         ----------
-        obj : Expression or VarElement family
-            objective function
-        constraints : list of Constraint
-            constraints
+        prob : Problem
 
         Returns
         -------
@@ -35,7 +32,6 @@ class RandomSearch(SequentialUpdateSearch):
 
 
     def setNewSolution(self, *args, **kwargs):
-        """
-        generate new solution with random.
+        """generate new solution with random.
         """
         self.solution.setRandom()

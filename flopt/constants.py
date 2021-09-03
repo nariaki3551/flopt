@@ -51,4 +51,4 @@ class ExpressionType(enum.IntEnum):
     Const   = 1002
 
     def __str__(self):
-        return f'ExpressionType.{self.name}'
+        return self.name

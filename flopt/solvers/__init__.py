@@ -16,6 +16,7 @@ from flopt.solvers.hyperopt_search import HyperoptTPESearch
 from flopt.solvers.swarm_intelligence_searches import ShuffledFrogLeapingSearch
 from flopt.solvers.pulp_search import PulpSearch
 from flopt.solvers.cvxopt_qp_search import CvxoptQpSearch
+from flopt.solvers.amplify_search import AmplifySearch
 from flopt.solvers.auto_search import AutoSearch
 
 
@@ -30,6 +31,7 @@ algos = {
     'ScipySearch'      : ScipySearch,
     'ScipyLpSearch'    : ScipyLpSearch,
     'CvxoptQpSearch'   : CvxoptQpSearch,
+    'AmplifySearch'    : AmplifySearch,
     'auto'             : AutoSearch,
 }
 

@@ -1,3 +1,6 @@
+from flopt.constants import number_classes
+
+
 class Constraint:
     """Constraint Class
 
@@ -57,6 +60,15 @@ class Constraint:
 
     def isLinear(self):
         return self.expression.isLinear()
+
+
+    def toSpin(self):
+        if not isinstance(self.left, number_classes):
+            self.left = self.left.toSpin()
+        if not isinstance(self.right, number_classes):
+            self.right = self.right.toSpin()
+        self.expression = self.left - self.right
+        return self
 
 
     def __str__(self):

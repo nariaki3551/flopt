@@ -133,11 +133,14 @@ class Expression:
                     self.polynominal = self.elmA.toPolynominal() + self.elmB.toPolynominal()
                 elif self.operater == '-':
                     self.polynominal = self.elmA.toPolynominal() - self.elmB.toPolynominal()
-                elif self.operater == '*':
+                else:
                     self.polynominal = self.elmA.toPolynominal() * self.elmB.toPolynominal()
             elif self.operater == '^' and isinstance(self.elmB, Const) and isinstance(self.elmB.value(), int):
                 self.polynominal = self.elmA.toPolynominal() ** self.elmB.value()
-        self._polynominal = None
+            else:
+                self.polynominal = None
+        else:
+            self.polynominal = None
 
 
     def setVarDict(self, var_dict):
@@ -281,16 +284,13 @@ class Expression:
         -------
         collections.namedtuple
             QuadraticStructure('QuadraticStructure', 'Q c C x'),
-            such that 1/2 x^T Q x + c^T x + C,
-                      Q^T = Q
+            such that 1/2 x^T Q x + c^T x + C, Q^T = Q
         """
         assert self.isQuadratic()
         from flopt.convert import QuadraticStructure
         polynominal = self.polynominal.simplify()
         if x is None:
-            x = np.array(
-                sorted(self.getVariables(), key=lambda var: var.name)
-            )
+            x = np.array(sorted(self.getVariables(), key=lambda var: var.name))
         num_variables = len(x)
 
         Q = np.zeros((num_variables, num_variables), dtype=np_float)
@@ -300,7 +300,7 @@ class Expression:
                 for j in range(i+1, num_variables):
                     Q[i, j] = Q[j, i] = polynominal.coeff(x[i], x[j])
 
-        c = np.zeros((num_variables, ))
+        c = np.zeros((num_variables, ), dtype=np_float)
         for i in range(num_variables):
             c[i] = polynominal.coeff(x[i])
 
@@ -528,7 +528,10 @@ class Expression:
         if isinstance(other, number_classes):
             if other == 0:
                 return self
-            return Expression(self, Const(other), '-')
+            elif other < 0:
+                return Expression(self, Const(-other), '+')
+            else:
+                return Expression(self, Const(other), '-')
         elif isinstance(other, Expression):
             if other.isNeg():
                 # self - (-1*other) -> self + other
@@ -797,12 +800,6 @@ class CustomExpression(Expression):
         return False
 
     def traverse(self):
-        """traverse Expression tree as root is self
-
-        Yield
-        -----
-        Expression or VarElement
-        """
         yield self
 
     def __hash__(self):
@@ -892,7 +889,10 @@ class Const:
         return self._value - other
 
     def __rsub__(self, other):
-        return other - self._value
+        if self._value < 0:
+            return other + (-self)
+        else:
+            return other - self._value
 
     def __mul__(self, other):
         return self._value * other

@@ -2,21 +2,27 @@
 QpStructure
 ^^^^^^^^^^^
 
-.. autofunction:: flopt.convert.QpStructure
+.. autoclass:: flopt.convert.QpStructure
+   :members:
 
 
 LpStructure
 ^^^^^^^^^^^
 
-.. autofunction:: flopt.convert.LpStructure
+.. autoclass:: flopt.convert.LpStructure
+   :members:
+
 
 IsingStructure
 ^^^^^^^^^^^^^^
 
-.. autofunction:: flopt.convert.IsingStructure
+.. autoclass:: flopt.convert.IsingStructure
+   :members:
+
 
 QuboStructure
 ^^^^^^^^^^^^^
 
-.. autofunction:: flopt.convert.QuboStructure
+.. autoclass:: flopt.convert.QuboStructure
+   :members:
 

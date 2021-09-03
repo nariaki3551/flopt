@@ -1,4 +1,5 @@
-from time import time
+import copy
+
 import pulp
 
 from flopt.solvers.base import BaseSearch
@@ -55,12 +56,14 @@ class PulpSearch(BaseSearch):
         bool
             return true if objective and constraint functions are linear else false
         """
-        return all( expr.isLinear() for expr in [prob.obj] + prob.constraints )\
-                and all(not var.type() == VariableType.Permutation for var in prob.getVariables())
+        var_types = {VariableType.Binary, VariableType.Integer, VariableType.Continuous}
+        var_match = all( var.type() in var_types for var in prob.getVariables() )
+        obj_linear = prob.obj.isLinear()
+        const_linear = all( const.isLinear() for const in prob.constraints )
+        return var_match and obj_linear and const_linear
 
 
     def search(self):
-        status = SolverTerminateState.Normal
 
         lp_prob, lp_solution = self.createLpProblem(self.solution, self.prob)
 
@@ -84,6 +87,8 @@ class PulpSearch(BaseSearch):
             # -3: undefined
             status = SolverTerminateState.Abnormal
             logger.info(f'PuLP LpStatus {pulp.constants.LpStatus[lp_status]}')
+        else:
+            status = SolverTerminateState.Normal
 
         return status
 

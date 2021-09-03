@@ -17,7 +17,7 @@ This problem can be formulated using `flopt` as follows,
 
 .. code-block:: python
 
-  from flopt import Variable, Problem, Solver
+  from flopt import Variable, Problem, Solver, Value
 
   # variables
   a = Variable(name='a', lowBound=0, upBound=1, cat='Integer')
@@ -29,15 +29,15 @@ This problem can be formulated using `flopt` as follows,
   prob += 2*(3*a+b)*c**2+3   # set the objective function
 
   # solver
-  solver = Solver(algo='RandomSearch')  # select the heuristic algorithm
-  solver.setParams(n_trial=1000)  # setting of the parameters
+  solver = Solver(algo='RandomSearch')  # select the random search algorithm
+  solver.setParams(n_trial=1000)  # set the parameters for solver
   prob.solve(solver, msg=True)    # run solver
 
   # get best solution
   print('obj value', prob.getObjectiveValue())
-  print('a', a.value())
-  print('b', b.value())
-  print('c', c.value())
+  print('a', Value(a))  # or a.value()
+  print('b', Value(b))
+  print('c', Value(c))
 
 
 Variable
@@ -121,11 +121,11 @@ The results of the solver are reflected in the problem and variable objects.
 
 - `getObjectiveValue()` in problem shows the objective value of the best solution solver found.<br>
 
-- `value()` in variable shows the value of variable of the best solution.
+- `Value()` in variable shows the value of variable of the best solution.
 
 .. code-block:: python
 
   print('obj value', prob.getObjectiveValue())
-  print('a', a.value())
-  print('b', b.value())
-  print('c', c.value())
+  print('a', Value(a))  # or a.value()
+  print('b', Value(b))
+  print('c', Value(c))

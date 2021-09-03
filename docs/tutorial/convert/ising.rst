@@ -39,21 +39,57 @@ We can convert this into Ising form as follows.
 
 .. code-block:: python
 
-  from flopt.convert import flopt_to_ising
-  ising = flopt_to_ising(prob)  # obtain Ising form
-
-  print(ising.J)
-  >>> [[0. 1.]
-  >>>  [0. 0.]]
-  print(ising.h)
-  >>> [1. 0.]
-  print(ising.C)
-  >>> 1.0
-  print(ising.x)
-  >>> [Variable(a, cat="Spin", ini_value=-1) Variable(b, cat="Spin", ini_value=-1)]
+  from flopt.convert import IsingStructure
+  ising = IsingStructure.fromFlopt(prob)
 
 
-We can convert evan problem includes `Binary` variables.
+To show the contents of ising,
+
+.. code-block:: python
+
+  print(ising.show())
+  >>> IsingStructure
+  >>> - x.T.dot(J).dot(x) - h.T.dot(x) + C
+  >>>
+  >>> #x
+  >>> 2
+  >>>
+  >>> J
+  >>> [[-0.  1.]
+  >>>  [-0. -0.]]
+  >>>
+  >>> h
+  >>> [ 1. -0.]
+  >>>
+  >>> C
+  >>> 1
+  >>>
+  >>> x
+  >>> [Variable("a", cat="Spin", ini_value=1)
+  >>>  Variable("b", cat="Spin", ini_value=1)]
+
+
+Convert QUBO
+^^^^^^^^^^^^
+
+To convert this problem as QUBO formulation, we use `.toQubo()` function.
+
+.. code-block:: python
+
+  print(ising.toQubo().toFlopt().show())  # for show cleary ising.toQubo()
+  >>> Name: None
+  >>>   Type         : Problem
+  >>>   sense        : minimize
+  >>>   objective    : -4.0*(a_b*b_b)+(2.0*b_b)+1.0
+  >>>   #constraints : 0
+  >>>   #variables   : 2 (Binary 2)
+
+
+`a_b` is the binary variable as `a_b = (1+a)/2`.
+
+In addition, `.toQp()`, `.toLp()` are available.
+The case of problem includes binary variable, we can convert as ising model if the problem is convertable.
+
 
 .. code-block:: python
 
@@ -75,31 +111,30 @@ We can convert evan problem includes `Binary` variables.
   >>>   #constraints : 0
   >>>   #variables   : 2 (Binary 1, Spin 1)
 
+  from flopt.convert import IsingStructure
+  ising = IsingStructure.fromFlopt(prob)
 
-By `.toSpin()`, we can see the objective function when all the variables are transformed to `Spin`.
-
-.. code-block:: python
-
-  print(prob.obj.toSpin().name)
-  >>> '1-a*((b_s+1)*0.5)-a'
-
-`b_s` is the spin variable converted from `b`.
-
-.. code-block:: python
-
-  from flopt.convert import flopt_to_ising
-  ising = flopt_to_ising(prob)
-
-  print(ising.J)
-  >>> [[0. 1.]
-  >>>  [0. 0.]]
-  print(ising.h)
-  >>> [1.5 0. ]
-  print(ising.C)
+  print(ising.show())
+  >>> IsingStructure
+  >>> - x.T.dot(J).dot(x) - h.T.dot(x) + C
+  >>>
+  >>> #x
+  >>> 2
+  >>>
+  >>> J
+  >>> [[-0.   0.5]
+  >>>  [-0.  -0. ]]
+  >>>
+  >>> h
+  >>> [ 1.5 -0. ]
+  >>>
+  >>> C
   >>> 1.0
-  print(ising.x)
-  >>> [Variable(a, cat="Spin", ini_value=-1)
-  >>>  Variable(b_s, cat="Spin", ini_value=-1)]
+  >>>
+  >>> x
+  >>> [Variable("a", cat="Spin", ini_value=-1)
+  >>>  Variable("b_s", cat="Spin", ini_value=-1)]
+
 
 
 Ising to flopt
@@ -113,13 +148,14 @@ Ising to flopt
   h = [1, 0]
   C = 1
 
-  from flopt.convert import ising_to_flopt
-  prob = ising_to_flopt(J, h, C)
+  from flopt.convert import IsingStructure
+  prob = IsingStructure(J, h, C).toFlopt()
 
-  print(prob)
+  print(prob.show())
   >>> Name: None
   >>>   Type         : Problem
   >>>   sense        : minimize
-  >>>   objective    : -s0*s1-s0+1
+  >>>   objective    : -x_0*x_1-x_0+1
   >>>   #constraints : 0
   >>>   #variables   : 2 (Spin 2)
+

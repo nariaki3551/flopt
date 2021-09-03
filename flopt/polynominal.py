@@ -27,14 +27,30 @@ class Monomial:
 
 
     def copy(self):
+        """
+        Returns
+        -------
+        Monomial
+        """
         return Monomial(dict(self.terms), self.coeff)
 
 
     def variables(self):
+        """
+        Returns
+        -------
+        set of VarElement family
+        """
         return set(self.terms.keys())
 
 
     def maxDegree(self):
+        """
+        Returns
+        -------
+        int
+            maximum degree of variables
+        """
         if self.max_degree is None:
             self.max_degree = max([0] + [exp for val, exp in self.terms.items()])
         return self.max_degree
@@ -63,16 +79,33 @@ class Monomial:
 
 
     def isLinear(self):
+        """
+        Returns
+        -------
+        bool
+            Return True if it is linear else False
+        """
         if self.is_linear is None:
             self.is_linear = (self.maxDegree() <= 1 and len(self.terms) <= 1)
         return self.is_linear
 
 
     def isQuadratic(self):
+        """
+        Returns
+        -------
+        bool
+            Return True if it is quadratic else False
+        """
         return sum(self.terms.values()) <= 2
 
 
     def toPolynominal(self):
+        """
+        Returns
+        -------
+        Polynominal
+        """
         if self.terms:
             return Polynominal({Monomial(self.terms): self.coeff})
         else:
@@ -80,6 +113,12 @@ class Monomial:
 
 
     def simplify(self):
+        """Simplify this monomial
+
+        Returns
+        -------
+        Monomial
+        """
         terms = dict(self.terms)
         for x in self.terms:
             if x.type() == VariableType.Binary:
@@ -159,6 +198,7 @@ class Monomial:
         return str(self)
 
 
+
 class Polynominal:
     """
     Parameters
@@ -174,10 +214,54 @@ class Polynominal:
 
 
     def monos(self):
+        """
+        Returns
+        -------
+        set of Monomial
+        """
         return set(self.terms.keys())
 
 
     def coeff(self, *args):
+        """
+        Returns
+        -------
+        int or float
+            coefficient of monomial
+
+        Examples
+        --------
+
+        .. code-block:: python
+
+            from flopt import Variable
+            x = Variable('x')
+            y = Variable('y')
+            e = x ** 2 + 3 * y ** 3
+            e.polynominal
+            >>> x^2+3*y^3+0
+
+        get coefficient of `x^2` term
+
+        .. code-block:: python
+
+            e.polynominal.coeff(x, x)
+            >>> 1
+
+        get coefficient of `x` term, it is 0
+
+        .. code-block:: python
+
+            e.polynominal.coeff(x)
+            >>> 0
+
+        get coefficient of `y^3` term, it is 0
+
+        .. code-block:: python
+
+            e.polynominal.coeff(y**3)
+            >>> 3
+        """
         if isinstance(args[0], Monomial):
             mono = args[0].copy()
         else:
@@ -195,18 +279,40 @@ class Polynominal:
 
 
     def constant(self):
+        """
+        Returns
+        -------
+        int or float
+        """
         return self._constant
 
 
     def isConstant(self):
+        """
+        Returns
+        -------
+        bool
+            return True if it is constant else False
+        """
         return len(self.terms) == 0
 
 
     def isMonomial(self):
+        """
+        Returns
+        -------
+        bool
+            return True if it is monomial else False
+        """
         return len(self.terms) == 0 or (len(self.terms) == 1 and self._constant == 0)
 
 
     def toMonomial(self):
+        """
+        Returns
+        -------
+        Monomial
+        """
         assert self.isMonomial()
         if len(self.terms) == 0:
             return Monomial(coeff=self._constant)
@@ -216,6 +322,12 @@ class Polynominal:
 
 
     def diff(self, x):
+        """
+        Returns
+        -------
+        Polynominal
+            return polynominal differentiated by x
+        """
         poly = Polynominal(constant=0)
         for mono, coeff in self:
             poly += mono.diff(x)
@@ -223,18 +335,41 @@ class Polynominal:
 
 
     def maxDegree(self):
+        """
+        Returns
+        -------
+        int
+        """
         return max(mono.maxDegree() for mono in self.terms)
 
 
     def isLinear(self):
+        """
+        Returns
+        -------
+        bool
+            return True if it is linear else False
+        """
         return all(mono.isLinear() for mono in self.terms)
 
 
     def isQuadratic(self):
+        """
+        Returns
+        -------
+        bool
+            return True if it is quadratic else False
+        """
         return all(mono.isQuadratic() for mono in self.terms)
 
 
     def simplify(self):
+        """
+        Returns
+        -------
+        Polynominal
+            return simplified polynominal
+        """
         poly = Polynominal(constant=self._constant)
         for mono, coeff in self:
             poly += coeff * mono.simplify()

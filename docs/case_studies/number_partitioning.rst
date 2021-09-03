@@ -20,6 +20,7 @@ If the solution is satisfied that objective function value is 0, then sum of B a
     s.t. x_i in {-1, 1}
 
 
+In flopt,
 
 .. code-block:: python
 
@@ -53,13 +54,9 @@ We search the optimal solution by RandomSearch.
     from flopt import Solver, Value
 
     # solve until obtain the solution
-    # whose objective value is lower than or equal 0
+    # whose objective value is lower than or equal to 0
     solver = Solver('RandomSearch')
     prob.solve(solver, msg=True, lowerbound=0)
-    print('x', Value(x))
-
-    solver = Solver('RandomSearch')
-    prob.solve(solver, msg=True, timelimit=1)
     >>> Welcome to the flopt Solver
     >>> Version 0.4
     >>> Date: August 12, 2021
@@ -93,7 +90,8 @@ To make sure we obtain the optimal solution, we use LP Solver to convert problem
 
 .. code-block:: python
 
-    from flopt.convert import linearize, binarize
+    from flopt.convert import linearize
+
     linearize(prob)
 
     print(prob.show())
@@ -152,8 +150,8 @@ To make sure we obtain the optimal solution, we use LP Solver to convert problem
     >>> x [1 -1 1 -1]
 
 
-Conversion other formulation
-----------------------------
+Conversion to other formulations
+--------------------------------
 
 
 QP

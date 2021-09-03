@@ -6,6 +6,57 @@ from flopt.constants import VariableType, SolverTerminateState
 class CvxoptQpSearch(BaseSearch):
     """API of CVXOPT.qp Solver
 
+    Parameters
+    ----------
+    n_trial : int
+        max iteration
+
+    Examples
+    --------
+
+    .. code-block:: python
+
+        from flopt import Variable, Problem
+
+        x = Variable('x', lowBound=-1, upBound=1, cat='Continuous')
+        y = Variable('y', lowBound=-1, upBound=1, cat='Continuous')
+
+        prob = Problem()
+        prob += 2*x*x + x*y + y*y + x + y
+        prob += x >= 0
+        prob += y >= 0
+        prob += x + y == 1
+
+        print(prob.show())
+        >>> Name: None
+        >>>   Type         : Problem
+        >>>   sense        : minimize
+        >>>   objective    : 2*(x*x)+(x*y)+(y*y)+x+y
+        >>>   #constraints : 3
+        >>>   #variables   : 2 (Continuous 2)
+        >>>
+        >>>   C 0, name None, x >= 0
+        >>>   C 1, name None, y >= 0
+        >>>   C 2, name None, x+y-1 == 0
+
+
+    .. code-block:: python
+
+        from flopt import Solver, Value
+
+        solver = Solver('CvxoptQpSearch')
+        status, log = prob.solve(solver, msg=True)
+        print()
+        print('obj =', Value(prob.obj))
+        print('x =', Value(x))
+        print('y =', Value(y))
+        >>> obj = 1.8750000000000002
+        >>> x = 0.2500000152449024
+        >>> y = 0.7499999847550975
+
+    See Also
+    --------
+    `https://cvxopt.org/userguide/coneprog.html#quadratic-programming`
     """
     def __init__(self):
         super().__init__()

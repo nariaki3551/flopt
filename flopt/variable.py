@@ -123,27 +123,17 @@ class VariableFactory:
         >>> Variable.dict('x', [0, 1])
         >>> {0: Variable(x_0, cat="Continuous", ini_value=0.0),
         >>>  1: Variable(x_1, cat="Continuous", ini_value=0.0)}
-
+        >>>
         >>> Variable.dict('x', range(2), cat='Binary')
         >>> {0: Variable(x_0, cat="Binary", ini_value=0),
         >>>  1: Variable(x_1, cat="Binary", ini_value=0)}
-
+        >>>
         >>> Variable.dict('x', (range(2), range(2)), cat='Binary')
         >>> {(0, 0): Variable(x_0_0, cat="Binary", ini_value=0),
              (0, 1): Variable(x_0_1, cat="Binary", ini_value=0),
              (1, 0): Variable(x_1_0, cat="Binary", ini_value=0),
              (1, 1): Variable(x_1_1, cat="Binary", ini_value=0)}
-
-        >>> Variable.dict('x', (range(2), range(2), range(2)), cat='Binary)
-        >>> {(0, 0, 0): Variable(x_0_0_0, cat="Binary", ini_value=0),
-             (0, 0, 1): Variable(x_0_0_1, cat="Binary", ini_value=0),
-             (0, 1, 0): Variable(x_0_1_0, cat="Binary", ini_value=0),
-             (0, 1, 1): Variable(x_0_1_1, cat="Binary", ini_value=0),
-             (1, 0, 0): Variable(x_1_0_0, cat="Binary", ini_value=0),
-             (1, 0, 1): Variable(x_1_0_1, cat="Binary", ini_value=0),
-             (1, 1, 0): Variable(x_1_1_0, cat="Binary", ini_value=0),
-             (1, 1, 1): Variable(x_1_1_1, cat="Binary", ini_value=0)}
-
+        >>>
         >>> # not work
         >>> # Variable.dict('x', [range(2), range(2)], cat='Binary')
 
@@ -191,7 +181,7 @@ class VariableFactory:
         >>> Variable.array('x', 2, cat='Binary')
         >>> array([Variable(x_0, cat="Binary", ini_value=0),
         >>>        Variable(x_1, cat="Binary", ini_value=0)], dtype=object)
-
+        >>>
         >>> Variable.array('x', (2, 2), cat='Binary')
         >>> array([[Variable(x_0_0, cat="Binary", ini_value=0),
         >>>         Variable(x_0_1, cat="Binary", ini_value=0)],
@@ -403,7 +393,10 @@ class VarElement:
         if isinstance(other, number_classes):
             if other == 0:
                 return self
-            return Expression(self, Const(other), '-')
+            elif other < 0:
+                return Expression(self, Const(-other), '+')
+            else:
+                return Expression(self, Const(other), '-')
         elif isinstance(other, VarElement):
             return Expression(self, other, '-')
         elif isinstance(other, Expression):

@@ -9,12 +9,8 @@ Solvers
     SwarmIntelligence
     Basian
     Evolution
+    QP
     LP
     nonLP
+    Ising
 
-
-Solver Base class
------------------
-
-.. autoclass:: flopt.solvers.base.BaseSearch
-  :members:

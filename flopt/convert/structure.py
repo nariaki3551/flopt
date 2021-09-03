@@ -9,6 +9,12 @@ from flopt.env import setup_logger
 logger = setup_logger(__name__)
 
 
+
+# -------------------------------------------------------
+#   Utils
+# -------------------------------------------------------
+
+
 def merge(func, arrays):
     """
     Parameters
@@ -44,9 +50,13 @@ def shape(array):
 
 
 
+# -------------------------------------------------------
+#   Expression Structures
+# -------------------------------------------------------
+
 class QuadraticStructure:
     """Quadratic Structure
-    ..
+    ::
 
       1/2 x.T.dot(Q).dot(x) + c.T.dot(x) + C
     """
@@ -58,6 +68,16 @@ class QuadraticStructure:
 
 
     def toLinear(self):
+        """
+        Returns
+        -------
+        LinearStructure
+
+        Raises
+        ------
+        ConversionError
+            If this problem cannot be converted to LinearStructure
+        """
         if self.Q is not None and not np.all(self.Q == 0):
             raise ConversionError()
         return LinearStructure(self.c, self.C, self.x)
@@ -70,7 +90,7 @@ class QuadraticStructure:
 
 class LinearStructure:
     """Linear Structure
-    ..
+    ::
 
       c.T.dot(x) + C
     """
@@ -81,10 +101,14 @@ class LinearStructure:
 
 
     def __repr__(self):
-        return f'LinearStructur{self.c, self.C, self.x}'
+        return f'LinearStructure{self.c, self.C, self.x}'
 
 
 
+
+# -------------------------------------------------------
+#   Problem Structures
+# -------------------------------------------------------
 
 class QpStructure:
     """Quadratic Programming Structure
@@ -208,11 +232,15 @@ class QpStructure:
     def toAllNeq(self):
         """convert all non eqaual constraint type
 
-        ..
+        ::
 
           obj  1/2 x.T.dot(Q).dot(x) + c.T.dot(x) + C
           s.t. [G; A; -A] x <= [h; b; -b]
                lb <= x <= ub
+
+        Returns
+        -------
+        QpStructure
         """
         G = merge(np.vstack, [(self.G, 1), (self.A, 1), (self.A, -1)])
         h = merge(np.hstack, [(self.h, 1), (self.b, 1), (self.b, -1)])
@@ -224,7 +252,7 @@ class QpStructure:
     def toAllEq(self):
         """convert all eqaual constraint type
 
-        ..
+        ::
 
           obj  1/2 x.T.dot([Q, O; O, O]).dot([x; s]) + [c; O].T.dot([x; s]) + C
           s.t. [A, O; G, I] [x; s] == [b; h]
@@ -268,11 +296,15 @@ class QpStructure:
     def boundsToNeq(self):
         """convert bounds constraints into neq constraints
 
-        ..
+        ::
 
           obj  1/2 x.T.dot(Q).dot(x) + c.T.dot(x) + C
           s.t. [G; -I; I] x <= [h; -lb; ub]
                A x == b
+
+        Returns
+        -------
+        QpStructure
         """
         G = np.array(self.G) if self.G is not None else None
         h = np.array(self.h) if self.h is not None else None
@@ -289,6 +321,16 @@ class QpStructure:
 
 
     def toFlopt(self, name=None):
+        """
+        Parameters
+        ----------
+        name : str
+            name of problem
+
+        Returns
+        -------
+        Problem
+        """
         if self.x is not None:
             x = self.x
         else:
@@ -309,6 +351,16 @@ class QpStructure:
 
 
     def toLp(self):
+        """
+        Returns
+        -------
+        LpStructure
+
+        Raises
+        ------
+        ConversionError
+            If this cannot be conversion to LpStructure
+        """
         if self.Q is not None and not np.all(self.Q == 0):
             logger.info(f'linearization will be done because it is not linearize')
             prob = self.toFlopt()
@@ -323,10 +375,30 @@ class QpStructure:
 
 
     def toIsing(self):
+        """
+        ::
+
+            QpStructure --> Problem (flopt) --> IsingStructure
+
+        Returns
+        -------
+        IsingStructure
+        """
+        assert self.G is None and self.A is None
         return self.toFlopt().obj.toIsing()
 
 
     def toQubo(self):
+        """
+        ::
+
+            QpStructure --> Problem (flopt) --> IsingStructure --> QuboStructure
+
+        Returns
+        -------
+        QuboStructure
+        """
+        assert self.G is None and self.A is None
         return self.toIsing().toQubo()
 
 
@@ -405,23 +477,56 @@ class LpStructure:
 
 
     def toAllNeq(self):
+        """
+        Returns
+        -------
+        LpStructure
+        """
         return self.toQp().toAllNeq().toLp()
 
 
     def toAllEq(self):
+        """
+        Returns
+        -------
+        LpStructure
+        """
         return self.toQp().toAllEq().toLp()
 
 
     @classmethod
     def fromFlopt(cls, prob, x=None):
+        """
+        ::
+
+            Problem (flopt) --> QpStructure --> LpStructure
+
+        Returns
+        -------
+        LpStructure
+        """
         return QpStructure.fromFlopt(prob, x).toLp()
 
 
     def toFlopt(self):
+        """
+        ::
+
+            LpStructure --> QpStructure --> Problem (flopt)
+
+        Returns
+        -------
+        Problem
+        """
         return self.toQp().toFlopt()
 
 
     def toQp(self):
+        """
+        Returns
+        -------
+        QpStructure
+        """
         Q = np.zeros((len(self.c), len(self.c)), dtype=np_float)
         return QpStructure(Q, self.c, self.C,
                 self.G, self.h, self.A, self.b,
@@ -429,10 +534,30 @@ class LpStructure:
 
 
     def toIsing(self):
+        """
+        ::
+
+            LpStructure --> Problem (flopt) --> IsingStructure
+
+        Returns
+        -------
+        IsingStructure
+        """
+        assert self.G is None and self.A is None
         return self.toFlopt().obj.toIsing()
 
 
     def toQubo(self):
+        """
+        ::
+
+            LpStructure --> Problem (flopt) --> IsingStructure --> QuboStructure
+
+        Returns
+        -------
+        QuboStructure
+        """
+        assert self.G is None and self.A is None
         return self.toIsing().toQubo()
 
 
@@ -499,7 +624,7 @@ class IsingStructure:
 
     @classmethod
     def fromFlopt(cls, prob, x=None):
-        return QpStructure.fromFlopt(prob, x).toIsing()
+        return prob.obj.toIsing()
 
 
     def toFlopt(self):
@@ -513,14 +638,37 @@ class IsingStructure:
 
 
     def toQp(self):
+        """
+        ::
+
+            IsingStructure --> Problem (flopt) --> QpStructure
+
+        Returns
+        -------
+        QpStructure
+        """
         return QpStructure.fromFlopt(self.toFlopt())
 
 
     def toLp(self):
+        """
+        ::
+
+            IsingStructure --> Problem (flopt) --> QpStructure --> LpStructure
+
+        Returns
+        -------
+        LpStructure
+        """
         return self.toQp().toLp()
 
 
     def toQubo(self):
+        """
+        Returns
+        -------
+        QuboStructure
+        """
         num_x = len(self.J)
 
         # create Q
@@ -571,8 +719,7 @@ class IsingStructure:
 
 class QuboStructure:
     """QUBO Structure
-
-    ..
+    ::
 
       obj  x.T.dot(Q).dot(x) + C
     """
@@ -591,10 +738,20 @@ class QuboStructure:
 
     @classmethod
     def fromFlopt(cls, prob, x=None):
+        """
+        ::
+
+            Problem (flopt) --> IsingStructure --> QuboStructure
+        """
         return IsingStructure.fromFlopt(prob, x).toQubo()
 
 
     def toFlopt(self):
+        """
+        Returns
+        -------
+        Problem
+        """
         if self.x is not None:
             x = self.x
         else:
@@ -605,14 +762,41 @@ class QuboStructure:
 
 
     def toQp(self):
+        """
+        ::
+
+            QuboStructure --> Problem (flopt) --> QpStructure
+
+        Returns
+        -------
+        QpStructure
+        """
         return QpStructure.fromFlopt(self.toFlopt())
 
 
     def toLp(self):
+        """
+        ::
+
+            QuboStructure --> Problem (flopt) --> QuboStructure --> LpStructure
+
+        Returns
+        -------
+        LpStructure
+        """
         return self.toQp().toLp()
 
 
     def toIsing(self):
+        """
+        ::
+
+            QuboStructure --> Problem (flopt) --> IsingStructure
+
+        Returns
+        -------
+        IsingStructure
+        """
         return self.toFlopt().obj.toIsing()
 
 
