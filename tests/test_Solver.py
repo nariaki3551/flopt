@@ -280,15 +280,21 @@ def test_AmplifySearch_available(
     assert solver.available(prob_ising_const) == True
     assert solver.available(prob_perm) == False
 
-def test_AmplifySearch1(prob_ising, callback):
+def test_AmplifySearch1(prob_ising, callback, request):
+    token = request.config.getoption('amplify_token')
+    if token is None:
+        return True
     solver = Solver(algo='AmplifySearch')
-    solver.setParams(token="Z9KtZmRAxfeS3qtif2DYdi9OF8iWWbYE")
-    prob_ising.solve(solver, timelimit=0.5)
+    solver.setParams(token=token)
+    prob_ising.solve(solver, timelimit=1, msg=True)
 
-def test_AmplifySearch2(prob_ising_const, callback):
+def test_AmplifySearch2(prob_ising_const, callback, request):
+    token = request.config.getoption('amplify_token')
+    if token is None:
+        return True
     solver = Solver(algo='AmplifySearch')
-    solver.setParams(token="Z9KtZmRAxfeS3qtif2DYdi9OF8iWWbYE")
-    prob_ising_const.solve(solver, timelimit=0.5)
+    solver.setParams(token=token)
+    prob_ising_const.solve(solver, timelimit=1, msg=True)
 
 
 def test_CvxoptQpSearch1(prob_only_continuous, callback):
