@@ -1,4 +1,3 @@
-<<<<<<< release/v0.5
 import enum
 
 import numpy as np
@@ -18,10 +17,7 @@ array_classes = (list, tuple, np.ndarray)
 # numpy floating point
 np_float = np.float64
 
-=======
-VERSION = '0.4.1'
-DATE = 'August 16, 2021'
->>>>>>> version0.5
+
 
 # termination state
 class SolverTerminateState(enum.IntEnum):
