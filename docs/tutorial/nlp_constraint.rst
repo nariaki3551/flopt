@@ -25,11 +25,11 @@ This problem can be formulated using `flopt` as follows,
 
   # problem
   prob = Problem(name='Test')
-  prob += 2*(3*a+b**2)   # set the objective function
-  prob += a*b >= 2  # add constraint
+  prob += 2*(3*a+b**2)  # set the objective function
+  prob += a*b >= 2      # add constraint
 
   # solver
-  solver = Solver(algo='ScipySearch')  # select the heuristic algorithm
+  solver = Solver(algo='ScipySearch')  # select the scipy function
   prob.solve(solver, timelimit=10, msg=True)    # run solver
 
   # get best solution

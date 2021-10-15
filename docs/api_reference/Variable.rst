@@ -1,21 +1,21 @@
-.. module:: flopt.variable
 
 Variable
 ========
 
-.. autofunction:: flopt.Variable
+.. autoclass:: flopt.variable.VariableFactory
+  :members:
 
-.. autoclass:: VarElement
+.. autoclass:: flopt.variable.VarElement
   :members:
   :inherited-members:
 
-.. autoclass:: VarInteger
+.. autoclass:: flopt.variable.VarInteger
 
-.. autoclass:: VarBinary
+.. autoclass:: flopt.variable.VarBinary
 
-.. autoclass:: VarContinuous
+.. autoclass:: flopt.variable.VarContinuous
 
-.. autoclass:: VarPermutation
+.. autoclass:: flopt.variable.VarPermutation
   :members:
 
-.. autoclass:: VarConst
+.. autoclass:: flopt.expression.Const

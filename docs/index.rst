@@ -7,15 +7,17 @@ Welcome to flopt's documentation!
 =================================
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
    :caption: Contents:
 
    installation
    tutorial/index
+   case_studies/index
    solvers/index
    api_reference/index
    reference/index
    examples/index
+
 
 Indices and tables
 ==================

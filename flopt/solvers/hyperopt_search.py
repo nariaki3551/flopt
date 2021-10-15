@@ -2,16 +2,9 @@ from time import time
 
 from flopt.solvers.base import BaseSearch
 from flopt.solvers.solver_utils import (
-    Log, start_solver_message,
-    during_solver_message_header,
     during_solver_message,
-    end_solver_message
 )
-from flopt.env import setup_logger
-import flopt.constants
-
-
-logger = setup_logger(__name__)
+from flopt.constants import VariableType, SolverTerminateState
 
 
 import logging
@@ -61,23 +54,22 @@ class HyperoptTPESearch(BaseSearch):
             return true if it can solve the problem else false
         """
         return all(
-                var.getType() in {'VarContinuous', 'VarInteger', 'VarBinary'}
+                var.type() in {VariableType.Continuous, VariableType.Integer, VariableType.Binary}
                 for var in prob.getVariables()
                 ) and ( not prob.constraints )
 
 
     def search(self):
         import hyperopt
-        self.startProcess()
-        status = flopt.constants.SOLVER_NORMAL_TERMINATE
+        status = SolverTerminateState.Normal
 
         # make the search space
         space = dict()
         for var in self.solution:
             name = var.name
-            if var.getType() in {name, 'VarInteger', 'VarBinary'}:
+            if var.type() in {name, VariableType.Integer, VariableType.Binary}:
                 var_space = hyperopt.hp.quniform(name, var.getLb(), var.getUb(), 1)
-            elif var.getType() == 'VarContinuous':
+            elif var.type() == VariableType.Continuous:
                 var_space = hyperopt.hp.uniform(name, var.getLb(), var.getUb())
             space[var.name] = var_space
 
@@ -93,9 +85,8 @@ class HyperoptTPESearch(BaseSearch):
                 show_progressbar=self.show_progressbar,
             )
         except TimeoutError:
-            status = flopt.constants.SOLVER_TIMELIMIT_TERMINATE
+            status = SolverTerminateState.Timelimit
 
-        self.closeProcess()
         return status
 
 
@@ -108,7 +99,7 @@ class HyperoptTPESearch(BaseSearch):
         self.trial_ix += 1
         for name, value in var_value_dict.items():
             self.var_dict[name].setValue(value)
-        obj_value = self.obj.value(self.solution)
+        obj_value = self.getObjValue(self.solution)
 
         # check whether update or not
         if obj_value < self.best_obj_value:
@@ -124,14 +115,3 @@ class HyperoptTPESearch(BaseSearch):
         return {'loss': obj_value, 'status': self.hyperopt_STATUS_OK}
 
 
-    def startProcess(self):
-        self.best_obj_value = self.obj.value(self.best_solution)
-        self.recordLog()
-
-        if self.msg:
-            during_solver_message_header()
-            self.during_solver_message('S')
-
-
-    def closeProcess(self):
-        self.recordLog()

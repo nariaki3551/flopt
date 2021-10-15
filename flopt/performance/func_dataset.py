@@ -7,8 +7,7 @@ logger = logging.getLogger(__name__)
 
 
 class FuncDataset(BaseDataset):
-    """
-    Function Benchmark Instance Set
+    """Function Benchmark Instance Set
 
     Parameters
     ----------
@@ -19,9 +18,9 @@ class FuncDataset(BaseDataset):
         self.name = 'func'
         self.instance_names = list(benchmark_func)
 
+
     def createInstance(self, instance_name):
-        """
-        create FuncInstance
+        """create FuncInstance
         """
         logger.debug(f'{instance_name}')
         func_data = benchmark_func[instance_name]
@@ -35,9 +34,9 @@ class FuncDataset(BaseDataset):
         return func_instance
 
 
+
 class FuncInstance(BaseInstance):
-    """
-    Function Benchmark Instance
+    """Function Benchmark Instance
 
     Parameters
     ----------
@@ -58,15 +57,15 @@ class FuncInstance(BaseInstance):
         self.minimum_value    = minimum_value
         self.n = n
 
+
     def getBestValue(self):
-        """
-        return the optimal value of objective function
+        """return the optimal value of objective function
         """
         return self.minimum_value(self.n)
 
+
     def createProblem(self, solver):
-        """
-        Create problem according to solver
+        """Create problem according to solver
 
         Parameters
         ----------
@@ -82,12 +81,12 @@ class FuncInstance(BaseInstance):
         if 'blackbox' in solver.can_solve_problems:
             return True, self.createProblemFunc()
         else:
-            print('this instance can be only `blackbox` formulation')
+            logger.info('this instance can be only `blackbox` formulation')
             return False, None
 
+
     def createProblemFunc(self):
-        """
-        create problem from instance
+        """create problem from instance
 
         Returns
         -------
@@ -98,11 +97,11 @@ class FuncInstance(BaseInstance):
         for var in variables:
             var.setRandom()
         func = self.create_objective(self.n)
-        _func = lambda *x: func(x)
-        obj = CustomExpression(_func, variables)
+        obj = CustomExpression(lambda *x: func(x), variables)
         prob = Problem(name='Function:{self.name}')
         prob.setObjective(obj)
         return prob
+
 
     def __str__(self):
         return f'Instance: {self.name}'

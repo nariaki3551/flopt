@@ -1,17 +1,12 @@
-from time import time
+import copy
+
 import pulp
 
 from flopt.solvers.base import BaseSearch
-from flopt.solvers.solver_utils import (
-    Log, start_solver_message,
-    during_solver_message_header,
-    during_solver_message,
-    end_solver_message
-)
-from flopt.expression import ExpressionConst
+from flopt.expression import Const
 from flopt.solution import Solution
 from flopt.env import setup_logger
-import flopt.constants
+from flopt.constants import VariableType, SolverTerminateState
 
 
 logger = setup_logger(__name__)
@@ -61,15 +56,16 @@ class PulpSearch(BaseSearch):
         bool
             return true if objective and constraint functions are linear else false
         """
-        return all( expr.isLinear() for expr in [prob.obj] + prob.constraints )\
-                and all(not var.getType() == 'VarPermutation' for var in prob.getVariables())
+        var_types = {VariableType.Binary, VariableType.Integer, VariableType.Continuous}
+        var_match = all( var.type() in var_types for var in prob.getVariables() )
+        obj_linear = prob.obj.isLinear()
+        const_linear = all( const.isLinear() for const in prob.constraints )
+        return var_match and obj_linear and const_linear
 
 
     def search(self):
-        status = flopt.constants.SOLVER_NORMAL_TERMINATE
 
-        lp_prob, lp_solution \
-            = self.createLpProblem(self.solution, self.obj, self.constraints)
+        lp_prob, lp_solution = self.createLpProblem(self.solution, self.prob)
 
         if self.solver is not None:
             solver = self.solver
@@ -80,7 +76,7 @@ class PulpSearch(BaseSearch):
         # get result
         for lp_var, var in zip(lp_solution, self.solution):
             value = lp_var.getValue()
-            if var.getType() in {'VarInteger', 'VarBinary'}:
+            if var.type() in {VariableType.Integer, VariableType.Binary}:
                 value = round(value)
             var.setValue(value)
         self.updateSolution(self.solution)
@@ -89,20 +85,21 @@ class PulpSearch(BaseSearch):
             # -1: infeasible
             # -2: unbounded
             # -3: undefined
-            status = flopt.constants.SOLVER_ABNORMAL_TERMINATE
+            status = SolverTerminateState.Abnormal
             logger.info(f'PuLP LpStatus {pulp.constants.LpStatus[lp_status]}')
+        else:
+            status = SolverTerminateState.Normal
 
         return status
 
 
-    def createLpProblem(self, solution, obj, constraints):
+    def createLpProblem(self, solution, prob):
         """Convert Problem into pulp.LpProblem
 
         Parameters
         ----------
         solution : Solution
-        obj : Expression or VarElement family
-        constraints : list of Expression or VarElement family
+        prob : Problem
 
         Returns
         -------
@@ -111,14 +108,14 @@ class PulpSearch(BaseSearch):
         # conver VarElement -> LpVariable
         lp_variables = []
         for var in solution:
-            if var.getType() == 'VarContinuous':
+            if var.type() == VariableType.Continuous:
                 cat = 'Continuous'
-            elif var.getType() == 'VarInteger':
+            elif var.type() == VariableType.Integer:
                 cat = 'Integer'
-            elif var.getType() == 'VarBinary':
+            elif var.type() == VariableType.Binary:
                 cat = 'Binary'
             else:
-                raise ValueError
+                raise ValueError(var.type())
             lp_var = LpVariable(
                 var.name, lowBound=var.lowBound, upBound=var.upBound, cat=cat
             )
@@ -128,10 +125,10 @@ class PulpSearch(BaseSearch):
         # conver Problem -> pulp.LpProblem
         name = '' if self.name is None else self.name
         lp_prob = pulp.LpProblem(name=name)
-        if not isinstance(obj, ExpressionConst):
-            lp_prob.setObjective(obj.value(lp_solution))
+        if not isinstance(prob.obj, Const):
+            lp_prob.setObjective(prob.obj.value(lp_solution))
 
-        for const in constraints:
+        for const in prob.constraints:
             const_exp = const.expression
             if const.type == 'eq':
                 lp_prob.addConstraint(

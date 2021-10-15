@@ -14,7 +14,7 @@ PulpSearch
 
 
 ScipyLpSearch
-^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^
 
 .. image:: https://img.shields.io/badge/Variable-Continuous-blue.svg
 .. image:: https://img.shields.io/badge/Objective-Linear-orange.svg

@@ -5,14 +5,10 @@ import numpy as np
 
 from flopt.solvers.base import BaseSearch
 from flopt.solvers.solver_utils import (
-    Log,
-    start_solver_message,
-    during_solver_message_header,
     during_solver_message,
-    end_solver_message
 )
 from flopt.env import setup_logger
-import flopt.constants
+from flopt.constants import VariableType, SolverTerminateState
 
 
 logger = setup_logger(__name__)
@@ -75,26 +71,24 @@ class ShuffledFrogLeapingSearch(BaseSearch):
         bool
             return true if it can solve the problem else false
         """
-        return all(not var.getType() == 'VarPermutation' for var in prob.getVariables())\
+        return all(not var.type() == VariableType.Permutation for var in prob.getVariables())\
                 and (not prob.constraints)
 
 
     def search(self):
-        self.startProcess()
-        status = flopt.constants.SOLVER_NORMAL_TERMINATE
+        status = SolverTerminateState.Normal
 
         for i in range(self.n_trial):
             self.trial_ix += 1
 
             # check time limit
             if time.time() > self.start_time + self.timelimit:
-                self.closeProcess()
-                status = flopt.constants.SOLVER_TIMELIMIT_TERMINATE
+                status = SolverTerminateState.Timelimit
                 return status
 
             self._memetic_evolution()
 
-            obj_value = self.obj.value(self.frogs[0])
+            obj_value = self.getObjValue(self.frogs[0])
             if obj_value < self.best_obj_value:
                 self.updateSolution(self.frogs[0])
                 self.best_obj_value = obj_value
@@ -109,7 +103,6 @@ class ShuffledFrogLeapingSearch(BaseSearch):
             for callback in self.callbacks:
                 callback(self.frogs, self.best_solution, self.best_obj_value)
 
-        self.closeProcess()
         return status
 
 
@@ -139,9 +132,9 @@ class ShuffledFrogLeapingSearch(BaseSearch):
                     new_frog.clip()
 
                 # evaluate solutions
-                fitness_best = self.obj.value(best_frog)
-                fitness_worst = self.obj.value(worst_frog)
-                fitness_new = self.obj.value(new_frog)
+                fitness_best = self.getObjValue(best_frog)
+                fitness_worst = self.getObjValue(worst_frog)
+                fitness_new = self.getObjValue(new_frog)
 
                 # if it does not improve (1)
                 if fitness_new > fitness_worst:
@@ -154,7 +147,7 @@ class ShuffledFrogLeapingSearch(BaseSearch):
                     if self.feasible_guard == 'clip':
                         new_frog.clip()
 
-                    fitness_new = self.obj.value(new_frog)
+                    fitness_new = self.getObjValue(new_frog)
                     # if it does not improve (2)
                     if fitness_new > fitness_worst:
                         new_frog.setRandom()
@@ -166,31 +159,24 @@ class ShuffledFrogLeapingSearch(BaseSearch):
                 # evaluate and sort memeplex
                 for flog in self.memeplexes[j]:
                     if not hasattr(flog, '__flog_obj'):
-                        setattr(flog, '__flog_obj', self.obj.value(flog))
+                        setattr(flog, '__flog_obj', self.getObjValue(flog))
                 self.memeplexes[j].sort(key=lambda frog: getattr(flog, '__flog_obj'))
 
         # sort entire memeplexes
         self.frogs = [frog for memeplex in self.memeplexes for frog in memeplex]
-        self.frogs.sort(key=lambda frog: self.obj.value(frog))
+        self.frogs.sort(key=lambda frog: self.getObjValue(frog))
         self.memeplexes = [[self.frogs[i*M+j] for i in range(N)]
                                               for j in range(M)]
 
     def startProcess(self):
+        super().startProcess()
         M = self.n_memeplex
         N = self.n_frog_per_memeplex
         self.frogs = [self.solution.clone() for _ in range(M*N)]
         for frog in self.frogs:
             frog.setRandom()
-        self.frogs.sort(key=lambda frog: self.obj.value(frog))
+        self.frogs.sort(key=lambda frog: self.getObjValue(frog))
         self.memeplexes=[[self.frogs[i*M+j] for i in range(N)]
                                             for j in range(M)]
         self.updateSolution(self.frogs[0])
-        self.best_obj_value = self.obj.value(self.best_solution)
-        self.recordLog()
-        if self.msg:
-            during_solver_message_header()
-            self.during_solver_message('S')
 
-
-    def closeProcess(self):
-        self.recordLog()

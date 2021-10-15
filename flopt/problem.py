@@ -1,5 +1,5 @@
-from flopt.variable import VarElement, VarConst
-from flopt.expression import Expression, ExpressionConst, CustomExpression
+from flopt.variable import VarElement
+from flopt.expression import Expression, Const
 from flopt.constraint import Constraint
 from flopt.solution import Solution
 from flopt.env import setup_logger
@@ -57,7 +57,7 @@ class Problem:
         self.type = 'Problem'
         self.name = name
         self.sense = sense
-        self.obj = ExpressionConst(0)
+        self.obj = Const(0)
         self.constraints = []
         self.variables = set()
         self.solver = None
@@ -74,9 +74,9 @@ class Problem:
             objective function
         """
         if isinstance(obj, (int, float)):
-            obj = ExpressionConst(obj)
+            obj = Const(obj)
         elif isinstance(obj, VarElement):
-            obj = Expression(obj, VarConst(0), '+')
+            obj = Expression(obj, Const(0), '+')
         self.obj = obj
         self.variables |= obj.getVariables()
 
@@ -126,13 +126,21 @@ class Problem:
         return self.variables
 
 
-    def solve(self, solver=None, timelimit=None, msg=False):
+    def resetVariables(self):
+        self.variables = self.obj.getVariables()
+        for const in self.constraints:
+            self.variables |= const.getVariables()
+
+
+    def solve(self, solver=None, timelimit=None, lowerbound=None, msg=False):
         """solve this problem
 
         Parameters
         ----------
         solver : Solver
         timelimit : float
+        lowerbound : float
+            solver terminates when it obtains the solution whose objective value is lower than this
         msg : bool
             if true, display the message from solver
 
@@ -148,17 +156,20 @@ class Problem:
             self.solver = solver
         if timelimit is not None:
             solver.setParams(timelimit=timelimit)
+        if lowerbound is not None:
+            solver.setParams(lowerbound=lowerbound)
 
-        if self.sense == 'minimize':
-            obj = self.obj
-        elif self.sense == 'maximize':
-            obj = -self.obj
+        if self.sense == 'maximize':
+            self.obj = -self.obj
 
         solution = Solution('s', self.getVariables())
 
         status, log, self.time = self.solver.solve(
-            solution, obj, self.constraints, self, msg=msg,
+            solution, self, msg=msg,
         )
+
+        if self.sense == 'maximize':
+            self.obj = -self.obj
 
         return status, log
 
@@ -181,11 +192,18 @@ class Problem:
             var.setValue(var_dict[var.name].value())
 
 
+    def toSpin(self):
+        self.obj = self.obj.toSpin()
+
+
+
     def __iadd__(self, other):
-        if isinstance(other, Constraint):
-            self.addConstraint(other)
+        if not isinstance(other, tuple):
+            other = (other, )
+        if isinstance(other[0], Constraint):
+            self.addConstraint(*other)
         else:
-            self.setObjective(other)
+            self.setObjective(*other)
         return self
 
 
@@ -193,9 +211,9 @@ class Problem:
         from collections import defaultdict
         variables_dict = defaultdict(int)
         for var in self.getVariables():
-            variables_dict[var.getType()] += 1
+            variables_dict[var.type()] += 1
         variables_str = ', '.join(
-            [f'{key.replace("Var", "")} {value}'
+            [f'{str(key).replace("VariableType.", "")} {value}'
                 for key, value in sorted(variables_dict.items())]
             )
         s  = f'Name: {self.name}\n'
@@ -205,3 +223,11 @@ class Problem:
         s += f'  #constraints : {len(self.constraints)}\n'
         s += f'  #variables   : {len(self.variables)} ({variables_str})'
         return s
+
+
+    def show(self):
+        s = str(self) + '\n\n'
+        for ix, const in enumerate(self.constraints):
+            s += f'  C {ix}, name {const.name}, {str(const)}\n'
+        return s
+

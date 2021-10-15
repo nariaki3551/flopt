@@ -1,5 +1,6 @@
 import random
 from .base_sequential_update import SequentialUpdateSearch
+from flopt.constants import VariableType
 
 class TwoOpt(SequentialUpdateSearch):
     """2-Opt: a kind of local search for permutation.
@@ -30,7 +31,7 @@ class TwoOpt(SequentialUpdateSearch):
         bool
             return true if it can solve the problem else false
         """
-        return all(var.getType() == 'VarPermutation' for var in prob.getVariables())
+        return all(var.type() == VariableType.Permutation for var in prob.getVariables())
 
 
     def setNewSolution(self, *args, **kwargs):
@@ -45,7 +46,7 @@ class TwoOpt(SequentialUpdateSearch):
             # 2-opt
             new_perm = perm[:i] + perm[i:j][::-1] + perm[j:]
             var.setValue(new_perm)
-            if self.obj.value(self.solution) >= self.best_obj_value:
+            if self.getObjValue(self.solution) >= self.best_obj_value:
                 var.setValue(perm)
 
 

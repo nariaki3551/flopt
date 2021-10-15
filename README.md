@@ -26,7 +26,13 @@ git clone https://github.com/flab-coder/flopt.git
 
 ## Formulatable problems in flopt
 
-- Linear problem
+- Linear Programming (LP)
+
+- Quadratic Programming (QP)
+
+- Ising
+
+- Quadratic Unconstrainted Binary Programming  (QUBO)
 
 - Non-Linear problem
 

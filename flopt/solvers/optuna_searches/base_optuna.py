@@ -2,13 +2,10 @@ from time import time
 
 from flopt.solvers.base import BaseSearch
 from flopt.solvers.solver_utils import (
-    Log, start_solver_message,
-    during_solver_message_header,
     during_solver_message,
-    end_solver_message
 )
 from flopt.env import setup_logger
-import flopt.constants
+from flopt.constants import VariableType, SolverTerminateState
 
 
 logger = setup_logger(__name__)
@@ -52,21 +49,19 @@ class OptunaSearch(BaseSearch):
             return true if it can solve the problem else false
         """
         return all(
-                var.getType() in {'VarContinuous', 'VarInteger', 'VarBinary'}
+                var.type() in {VariableType.Continuous, VariableType.Integer, VariableType.Binary}
                 for var in prob.getVariables()
-                ) and (not prob.constraints)
+                ) and ( not prob.constraints )
 
 
     def search(self):
-        status = flopt.constants.SOLVER_NORMAL_TERMINATE
-        self.startProcess()
+        status = SolverTerminateState.Normal
         self.createStudy()
         try:
             self.study.optimize(self.objective, self.n_trial, timeout=self.timelimit)
         except Exception as e:
             logger.info(f'Exception {e}')
-            status = flopt.constants.SOLVER_ABNORMAL_TERMINATE
-        self.closeProcess()
+            status = flopt.constants.SolverTerminateState.Abnormal
         return status
 
 
@@ -74,17 +69,17 @@ class OptunaSearch(BaseSearch):
         # set value into self.solution
         self.trial_ix += 1
         for var in self.solution:
-            if var.getType() == 'VarInteger':
+            if var.type() == VariableType.Integer:
                 var._value = trial.suggest_int(
                     var.name, var.getLb(), var.getUb()
                 )
-            elif var.getType() == 'VarContinuous':
+            elif var.type() == VariableType.Continuous:
                 var._value = trial.suggest_uniform(
                     var.name, var.getLb(), var.getUb()
                 )
 
         # get objective value by self.solution
-        obj_value = self.obj.value(self.solution)
+        obj_value = self.getObjValue(self.solution)
 
         # check whether update or not
         if obj_value < self.best_obj_value:
@@ -99,16 +94,4 @@ class OptunaSearch(BaseSearch):
 
         return obj_value
 
-
-    def startProcess(self):
-        self.best_obj_value = self.obj.value(self.best_solution)
-        self.recordLog()
-
-        if self.msg:
-            during_solver_message_header()
-            self.during_solver_message('S')
-
-
-    def closeProcess(self):
-        self.recordLog()
 

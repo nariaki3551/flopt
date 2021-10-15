@@ -1,8 +1,8 @@
 Tutorial
 ========
 
-Define problem and solve
-------------------------
+Declaration problem and solving
+-------------------------------
 
 .. toctree::
    :maxdepth: 1
@@ -12,14 +12,17 @@ Define problem and solve
    black_box
    permutation
    max_satisfiability
+   expression_examples.rst
 
 
-Convert different problem forms
--------------------------------
+Conversion to different formulations
+------------------------------------
 
 .. toctree::
    :maxdepth: 1
 
+   convert/overview
+   convert/qp
    convert/lp
    convert/ising
    convert/qubo
