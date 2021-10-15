@@ -2,8 +2,8 @@ import enum
 
 import numpy as np
 
-VERSION = '0.4'
-DATE = 'August 12, 2021'
+VERSION = '0.5'
+DATE = 'October 16, 2021'
 
 
 # number classes
