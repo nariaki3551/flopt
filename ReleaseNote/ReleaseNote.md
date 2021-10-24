@@ -1,5 +1,29 @@
 # flopt
 
+1. Add New Solvers
+    - CvxoptQpSearch
+      - It can solve the Quadratic Problem
+    - AmplifySearch
+        - It can solve the Ising model with constraints
+
+2. Add some formulation structure
+    - We can convert between any formulation structure pair
+    - Faster conversion
+        - by developing polynomial class
+
+3. Add linearize function
+    - A problem can be linearized as possible as
+
+4. Add utility functions for variable and expression
+    - Variable.array, Variable.dict, Variable.matrix
+    - Sum, Dot, Prod
+
+5. Add some case studies to document
+
+6. Update some internal classes and performance
+    - VarConst + ExpressionConst → Const
+    - Manage type of Variable, Expression, and SolverState from str to int of Enum
+
 
 
 ### version 0.4 (August, 2021)
@@ -29,7 +53,6 @@
 3. Add `isLinear` `isIsing` `toIsing` `maxDegree` function in Problem
 4. `import flopt` is about 4 times faster
 5. Fix some bugs about `view_performance.py`
-
 
 
 

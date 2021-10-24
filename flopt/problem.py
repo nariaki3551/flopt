@@ -1,8 +1,7 @@
 from flopt.variable import VarElement
-from flopt.expression import Expression, ExpressionConst, CustomExpression
+from flopt.expression import Expression, Const
 from flopt.constraint import Constraint
 from flopt.solution import Solution
-from flopt.solvers import Solver
 from flopt.env import setup_logger
 
 
@@ -30,7 +29,7 @@ class Problem:
         (future satisfiability is added)
     obj : Expression family
     variables : set of VarElement family
-    solver : Solver
+    solver : Solver or None
     time : float
         solving time
     prob_type : list of str
@@ -58,10 +57,10 @@ class Problem:
         self.type = 'Problem'
         self.name = name
         self.sense = sense
-        self.obj = ExpressionConst(0)
+        self.obj = Const(0)
         self.constraints = []
         self.variables = set()
-        self.solver = Solver(algo='RandomSearch')
+        self.solver = None
         self.time = None
         self.prob_type = ['blackbox']
 
@@ -75,11 +74,20 @@ class Problem:
             objective function
         """
         if isinstance(obj, (int, float)):
-            obj = ExpressionConst(obj)
+            obj = Const(obj)
         elif isinstance(obj, VarElement):
-            obj = Exprression(obj, 0, '+')
+            obj = Expression(obj, Const(0), '+')
         self.obj = obj
         self.variables |= obj.getVariables()
+
+
+    def setSolver(self, solver):
+        """
+        Parameters
+        ----------
+        solver : Solver
+        """
+        self.solver = solver
 
 
     def addConstraint(self, const, name=None):
@@ -118,15 +126,21 @@ class Problem:
         return self.variables
 
 
-    def solve(self, solver=None, timelimit=None, msg=False):
+    def resetVariables(self):
+        self.variables = self.obj.getVariables()
+        for const in self.constraints:
+            self.variables |= const.getVariables()
+
+
+    def solve(self, solver=None, timelimit=None, lowerbound=None, msg=False):
         """solve this problem
 
         Parameters
         ----------
         solver : Solver
-            solver
         timelimit : float
-            timelimit
+        lowerbound : float
+            solver terminates when it obtains the solution whose objective value is lower than this
         msg : bool
             if true, display the message from solver
 
@@ -137,21 +151,25 @@ class Problem:
         Log
             return log object
         """
+        assert solver is not None or self.solver is not None, f'solver is not specified'
         if solver is not None:
             self.solver = solver
         if timelimit is not None:
             solver.setParams(timelimit=timelimit)
+        if lowerbound is not None:
+            solver.setParams(lowerbound=lowerbound)
 
-        if self.sense == 'minimize':
-            obj = self.obj
-        elif self.sense == 'maximize':
-            obj = -self.obj
+        if self.sense == 'maximize':
+            self.obj = -self.obj
 
         solution = Solution('s', self.getVariables())
 
         status, log, self.time = self.solver.solve(
-            solution, obj, self.constraints, self, msg=msg,
+            solution, self, msg=msg,
         )
+
+        if self.sense == 'maximize':
+            self.obj = -self.obj
 
         return status, log
 
@@ -174,19 +192,42 @@ class Problem:
             var.setValue(var_dict[var.name].value())
 
 
+    def toSpin(self):
+        self.obj = self.obj.toSpin()
+
+
+
     def __iadd__(self, other):
-        if isinstance(other, Constraint):
-            self.addConstraint(other)
+        if not isinstance(other, tuple):
+            other = (other, )
+        if isinstance(other[0], Constraint):
+            self.addConstraint(*other)
         else:
-            self.setObjective(other)
+            self.setObjective(*other)
         return self
 
+
     def __str__(self):
-        obj_str = ",".join(self.obj.__str__().split("\n"))
+        from collections import defaultdict
+        variables_dict = defaultdict(int)
+        for var in self.getVariables():
+            variables_dict[var.type()] += 1
+        variables_str = ', '.join(
+            [f'{str(key).replace("VariableType.", "")} {value}'
+                for key, value in sorted(variables_dict.items())]
+            )
         s  = f'Name: {self.name}\n'
         s += f'  Type         : {self.type}\n'
         s += f'  sense        : {self.sense}\n'
-        s += f'  objective    : {obj_str}\n'
+        s += f'  objective    : {self.obj.name}\n'
         s += f'  #constraints : {len(self.constraints)}\n'
-        s += f'  #variables   : {len(self.variables)}'
+        s += f'  #variables   : {len(self.variables)} ({variables_str})'
         return s
+
+
+    def show(self):
+        s = str(self) + '\n\n'
+        for ix, const in enumerate(self.constraints):
+            s += f'  C {ix}, name {const.name}, {str(const)}\n'
+        return s
+

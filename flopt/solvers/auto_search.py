@@ -2,7 +2,7 @@ import inspect
 
 from flopt.solvers.base import BaseSearch
 import flopt.constants
-from flopt.constants import SolverError
+import flopt.error
 from flopt.env import setup_logger
 
 logger = setup_logger(__name__)
@@ -106,6 +106,7 @@ class AutoSearch(BaseSearch):
                 'OptunaCmaEsSearch',
                 'OptunaTPESearch',
                 'PulpSearch',
+                'CvxoptQpSearch',
                 'ScipyLpSearch',
             ]
         if self.timelimit < 5:
@@ -118,6 +119,7 @@ class AutoSearch(BaseSearch):
                 'HyperoptTPESearch',
                 'OptunaTPESearch',
                 'PulpSearch',
+                'CvxoptQpSearch',
                 'ScipyLpSearch',
             ]
         elif self.timelimit < 30:
@@ -130,6 +132,7 @@ class AutoSearch(BaseSearch):
                 'HyperoptTPESearch',
                 'SFLA',
                 'PulpSearch',
+                'CvxoptQpSearch',
                 'ScipyLpSearch',
             ]
         else:
@@ -142,6 +145,7 @@ class AutoSearch(BaseSearch):
                 'OptunaTPESearch',
                 'HyperoptTPESearch',
                 'PulpSearch',
+                'CvxoptQpSearch',
                 'ScipyLpSearch',
             ]
 
@@ -150,7 +154,7 @@ class AutoSearch(BaseSearch):
                 algo = _algo
                 break
         else:
-            raise SolverError
+            raise flopt.error.SolverError
 
         solver = Solver(algo=algo)
         # set params
@@ -164,7 +168,7 @@ class AutoSearch(BaseSearch):
         return solver
 
 
-    def solve(self, solution, obj, constraints, prob, msg=False):
+    def solve(self, solution, prob, *args, **kwargs):
         """
         select solver and solve the problem of (solution, obj)
 
@@ -172,20 +176,14 @@ class AutoSearch(BaseSearch):
         ----------
         solution : Solution
             solution object
-        obj : expression or VarElement family
-            objective function
-        constraints : list of Constraint
-            constraints
         prob : Problem
             problem
-        msg : bool
-            if true, then display logs
 
         Returns
         -------
         status, Log
         """
         solver = self.select(prob)
-        return solver.solve(solution, obj, constraints, prob, msg)
+        return solver.solve(solution, prob, *args, **kwargs)
 
 

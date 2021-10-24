@@ -20,7 +20,7 @@ setup(
             "tspLib/sop/*.sop"
         ]
     },
-    version='0.4',
+    version='0.5',
     license='MIT',
     install_requires=[
         'numpy',
@@ -29,9 +29,12 @@ setup(
         'pulp',
         'optuna',
         'hyperopt',
+        'cvxopt',
+        'amplify',
         'sphinx',
         'sphinx-autobuild',
         'sphinx_rtd_theme',
+        'sphinxcontrib-mermaid',
         'recommonmark',
         'pytest'
     ],

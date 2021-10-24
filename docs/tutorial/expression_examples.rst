@@ -1,0 +1,91 @@
+Expression Examples
+===================
+
+.. code-block:: python
+
+  from flopt import Variable, Sum, Prod
+
+
+1. :math:`f = \sum_i x_i`
+-------------------------
+
+.. code-block:: python
+
+  x = Variable.array('x', 4)
+  f = Sum(x)
+
+  print(f)
+  >>> Name: x_0+x_1+x_2+x_3
+  >>> Type    : Normal
+  >>> Value   : 0.0
+
+
+2. :math:`f = \sum_i \sum_j x_i x_j`
+------------------------------------
+
+.. code-block:: python
+
+  import itertools
+
+  x = Variable.array('x', 4)
+  f = Sum(xi * xj for xi, xj in itertools.product(x, x))
+
+  print(f)
+  >>> Name: x_0*x_0+(x_0*x_1)+(x_0*x_2)+(x_0*x_3)+(x_1*x_0)+(x_1*x_1)+(x_1*x_2)+(x_1*x_3)+(x_2*x_0)+(x_2*x_1)+(x_2*x_2)+(x_2*x_3)+(x_3*x_0)+(x_3*x_1)+(x_3*x_2)+(x_3*x_3)
+  >>>   Type    : Normal
+  >>>   Value   : 0.0
+
+.. code-block:: python
+
+  x = Variable.array('x', (4, 1))
+  f = Sum(x.dot(x.T))
+
+  print(f)
+  >>> Name: x_0_0*x_0_0+(x_0_0*x_1_0)+(x_0_0*x_2_0)+(x_0_0*x_3_0)+(x_1_0*x_0_0)+(x_1_0*x_1_0)+(x_1_0*x_2_0)+(x_1_0*x_3_0)+(x_2_0*x_0_0)+(x_2_0*x_1_0)+(x_2_0*x_2_0)+(x_2_0*x_3_0)+(x_3_0*x_0_0)+(x_3_0*x_1_0)+(x_3_0*x_2_0)+(x_3_0*x_3_0)
+  >>>   Type    : Normal
+  >>>   Value   : 0.0
+
+
+3. :math:`f = \sum_i \left( \sum_j x_{ij} -1 \right) ^2`
+--------------------------------------------------------
+
+.. code-block:: python
+
+  x = Variable.matrix('x', 2, 2)
+  f = Sum( (Sum(xi) - 1) ** 2 for xi in x )
+
+  print(f)
+  >>> Name: (x_0_0+x_0_1-1)^2+((x_1_0+x_1_1-1)^2)
+  >>>   Type    : Normal
+  >>>   Value   : 2.0
+
+
+4. :math:`f = \sum_{i \neq j}x_i x_j`
+-------------------------------------
+
+.. code-block:: python
+
+  import itertools
+
+  x = Variable.array('x', 4)
+  f = Sum(xi * xj for xi, xj in itertools.combinations(x, 2))
+
+  print(f)
+  >>> Name: x_0*x_1+(x_0*x_2)+(x_0*x_3)+(x_1*x_2)+(x_1*x_3)+(x_2*x_3)
+  >>>   Type    : Normal
+  >>>   Value   : 0.0
+
+
+5. :math:`f = \prod_i x_i`
+--------------------------
+
+.. code-block:: python
+
+  x = Variable.array('x', 4)
+  f = Prod(x)
+
+  print(f)
+  >>> Name: ((x_0*x_1)*x_2)*x_3
+  >>>   Type    : Normal
+  >>>   Value   : 0.0
+

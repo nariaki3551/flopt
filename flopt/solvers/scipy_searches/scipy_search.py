@@ -5,15 +5,12 @@ import numpy as np
 
 from flopt.solvers.base import BaseSearch
 from flopt.solvers.solver_utils import (
-    Log, start_solver_message,
-    during_solver_message_header,
     during_solver_message,
-    end_solver_message
 )
 from flopt.env import setup_logger
-from flopt.variable import VarConst
+from flopt.expression import Const
 from flopt.solution import Solution
-import flopt.constants
+from flopt.constants import VariableType, SolverTerminateState
 
 
 logger = setup_logger(__name__)
@@ -38,38 +35,31 @@ class ScipySearch(BaseSearch):
         """
         Parameters
         ----------
-        prob : flopt.Problem
+        prob : Problem
 
         Returns
         -------
         bool
             return true if it can solve the problem else false
         """
-        return all(var.getType() == 'VarContinuous' for var in prob.getVariables())
+        return all(var.type() == VariableType.Continuous for var in prob.getVariables())
 
 
     def search(self):
-        self.startProcess()
-        status = self._search()
-        self.closeProcess()
-        return status
-
-
-    def _search(self):
-        status = flopt.constants.SOLVER_NORMAL_TERMINATE
+        status = SolverTerminateState.Normal
         var_names = [var.name for var in self.solution]
 
         def gen_func(expression):
             def func(values):
                 variables = []
                 for var_name, value in zip(var_names, values):
-                    variables.append(VarConst(value, name=var_name))
+                    variables.append(Const(value, name=var_name))
                 solution = Solution('tmp', variables)
                 return expression.value(solution)
             return func
 
         # function
-        func = gen_func(self.obj)
+        func = gen_func(self.prob.obj)
 
         # initial point
         self.solution.setRandom()
@@ -82,7 +72,7 @@ class ScipySearch(BaseSearch):
 
         # constraints
         constraints = []
-        for const in self.constraints:
+        for const in self.prob.constraints:
             const_func = gen_func(const)
             lb, ub = 0, 0
             if const.type == 'le':
@@ -124,19 +114,7 @@ class ScipySearch(BaseSearch):
                 var.setValue(value)
             self.updateSolution(self.solution, obj_value=None)
         except TimeoutError:
-            status = flopt.constants.SOLVER_TIMELIMIT_TERMINATE
+            status = SolverTerminateState.Timelimit
 
         return status
 
-
-    def startProcess(self):
-        self.best_obj_value = self.obj.value(self.best_solution)
-        self.recordLog()
-
-        if self.msg:
-            during_solver_message_header()
-            self.during_solver_message('S')
-
-
-    def closeProcess(self):
-        self.recordLog()

@@ -19,7 +19,7 @@ def prob(a, b):
     return _prob
 
 def test_compute_nosolver(prob):
-    logs = flopt.performance.compute(prob, timelimit=1, msg=True)
+    logs = flopt.performance.compute(prob, timelimit=0.5, msg=True)
 
 def test_compute_RandomSearch(prob):
     rs_solver = Solver('RandomSearch')

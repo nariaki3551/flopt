@@ -7,7 +7,7 @@ def flopt_to_pulp(prob):
     """
     Parameters
     ----------
-    prob : flopt.Problem
+    prob : Problem
 
     Returns
     -------
@@ -42,8 +42,7 @@ def flopt_to_pulp(prob):
     """
     assert PulpSearch().available(prob)
     solution = Solution('s', prob.getVariables())
-    lp_prob, lp_solution \
-        = PulpSearch().createLpProblem(solution, prob.obj, prob.constraints)
+    lp_prob, lp_solution = PulpSearch().createLpProblem(solution, prob)
     return lp_prob, lp_solution
 
 
@@ -55,8 +54,7 @@ def pulp_to_flopt(prob):
 
     Returns
     -------
-    flopt_prob : flopt.Problem
-    flopt_solution : Solution of flopt.VarElement family
+    flopt_prob : Problem
 
     Examples
     --------
@@ -78,7 +76,7 @@ def pulp_to_flopt(prob):
 
         # convert pulp to flopt
         from flopt.solvers.convert import pulp_to_flopt
-        flopt_prob, flopt_solution = pulp_to_flopt(prob)
+        flopt_prob = pulp_to_flopt(prob)
 
     """
     # conver LpVariable -> VarElement
@@ -88,7 +86,6 @@ def pulp_to_flopt(prob):
             var.getName(), lowBound=var.getLb(), upBound=var.getUb(), cat=var.cat
         )
         flopt_variables[var.getName()] = flopt_var
-    flopt_solution = Solution('flopt_solution', list(flopt_variables.values()))
 
     # convert Problem -> pulp.LpProblem
     name = '' if prob.name is None else prob.name
@@ -106,7 +103,10 @@ def pulp_to_flopt(prob):
     flopt_prob.setObjective(obj)
 
     for const in prob.constraints.values():
-        exp = flopt_exp(const.constant, const.to_dict()['coefficients'])
+        if 'coefficients' in const.to_dict():
+            exp = flopt_exp(const.constant, const.to_dict()['coefficients'])
+        else:
+            exp = flopt_exp(const.constant, const.to_dict())
         if const.sense == 0:
             flopt_prob.addConstraint( exp == 0, const.name )
         elif const.sense == -1:
@@ -114,4 +114,4 @@ def pulp_to_flopt(prob):
         elif const.sense == 1:
             flopt_prob.addConstraint( exp >= 0, const.name )
 
-    return flopt_prob, flopt_solution
+    return flopt_prob

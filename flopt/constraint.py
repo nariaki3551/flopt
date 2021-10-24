@@ -1,3 +1,6 @@
+from flopt.constants import number_classes
+
+
 class Constraint:
     """Constraint Class
 
@@ -25,17 +28,21 @@ class Constraint:
     >>> np.float64(0) <= a
     >>> True
     """
-    def __init__(self, expression, _type, name=None):
+    def __init__(self, left, right, _type, name=None):
         assert _type in {'eq', 'le', 'ge'},\
             f"""get constraint type {_type} but this is not supported.
                 You must choice from eq, le or ge.
              """
-        self.expression = expression
+        self.expression = left - right
         self.type = _type
-        self.name = None
+        self.name = name
+        self.left = left
+        self.right = right
+
 
     def value(self, solution=None):
         return self.expression.value(solution)
+
 
     def feasible(self, solution=None):
         exp_value = self.value(solution)
@@ -46,19 +53,33 @@ class Constraint:
         elif self.type == 'ge':
             return exp_value >= 0
 
+
     def getVariables(self):
         return self.expression.getVariables()
+
 
     def isLinear(self):
         return self.expression.isLinear()
 
 
+    def toSpin(self):
+        if not isinstance(self.left, number_classes):
+            self.left = self.left.toSpin()
+        if not isinstance(self.right, number_classes):
+            self.right = self.right.toSpin()
+        self.expression = self.left - self.right
+        return self
+
+
     def __str__(self):
-        s  = f'Name: {self.name}\n'
-        s += f'  Type      :  Constraint\n'
-        s += f'  ConstType : {self.type}\n'
-        s += f'  Expression: {self.expression}\n'
-        return s
+        if self.type == 'eq':
+            type_str = '=='
+        elif self.type == 'le':
+            type_str = '<='
+        elif self.type == 'ge':
+            type_str = '>='
+        return f'{self.expression.name} {type_str} 0'
 
     def __repr__(self):
-        return f'Constraint({self.expression.__repr__()}, {self.type}, {self.name})'
+        return f'Constraint({repr(self.left)}, {repr(self.right)}, {self.type}, {self.name})'
+

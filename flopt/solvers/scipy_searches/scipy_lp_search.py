@@ -5,16 +5,14 @@ import numpy as np
 
 from flopt.solvers.base import BaseSearch
 from flopt.solvers.solver_utils import (
-    Log, start_solver_message,
-    during_solver_message_header,
     during_solver_message,
     end_solver_message
 )
-from flopt.convert import flopt_to_lp
+from flopt.convert import LpStructure
 from flopt.env import setup_logger
-from flopt.variable import VarConst
+from flopt.expression import Const
 from flopt.solution import Solution
-import flopt.constants
+from flopt.constants import VariableType, SolverTerminateState
 
 
 logger = setup_logger(__name__)
@@ -37,47 +35,46 @@ class ScipyLpSearch(BaseSearch):
         self.name = "ScipyLpSearch"
         self.n_trial = 1e10
         self.method = 'simplex'
+        self.can_solve_problems = ['lp']
 
 
     def available(self, prob):
         """
         Parameters
         ----------
-        prob : flopt.Problem
+        prob : Problem
 
         Returns
         -------
         bool
             return true if it can solve the problem else false
         """
-        return all(var.getType() == 'VarContinuous' for var in prob.getVariables())
+        if prob.obj.isLinear()\
+            and all(const.expression.isLinear() for const in prob.constraints)\
+            and all(var.type() == VariableType.Continuous for var in prob.getVariables()):
+            return True
+        else:
+            return False
 
 
     def search(self):
-        self.startProcess()
-        status = self._search()
-        self.closeProcess()
-        return status
-
-
-    def _search(self):
-        status = flopt.constants.SOLVER_NORMAL_TERMINATE
+        status = SolverTerminateState.Normal
         var_names = [var.name for var in self.solution]
 
         def gen_func(expression):
             def func(values):
                 variables = []
                 for var_name, value in zip(var_names, values):
-                    variables.append(VarConst(value, name=var_name))
+                    variables.append(Const(value, name=var_name))
                 solution = Solution('tmp', variables)
                 return expression.value(solution)
             return func
 
         # function
-        func = gen_func(self.obj)
+        func = gen_func(self.prob.obj)
 
         # lp structure
-        lp = flopt_to_lp(self.prob, x=self.solution.getVariables())
+        lp = LpStructure.fromFlopt(self.prob, x=self.solution.getVariables())
 
         # bounds
         bounds = [ (_lb, _ub) for _lb, _ub in zip(lp.lb, lp.ub) ]
@@ -102,9 +99,13 @@ class ScipyLpSearch(BaseSearch):
             for _callback in self.callbacks:
                 _callback([self.solution], self.best_solution, self.best_obj_value)
 
+        # search
         try:
             res = scipy_optimize.linprog(
-                c=lp.c, A_ub=lp.A, b_ub=lp.b, bounds=bounds,
+                c=lp.c,
+                A_ub=lp.A, b_ub=lp.b,
+                A_eq=lp.G, b_eq=lp.h,
+                bounds=bounds,
                 options=options,
                 callback=callback, method=self.method,
                 )
@@ -113,19 +114,7 @@ class ScipyLpSearch(BaseSearch):
                 var.setValue(value)
             self.updateSolution(self.solution, obj_value=None)
         except TimeoutError:
-            status = flopt.constants.SOLVER_TIMELIMIT_TERMINATE
+            status = SolverTerminateState.Timelimit
 
         return status
 
-
-    def startProcess(self):
-        self.best_obj_value = self.obj.value(self.best_solution)
-        self.recordLog()
-
-        if self.msg:
-            during_solver_message_header()
-            self.during_solver_message('S')
-
-
-    def closeProcess(self):
-        self.recordLog()

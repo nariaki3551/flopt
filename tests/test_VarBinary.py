@@ -3,10 +3,15 @@ import pytest
 import numpy as np
 
 from flopt import Variable
+from flopt.constants import VariableType
 
 @pytest.fixture(scope='function')
 def a():
-    return Variable('a', iniValue=1, cat='Binary')
+    return Variable('a', ini_value=1, cat='Binary')
+
+@pytest.fixture(scope='function')
+def b():
+    return Variable('b', ini_value=1, cat='Binary')
 
 
 def test_VarBinary_add(a):
@@ -25,13 +30,20 @@ def test_VarBinary_sub(a):
     assert (a-np.float64(2.1)).value() == -1.1
     assert (np.float64(2.1)-a).value() == 1.1
 
-def test_VarBinary_mul(a):
+def test_VarBinary_mul1(a):
     assert (a*2).value() == 2
     assert (2*a).value() == 2
     assert (a*2.1).value() == 2.1
     assert (2.1*a).value() == 2.1
     assert (a*np.float64(2.1)).value() == 2.1
     assert (np.float64(2.1)*a).value() == 2.1
+
+def test_VarBinary_mul2(a, b):
+    assert ((-a)*b).name == (a*(-b)).name
+    assert (a*b).name == ((-a)*(-b)).name
+
+def test_VarBinary_selfmul(a):
+    assert a * a == a
 
 def test_VarBinary_div(a):
     assert (a/2).value() == 0.5
@@ -49,6 +61,12 @@ def test_VarBinary_pow(a):
     assert (a**np.float64(2.1)).value() == 1
     assert (np.float64(2.1)**a).value() == 2.1
 
+def test_VarBinary_intpow(a):
+    assert (a ** 0).value() == 1
+    assert a ** 1 == a
+    assert a ** 2 == a
+    assert a ** 3 == a
+
 def test_VarBinary_mod(a):
     assert (a%2).value() == 1
 
@@ -64,8 +82,8 @@ def test_VarBinary_hash(a):
     hash(a)
 
 # base function
-def test_VarBinary_getType(a):
-    assert a.getType() == 'VarBinary'
+def test_VarBinary_type(a):
+    assert a.type() == VariableType.Binary
 
 def test_VarBinary_getVariable(a):
     assert a.getVariables() == {a}
@@ -102,5 +120,5 @@ def test_VarBinary_colne(a):
     assert _a.value() == a.value()
     assert _a.getLb() == a.getLb()
     assert _a.getUb() == a.getUb()
-    assert _a.getType() == a.getType()
+    assert _a.type() == a.type()
 
