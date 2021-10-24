@@ -1,5 +1,7 @@
 # flopt
 
+### version 0.5 (Oct, 2021)
+
 1. Add New Solvers
     - CvxoptQpSearch
       - It can solve the Quadratic Problem
