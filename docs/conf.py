@@ -18,8 +18,8 @@ sys.path.insert(0, os.path.abspath('./..'))
 # -- Project information -----------------------------------------------------
 
 project = 'flopt'
-copyright = '2020, Nariaki Tateiwa, Takashi Wakamatsu'
-author = 'Nariaki Tateiwa, Takashi Wakamatsu'
+copyright = '2021, Nariaki Tateiwa'
+author = 'Nariaki Tateiwa'
 
 
 # -- General configuration ---------------------------------------------------

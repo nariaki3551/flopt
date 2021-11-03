@@ -708,7 +708,7 @@ class Expression:
 
 
 # ------------------------------------------------
-#   CustomeExpression Class
+#   CustomExpression Class
 # ------------------------------------------------
 
 class CustomExpression(Expression):

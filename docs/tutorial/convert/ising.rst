@@ -43,7 +43,7 @@ We can convert this into Ising form as follows.
   ising = IsingStructure.fromFlopt(prob)
 
 
-To show the contents of ising,
+To show the contents of ising structure,
 
 .. code-block:: python
 
@@ -69,27 +69,8 @@ To show the contents of ising,
   >>>  Variable("b", cat="Spin", ini_value=1)]
 
 
-Convert QUBO
-^^^^^^^^^^^^
-
-To convert this problem as QUBO formulation, we use `.toQubo()` function.
-
-.. code-block:: python
-
-  print(ising.toQubo().toFlopt().show())  # for show cleary ising.toQubo()
-  >>> Name: None
-  >>>   Type         : Problem
-  >>>   sense        : minimize
-  >>>   objective    : -4.0*(a_b*b_b)+(2.0*b_b)+1.0
-  >>>   #constraints : 0
-  >>>   #variables   : 2 (Binary 2)
-
-
-`a_b` is the binary variable as `a_b = (1+a)/2`.
-
-In addition, `.toQp()`, `.toLp()` are available.
-The case of problem includes binary variable, we can convert as ising model if the problem is convertable.
-
+We can convert flopt to ising even if the problem includes binary variable.
+Binary variables are automatically replaced to spin variable.
 
 .. code-block:: python
 
@@ -134,6 +115,31 @@ The case of problem includes binary variable, we can convert as ising model if t
   >>> x
   >>> [Variable("a", cat="Spin", ini_value=-1)
   >>>  Variable("b_s", cat="Spin", ini_value=-1)]
+
+
+`b_s` is the spin variable as `b_s = 2 b - 1`.
+
+
+Convert QUBO
+^^^^^^^^^^^^
+
+To convert this problem as QUBO formulation, we use `.toQubo()` function.
+
+.. code-block:: python
+
+  ising.toQubo()    # convert ising to QUBO
+
+  print(ising.toQubo().toFlopt().show())  # for show cleary ising.toQubo()
+  >>> Name: None
+  >>>   Type         : Problem
+  >>>   sense        : minimize
+  >>>   objective    : -4.0*(a_b*b_b)+(2.0*b_b)+1.0
+  >>>   #constraints : 0
+  >>>   #variables   : 2 (Binary 2)
+
+
+`a_b` is the binary variable as `a_b = (1+a)/2`.
+In addition, `.toQp()`, `.toLp()` are also available.
 
 
 
