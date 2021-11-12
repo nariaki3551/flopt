@@ -17,10 +17,11 @@ setup(
             "tspLib/hcp/*.hcp",
             "tspLib/tsp/*.tsp",
             "tspLib/vrp/*.vrp",
-            "tspLib/sop/*.sop"
+            "tspLib/sop/*.sop",
+            "funcLib/*"
         ]
     },
-    version='0.4.1',
+    version='0.5.1',
     license='MIT',
     install_requires=[
         'numpy',
