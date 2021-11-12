@@ -30,9 +30,12 @@ setup(
         'pulp',
         'optuna',
         'hyperopt',
+        'cvxopt',
+        'amplify',
         'sphinx',
         'sphinx-autobuild',
         'sphinx_rtd_theme',
+        'sphinxcontrib-mermaid',
         'recommonmark',
         'pytest'
     ],

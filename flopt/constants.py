@@ -17,6 +17,8 @@ array_classes = (list, tuple, np.ndarray)
 # numpy floating point
 np_float = np.float64
 
+
+
 # termination state
 class SolverTerminateState(enum.IntEnum):
     Normal      = 0
