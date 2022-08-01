@@ -103,8 +103,8 @@ class ScipyLpSearch(BaseSearch):
         try:
             res = scipy_optimize.linprog(
                 c=lp.c,
-                A_ub=lp.A, b_ub=lp.b,
-                A_eq=lp.G, b_eq=lp.h,
+                A_ub=lp.G, b_ub=lp.h,
+                A_eq=lp.A, b_eq=lp.b,
                 bounds=bounds,
                 options=options,
                 callback=callback, method=self.method,
