@@ -31,18 +31,24 @@ class ScipySearch(BaseSearch):
         self.can_solve_problems = ['blackbox']
 
 
-    def available(self, prob):
+    def available(self, prob, verbose=False):
         """
         Parameters
         ----------
         prob : Problem
+        verbose : bool
 
         Returns
         -------
         bool
             return true if it can solve the problem else false
         """
-        return all(var.type() == VariableType.Continuous for var in prob.getVariables())
+        for var in prob.getVariables():
+            if not var.type() == VariableType.Continuous:
+                if verbose:
+                    logger.error(f"variable: \n{var}\n must be continouse, but got {var.type()}")
+                return False
+        return True
 
 
     def search(self):

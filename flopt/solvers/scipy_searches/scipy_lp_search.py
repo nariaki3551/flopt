@@ -29,32 +29,46 @@ class ScipyLpSearch(BaseSearch):
     -------
     status : int
         status of solver
+
+    Attributes
+    ----------
+    method : {"highs", "highs-ds", "highs-ipm", "simplex", "revised simplex", "interior-point"}
     """
     def __init__(self):
         super().__init__()
         self.name = "ScipyLpSearch"
         self.n_trial = 1e10
-        self.method = 'simplex'
+        self.method = 'interior-point'
         self.can_solve_problems = ['lp']
 
 
-    def available(self, prob):
+    def available(self, prob, verbose=False):
         """
         Parameters
         ----------
         prob : Problem
+        verbose : bool
 
         Returns
         -------
         bool
             return true if it can solve the problem else false
         """
-        if prob.obj.isLinear()\
-            and all(const.expression.isLinear() for const in prob.constraints)\
-            and all(var.type() == VariableType.Continuous for var in prob.getVariables()):
-            return True
-        else:
+        for var in prob.getVariables():
+            if not var.type() == VariableType.Continuous:
+                if verbose:
+                    logger.error(f"variable: \n{var}\n must be continouse, but got {var.type()}")
+                return False
+        if not prob.obj.isLinear():
+            if verbose:
+                logger.error(f"objective function: \n{prob.obj}\n must be Linear")
             return False
+        for const in prob.constraints:
+            if not const.expression.isLinear():
+                if verbose:
+                    logger.error(f"constraint: \n{const}\n must be Linear")
+                return False
+        return True
 
 
     def search(self):
@@ -107,7 +121,8 @@ class ScipyLpSearch(BaseSearch):
                 A_eq=lp.G, b_eq=lp.h,
                 bounds=bounds,
                 options=options,
-                callback=callback, method=self.method,
+                callback=callback,
+                method=self.method,
                 )
             # get result of solver
             for var, value in zip(self.solution, res.x):
