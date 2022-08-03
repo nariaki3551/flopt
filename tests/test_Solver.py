@@ -271,6 +271,37 @@ def test_ScipyLpSearch_available(prob, prob_only_continuous, prob_with_const, pr
 
 
 
+def test_ScipyMilpSearch1(prob):
+    solver = Solver(algo='ScipyMilpSearch')
+    solver.setParams()
+    prob.solve(solver, timelimit=0.5)
+
+def test_ScipyMilpSearch2(prob_only_continuous):
+    solver = Solver(algo='ScipyMilpSearch')
+    solver.setParams()
+    prob_only_continuous.solve(solver, timelimit=0.5)
+
+def test_ScipyMilpSearch3(prob_with_const):
+    solver = Solver(algo='ScipyMilpSearch')
+    solver.setParams()
+    prob_with_const.solve(solver, timelimit=0.5)
+
+def test_ScipyMilpSearch4(prob_lp):
+    solver = Solver(algo='ScipyMilpSearch')
+    solver.setParams()
+    prob_lp.solve(solver, timelimit=0.5)
+
+def test_ScipyMilpSearch_available(prob, prob_only_continuous, prob_with_const, prob_lp, prob_qp, prob_nonlinear, prob_perm):
+    solver = Solver(algo='ScipyMilpSearch')
+    assert solver.available(prob) == True
+    assert solver.available(prob_only_continuous) == True
+    assert solver.available(prob_with_const) == True
+    assert solver.available(prob_lp) == True
+    assert solver.available(prob_qp) == False
+    assert solver.available(prob_nonlinear) == False
+
+
+
 def test_CvxoptQpSearch1(prob_only_continuous, callback):
     solver = Solver(algo='CvxoptQpSearch')
     solver.setParams(n_trial=10, callbacks=[callback])

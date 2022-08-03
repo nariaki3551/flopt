@@ -59,6 +59,8 @@ Some solvers input a structure, and the Conversion Graph includes solvers and mo
   style CVXOPT fill:#fff,stroke:#000,stroke-width:1px
   Scipy.optimize.linprog(Scipy.optimize.linprog)
   style Scipy.optimize.linprog fill:#fff,stroke:#000,stroke-width:1px
+  Scipy.optimize.milp(Scipy.optimize.milp)
+  style Scipy.optimize.milp fill:#fff,stroke:#000,stroke-width:1px
   Scipy.optimize.minimize(Scipy.optimize.minize)
   style Scipy.optimize.minimize fill:#fff,stroke:#000,stroke-width:1px
   PuLP([PuLP])
@@ -90,6 +92,7 @@ Some solvers input a structure, and the Conversion Graph includes solvers and mo
 
   QpStructure --> CVXOPT
   LpStructure --> Scipy.optimize.linprog
+  LpStructure --> Scipy.optimize.milp
 
 
   flopt --> PuLP
