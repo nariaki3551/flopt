@@ -39,6 +39,18 @@ def prob_with_const():
     return _prob
 
 @pytest.fixture(scope='function')
+def prob_lp():
+    a = flopt.Variable('a', cat='Continuous')
+    b = flopt.Variable('b', cat='Continuous')
+    _prob = flopt.Problem('TestLp', sense="maximize")
+    _prob += 1 * a + 3 * b <= 30
+    _prob += 2 * a + 1 * b <= 40
+    _prob += a >= 0
+    _prob += b >= 0
+    _prob += a + 2 * b
+    return _prob
+
+@pytest.fixture(scope='function')
 def prob_qp():
     # Problem with constraint
     a = Variable('a', 0, 1, 'Integer')
@@ -242,11 +254,17 @@ def test_ScipyLpSearch1(prob_only_continuous, callback):
     solver.setParams(n_trial=10, callbacks=[callback])
     prob_only_continuous.solve(solver, timelimit=0.5)
 
-def test_ScipyLpSearch_available(prob, prob_only_continuous, prob_with_const, prob_qp, prob_nonlinear, prob_perm):
+def test_ScipyLpSearch2(prob_lp, callback):
+    solver = Solver(algo='ScipyLpSearch')
+    solver.setParams(n_trial=10, callbacks=[callback])
+    prob_lp.solve(solver, timelimit=0.5)
+
+def test_ScipyLpSearch_available(prob, prob_only_continuous, prob_with_const, prob_lp, prob_qp, prob_nonlinear, prob_perm):
     solver = Solver(algo='ScipyLpSearch')
     assert solver.available(prob) == False
     assert solver.available(prob_only_continuous) == True
     assert solver.available(prob_with_const) == False
+    assert solver.available(prob_lp) == True
     assert solver.available(prob_qp) == False
     assert solver.available(prob_nonlinear) == False
     assert solver.available(prob_perm) == False
