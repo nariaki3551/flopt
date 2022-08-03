@@ -32,12 +32,8 @@ setup(
         'hyperopt',
         'cvxopt',
         'amplify',
-        'sphinx',
-        'sphinx-autobuild',
-        'sphinx_rtd_theme',
-        'sphinxcontrib-mermaid',
-        'recommonmark',
-        'pytest'
+        'pytest',
+        'scipy',
     ],
     author='nariaki tateiwa',
     author_email='nariaki3551@gmail.com',
@@ -48,8 +44,8 @@ setup(
     keywords='optimization nonliear search heuristics algorithm',
     classifiers=[
         'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
     ],
 )
