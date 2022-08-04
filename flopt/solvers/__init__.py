@@ -6,6 +6,7 @@ from flopt.solvers.sequential_update_searches import(
 from flopt.solvers.scipy_searches import (
     ScipySearch,
     ScipyLpSearch,
+    ScipyMilpSearch,
 )
 from flopt.solvers.optuna_searches import (
     OptunaSearch,
@@ -30,6 +31,7 @@ algos = {
     'PulpSearch'       : PulpSearch,
     'ScipySearch'      : ScipySearch,
     'ScipyLpSearch'    : ScipyLpSearch,
+    'ScipyMilpSearch'  : ScipyMilpSearch,
     'CvxoptQpSearch'   : CvxoptQpSearch,
     'AmplifySearch'    : AmplifySearch,
     'auto'             : AutoSearch,

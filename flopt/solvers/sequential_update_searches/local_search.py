@@ -17,21 +17,28 @@ class TwoOpt(SequentialUpdateSearch):
         self.can_solve_problems = ['permutation']
 
 
-    def available(self, prob):
+    def available(self, prob, verbose=False):
         """
         Parameters
         ----------
-        obj : Expression or VarElement family
-            objective function
-        constraints : list of Constraint
-            constraints
+        prob : Problem
+        verbose : bool
 
         Returns
         -------
         bool
             return true if it can solve the problem else false
         """
-        return all(var.type() == VariableType.Permutation for var in prob.getVariables())
+        for var in prob.getVariables():
+            if not var.type() == VariableType.Permutation:
+                if verbose:
+                    logger.error(f"variable: \n{var}\n must be permutation, but got {var.type()}")
+                return False
+        if prob.constraints:
+            if verbose:
+                logger.error(f"this solver can not handle constraints")
+            return False
+        return True
 
 
     def setNewSolution(self, *args, **kwargs):

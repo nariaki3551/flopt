@@ -94,6 +94,44 @@ def test_flopt_to_lp2():
     lp.toQubo()
 
 
+def test_flopt_to_lp_allneq():
+    # Variables
+    a = Variable('a', cat='Binary')
+    b = Variable('b', cat='Binary')
+    c = Variable('c', lowBound=-1, upBound=2, cat='Integer')
+    d = Variable('d', lowBound=-2, upBound=1, cat='Continuous')
+
+    # Problem
+    prob = Problem()
+    prob += c + b       # set the objective function
+    prob += a + c == 0  # set the constraint
+    prob += a + b <= 1  # set the constraint
+    prob += a + d >= -1 # set the constraint
+    print(prob)
+
+    from flopt.convert import LpStructure
+    lp = LpStructure.fromFlopt(prob, option="all_neq")
+
+
+def test_flopt_to_lp_alleq():
+    # Variables
+    a = Variable('a', cat='Binary')
+    b = Variable('b', cat='Binary')
+    c = Variable('c', lowBound=-1, upBound=2, cat='Integer')
+    d = Variable('d', lowBound=-2, upBound=1, cat='Continuous')
+
+    # Problem
+    prob = Problem()
+    prob += c + b       # set the objective function
+    prob += a + c == 0  # set the constraint
+    prob += a + b <= 1  # set the constraint
+    prob += a + d >= -1 # set the constraint
+    print(prob)
+
+    from flopt.convert import LpStructure
+    lp = LpStructure.fromFlopt(prob, option="all_eq")
+
+
 def test_flopt_to_lp1():
     # Variables
     a = Variable('a', cat='Binary')

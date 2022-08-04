@@ -2,8 +2,8 @@ import enum
 
 import numpy as np
 
-VERSION = '0.5'
-DATE = 'October 16, 2021'
+VERSION = '0.5.2'
+DATE = 'August 4, 2022'
 
 
 # number classes
@@ -25,7 +25,9 @@ class SolverTerminateState(enum.IntEnum):
     Timelimit   = 1
     Lowerbound  = 2
     Interrupt   = 3
-    Abnormal    = 4
+    Infeasible  = 4
+    Unbounded   = 5
+    Abnormal    = 6
 
     def __str__(self):
         return self.name
