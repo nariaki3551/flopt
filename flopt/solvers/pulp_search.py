@@ -65,6 +65,7 @@ class PulpSearch(BaseSearch):
 
     def search(self):
 
+        status = SolverTerminateState.Normal
         lp_prob, lp_solution = self.createLpProblem(self.solution, self.prob)
 
         if self.solver is not None:
@@ -81,14 +82,16 @@ class PulpSearch(BaseSearch):
             var.setValue(value)
         self.updateSolution(self.solution)
 
-        if lp_status in {-1, -2, -3}:
-            # -1: infeasible
-            # -2: unbounded
-            # -3: undefined
-            status = SolverTerminateState.Abnormal
-            logger.info(f'PuLP LpStatus {pulp.constants.LpStatus[lp_status]}')
+        # lp_status =   -1: infeasible
+        #               -2: unbounded
+        #               -3: undefined
+        if lp_status == -1:
+            status = SolverTerminateState.Infeasible
+        elif lp_status  == -2:
+            status = SolverTerminateState.Unbounded
         else:
-            status = SolverTerminateState.Normal
+            status = SolverTerminateState.Abnormal
+        logger.info(f'PuLP LpStatus {pulp.constants.LpStatus[lp_status]}')
 
         return status
 

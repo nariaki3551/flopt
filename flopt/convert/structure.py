@@ -146,12 +146,13 @@ class QpStructure:
 
 
     @classmethod
-    def fromFlopt(cls, prob, x=None):
+    def fromFlopt(cls, prob, x=None, progress=False):
         """
         Parameters
         ----------
         prob : Problem
         x : None or list of VarElement family
+        progress: bool
 
         Returns
         -------
@@ -172,6 +173,14 @@ class QpStructure:
         else:
             num_x = 0
 
+        if progress:
+            import tqdm
+            def iter_wrapper(x, desc, *args, **kwargs):
+                return tqdm.tqdm(x, desc=desc)
+        else:
+            def iter_wrapper(x, *args, **kwargs):
+                return x
+
         # create G, h
         num_neq_consts = sum(const.type != 'eq' for const in prob.constraints)
         if num_neq_consts == 0:
@@ -181,7 +190,7 @@ class QpStructure:
             G = np.zeros((num_neq_consts, num_x), dtype=np_float)
             h = np.zeros((num_neq_consts, ), dtype=np_float)
             i = 0
-            for const in prob.constraints:
+            for const in iter_wrapper(prob.constraints, desc="convert neq constraints"):
                 if const.type == 'le':
                     # c.T.dot(x) + C <= 0
                     linear = const.expression.toLinear(x)
@@ -205,7 +214,7 @@ class QpStructure:
             A = np.zeros((num_eq_consts, num_x), dtype=np_float)
             b = np.zeros((num_eq_consts, ), dtype=np_float)
             i = 0
-            for const in prob.constraints:
+            for const in iter_wrapper(prob.constraints, desc="convert eq constraints"):
                 if const.type == 'eq':
                     linear = const.expression.toLinear(x)
                     A[i, :] = linear.c.T
@@ -495,7 +504,7 @@ class LpStructure:
 
 
     @classmethod
-    def fromFlopt(cls, prob, x=None):
+    def fromFlopt(cls, prob, x=None, progress=False):
         """
         ::
 
@@ -505,7 +514,7 @@ class LpStructure:
         -------
         LpStructure
         """
-        return QpStructure.fromFlopt(prob, x).toLp()
+        return QpStructure.fromFlopt(prob, x, progress).toLp()
 
 
     def toFlopt(self):

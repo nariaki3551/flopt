@@ -21,6 +21,13 @@ logger = setup_logger(__name__)
 class ScipyMilpSearch(BaseSearch):
     """Scipy optimize milp API Solver
 
+    Note
+    ----
+    In scipy version 1.9.0,
+    we can not obtain the incumbent solution from scipy.optimize.milp API,
+    and can not use callback to this API for logging.
+    Therefore, we can obtain the solution when only scipy.optimize.milp terminate the execution normally.
+
     See Also
     --------
     scipy.optimize.milp
@@ -100,26 +107,31 @@ class ScipyMilpSearch(BaseSearch):
         options = {'disp': self.msg, 'time_limit': self.timelimit}
 
         # search
-        try:
-            res = scipy_optimize.milp(
-                c=lp.c,
-                constraints=constraints,
-                integrality=integrality,
-                bounds=bounds,
-                options=options,
-                )
-            # res.status =  0: Optimal solution found.
-            #               1: Iteration or time limit reached.
-            #               2: Problem is infeasible.
-            #               3: Problem is unbounded.
-            #               4: Other; see message for details.
-            if res.status == 0:
-                # get result of solver
-                for var, value in zip(self.solution, res.x):
-                    var.setValue(value)
-                self.updateSolution(self.solution, obj_value=None)
-        except TimeoutError:
+        res = scipy_optimize.milp(
+            c=lp.c,
+            constraints=constraints,
+            integrality=integrality,
+            bounds=bounds,
+            options=options,
+            )
+        # res.status =  0: Optimal solution found.
+        #               1: Iteration or time limit reached.
+        #               2: Problem is infeasible.
+        #               3: Problem is unbounded.
+        #               4: Other; see message for details.
+        if res.status == 0:
+            # get result of solver
+            for var, value in zip(self.solution, res.x):
+                var.setValue(value)
+            self.updateSolution(self.solution, obj_value=None)
+        elif res.status == 1:
             status = SolverTerminateState.Timelimit
+        elif res.status == 2:
+            status = SolverTerminateState.Infeasible
+        elif res.status == 3:
+            status = SolverTerminateState.Unbounded
+        else:
+            status = SolverTerminateState.Abnormal
 
         return status
 
