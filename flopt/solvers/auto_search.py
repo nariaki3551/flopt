@@ -67,14 +67,12 @@ class AutoSearch(BaseSearch):
         self.name = 'AutoSearch'
 
 
-    def available(self, prob):
+    def available(self, prob, verbose=False):
         """
         Parameters
         ----------
-        obj : Expression or VarElement family
-            objective function
-        constraints : list of Constraint
-            constraints
+        prob : Problem
+        verbose : bool
 
         Returns
         -------
@@ -82,7 +80,7 @@ class AutoSearch(BaseSearch):
             return true if it can solve the problem else false
         """
         from flopt import Solver, Solver_list
-        return any(Solver(algo=algo).available(prob)
+        return any(Solver(algo=algo).available(prob, verbose)
                 for algo in (set(Solver_list()) - {'auto'}) )
 
 

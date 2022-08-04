@@ -137,7 +137,7 @@ class BaseSearch:
         -------
         status, Log
         """
-        if not self.available(prob):
+        if not self.available(prob, verbose=True):
             logger.error(f'Problem can not be solved by solver {self.name}.')
             status = SolverTerminateState.Abnormal
             raise flopt.error.SolverError

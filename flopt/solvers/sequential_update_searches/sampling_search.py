@@ -17,18 +17,23 @@ class RandomSearch(SequentialUpdateSearch):
         self.can_solve_problems = ['blackbox', 'permutation']
 
 
-    def available(self, prob):
+    def available(self, prob, verbose=False):
         """
         Parameters
         ----------
         prob : Problem
+        verbose : bool
 
         Returns
         -------
         bool
             return true if it can solve the problem else false
         """
-        return (not prob.constraints)
+        if prob.constraints:
+            if verbose:
+                logger.error(f"this solver can not handle constraints")
+            return False
+        return True
 
 
     def setNewSolution(self, *args, **kwargs):
