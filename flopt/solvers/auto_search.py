@@ -104,6 +104,7 @@ class AutoSearch(BaseSearch):
                 'OptunaCmaEsSearch',
                 'OptunaTPESearch',
                 'PulpSearch',
+                'ScipyMilpSearch',
                 'CvxoptQpSearch',
                 'ScipyLpSearch',
             ]
@@ -117,6 +118,7 @@ class AutoSearch(BaseSearch):
                 'HyperoptTPESearch',
                 'OptunaTPESearch',
                 'PulpSearch',
+                'ScipyMilpSearch',
                 'CvxoptQpSearch',
                 'ScipyLpSearch',
             ]
@@ -130,6 +132,7 @@ class AutoSearch(BaseSearch):
                 'HyperoptTPESearch',
                 'SFLA',
                 'PulpSearch',
+                'ScipyMilpSearch',
                 'CvxoptQpSearch',
                 'ScipyLpSearch',
             ]
@@ -142,6 +145,7 @@ class AutoSearch(BaseSearch):
                 'RandomSearch',
                 'OptunaTPESearch',
                 'HyperoptTPESearch',
+                'ScipyMilpSearch',
                 'PulpSearch',
                 'CvxoptQpSearch',
                 'ScipyLpSearch',
