@@ -94,7 +94,7 @@ class ScipyLpSearch(BaseSearch):
         bounds = [ (_lb, _ub) for _lb, _ub in zip(lp.lb, lp.ub) ]
 
         # options
-        options = {'maxiter': self.n_trial, 'disp': self.msg}
+        options = {'maxiter': self.n_trial, 'disp': self.msg, 'time_limit': self.timelimit}
 
         # callback
         def callback(optimize_result):
@@ -102,8 +102,6 @@ class ScipyLpSearch(BaseSearch):
             obj_value = func(optimize_result.x)
             for var, value in zip(self.solution, optimize_result.x):
                 var.setValue(value)
-            if time() > self.start_time + self.timelimit:
-                raise TimeoutError
             if obj_value < self.best_obj_value:
                 diff = self.best_obj_value - obj_value
                 self.updateSolution(self.solution, obj_value)
@@ -114,22 +112,33 @@ class ScipyLpSearch(BaseSearch):
                 _callback([self.solution], self.best_solution, self.best_obj_value)
 
         # search
-        try:
-            res = scipy_optimize.linprog(
-                c=lp.c,
-                A_ub=lp.G, b_ub=lp.h,
-                A_eq=lp.A, b_eq=lp.b,
-                bounds=bounds,
-                options=options,
-                callback=callback,
-                method=self.method,
-                )
+        res = scipy_optimize.linprog(
+            c=lp.c,
+            A_ub=lp.G, b_ub=lp.h,
+            A_eq=lp.A, b_eq=lp.b,
+            bounds=bounds,
+            options=options,
+            callback=callback,
+            method=self.method,
+            )
+        # res.status =  0: Optimal solution found.
+        #               1: Iteration or time limit reached.
+        #               2: Problem is infeasible.
+        #               3: Problem is unbounded.
+        #               4: The HiGHS solver ran into a problem.
+        if res.status == 0:
             # get result of solver
             for var, value in zip(self.solution, res.x):
                 var.setValue(value)
             self.updateSolution(self.solution, obj_value=None)
-        except TimeoutError:
+        elif res.status == 1:
             status = SolverTerminateState.Timelimit
+        elif res.status == 2:
+            status = SolverTerminateState.Infeasible
+        elif res.status == 3:
+            status = SolverTerminateState.Unbounded
+        else:
+            status = SolverTerminateState.Abnormal
 
         return status
 

@@ -18,7 +18,8 @@ setup(
             "tspLib/tsp/*.tsp",
             "tspLib/vrp/*.vrp",
             "tspLib/sop/*.sop",
-            "funcLib/*"
+            "funcLib/*",
+            "mipLib/*",
         ]
     },
     version='0.5.1',
