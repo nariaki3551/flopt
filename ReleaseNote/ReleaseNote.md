@@ -1,6 +1,22 @@
 # flopt
 
+### version 0.5.2 (Aug, 2022)
+
+**Update**
+
+1. Add New Solvers
+    - ScipyMilpSearch
+        - Mixed-Interger programming problem solver
+        - Engine is HIGHS solver
+
+2. Add mipLib to measure the performance of LP, MIP solvers
+
+3. Fixed some bugs
+
+
 ### version 0.5 (Oct, 2021)
+
+**Update**
 
 1. Add New Solvers
     - CvxoptQpSearch
