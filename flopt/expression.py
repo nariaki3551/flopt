@@ -669,7 +669,7 @@ class Expression:
 
     def __neg__(self):
         # -1 * self
-        return Expression(Const(-1), self, '*', name=f'-{self.name}')
+        return Expression(Const(-1), self, '*', name=f'-({self.name})')
 
     def __abs__(self):
         return abs(self.value())
@@ -812,7 +812,7 @@ class CustomExpression(Expression):
         return 'CustomExpression'
 
 
-class Const:
+class Const(float):
     """
     It is the expression of constant value.
 

@@ -78,7 +78,15 @@ class Problem:
         elif isinstance(obj, VarElement):
             obj = Expression(obj, Const(0), '+')
         self.obj = obj
-        self.variables |= obj.getVariables()
+        try:
+            self.variables |= obj.getVariables()
+        except RecursionError:
+            import sys
+            logger.warning(f"recursion reaches {sys.getrecursionlimit}")
+            sys.setrecursionlimit(sys.getrecursionlimit() * 100)
+            self.variables |= obj.getVariables()
+        except Exception as e:
+            raise e
 
 
     def setSolver(self, solver):

@@ -65,21 +65,33 @@ class CvxoptQpSearch(BaseSearch):
         self.can_solve_problems = ['lp', 'qp']
 
 
-    def available(self, prob):
+    def available(self, prob, verbose=False):
         """
         Parameters
         ----------
         prob : Problem
+        verbose : bool
 
         Returns
         -------
         bool
             return true if it can solve the problem else false
         """
-        obj_is_quadratic    = prob.obj.isQuadratic()
-        consts_are_lp       = all( const.expression.isLinear() for const in prob.constraints )
-        var_are_continuous  = all( var.type() == VariableType.Continuous for var in prob.getVariables() )
-        return obj_is_quadratic and consts_are_lp and var_are_continuous
+        for var in prob.getVariables():
+            if not var.type() == VariableType.Continuous:
+                if verbose:
+                    logger.error(f"variable: \n{var}\n must be continuous, but got {var.type()}")
+                return False
+        if not prob.obj.isQuadratic():
+            if verbose:
+                logger.error(f"objective function: \n{prob.obj}\n must be quadratic")
+            return False
+        for const in prob.constraints:
+            if not const.expression.isLinear():
+                if verbose:
+                    logger.error(f"constraint: \n{const}\n must be linear")
+                return False
+        return True
 
 
     def search(self):

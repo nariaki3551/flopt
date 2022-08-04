@@ -29,32 +29,46 @@ class ScipyLpSearch(BaseSearch):
     -------
     status : int
         status of solver
+
+    Attributes
+    ----------
+    method : {"highs", "highs-ds", "highs-ipm", "simplex", "revised simplex", "interior-point"}
     """
     def __init__(self):
         super().__init__()
         self.name = "ScipyLpSearch"
         self.n_trial = 1e10
-        self.method = 'simplex'
+        self.method = 'interior-point'
         self.can_solve_problems = ['lp']
 
 
-    def available(self, prob):
+    def available(self, prob, verbose=False):
         """
         Parameters
         ----------
         prob : Problem
+        verbose : bool
 
         Returns
         -------
         bool
             return true if it can solve the problem else false
         """
-        if prob.obj.isLinear()\
-            and all(const.expression.isLinear() for const in prob.constraints)\
-            and all(var.type() == VariableType.Continuous for var in prob.getVariables()):
-            return True
-        else:
+        for var in prob.getVariables():
+            if not var.type() == VariableType.Continuous:
+                if verbose:
+                    logger.error(f"variable: \n{var}\n must be continouse, but got {var.type()}")
+                return False
+        if not prob.obj.isLinear():
+            if verbose:
+                logger.error(f"objective function: \n{prob.obj}\n must be Linear")
             return False
+        for const in prob.constraints:
+            if not const.expression.isLinear():
+                if verbose:
+                    logger.error(f"constraint: \n{const}\n must be Linear")
+                return False
+        return True
 
 
     def search(self):
@@ -80,7 +94,7 @@ class ScipyLpSearch(BaseSearch):
         bounds = [ (_lb, _ub) for _lb, _ub in zip(lp.lb, lp.ub) ]
 
         # options
-        options = {'maxiter': self.n_trial, 'disp': self.msg}
+        options = {'maxiter': self.n_trial, 'disp': self.msg, 'time_limit': self.timelimit}
 
         # callback
         def callback(optimize_result):
@@ -88,8 +102,6 @@ class ScipyLpSearch(BaseSearch):
             obj_value = func(optimize_result.x)
             for var, value in zip(self.solution, optimize_result.x):
                 var.setValue(value)
-            if time() > self.start_time + self.timelimit:
-                raise TimeoutError
             if obj_value < self.best_obj_value:
                 diff = self.best_obj_value - obj_value
                 self.updateSolution(self.solution, obj_value)
@@ -100,21 +112,33 @@ class ScipyLpSearch(BaseSearch):
                 _callback([self.solution], self.best_solution, self.best_obj_value)
 
         # search
-        try:
-            res = scipy_optimize.linprog(
-                c=lp.c,
-                A_ub=lp.A, b_ub=lp.b,
-                A_eq=lp.G, b_eq=lp.h,
-                bounds=bounds,
-                options=options,
-                callback=callback, method=self.method,
-                )
+        res = scipy_optimize.linprog(
+            c=lp.c,
+            A_ub=lp.G, b_ub=lp.h,
+            A_eq=lp.A, b_eq=lp.b,
+            bounds=bounds,
+            options=options,
+            callback=callback,
+            method=self.method,
+            )
+        # res.status =  0: Optimal solution found.
+        #               1: Iteration or time limit reached.
+        #               2: Problem is infeasible.
+        #               3: Problem is unbounded.
+        #               4: The HiGHS solver ran into a problem.
+        if res.status == 0:
             # get result of solver
             for var, value in zip(self.solution, res.x):
                 var.setValue(value)
             self.updateSolution(self.solution, obj_value=None)
-        except TimeoutError:
+        elif res.status == 1:
             status = SolverTerminateState.Timelimit
+        elif res.status == 2:
+            status = SolverTerminateState.Infeasible
+        elif res.status == 3:
+            status = SolverTerminateState.Unbounded
+        else:
+            status = SolverTerminateState.Abnormal
 
         return status
 
