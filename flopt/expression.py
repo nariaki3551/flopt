@@ -812,7 +812,7 @@ class CustomExpression(Expression):
         return 'CustomExpression'
 
 
-class Const:
+class Const(float):
     """
     It is the expression of constant value.
 
