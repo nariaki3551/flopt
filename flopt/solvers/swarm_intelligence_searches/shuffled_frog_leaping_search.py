@@ -57,22 +57,28 @@ class ShuffledFrogLeapingSearch(BaseSearch):
         self.max_step = int(1e10)
 
 
-    def available(self, prob):
+    def available(self, prob, verbose=False):
         """
         Parameters
         ----------
-        obj : Expression or VarElement family
-            objective function
-        constraints : list of Constraint
-            constraints
+        prob : Problem
+        verbose : bool
 
         Returns
         -------
         bool
             return true if it can solve the problem else false
         """
-        return all(not var.type() == VariableType.Permutation for var in prob.getVariables())\
-                and (not prob.constraints)
+        for var in prob.getVariables():
+            if var.type() == VariableType.Permutation:
+                if verbose:
+                    logger.error(f"variable: \n{var}\n must be not permutation, but got {var.type()}")
+                return False
+        if prob.constraints:
+            if verbose:
+                logger.error(f"this solver can not handle constraints")
+            return False
+        return True
 
 
     def search(self):

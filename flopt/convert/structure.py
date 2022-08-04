@@ -146,13 +146,14 @@ class QpStructure:
 
 
     @classmethod
-    def fromFlopt(cls, prob, x=None, progress=False):
+    def fromFlopt(cls, prob, x=None, option=None, progress=False):
         """
         Parameters
         ----------
         prob : Problem
         x : None or list of VarElement family
         progress: bool
+        option : {"all_neq", "all_eq"}
 
         Returns
         -------
@@ -235,7 +236,14 @@ class QpStructure:
         }
         types = [type2str[var.type()] for var in x]
 
-        return cls(Q, c, C, G, h, A, b, lb, ub, types, x)
+        qp = cls(Q, c, C, G, h, A, b, lb, ub, types, x)
+        
+        if option == "all_neq":
+            return qp.toAllNeq()
+        elif option == "all_eq":
+            return qp.toAllEq()
+        else:
+            return qp
 
 
     def toAllNeq(self):
@@ -504,17 +512,32 @@ class LpStructure:
 
 
     @classmethod
-    def fromFlopt(cls, prob, x=None, progress=False):
+    def fromFlopt(cls, prob, x=None, option=None, progress=False):
         """
         ::
 
             Problem (flopt) --> QpStructure --> LpStructure
 
+        Parameters
+        ----------
+        prob : Problem
+        x : None or list of Variable family
+        option : {"all_neq", "all_eq"}
+        progress : bool
+
         Returns
         -------
         LpStructure
         """
-        return QpStructure.fromFlopt(prob, x, progress).toLp()
+        assert option is None or option in {"all_neq", "all_eq"},\
+            f"option must be None, all_neq or all_eq, but got {option}"
+        qp = QpStructure.fromFlopt(prob, x, progress)
+        if option == "all_neq":
+            return qp.toAllNeq().toLp()
+        elif option == "all_eq":
+            return qp.toAllEq().toLp()
+        else:
+            return qp.toLp()
 
 
     def toFlopt(self):

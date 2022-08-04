@@ -88,21 +88,34 @@ class AmplifySearch(BaseSearch):
         self.can_solve_problems = ['ising']
 
 
-    def available(self, prob):
+    def available(self, prob, verbose=False):
         """
         Parameters
         ----------
         prob : Problem
+        verbose : bool
 
         Returns
         -------
         bool
             return true if it can solve the problem else false
         """
-        all_spin = all( var.type() == VariableType.Spin for var in prob.getVariables() )
-        ising_obj = prob.obj.isIsing()
-        ising_consts = all( const.expression.isIsing() for const in prob.constraints )
-        return all_spin and ising_obj and ising_consts
+        for var in prob.getVariables():
+            if not var.type() == VariableType.Spin:
+                if verbose:
+                    logger.error(f"variable: \n{var}\n must be spin, but got {var.type()}")
+                return False
+        if not prob.obj.isIsing():
+            if verbose:
+                logger.error(f"objective function: \n{prob.obj}\n must be ising form")
+            return False
+        for const in prob.constraints:
+            if not const.expression.isIsing():
+                if verbose:
+                    logger.error(f"constraint: \n{const}\n must be ising form")
+                return False
+        return True
+
 
 
     def search(self):

@@ -45,22 +45,33 @@ class PulpSearch(BaseSearch):
         self.can_solve_problems = ['lp']
 
 
-    def available(self, prob):
+    def available(self, prob, verbose=False):
         """
         Parameters
         ----------
         prob : Problem
+        verbose : bool
 
         Returns
         -------
         bool
             return true if objective and constraint functions are linear else false
         """
-        var_types = {VariableType.Binary, VariableType.Integer, VariableType.Continuous}
-        var_match = all( var.type() in var_types for var in prob.getVariables() )
-        obj_linear = prob.obj.isLinear()
-        const_linear = all( const.isLinear() for const in prob.constraints )
-        return var_match and obj_linear and const_linear
+        for var in prob.getVariables():
+            if not var.type() in {VariableType.Continuous, VariableType.Integer, VariableType.Binary}:
+                if verbose:
+                    logger.error(f"variable: \n{var}\n must be continouse, integer or binary, but got {var.type()}")
+                return False
+        if not prob.obj.isLinear():
+            if verbose:
+                logger.error(f"objective function: \n{prob.obj}\n must be Linear")
+            return False
+        for const in prob.constraints:
+            if not const.expression.isLinear():
+                if verbose:
+                    logger.error(f"constraint: \n{const}\n must be Linear")
+                return False
+        return True
 
 
     def search(self):

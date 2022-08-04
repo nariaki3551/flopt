@@ -20,7 +20,7 @@ logger = setup_logger(__name__)
 # -------------------------------------------------------
 
 
-INI_BOUND = 1e10
+INI_BOUND = 1e20
 
 
 class VariableFactory:
