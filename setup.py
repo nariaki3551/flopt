@@ -22,7 +22,7 @@ setup(
             "mipLib/*",
         ]
     },
-    version='0.5.1',
+    version='0.5.2',
     license='MIT',
     install_requires=[
         'numpy',
