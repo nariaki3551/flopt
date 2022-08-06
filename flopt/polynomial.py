@@ -390,11 +390,10 @@ class Polynomial:
                     terms[mono] += coeff
                 else:
                     terms[mono] = coeff
-            constant = self._constant + other._constant
-            # clean up
-            for mono in list(terms.keys()):
-                if isinstance(mono, Monomial) and terms[mono] == 0:
+                # clean up
+                if terms[mono] == 0:
                     del terms[mono]
+            constant = self._constant + other._constant
             return Polynomial(terms, constant)
         else:
             return NotImplemented
