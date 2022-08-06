@@ -1,6 +1,7 @@
 import numpy as np
 
 from flopt import Variable, Problem
+from flopt.variable import VariableArrayWithDict
 from flopt.convert.linearize import linearize
 from flopt.constants import VariableType, np_float
 from flopt.error import ConversionError
@@ -161,9 +162,10 @@ class QpStructure:
         """
         assert prob.obj.isQuadratic()
         assert all(const.isLinear() for const in prob.constraints)
+        assert x is None or isinstance(x, VariableArrayWithDict), f"x must be None or VariableArrayWithDict"
 
         if x is None:
-            x = np.array(list(prob.getVariables()), dtype=object)
+            x = VariableArrayWithDict(list(prob.getVariables()), dtype=object)
 
         quadratic = prob.obj.toQuadratic(x)
         Q, c, C = quadratic.Q, quadratic.c, quadratic.C
@@ -531,7 +533,7 @@ class LpStructure:
         """
         assert option is None or option in {"all_neq", "all_eq"},\
             f"option must be None, all_neq or all_eq, but got {option}"
-        qp = QpStructure.fromFlopt(prob, x, progress)
+        qp = QpStructure.fromFlopt(prob, x, progress=progress)
         if option == "all_neq":
             return qp.toAllNeq().toLp()
         elif option == "all_eq":
