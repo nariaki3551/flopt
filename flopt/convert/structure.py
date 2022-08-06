@@ -531,7 +531,7 @@ class LpStructure:
         """
         assert option is None or option in {"all_neq", "all_eq"},\
             f"option must be None, all_neq or all_eq, but got {option}"
-        qp = QpStructure.fromFlopt(prob, x, progress)
+        qp = QpStructure.fromFlopt(prob, x, progress=progress)
         if option == "all_neq":
             return qp.toAllNeq().toLp()
         elif option == "all_eq":

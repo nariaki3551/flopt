@@ -2,6 +2,7 @@ import pytest
 
 import numpy as np
 
+import flopt
 from flopt import Variable, Problem, Solver
 
 
@@ -47,6 +48,28 @@ def test_flopt_to_qp2():
     qp.toLp()
     qp.toIsing()
     qp.toQubo()
+
+
+def test_flopt_to_qp3():
+
+    # list of numbers
+    A = [1, 2]
+
+    prob = Problem()
+
+    # create variables
+    x = Variable.array('x', len(A), cat='Spin')
+
+    # set objective function
+    prob += flopt.Dot(x, A) ** 2
+
+    # binarize from spin variables
+    flopt.convert.binarize(prob)
+    qp = flopt.convert.QpStructure.fromFlopt(prob)
+    assert qp.Q.shape == (2, 2)
+    assert (qp.Q == np.array([[0.0, 16.0], [16.0, 0.0]])).all()
+    assert (qp.c == np.array([-8.0, -8.0])).all()
+    assert qp.C == 9
 
 
 def test_flopt_to_lp1():
