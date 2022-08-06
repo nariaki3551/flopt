@@ -343,8 +343,18 @@ class Expression:
             where c.T.dot(x) + C
         """
         assert self.isLinear()
-        quadratic = self.toQuadratic(x)
-        return self.toQuadratic(x).toLinear()
+        from flopt.convert import LinearStructure
+        if x is None:
+            x = np.array(sorted(self.getVariables(), key=lambda var: var.name))
+
+        num_variables = len(x)
+
+        c = np.zeros((num_variables, ), dtype=np_float)
+        for i in range(num_variables):
+            c[i] = self.polynomial.coeff(x[i])
+
+        C = self.polynomial.constant()
+        return LinearStructure(c, C, x=x)
 
 
     def isIsing(self):
