@@ -1,7 +1,6 @@
 import numpy as np
 
 from flopt import Variable, Problem
-from flopt.variable import VariableArrayWithDict
 from flopt.convert.linearize import linearize
 from flopt.constants import VariableType, np_float
 from flopt.error import ConversionError
@@ -162,10 +161,9 @@ class QpStructure:
         """
         assert prob.obj.isQuadratic()
         assert all(const.isLinear() for const in prob.constraints)
-        assert x is None or isinstance(x, VariableArrayWithDict), f"x must be None or VariableArrayWithDict"
 
         if x is None:
-            x = VariableArrayWithDict(list(prob.getVariables()), dtype=object)
+            x = np.array(list(prob.getVariables()), dtype=object)
 
         quadratic = prob.obj.toQuadratic(x)
         Q, c, C = quadratic.Q, quadratic.c, quadratic.C
