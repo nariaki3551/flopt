@@ -263,9 +263,11 @@ class Polynomial:
             >>> 3
         """
         if isinstance(args[0], Monomial):
-            mono = args[0].copy()
+            mono = args[0]
         else:
-            mono = args[0].toMonomial().copy()
+            mono = args[0].toMonomial()
+        if len(args) > 1:
+            mono = mono.copy()
         for elm in args[1:]:
             if isinstance(elm, Monomial):
                 assert elm.coeff == 1
@@ -382,15 +384,18 @@ class Polynomial:
         elif isinstance(other, Monomial):
             return self + other.toPolynomial()
         elif isinstance(other, Polynomial):
-            terms = collections.defaultdict(int, self.terms)
+            terms = dict(self.terms)
             for mono, coeff in other:
-                terms[mono] += coeff
+                if mono in terms:
+                    terms[mono] += coeff
+                else:
+                    terms[mono] = coeff
             constant = self._constant + other._constant
             # clean up
             for mono in list(terms.keys()):
                 if isinstance(mono, Monomial) and terms[mono] == 0:
                     del terms[mono]
-            return Polynomial(dict(terms), constant)
+            return Polynomial(terms, constant)
         else:
             return NotImplemented
 
