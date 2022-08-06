@@ -16,7 +16,42 @@ logger = setup_logger(__name__)
 
 
 # -------------------------------------------------------
-#   Variable Factory
+#   Variable Container Factory
+# -------------------------------------------------------
+
+class VariableArray(np.ndarray):
+    def __new__(cls, array, *args, **kwargs):
+        if isinstance(array, (list, tuple)):
+            shape = (len(array), )
+        else:
+            shape = array.shape
+        obj = super().__new__(cls, shape, dtype=VarElement)
+        obj.mono_to_index = dict()
+        return obj
+
+    def __init__(self, array, *args, **kwargs):
+        array = np.array(array)
+        for i in itertools.product(*map(range, self.shape)):
+            self[i] = array[i]
+            self.mono_to_index[array[i].toMonomial()] = i
+
+    def __array_finalize__(self, obj):
+        self.mono_to_index = getattr(obj, 'mono_to_index', None)
+
+    def index(self, mono):
+        if not isinstance(mono, Monomial):
+            mono = mono.toMonomial()
+        i = self.mono_to_index[mono]
+        if len(i) == 1:
+            return i[0]
+        return i
+
+
+
+
+
+# -------------------------------------------------------
+#   Variable and Variable Container Factory
 # -------------------------------------------------------
 
 
@@ -199,7 +234,7 @@ class VariableFactory:
         if isinstance(ini_value, array_classes):
             ini_value = np.array(ini_value, dtype=np_float)
         iterator = itertools.product(*map(range, shape))
-        variables = np.empty(shape, dtype=object)
+        variables = np.ndarray(shape, dtype=object)
         for i in iterator:
             var_name = f'{name}_' + '_'.join(map(str, i))
             _lowBound  = lowBound[i]  if isinstance(lowBound,  array_classes) else lowBound
@@ -207,7 +242,7 @@ class VariableFactory:
             _cat       = cat[i]       if isinstance(cat,       array_classes) else cat
             _ini_value = ini_value[i] if isinstance(ini_value, array_classes) else ini_value
             variables[i] = self(var_name, _lowBound, _upBound, _cat, _ini_value)
-        return variables
+        return VariableArray(variables)
 
 
     def matrix(self, name, n_row, n_col, lowBound=None, upBound=None, cat='Continuous', ini_value=None):

@@ -10,6 +10,7 @@ from flopt.solvers.solver_utils import (
 )
 from flopt.convert import LpStructure
 from flopt.env import setup_logger
+from flopt.variable import VariableArray
 from flopt.expression import Const
 from flopt.solution import Solution
 from flopt.constants import VariableType, SolverTerminateState
@@ -88,7 +89,10 @@ class ScipyLpSearch(BaseSearch):
         func = gen_func(self.prob.obj)
 
         # lp structure
-        lp = LpStructure.fromFlopt(self.prob, x=self.solution.getVariables())
+        lp = LpStructure.fromFlopt(
+            self.prob,
+            x=VariableArray(self.solution.getVariables()),
+            )
 
         # bounds
         bounds = [ (_lb, _ub) for _lb, _ub in zip(lp.lb, lp.ub) ]
