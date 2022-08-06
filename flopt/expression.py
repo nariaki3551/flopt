@@ -287,10 +287,13 @@ class Expression:
             such that 1/2 x^T Q x + c^T x + C, Q^T = Q
         """
         assert self.isQuadratic()
+        from flopt.variable import VariableArray
+        assert x is None or isinstance(x, VariableArray), f"x must be None or VariableArray"
         from flopt.convert import QuadraticStructure
         polynomial = self.polynomial.simplify()
         if x is None:
-            x = np.array(sorted(self.getVariables(), key=lambda var: var.name))
+            x = VariableArray(sorted(self.getVariables(), key=lambda var: var.name))
+
         num_variables = len(x)
 
         Q = np.zeros((num_variables, num_variables), dtype=np_float)
@@ -301,8 +304,9 @@ class Expression:
                     Q[i, j] = Q[j, i] = polynomial.coeff(x[i], x[j])
 
         c = np.zeros((num_variables, ), dtype=np_float)
-        for i in range(num_variables):
-            c[i] = polynomial.coeff(x[i])
+        for mono, coeff in self.polynomial:
+            if mono.isLinear():
+                c[x.index(mono)] = coeff
 
         C = polynomial.constant()
         return QuadraticStructure(Q, c, C, x=x)
@@ -343,8 +347,20 @@ class Expression:
             where c.T.dot(x) + C
         """
         assert self.isLinear()
-        quadratic = self.toQuadratic(x)
-        return self.toQuadratic(x).toLinear()
+        from flopt.variable import VariableArray
+        assert x is None or isinstance(x, VariableArray), f"x must be None or VariableArray"
+        from flopt.convert import LinearStructure
+        if x is None:
+            x = VariableArray(sorted(self.getVariables(), key=lambda var: var.name))
+
+        num_variables = len(x)
+
+        c = np.zeros((num_variables, ), dtype=np_float)
+        for mono, coeff in self.polynomial:
+            c[x.index(mono)] = coeff
+
+        C = self.polynomial.constant()
+        return LinearStructure(c, C, x=x)
 
 
     def isIsing(self):

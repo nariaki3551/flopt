@@ -1,5 +1,6 @@
 from flopt.convert.structure import (
     QuadraticStructure,
+    LinearStructure,
     QpStructure,
     LpStructure,
     IsingStructure,

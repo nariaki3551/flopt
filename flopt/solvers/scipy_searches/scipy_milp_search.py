@@ -10,6 +10,7 @@ from flopt.solvers.solver_utils import (
 )
 from flopt.convert import LpStructure
 from flopt.env import setup_logger
+from flopt.variable import VariableArray
 from flopt.expression import Const
 from flopt.solution import Solution
 from flopt.constants import VariableType, SolverTerminateState
@@ -86,7 +87,11 @@ class ScipyMilpSearch(BaseSearch):
         func = gen_func(self.prob.obj)
 
         # lp structure
-        lp = LpStructure.fromFlopt(self.prob, x=self.solution.getVariables()).toAllNeq()
+        lp = LpStructure.fromFlopt(
+            self.prob,
+            x=VariableArray(self.solution.getVariables()),
+            option="all_neq",
+            )
 
         # bounds
         lbs = [_lb if not np.isnan(_lb) else -np.inf for _lb in lp.lb]
