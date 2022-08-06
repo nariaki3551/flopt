@@ -25,7 +25,7 @@ class Expression:
     """Expression Base Class
 
     This represents the operation of two items
-    elmA (operater) elmB
+    elmA (operator) elmB
 
     Parameters
     ----------
@@ -33,8 +33,8 @@ class Expression:
       first element
     elmB : Variable family or Expression family
       later element
-    operater : str
-      operater between elmA and elmB
+    operator : str
+      operator between elmA and elmB
 
     Attributes
     ----------
@@ -44,8 +44,8 @@ class Expression:
       first element
     elmB : Variable family or Expression family
       later element
-    operater : str
-      operater between elmA and elmB
+    operator : str
+      operator between elmA and elmB
     var_dict : None or dict
     expr : None or sympy.sympify
 
@@ -64,7 +64,7 @@ class Expression:
     >>> c.getVariables()
     >>> {VarElement("b", 1, 2, 2), VarElement("a", 0, 1, 1)}
 
-    operater "+", "-", "*", "/", "^" and "%" are supported for Integer, Binary and
+    operator "+", "-", "*", "/", "^" and "%" are supported for Integer, Binary and
     Continuous Variables.
 
     >>> a = Variable(name='a', ini_value=1, cat='Integer')  # a.value() is 1
@@ -82,7 +82,7 @@ class Expression:
     >>> Expression(a, b, '%').value()  # a%b modulo
     >>> 1
 
-    operater "&", "|" are supported for Binary Variable.
+    operator "&", "|" are supported for Binary Variable.
 
     >>> a = Variable(name='a', ini_value=1, cat='Binary')
     >>> b = Variable(name='b', ini_value=0, cat='Binary')
@@ -91,10 +91,10 @@ class Expression:
     >>> Expression(a, b, '|').value().value()  # a&b bitwise or
     >>> 1
     """
-    def __init__(self, elmA, elmB, operater, name=None):
+    def __init__(self, elmA, elmB, operator, name=None):
         self.elmA = elmA
         self.elmB = elmB
-        self.operater = operater
+        self.operator = operator
         if name is not None:
             self.name = name
         else:
@@ -118,24 +118,24 @@ class Expression:
         elmA_name = self.elmA.name
         elmB_name = self.elmB.name
         if isinstance(self.elmA, Expression):
-            if self.operater in {'*', '/', '^', '%'}:
+            if self.operator in {'*', '/', '^', '%'}:
                 elmA_name = f'({elmA_name})'
         if isinstance(self.elmB, Expression):
-            if not self.operater == '+' or not self.elmB.name.startswith('-'):
+            if not self.operator == '+' or not self.elmB.name.startswith('-'):
                 elmB_name = f'({elmB_name})'
-        self.name = f'{elmA_name}{self.operater}{elmB_name}'
+        self.name = f'{elmA_name}{self.operator}{elmB_name}'
 
 
     def setPolynomial(self):
         if self.elmA.isPolynomial() and self.elmB.isPolynomial():
-            if self.operater in {'+', '-', '*'}:
-                if self.operater == '+':
+            if self.operator in {'+', '-', '*'}:
+                if self.operator == '+':
                     self.polynomial = self.elmA.toPolynomial() + self.elmB.toPolynomial()
-                elif self.operater == '-':
+                elif self.operator == '-':
                     self.polynomial = self.elmA.toPolynomial() - self.elmB.toPolynomial()
                 else:
                     self.polynomial = self.elmA.toPolynomial() * self.elmB.toPolynomial()
-            elif self.operater == '^' and isinstance(self.elmB, Const) and isinstance(self.elmB.value(), int):
+            elif self.operator == '^' and isinstance(self.elmB, Const) and isinstance(self.elmB.value(), int):
                 self.polynomial = self.elmA.toPolynomial() ** self.elmB.value()
             else:
                 self.polynomial = None
@@ -166,7 +166,7 @@ class Expression:
         float or int
             return value of expression
         """
-        assert self.operater != '' or isinstance(self.elmB, ExpressionNull)
+        assert self.operator != '' or isinstance(self.elmB, ExpressionNull)
         elmA = self.elmA
         elmB = self.elmB
         if self.var_dict is not None:
@@ -179,21 +179,21 @@ class Expression:
             elif self.elmB.name in self.var_dict:
                 elmB = self.var_dict[self.elmB.name]
 
-        if self.operater == '+':
+        if self.operator == '+':
             return elmA.value() + elmB.value()
-        elif self.operater == '-':
+        elif self.operator == '-':
             return elmA.value() - elmB.value()
-        elif self.operater == '*':
+        elif self.operator == '*':
             return elmA.value() * elmB.value()
-        elif self.operater == '/':
+        elif self.operator == '/':
             return elmA.value() / elmB.value()
-        elif self.operater == '^':
+        elif self.operator == '^':
             return elmA.value() ** elmB.value()
-        elif self.operater == '%':
+        elif self.operator == '%':
             return elmA.value() % elmB.value()
-        elif self.operater == '&':
+        elif self.operator == '&':
             return elmA.value() and elmB.value()
-        elif self.operater == '|':
+        elif self.operator == '|':
             return elmA.value() or elmB.value()
 
         self.unsetVarDict()
@@ -241,7 +241,7 @@ class Expression:
         bool
             return if it is - value form else false
         """
-        return self.operater == '*'\
+        return self.operator == '*'\
                 and isinstance(self.elmA, Const) \
                 and self.elmA.value() == -1
 
@@ -581,15 +581,15 @@ class Expression:
                 return -self
             return Expression(Const(other), self, '*')
         elif isinstance(other, Expression):
-            if self.operater == '*' and isinstance(self.elmA, Const):
-                if other.operater == '*' and isinstance(other.elmA, Const):
+            if self.operator == '*' and isinstance(self.elmA, Const):
+                if other.operator == '*' and isinstance(other.elmA, Const):
                     # (a*self) * (b*other) --> a * b * (self*other)
                     return self.elmA * other.elmA * Expression(self.elmB, other.elmB, '*')
                 else:
                     # (a*self) * other --> a * (self*other)
                     return self.elmA * Expression(self.elmB, other, '*')
             else:
-                if other.operater == '*' and isinstance(other.elmA, Const):
+                if other.operator == '*' and isinstance(other.elmA, Const):
                     # self * (b*other) --> b * (self*other)
                     return other.elmA * Expression(self, other.elmB, '*')
                 else:
@@ -605,15 +605,15 @@ class Expression:
                 return self
             return Expression(Const(other), self, '*')
         elif isinstance(other, Expression):
-            if self.operater == '*' and isinstance(self.elmA, Const):
-                if other.operater == '*' and isinstance(other.elmA, Const):
+            if self.operator == '*' and isinstance(self.elmA, Const):
+                if other.operator == '*' and isinstance(other.elmA, Const):
                     # (b*other) * (a*self) --> a * b * (other*self)
                     return self.elmA * other.elmA * Expression(other.elmB, self.elmB, '*')
                 else:
                     # other * (a*self) --> a * (other*self)
                     return self.elmA * Expression(other, self.elmB, '*')
             else:
-                if other.operater == '*' and isinstance(other.elmA, Const):
+                if other.operator == '*' and isinstance(other.elmA, Const):
                     # (b*other) * self --> b * (other*self)
                     return other.elmA * Expression(other.elmB, self, '*')
                 else:
@@ -700,7 +700,7 @@ class Expression:
         return self
 
     def __hash__(self):
-        return hash((hash(self.elmA), hash(self.elmB), hash(self.operater)))
+        return hash((hash(self.elmA), hash(self.elmB), hash(self.operator)))
 
     def __eq__(self, other):
         return Constraint(self, other, 'eq')
@@ -718,7 +718,7 @@ class Expression:
         return s
 
     def __repr__(self):
-        s = f'Expression({self.elmA.name}, {self.elmB.name}, {self.operater})'
+        s = f'Expression({self.elmA.name}, {self.elmB.name}, {self.operator})'
         return s
 
 
@@ -787,7 +787,7 @@ class CustomExpression(Expression):
     def __init__(self, func, variables, name=None):
         self.func = func
         self.variables = variables
-        self.operater = None
+        self.operator = None
         self.name = 'Custom'
         self._type = ExpressionType.Custom
         self.var_dict = None
@@ -846,7 +846,7 @@ class Const(float):
         self._value = value
         self._type = ExpressionType.Const
         self.parents = list()   # dummy
-        self.operater = None    # dummy
+        self.operator = None    # dummy
         self.parents = list()   # dummy
 
     def type(self):

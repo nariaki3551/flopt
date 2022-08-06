@@ -270,7 +270,7 @@ def is_var_mul(node):
         return true if node is Expression and variable-multiply else false
     """
     return isinstance(node, Expression)\
-        and node.operater == '*'\
+        and node.operator == '*'\
         and isinstance(node.elmA, VarElement)\
         and isinstance(node.elmB, VarElement)
 
