@@ -1,6 +1,6 @@
 import numpy as np
 
-from flopt.variable import VarElement
+from flopt.variable import VarElement, VariableArray
 from flopt.expression import Expression, Const
 
 
@@ -14,7 +14,9 @@ def Sum(x):
     -------
     all sum of x
     """
-    if isinstance(x, np.ndarray):
+    if isinstance(x, VariableArray):
+        return x.sum().item()
+    elif isinstance(x, np.ndarray):
         return x.sum()
     else:
         return sum(x)
