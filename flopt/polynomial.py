@@ -1,5 +1,3 @@
-import collections
-
 from flopt.constants import VariableType
 
 
@@ -417,26 +415,31 @@ class Polynomial:
             terms = dict()
             for mono, coeff in other:
                 for mono_, coeff_ in self:
-                    mono__ = mono*mono_
+                    mono__ = mono * mono_
                     if mono__ in terms:
                         terms[mono__] += coeff * coeff_
                     else:
                         terms[mono__] = coeff * coeff_
+                    # clean up
+                    if terms[mono__] == 0:
+                        del terms[mono__]
             for mono, coeff in self:
                 if mono in terms:
                     terms[mono] += other._constant * coeff
                 else:
                     terms[mono] = other._constant * coeff
+                # clean up
+                if terms[mono] == 0:
+                    del terms[mono]
             for mono, coeff in other:
                 if mono in terms:
                     terms[mono] += self._constant * coeff
                 else:
                     terms[mono] = self._constant * coeff
-            constant = self._constant * other._constant
-            # clean up
-            for mono in list(terms.keys()):
-                if isinstance(mono, Monomial) and terms[mono] == 0:
+                # clean up
+                if terms[mono] == 0:
                     del terms[mono]
+            constant = self._constant * other._constant
             return Polynomial(terms, constant)
         else:
             return NotImpremented
