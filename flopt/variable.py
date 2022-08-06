@@ -466,7 +466,7 @@ class VarElement:
         elif isinstance(other, VarElement):
             return Expression(self, other, '*')
         elif isinstance(other, Expression):
-            if other.operater == '*' and isinstance(other.elmA, Const):
+            if other.operator == '*' and isinstance(other.elmA, Const):
                 # self * (a*other) -> a * (self * other)
                 return other.elmA * Expression(self, other.elmB, '*')
             else:
@@ -486,7 +486,7 @@ class VarElement:
         elif isinstance(other, VarElement):
             return Expression(other, self, '*')
         elif isinstance(other, Expression):
-            if other.operater == '*' and isinstance(other.elmA, Const):
+            if other.operator == '*' and isinstance(other.elmA, Const):
                 # (a*other) * self -> a * (self * other)
                 return other.elmA * Expression(other.elmB, self, '*')
             else:
@@ -702,7 +702,7 @@ class VarBinary(VarInteger):
         if id(other) == id(self):
             # a * a = a
             return self
-        elif isinstance(other, Expression) and other.operater == '*':
+        elif isinstance(other, Expression) and other.operator == '*':
             if id(other.elmA) == id(self) or id(other.elmB) == id(self):
                 # a * (a * b) = a * b
                 # a * (b * a) = b * a
@@ -818,7 +818,7 @@ class VarSpin(VarElement):
     def __mul__(self, other):
         if id(other) == id(self):
             return Const(1)
-        elif isinstance(other, Expression) and other.operater == '*':
+        elif isinstance(other, Expression) and other.operator == '*':
             if id(other.elmA) == id(self):
                 # a * (a * b) = b
                 if isinstance(other.elmB, number_classes):
@@ -836,7 +836,7 @@ class VarSpin(VarElement):
     def __rmul__(self, other):
         if id(other) == id(self):
             return Const(1)
-        elif isinstance(other, Expression) and other.operater == '*':
+        elif isinstance(other, Expression) and other.operator == '*':
             if id(other.elmA) == id(self):
                 # (a * b) * a = b
                 if isinstance(other.elmB, number_classes):
