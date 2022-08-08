@@ -121,7 +121,7 @@ class Expression:
             if self.operator in {'*', '/', '^', '%'}:
                 elmA_name = f'({elmA_name})'
         if isinstance(self.elmB, Expression):
-            if not self.operator == '+' or not self.elmB.name.startswith('-'):
+            if self.elmB.name.startswith('-'):
                 elmB_name = f'({elmB_name})'
         self.name = f'{elmA_name}{self.operator}{elmB_name}'
 
