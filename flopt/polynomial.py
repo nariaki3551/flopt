@@ -76,6 +76,17 @@ class Monomial:
             return Monomial(terms, coeff)
 
 
+    def isConstant(self):
+        """
+        Returns
+        -------
+        bool
+            return True if it is constant else False
+        """
+        return len(self.terms) == 0
+
+
+
     def isLinear(self):
         """
         Returns
@@ -375,15 +386,15 @@ class Polynomial:
         Polynomial
             return simplified self polynomial
         """
-        del_monos = list()
+        terms = dict()
+        constant = 0
         for mono in self.terms.keys():
-            mono = mono.simplify()
-            if mono == 1:
-                self += self.terms[mono]
-                del_monos.append(mono)
-        for mono in del_monos:
-            del self.terms[mono]
-        return self
+            _mono = mono.simplify()
+            if _mono.isConstant():
+                constant += _mono.coeff
+            else:
+                terms[_mono] = self.terms[mono]
+        return Polynomial(terms, constant + self._constant)
 
 
 
