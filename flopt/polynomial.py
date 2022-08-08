@@ -117,15 +117,17 @@ class Monomial:
         -------
         Monomial
         """
-        terms = dict(self.terms)
+        terms = dict()
         for x in self.terms:
             if x.type() == VariableType.Binary:
                 terms[x] = 1  # x * x = x
             elif x.type() == VariableType.Spin:
-                if terms[x] % 2 == 0:
-                    del terms[x]  # x * x = 1 --> x^{2n} = 1
-                else:
+                if self.terms[x] % 2 == 1:
                     terms[x] = 1  # x * x = 1 --> x^{2n+1} = x
+                else:
+                    pass  # x * x = 1 --> x^{2n} = 1 (become constant 1)
+            else:
+                terms[x] = self.terms[x]
         return Monomial(terms, self.coeff)
 
 
@@ -188,7 +190,10 @@ class Monomial:
             else:
                 s += '*' + f'{x.name}^{exp}'
         if self.coeff == 1:
-            return s[1:]
+            if s:
+                return s[1:]
+            else:
+                return '1'
         else:
             return f'{self.coeff}' + s
 
@@ -368,12 +373,18 @@ class Polynomial:
         Returns
         -------
         Polynomial
-            return simplified polynomial
+            return simplified self polynomial
         """
-        poly = Polynomial(constant=self._constant)
-        for mono, coeff in self:
-            poly += coeff * mono.simplify()
-        return poly
+        del_monos = list()
+        for mono in self.terms.keys():
+            mono = mono.simplify()
+            if mono == 1:
+                self += self.terms[mono]
+                del_monos.append(mono)
+        for mono in del_monos:
+            del self.terms[mono]
+        return self
+
 
 
     def __add__(self, other):
