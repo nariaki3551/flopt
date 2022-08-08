@@ -297,16 +297,28 @@ class Expression:
         num_variables = len(x)
 
         Q = np.zeros((num_variables, num_variables), dtype=np_float)
-        if not polynomial.isLinear():
-            for i in range(num_variables):
-                Q[i, i] = 2 * polynomial.coeff(x[i], x[i])
-                for j in range(i+1, num_variables):
-                    Q[i, j] = Q[j, i] = polynomial.coeff(x[i], x[j])
-
         c = np.zeros((num_variables, ), dtype=np_float)
-        for mono, coeff in self.polynomial:
+
+        # set matrix Q and vector c
+        # psude-code
+        # |   if not polynomial.isLinear():
+        # |       for i in range(num_variables):
+        # |           Q[i, i] = 2 * polynomial.coeff(x[i], x[i])
+        # |           for j in range(i+1, num_variables):
+        # |               Q[i, j] = Q[j, i] = polynomial.coeff(x[i], x[j])
+        for mono, coeff in polynomial:
             if mono.isLinear():
                 c[x.index(mono)] = coeff
+            elif mono.isQuadratic():
+                if len(mono.terms) == 1:
+                    var_a = list(mono.terms)[0]
+                    a_ix = x.index(var_a.toMonomial())
+                    Q[a_ix, a_ix] = 2 * coeff
+                else:
+                    var_a, var_b = list(mono.terms.keys())
+                    a_ix = x.index(var_a.toMonomial())
+                    b_ix = x.index(var_b.toMonomial())
+                    Q[a_ix, b_ix] = Q[b_ix, a_ix] = coeff
 
         C = polynomial.constant()
         return QuadraticStructure(Q, c, C, x=x)
