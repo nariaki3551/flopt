@@ -1,5 +1,3 @@
-import collections
-
 from flopt.constants import VariableType
 
 
@@ -78,6 +76,17 @@ class Monomial:
             return Monomial(terms, coeff)
 
 
+    def isConstant(self):
+        """
+        Returns
+        -------
+        bool
+            return True if it is constant else False
+        """
+        return len(self.terms) == 0
+
+
+
     def isLinear(self):
         """
         Returns
@@ -119,15 +128,17 @@ class Monomial:
         -------
         Monomial
         """
-        terms = dict(self.terms)
+        terms = dict()
         for x in self.terms:
             if x.type() == VariableType.Binary:
                 terms[x] = 1  # x * x = x
             elif x.type() == VariableType.Spin:
-                if terms[x] % 2 == 0:
-                    del terms[x]  # x * x = 1 --> x^{2n} = 1
-                else:
+                if self.terms[x] % 2 == 1:
                     terms[x] = 1  # x * x = 1 --> x^{2n+1} = x
+                else:
+                    pass  # x * x = 1 --> x^{2n} = 1 (become constant 1)
+            else:
+                terms[x] = self.terms[x]
         return Monomial(terms, self.coeff)
 
 
@@ -190,7 +201,10 @@ class Monomial:
             else:
                 s += '*' + f'{x.name}^{exp}'
         if self.coeff == 1:
-            return s[1:]
+            if s:
+                return s[1:]
+            else:
+                return '1'
         else:
             return f'{self.coeff}' + s
 
@@ -263,9 +277,11 @@ class Polynomial:
             >>> 3
         """
         if isinstance(args[0], Monomial):
-            mono = args[0].copy()
+            mono = args[0]
         else:
-            mono = args[0].toMonomial().copy()
+            mono = args[0].toMonomial()
+        if len(args) > 1:
+            mono = mono.copy()
         for elm in args[1:]:
             if isinstance(elm, Monomial):
                 assert elm.coeff == 1
@@ -368,12 +384,18 @@ class Polynomial:
         Returns
         -------
         Polynomial
-            return simplified polynomial
+            return simplified self polynomial
         """
-        poly = Polynomial(constant=self._constant)
-        for mono, coeff in self:
-            poly += coeff * mono.simplify()
-        return poly
+        terms = dict()
+        constant = 0
+        for mono in self.terms.keys():
+            _mono = mono.simplify()
+            if _mono.isConstant():
+                constant += _mono.coeff
+            else:
+                terms[_mono] = self.terms[mono]
+        return Polynomial(terms, constant + self._constant)
+
 
 
     def __add__(self, other):
@@ -382,15 +404,17 @@ class Polynomial:
         elif isinstance(other, Monomial):
             return self + other.toPolynomial()
         elif isinstance(other, Polynomial):
-            terms = collections.defaultdict(int, self.terms)
+            terms = dict(self.terms)
             for mono, coeff in other:
-                terms[mono] += coeff
-            constant = self._constant + other._constant
-            # clean up
-            for mono in list(terms.keys()):
-                if isinstance(mono, Monomial) and terms[mono] == 0:
+                if mono in terms:
+                    terms[mono] += coeff
+                else:
+                    terms[mono] = coeff
+                # clean up
+                if terms[mono] == 0:
                     del terms[mono]
-            return Polynomial(dict(terms), constant)
+            constant = self._constant + other._constant
+            return Polynomial(terms, constant)
         else:
             return NotImplemented
 
@@ -413,26 +437,31 @@ class Polynomial:
             terms = dict()
             for mono, coeff in other:
                 for mono_, coeff_ in self:
-                    mono__ = mono*mono_
+                    mono__ = mono * mono_
                     if mono__ in terms:
                         terms[mono__] += coeff * coeff_
                     else:
                         terms[mono__] = coeff * coeff_
+                    # clean up
+                    if terms[mono__] == 0:
+                        del terms[mono__]
             for mono, coeff in self:
                 if mono in terms:
                     terms[mono] += other._constant * coeff
                 else:
                     terms[mono] = other._constant * coeff
+                # clean up
+                if terms[mono] == 0:
+                    del terms[mono]
             for mono, coeff in other:
                 if mono in terms:
                     terms[mono] += self._constant * coeff
                 else:
                     terms[mono] = self._constant * coeff
-            constant = self._constant * other._constant
-            # clean up
-            for mono in list(terms.keys()):
-                if isinstance(mono, Monomial) and terms[mono] == 0:
+                # clean up
+                if terms[mono] == 0:
                     del terms[mono]
+            constant = self._constant * other._constant
             return Polynomial(terms, constant)
         else:
             return NotImpremented

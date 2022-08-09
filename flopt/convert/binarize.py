@@ -146,8 +146,10 @@ def binarize_traverse(e, binarizes):
                 update = True
             if update:
                 node.setName()
+                node.setPolynomial()
                 for parent in node.traverseAncestors():
                     parent.setName()
+                    parent.setPolynomial()
                 return True
     return False
 
