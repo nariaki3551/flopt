@@ -29,7 +29,7 @@ setup(
         'sympy',
         'matplotlib',
         'pulp',
-        'optuna',
+        'optuna==2.10.1',
         'hyperopt',
         'cvxopt',
         'amplify',
