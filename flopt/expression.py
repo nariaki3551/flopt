@@ -128,13 +128,12 @@ class Expression:
 
     def setPolynomial(self):
         if self.elmA.isPolynomial() and self.elmB.isPolynomial():
-            if self.operator in {'+', '-', '*'}:
-                if self.operator == '+':
-                    self.polynomial = self.elmA.toPolynomial() + self.elmB.toPolynomial()
-                elif self.operator == '-':
-                    self.polynomial = self.elmA.toPolynomial() - self.elmB.toPolynomial()
-                else:
-                    self.polynomial = self.elmA.toPolynomial() * self.elmB.toPolynomial()
+            if self.operator == '+':
+                self.polynomial = self.elmA.toPolynomial() + self.elmB.toPolynomial()
+            elif self.operator == '-':
+                self.polynomial = self.elmA.toPolynomial() - self.elmB.toPolynomial()
+            elif self.operator == '*':
+                self.polynomial = self.elmA.toPolynomial() * self.elmB.toPolynomial()
             elif self.operator == '^' and isinstance(self.elmB, Const) and isinstance(self.elmB.value(), int):
                 self.polynomial = self.elmA.toPolynomial() ** self.elmB.value()
             else:
