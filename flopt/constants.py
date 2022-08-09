@@ -2,8 +2,8 @@ import enum
 
 import numpy as np
 
-VERSION = '0.5.2'
-DATE = 'August 4, 2022'
+VERSION = "0.5.2"
+DATE = "August 4, 2022"
 
 
 # number classes
@@ -18,40 +18,37 @@ array_classes = (list, tuple, np.ndarray)
 np_float = np.float64
 
 
-
 # termination state
 class SolverTerminateState(enum.IntEnum):
-    Normal      = 0
-    Timelimit   = 1
-    Lowerbound  = 2
-    Interrupt   = 3
-    Infeasible  = 4
-    Unbounded   = 5
-    Abnormal    = 6
+    Normal = 0
+    Timelimit = 1
+    Lowerbound = 2
+    Interrupt = 3
+    Infeasible = 4
+    Unbounded = 5
+    Abnormal = 6
 
     def __str__(self):
         return self.name
 
 
-
 # variable type
 class VariableType(enum.IntEnum):
-    Continuous  = 100
-    Integer     = 101
-    Binary      = 102
-    Spin        = 103
+    Continuous = 100
+    Integer = 101
+    Binary = 102
+    Spin = 103
     Permutation = 104
 
     def __str__(self):
         return self.name
 
 
-
 # expression type
 class ExpressionType(enum.IntEnum):
-    Normal  = 1000
-    Custom  = 1001
-    Const   = 1002
+    Normal = 1000
+    Custom = 1001
+    Const = 1002
 
     def __str__(self):
         return self.name

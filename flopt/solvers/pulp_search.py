@@ -1,5 +1,3 @@
-import copy
-
 import pulp
 
 from flopt.solvers.base import BaseSearch
@@ -38,12 +36,12 @@ class PulpSearch(BaseSearch):
     status : int
         status of solver
     """
+
     def __init__(self):
         super().__init__()
         self.name = "PulpSearch"
         self.solver = None
-        self.can_solve_problems = ['lp']
-
+        self.can_solve_problems = ["lp"]
 
     def available(self, prob, verbose=False):
         """
@@ -58,9 +56,15 @@ class PulpSearch(BaseSearch):
             return true if objective and constraint functions are linear else false
         """
         for var in prob.getVariables():
-            if not var.type() in {VariableType.Continuous, VariableType.Integer, VariableType.Binary}:
+            if not var.type() in {
+                VariableType.Continuous,
+                VariableType.Integer,
+                VariableType.Binary,
+            }:
                 if verbose:
-                    logger.error(f"variable: \n{var}\n must be continouse, integer or binary, but got {var.type()}")
+                    logger.error(
+                        f"variable: \n{var}\n must be continouse, integer or binary, but got {var.type()}"
+                    )
                 return False
         if not prob.obj.isLinear():
             if verbose:
@@ -72,7 +76,6 @@ class PulpSearch(BaseSearch):
                     logger.error(f"constraint: \n{const}\n must be Linear")
                 return False
         return True
-
 
     def search(self):
 
@@ -98,14 +101,13 @@ class PulpSearch(BaseSearch):
         #               -3: undefined
         if lp_status == -1:
             status = SolverTerminateState.Infeasible
-        elif lp_status  == -2:
+        elif lp_status == -2:
             status = SolverTerminateState.Unbounded
         else:
             status = SolverTerminateState.Abnormal
-        logger.info(f'PuLP LpStatus {pulp.constants.LpStatus[lp_status]}')
+        logger.info(f"PuLP LpStatus {pulp.constants.LpStatus[lp_status]}")
 
         return status
-
 
     def createLpProblem(self, solution, prob):
         """Convert Problem into pulp.LpProblem
@@ -123,42 +125,32 @@ class PulpSearch(BaseSearch):
         lp_variables = []
         for var in solution:
             if var.type() == VariableType.Continuous:
-                cat = 'Continuous'
+                cat = "Continuous"
             elif var.type() == VariableType.Integer:
-                cat = 'Integer'
+                cat = "Integer"
             elif var.type() == VariableType.Binary:
-                cat = 'Binary'
+                cat = "Binary"
             else:
                 raise ValueError(var.type())
             lp_var = LpVariable(
                 var.name, lowBound=var.lowBound, upBound=var.upBound, cat=cat
             )
             lp_variables.append(lp_var)
-        lp_solution = Solution('lp_solution', lp_variables)
+        lp_solution = Solution("lp_solution", lp_variables)
 
         # conver Problem -> pulp.LpProblem
-        name = '' if self.name is None else self.name
+        name = "" if self.name is None else self.name
         lp_prob = pulp.LpProblem(name=name)
         if not isinstance(prob.obj, Const):
             lp_prob.setObjective(prob.obj.value(lp_solution))
 
         for const in prob.constraints:
             const_exp = const.expression
-            if const.type == 'eq':
-                lp_prob.addConstraint(
-                    const_exp.value(lp_solution) == 0,
-                    const.name
-                )
-            elif const.type == 'le':
-                lp_prob.addConstraint(
-                    const_exp.value(lp_solution) <= 0,
-                    const.name
-                )
-            elif const.type == 'ge':
-                lp_prob.addConstraint(
-                    const_exp.value(lp_solution) >= 0,
-                    const.name
-                )
+            if const.type == "eq":
+                lp_prob.addConstraint(const_exp.value(lp_solution) == 0, const.name)
+            elif const.type == "le":
+                lp_prob.addConstraint(const_exp.value(lp_solution) <= 0, const.name)
+            elif const.type == "ge":
+                lp_prob.addConstraint(const_exp.value(lp_solution) >= 0, const.name)
 
         return lp_prob, lp_solution
-

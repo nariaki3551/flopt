@@ -1,5 +1,4 @@
-from flopt.solvers.sequential_update_searches import(
-    SequentialUpdateSearch,
+from flopt.solvers.sequential_update_searches import (
     RandomSearch,
     TwoOpt,
 )
@@ -9,9 +8,8 @@ from flopt.solvers.scipy_searches import (
     ScipyMilpSearch,
 )
 from flopt.solvers.optuna_searches import (
-    OptunaSearch,
     OptunaTPESearch,
-    OptunaCmaEsSearch
+    OptunaCmaEsSearch,
 )
 from flopt.solvers.hyperopt_search import HyperoptTPESearch
 from flopt.solvers.swarm_intelligence_searches import ShuffledFrogLeapingSearch
@@ -22,23 +20,23 @@ from flopt.solvers.auto_search import AutoSearch
 
 
 algos = {
-    'RandomSearch'     : RandomSearch,
-    '2-Opt'            : TwoOpt,
-    'OptunaTPESearch'  : OptunaTPESearch,
-    'OptunaCmaEsSearch': OptunaCmaEsSearch,
-    'HyperoptTPESearch': HyperoptTPESearch,
-    'SFLA'             : ShuffledFrogLeapingSearch,
-    'PulpSearch'       : PulpSearch,
-    'ScipySearch'      : ScipySearch,
-    'ScipyLpSearch'    : ScipyLpSearch,
-    'ScipyMilpSearch'  : ScipyMilpSearch,
-    'CvxoptQpSearch'   : CvxoptQpSearch,
-    'AmplifySearch'    : AmplifySearch,
-    'auto'             : AutoSearch,
+    "RandomSearch": RandomSearch,
+    "2-Opt": TwoOpt,
+    "OptunaTPESearch": OptunaTPESearch,
+    "OptunaCmaEsSearch": OptunaCmaEsSearch,
+    "HyperoptTPESearch": HyperoptTPESearch,
+    "SFLA": ShuffledFrogLeapingSearch,
+    "PulpSearch": PulpSearch,
+    "ScipySearch": ScipySearch,
+    "ScipyLpSearch": ScipyLpSearch,
+    "ScipyMilpSearch": ScipyMilpSearch,
+    "CvxoptQpSearch": CvxoptQpSearch,
+    "AmplifySearch": AmplifySearch,
+    "auto": AutoSearch,
 }
 
 
-def Solver(algo='RandomSearch'):
+def Solver(algo="RandomSearch"):
     """
     Obtain Solver object.
 
@@ -131,8 +129,6 @@ def allAvailableSolvers(prob):
         >>> ['RandomSearch', '2-Opt']
     """
     available_solvers = [
-        algo for algo in Solver_list()
-        if Solver(algo=algo).available(prob)
+        algo for algo in Solver_list() if Solver(algo=algo).available(prob)
     ]
     return available_solvers
-

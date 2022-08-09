@@ -1,7 +1,6 @@
-
 class BaseDataset:
-    """Base Dataset
-    """
+    """Base Dataset"""
+
     def create_instance(self, instance_name):
         """defined each dataset
 
@@ -20,7 +19,6 @@ class BaseDataset:
         """
         raise NotImplementedError()
 
-
     def genInstances(self):
         """
         generator of function instance
@@ -28,22 +26,19 @@ class BaseDataset:
         for instance_name in self.instance_names:
             yield self.createInstance(instance_name)
 
-
     def createProblem(self, solver):
         """
         Create problem according to solver
         """
         return None
 
-
     def __iter__(self):
         return self.genInstances()
 
 
-
 class BaseInstance:
-    """Base Instance
-    """
+    """Base Instance"""
+
     def createProblem(self, solver):
         """create probelm
 
@@ -58,8 +53,6 @@ class BaseInstance:
         """
         raise NotImplementedError()
 
-
     def getBestValue(self):
-        """return the optimal value of objective function
-        """
+        """return the optimal value of objective function"""
         raise NotImplementedError()

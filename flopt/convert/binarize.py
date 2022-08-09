@@ -1,6 +1,5 @@
-from flopt import Variable
-from flopt.variable import VarElement, VarBinary, VarInteger, VarContinuous
-from flopt.expression import Expression, Const, CustomExpression
+from flopt.variable import VarElement
+from flopt.expression import Expression, Const
 from flopt.constants import VariableType
 
 
@@ -81,8 +80,8 @@ def binarize(prob):
         const.expression = binarize_expression(const.expression, binarizes)
 
     for source, binaries in binarizes.items():
-        prob += sum(binaries) == 1, f'for_bin_{source.name}_sum'
-        prob += source == source.toBinary(), f'for_bin_{source.name}_eq'
+        prob += sum(binaries) == 1, f"for_bin_{source.name}_sum"
+        prob += source == source.toBinary(), f"for_bin_{source.name}_eq"
 
     prob.resetVariables()
     return prob
@@ -152,4 +151,3 @@ def binarize_traverse(e, binarizes):
                     parent.setPolynomial()
                 return True
     return False
-

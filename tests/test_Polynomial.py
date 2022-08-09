@@ -4,19 +4,22 @@ from flopt import Variable
 from flopt.polynomial import Monomial, Polynomial
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def x():
-    return Variable('x', cat='Integer')
+    return Variable("x", cat="Integer")
 
-@pytest.fixture(scope='function')
+
+@pytest.fixture(scope="function")
 def y():
-    return Variable('y', cat='Integer')
+    return Variable("y", cat="Integer")
 
-@pytest.fixture(scope='function')
+
+@pytest.fixture(scope="function")
 def a(x):
     return x.toPolynomial()
 
-@pytest.fixture(scope='function')
+
+@pytest.fixture(scope="function")
 def b(y):
     return y.toPolynomial()
 
@@ -39,14 +42,14 @@ def test_Monomial_mul(x, y):
 def test_Monomial_pow(x, y):
     a = Monomial({x: 1})  # x
     b = Monomial({y: 2})  # y^2
-    assert (2*a*b*b) ** 3 == Monomial({x: 3, y: 12}, coeff=8)
+    assert (2 * a * b * b) ** 3 == Monomial({x: 3, y: 12}, coeff=8)
 
 
 def test_Monomial_toPolynomial(x, y):
     a = Monomial({x: 1})  # x
     b = Monomial({y: 2})  # y^2
-    assert (a*b).toPolynomial() == Polynomial({Monomial({x: 1, y: 2}): 1})
-    assert (2*a*b).toPolynomial() == Polynomial({Monomial({x: 1, y: 2}): 2})
+    assert (a * b).toPolynomial() == Polynomial({Monomial({x: 1, y: 2}): 1})
+    assert (2 * a * b).toPolynomial() == Polynomial({Monomial({x: 1, y: 2}): 2})
 
 
 def test_Monomial_maxDegree(x, y):
@@ -80,7 +83,9 @@ def test_Monomial_diff(x, y):
 
 def test_Polynomial_constructor(x, y, a, b):
     assert a + 3 == Polynomial({Monomial({x: 1}): 1}, constant=3)
-    assert a + b + 2 == Polynomial({Monomial({x: 1}): 1, Monomial({y: 1}): 1}, constant=2)
+    assert a + b + 2 == Polynomial(
+        {Monomial({x: 1}): 1, Monomial({y: 1}): 1}, constant=2
+    )
 
 
 def test_Polynomial_mul(x, y, a, b):
@@ -90,14 +95,14 @@ def test_Polynomial_mul(x, y, a, b):
 
 
 def test_Polynomial_pow(x, y, a, b):
-    assert a ** 3 == Polynomial({Monomial({x: 3}): 1})
-    assert (a * b ** 2) ** 2 == Polynomial({Monomial({x: 2, y: 4}): 1})
+    assert a**3 == Polynomial({Monomial({x: 3}): 1})
+    assert (a * b**2) ** 2 == Polynomial({Monomial({x: 2, y: 4}): 1})
 
 
 def test_Polynomial_pow(x, y, a, b):
     assert (a * 3).maxDegree() == 1
-    assert (a * b*b).maxDegree() == 2
-    assert (b ** 4).maxDegree() == 4
+    assert (a * b * b).maxDegree() == 2
+    assert (b**4).maxDegree() == 4
 
 
 def test_Polynomial_isLinear(x, y, a, b):
@@ -105,7 +110,6 @@ def test_Polynomial_isLinear(x, y, a, b):
     assert (a + 3 * b).isLinear() == True
     assert (a * b).isLinear() == False
     assert (a * b * 2).isLinear() == False
-
 
 
 def test_Polynomial_diff(x, y, a, b):
@@ -118,7 +122,7 @@ def test_Polynomial_diff(x, y, a, b):
 def test_Polynomial_coeff(x, y, a, b):
     mx = Monomial({x: 1})  # x
     my = Monomial({y: 1})  # y
-    p = Polynomial({mx*my: 2, mx*mx: 1, mx: -1, my: 3})  # 2xy + xx - x + 3y
+    p = Polynomial({mx * my: 2, mx * mx: 1, mx: -1, my: 3})  # 2xy + xx - x + 3y
     assert p.coeff(x) == -1
     assert p.coeff(y) == 3
     assert p.coeff(x, y) == 2
@@ -130,3 +134,13 @@ def test_Polynomial_isConstant(x, y, a, b):
     assert Polynomial(constant=2).isConstant() == True
     assert Polynomial(constant=2).constant() == 2
     assert a.isConstant() == False
+
+
+def test_Polynomial_str(a):
+    print(a)
+    print(b)
+
+
+def test_Polynomial_repr(a):
+    repr(a)
+    repr(b)

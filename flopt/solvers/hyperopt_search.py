@@ -33,17 +33,18 @@ class HyperoptTPESearch(BaseSearch):
     show_progressbar : bool
         whether display a progress bar of search
     """
+
     def __init__(self):
         super().__init__()
         from hyperopt import STATUS_OK
-        self.name = 'HyperoptTPESearch'
+
+        self.name = "HyperoptTPESearch"
         self.n_trial = 1e100
         self.show_progressbar = False
-        self.can_solve_problems = ['blackbox']
+        self.can_solve_problems = ["blackbox"]
         self.hyperopt_STATUS_OK = STATUS_OK
 
-
-    def available(self, prob, verbose=True):
+    def available(self, prob, verbose=False):
         """
         Parameters
         ----------
@@ -56,9 +57,15 @@ class HyperoptTPESearch(BaseSearch):
             return true if it can solve the problem else false
         """
         for var in prob.getVariables():
-            if not var.type() in {VariableType.Continuous, VariableType.Integer, VariableType.Binary}:
+            if not var.type() in {
+                VariableType.Continuous,
+                VariableType.Integer,
+                VariableType.Binary,
+            }:
                 if verbose:
-                    logger.error(f"variable: \n{var}\n must be continuous, integer, or binary, but got {var.type()}")
+                    logger.error(
+                        f"variable: \n{var}\n must be continuous, integer, or binary, but got {var.type()}"
+                    )
                 return False
         if prob.constraints:
             if verbose:
@@ -66,9 +73,9 @@ class HyperoptTPESearch(BaseSearch):
             return False
         return True
 
-
     def search(self):
         import hyperopt
+
         status = SolverTerminateState.Normal
 
         # make the search space
@@ -87,7 +94,8 @@ class HyperoptTPESearch(BaseSearch):
         # search
         try:
             hyperopt.fmin(
-                self.objective, space=space,
+                self.objective,
+                space=space,
                 algo=hyperopt.tpe.suggest,
                 max_evals=self.n_trial,
                 show_progressbar=self.show_progressbar,
@@ -96,7 +104,6 @@ class HyperoptTPESearch(BaseSearch):
             status = SolverTerminateState.Timelimit
 
         return status
-
 
     def objective(self, var_value_dict):
         # check timelimit
@@ -114,12 +121,10 @@ class HyperoptTPESearch(BaseSearch):
             self.updateSolution(self.solution, obj_value)
             self.recordLog()
             if self.msg:
-                self.during_solver_message('*')
+                self.during_solver_message("*")
 
         # callbacks
         for callback in self.callbacks:
             callback([self.solution], self.best_solution, self.best_obj_value)
 
-        return {'loss': obj_value, 'status': self.hyperopt_STATUS_OK}
-
-
+        return {"loss": obj_value, "status": self.hyperopt_STATUS_OK}

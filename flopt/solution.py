@@ -1,4 +1,3 @@
-import random
 from math import sqrt
 
 from flopt.env import setup_logger
@@ -47,12 +46,12 @@ class Solution:
     >>> sol_product = sol1 * 2  # (Solution * constant)
     >>> sol_divide = sol1 / 2  # (Solution / constant)
     """
+
     def __init__(self, name=None, variables=[]):
         self.name = name
-        self.type = 'Solution'
+        self.type = "Solution"
         self._variables = sorted(variables, key=lambda var: var.name)
         self._var_dict = None
-
 
     def toDict(self):
         """
@@ -66,7 +65,6 @@ class Solution:
             self._var_dict = {variable.name: variable for variable in self._variables}
         return self._var_dict
 
-
     def value(self):
         """
         Returns
@@ -75,7 +73,6 @@ class Solution:
             values of the variables in the Solution
         """
         return [variable.value() for variable in self._variables]
-
 
     def setValue(self, name, value):
         """
@@ -86,7 +83,6 @@ class Solution:
         """
         self.toDict()[name].setValue(value)
 
-
     def getVariables(self):
         """
         Returns
@@ -95,7 +91,6 @@ class Solution:
           Variable instances which belong to the Solution
         """
         return self._variables
-
 
     def clone(self):
         """
@@ -106,7 +101,6 @@ class Solution:
         """
         return +self
 
-
     def copy(self, other):
         """
         Copy the values of a Solution to itself (call by value)
@@ -114,14 +108,12 @@ class Solution:
         for vb, ovb in zip(self._variables, other._variables):
             vb.setValue(ovb.value())
 
-
     def setRandom(self):
         """
         Set the solution values uniformly random
         """
         for vb in self._variables:
             vb.setRandom()
-
 
     def feasible(self):
         """
@@ -132,14 +124,12 @@ class Solution:
         """
         return all(vb.feasible() for vb in self._variables)
 
-
     def clip(self):
         """
         Guarantee feasibility of the solution
         """
         for vb in self._variables:
             vb.clip()
-
 
     def squaredNorm(self):
         """
@@ -148,8 +138,7 @@ class Solution:
         float
           Squared 2-norm of the solution as a vector in Euclid space
         """
-        return sum(vb.value()*vb.value() for vb in self._variables)
-
+        return sum(vb.value() * vb.value() for vb in self._variables)
 
     def norm(self):
         """
@@ -160,7 +149,6 @@ class Solution:
         """
         return sqrt(self.squaredNorm())
 
-
     def dot(self, other):
         """
         Returns
@@ -170,19 +158,18 @@ class Solution:
         """
         inner = 0
         for vb1, vb2 in zip(self._variables, other._variables):
-            inner += vb1.value()*vb2.value()
+            inner += vb1.value() * vb2.value()
         return inner
 
-
     def __pos__(self):
-        variables = [ var.clone() for var in self._variables ]
-        return Solution(f'+({self.name})', variables)
+        variables = [var.clone() for var in self._variables]
+        return Solution(f"+({self.name})", variables)
 
     def __neg__(self):
-        variables = [ var.clone() for var in self._variables ]
+        variables = [var.clone() for var in self._variables]
         for var in variables:
             var.setValue(-var.value())
-        return Solution(f'-({self.name})', variables)
+        return Solution(f"-({self.name})", variables)
 
     def __add__(self, other):
         """
@@ -190,19 +177,19 @@ class Solution:
         Solution + list
         Solutino + scalar
         """
-        variables = [ var.clone() for var in self._variables ]
+        variables = [var.clone() for var in self._variables]
         if isinstance(other, Solution):
             for var1, var2 in zip(variables, other._variables):
                 var1.setValue(var1.value() + var2.value())
-            return Solution('+Solution', variables)
+            return Solution("+Solution", variables)
         elif isinstance(other, list):
             for var, v in zip(variables, other):
                 var.setValue(var.value() + v)
-            return Solution('+list', variables)
+            return Solution("+list", variables)
         elif isinstance(other, (int, float)):
             for var in variables:
                 var.setValue(var.value() + other)
-            return Solution('+scalar', variables)
+            return Solution("+scalar", variables)
         else:
             return NotImplemented
 
@@ -215,24 +202,24 @@ class Solution:
         Solution - list     = (Solution + (-list))
         Solutino - scalar   = (Solution + (-scalar))
         """
-        variables = [ var.clone() for var in self._variables ]
+        variables = [var.clone() for var in self._variables]
         if isinstance(other, Solution):
             for var1, var2 in zip(variables, other._variables):
                 var1.setValue(var1.value() - var2.value())
-            return Solution('+Solution', variables)
+            return Solution("+Solution", variables)
         elif isinstance(other, list):
             for var, v in zip(variables, other):
                 var.setValue(var.value() - v)
-            return Solution('+list', variables)
+            return Solution("+list", variables)
         elif isinstance(other, (int, float)):
             for var in variables:
                 var.setValue(var.value() - other)
-            return Solution('+scalar', variables)
+            return Solution("+scalar", variables)
         else:
             return NotImplemented
 
     def __rsub__(self, other):
-        return - self + other
+        return -self + other
 
     def __mul__(self, other):
         """
@@ -240,19 +227,19 @@ class Solution:
         Solution * list
         Solution * scalar
         """
-        variables = [ var.clone() for var in self._variables ]
+        variables = [var.clone() for var in self._variables]
         if isinstance(other, Solution):
             for var1, var2 in zip(variables, other._variables):
                 var1.setValue(var1.value() * var2.value())
-            return Solution('*Solution', variables)
+            return Solution("*Solution", variables)
         elif isinstance(other, list):
             for var, v in zip(variables, other):
                 var.setValue(var.value() * v)
-            return Solution('*list', variables)
+            return Solution("*list", variables)
         elif isinstance(other, (int, float)):
             for var in variables:
                 var.setValue(var.value() * other)
-            return Solution('*scalar', variables)
+            return Solution("*scalar", variables)
         else:
             return NotImplemented
 
@@ -265,7 +252,7 @@ class Solution:
         Solution / scalar   = Solution * (1/scalar)
         """
         if isinstance(other, list):
-            reverse_list = [1/v for v in other]
+            reverse_list = [1 / v for v in other]
             return self * reverse_list
         elif isinstance(other, (int, float)):
             return self * (1 / other)
@@ -273,10 +260,10 @@ class Solution:
             return NotImplemented
 
     def __abs__(self):
-        variables = [ var.clone() for var in self._variables ]
+        variables = [var.clone() for var in self._variables]
         for var in variables:
             var.setValue(abs(var.value()))
-        return Solution('abs', variables)
+        return Solution("abs", variables)
 
     def __hash__(self):
         return hash((self.name, tuple(self._variables)))
@@ -294,4 +281,6 @@ class Solution:
         return self.__repr__()
 
     def __repr__(self):
-        return f'Solution({self.name}, [{", ".join([vb.name for vb in self._variables])}])'
+        return (
+            f'Solution({self.name}, [{", ".join([vb.name for vb in self._variables])}])'
+        )

@@ -31,11 +31,11 @@ class SequentialUpdateSearch(BaseSearch):
     n_trial : str
         number of trials
     """
+
     def __init__(self):
         super().__init__()
-        self.name = 'SequentialUpdate(base)'
+        self.name = "SequentialUpdate(base)"
         self.n_trial = 1e100
-
 
     def search(self):
         """
@@ -44,7 +44,7 @@ class SequentialUpdateSearch(BaseSearch):
         """
         status = SolverTerminateState.Normal
 
-        for self.trial_ix in range(1, int(self.n_trial)+1):
+        for self.trial_ix in range(1, int(self.n_trial) + 1):
             # check time limit
             if time() > self.start_time + self.timelimit:
                 status = SolverTerminateState.Timelimit
@@ -59,7 +59,7 @@ class SequentialUpdateSearch(BaseSearch):
                 self.updateSolution(self.solution, obj_value)
                 self.recordLog()
                 if self.msg:
-                    self.during_solver_message('*')
+                    self.during_solver_message("*")
 
             # callbacks
             for callback in self.callbacks:
@@ -67,7 +67,5 @@ class SequentialUpdateSearch(BaseSearch):
 
         return status
 
-
     def setNewSolution(self):
         raise NotImplementedError()
-

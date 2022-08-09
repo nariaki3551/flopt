@@ -1,6 +1,10 @@
 from flopt.solvers.base import BaseSearch
 from flopt.convert import QpStructure
+from flopt.env import setup_logger
 from flopt.constants import VariableType, SolverTerminateState
+
+
+logger = setup_logger(__name__)
 
 
 class CvxoptQpSearch(BaseSearch):
@@ -58,12 +62,12 @@ class CvxoptQpSearch(BaseSearch):
     --------
     `https://cvxopt.org/userguide/coneprog.html#quadratic-programming`
     """
+
     def __init__(self):
         super().__init__()
-        self.name = 'CvxoptQpSearch'
+        self.name = "CvxoptQpSearch"
         self.n_trial = None
-        self.can_solve_problems = ['lp', 'qp']
-
+        self.can_solve_problems = ["lp", "qp"]
 
     def available(self, prob, verbose=False):
         """
@@ -80,7 +84,9 @@ class CvxoptQpSearch(BaseSearch):
         for var in prob.getVariables():
             if not var.type() == VariableType.Continuous:
                 if verbose:
-                    logger.error(f"variable: \n{var}\n must be continuous, but got {var.type()}")
+                    logger.error(
+                        f"variable: \n{var}\n must be continuous, but got {var.type()}"
+                    )
                 return False
         if not prob.obj.isQuadratic():
             if verbose:
@@ -93,7 +99,6 @@ class CvxoptQpSearch(BaseSearch):
                 return False
         return True
 
-
     def search(self):
         qp = QpStructure.fromFlopt(self.prob).boundsToNeq()
         if qp.isLp():
@@ -101,7 +106,7 @@ class CvxoptQpSearch(BaseSearch):
         else:
             sol = self.search_qp(qp)
 
-        for var, value in zip(qp.x, sol['x']):
+        for var, value in zip(qp.x, sol["x"]):
             self.solution.setValue(var.name, value)
 
         # check whether update or not
@@ -111,8 +116,6 @@ class CvxoptQpSearch(BaseSearch):
             self.recordLog()
 
         return SolverTerminateState.Normal
-
-
 
     def search_qp(self, qp):
         from cvxopt import matrix, solvers
@@ -126,14 +129,13 @@ class CvxoptQpSearch(BaseSearch):
         b = matrix(qp.b) if qp.b is not None else None
 
         # solve
-        solvers.options['show_progress'] = self.msg
+        solvers.options["show_progress"] = self.msg
         if self.n_trial is not None:
-            solvers.options['maxiters'] = self.n_trial
-        elif 'maxiters' in solvers.options:
-            del solvers.options['maxiters']
+            solvers.options["maxiters"] = self.n_trial
+        elif "maxiters" in solvers.options:
+            del solvers.options["maxiters"]
         sol = solvers.qp(Q, c, G, h, A, b)
         return sol
-
 
     def search_lp(self, lp):
         from cvxopt import matrix, solvers
@@ -145,25 +147,22 @@ class CvxoptQpSearch(BaseSearch):
         b = matrix(lp.b) if lp.b is not None else None
 
         # solve
-        solvers.options['show_progress'] = self.msg
+        solvers.options["show_progress"] = self.msg
         if self.n_trial is not None:
-            solvers.options['maxiters'] = self.n_trial
-        elif 'maxiters' in solvers.options:
-            del solvers.options['maxiters']
+            solvers.options["maxiters"] = self.n_trial
+        elif "maxiters" in solvers.options:
+            del solvers.options["maxiters"]
         sol = solvers.lp(c, G, h, A, b)
         return sol
 
-
     def startProcess(self):
-        """process of beginning of search
-        """
+        """process of beginning of search"""
         if all(const.feasible(self.best_solution) for const in self.prob.constraints):
             self.best_obj_value = self.getObjValue(self.best_solution)
         else:
-            self.best_obj_value = float('inf')
+            self.best_obj_value = float("inf")
         self.recordLog()
 
     def closeProcess(self):
-        """process of ending of search
-        """
+        """process of ending of search"""
         self.recordLog()

@@ -2,7 +2,8 @@ import time
 
 import flopt
 from flopt.solvers.solver_utils import (
-    Log, start_solver_message,
+    Log,
+    start_solver_message,
     during_solver_message_header,
     during_solver_message,
     end_solver_message,
@@ -66,20 +67,21 @@ class BaseSearch:
     save_solution : bool
         flag for coping solution to log
     """
+
     def __init__(self):
         # base information
-        self.name = 'BaseSearch(base)'
-        self.feasible_guard = 'clip'
+        self.name = "BaseSearch(base)"
+        self.feasible_guard = "clip"
         # each solver
         self.can_solve_problems = []
         # core variables
         self.best_solution = None
-        self.best_obj_value = float('inf')
+        self.best_obj_value = float("inf")
         self.best_bd = None
         self.solution = None
         # parameters
-        self.timelimit = float('inf')
-        self.lowerbound = -float('inf')
+        self.timelimit = float("inf")
+        self.lowerbound = -float("inf")
         self.tol = 1e-10
         self.msg = False
         self.callbacks = []
@@ -89,7 +91,6 @@ class BaseSearch:
         self.trial_ix = 0
         self.max_k = 1
         self.save_solution = False
-
 
     def setParams(self, params=None, feasible_guard=None, **kwargs):
         """set some parameters
@@ -109,17 +110,14 @@ class BaseSearch:
         for param, value in kwargs.items():
             setattr(self, param, value)
 
-
     def reset(self):
-        """reset solving log and status
-        """
+        """reset solving log and status"""
         self.log = Log()
-        self.best_obj_value = float('inf')
+        self.best_obj_value = float("inf")
         self.start_time = None
         self.trial_ix = 0
         self.max_k = 1
         self.save_solution = False
-
 
     def solve(self, solution, prob, msg=False):
         """solve the problem of (solution, obj)
@@ -138,7 +136,7 @@ class BaseSearch:
         status, Log
         """
         if not self.available(prob, verbose=True):
-            logger.error(f'Problem can not be solved by solver {self.name}.')
+            logger.error(f"Problem can not be solved by solver {self.name}.")
             status = SolverTerminateState.Abnormal
             raise flopt.error.SolverError
 
@@ -149,7 +147,7 @@ class BaseSearch:
 
         self.start_time = time.time()
         if msg:
-            params = {'timelimit': self.timelimit}
+            params = {"timelimit": self.timelimit}
             start_solver_message(self.name, params, solution)
 
         try:
@@ -159,19 +157,17 @@ class BaseSearch:
         except flopt.error.RearchLowerbound:
             status = SolverTerminateState.Lowerbound
         except KeyboardInterrupt:
-            print('Get user ctrl-cuser ctrl-c')
+            print("Get user ctrl-cuser ctrl-c")
             status = SolverTerminateState.Interrupt
 
         if msg:
             obj_value = self.prob.obj.value(self.best_solution)
-            end_solver_message(status, obj_value, time.time()-self.start_time)
+            end_solver_message(status, obj_value, time.time() - self.start_time)
 
-        return status, self.log, time.time()-self.start_time
-
+        return status, self.log, time.time() - self.start_time
 
     def updateSolution(self, solution, obj_value=None):
-        """update self.best_solution
-        """
+        """update self.best_solution"""
         self.best_solution.copy(solution)
         if obj_value is None:
             self.best_obj_value = self.prob.obj.value(solution)
@@ -179,38 +175,37 @@ class BaseSearch:
             self.best_obj_value = obj_value
             self.save_solution = True
 
-
     def recordLog(self):
-        """write log in `self.log`
-        """
+        """write log in `self.log`"""
         log_dict = {
-            'obj_value': self.best_obj_value,
-            'best_bd': self.best_bd,
-            'time': time.time()-self.start_time,
-            'iteration': self.trial_ix
+            "obj_value": self.best_obj_value,
+            "best_bd": self.best_bd,
+            "time": time.time() - self.start_time,
+            "iteration": self.trial_ix,
         }
         if self.max_k > 1 and self.save_solution:
-            log_dict['solution'] = self.best_solution.clone()
+            log_dict["solution"] = self.best_solution.clone()
             self.save_solution = False
         self.log.append(log_dict)
         if self.best_obj_value < self.lowerbound + self.tol:
             if self.msg:
-                self.during_solver_message('*')
+                self.during_solver_message("*")
             raise flopt.error.RearchLowerbound()
 
-
     def during_solver_message(self, head):
-        during_solver_message(head, self.best_obj_value,
-            self.best_bd, time.time()-self.start_time, self.trial_ix)
-
+        during_solver_message(
+            head,
+            self.best_obj_value,
+            self.best_bd,
+            time.time() - self.start_time,
+            self.trial_ix,
+        )
 
     def search(self):
         raise NotImplementedError()
 
-
     def available(self, prob):
         raise NotImplementedError()
-
 
     def getObjValue(self, solution):
         """calculate objective value
@@ -225,24 +220,20 @@ class BaseSearch:
         """
         return self.prob.obj.value(solution)
 
-
     def startProcess(self):
-        """process of beginning of search
-        """
+        """process of beginning of search"""
         if all(const.feasible(self.best_solution) for const in self.prob.constraints):
             self.best_obj_value = self.prob.obj.value(self.best_solution)
         else:
-            self.best_obj_value = float('inf')
+            self.best_obj_value = float("inf")
         self.recordLog()
         if self.best_obj_value < self.lowerbound + self.tol:
             raise flopt.error.RearchLowerbound()
 
         if self.msg:
             during_solver_message_header()
-            self.during_solver_message('S')
-
+            self.during_solver_message("S")
 
     def closeProcess(self):
-        """process of ending of search
-        """
+        """process of ending of search"""
         self.recordLog()

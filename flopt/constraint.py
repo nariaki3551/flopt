@@ -28,9 +28,13 @@ class Constraint:
     >>> np.float64(0) <= a
     >>> True
     """
+
     def __init__(self, left, right, _type, name=None):
-        assert _type in {'eq', 'le', 'ge'},\
-            f"""get constraint type {_type} but this is not supported.
+        assert _type in {
+            "eq",
+            "le",
+            "ge",
+        }, f"""get constraint type {_type} but this is not supported.
                 You must choice from eq, le or ge.
              """
         self.expression = left - right
@@ -39,28 +43,23 @@ class Constraint:
         self.left = left
         self.right = right
 
-
     def value(self, solution=None):
         return self.expression.value(solution)
 
-
     def feasible(self, solution=None):
         exp_value = self.value(solution)
-        if self.type == 'eq':
+        if self.type == "eq":
             return exp_value == 0
-        elif self.type == 'le':
+        elif self.type == "le":
             return exp_value <= 0
-        elif self.type == 'ge':
+        elif self.type == "ge":
             return exp_value >= 0
-
 
     def getVariables(self):
         return self.expression.getVariables()
 
-
     def isLinear(self):
         return self.expression.isLinear()
-
 
     def toSpin(self):
         if not isinstance(self.left, number_classes):
@@ -70,16 +69,14 @@ class Constraint:
         self.expression = self.left - self.right
         return self
 
-
     def __str__(self):
-        if self.type == 'eq':
-            type_str = '=='
-        elif self.type == 'le':
-            type_str = '<='
-        elif self.type == 'ge':
-            type_str = '>='
-        return f'{self.expression.name} {type_str} 0'
+        if self.type == "eq":
+            type_str = "=="
+        elif self.type == "le":
+            type_str = "<="
+        elif self.type == "ge":
+            type_str = ">="
+        return f"{self.expression.name} {type_str} 0"
 
     def __repr__(self):
-        return f'Constraint({repr(self.left)}, {repr(self.right)}, {self.type}, {self.name})'
-
+        return f"Constraint({repr(self.left)}, {repr(self.right)}, {self.type}, {self.name})"

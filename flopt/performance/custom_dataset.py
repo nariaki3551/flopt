@@ -1,5 +1,6 @@
 from .base_dataset import BaseDataset, BaseInstance
 
+
 class CustomDataset(BaseDataset):
     """
     Creaet Dataset
@@ -70,28 +71,25 @@ class CustomDataset(BaseDataset):
       log_visualizer = flopt.performance.LogVisualizer(logs)
       log_visualizer.plot()
     """
-    def __init__(self, name='CustomDataset', probs=[]):
+
+    def __init__(self, name="CustomDataset", probs=[]):
         if not isinstance(probs, list):
             probs = [probs]
         self.name = name
         self.instance_names = [prob.name for prob in probs]
         self.instance_dict = {prob.name: prob for prob in probs}
 
-
     def createInstance(self, instance_name):
         prob = self.instance_dict[instance_name]
         return CustomInstance(prob)
-
 
     def addProblem(self, prob):
         self.instance_names.append(prob.name)
         self.instance_dict[prob.name] = prob
 
-
     def __iadd__(self, prob):
         self.addProblem(prob)
         return self
-
 
 
 class CustomInstance(BaseInstance):
@@ -107,12 +105,12 @@ class CustomInstance(BaseInstance):
     prob_type : list of str
       type oof problem
     """
+
     def __init__(self, prob):
         self.name = prob.name
         self.prob = prob
         self.prob_type = prob.prob_type
         self.var_values = {var.name: var.value() for var in prob.getVariables()}
-
 
     def createProblem(self, solver):
         if set(self.prob_type) & set(solver.can_solve_problems):
@@ -122,9 +120,6 @@ class CustomInstance(BaseInstance):
         else:
             return False, None
 
-
     def getBestValue(self):
-        """return the optimal value of objective function
-        """
+        """return the optimal value of objective function"""
         return None
-

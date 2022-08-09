@@ -1,12 +1,7 @@
 import time
 import random
 
-import numpy as np
-
 from flopt.solvers.base import BaseSearch
-from flopt.solvers.solver_utils import (
-    during_solver_message,
-)
 from flopt.env import setup_logger
 from flopt.constants import VariableType, SolverTerminateState
 
@@ -43,10 +38,11 @@ class ShuffledFrogLeapingSearch(BaseSearch):
     max_step : float (default 0.01)
       max size of step when frog move in memetic evolution.
     """
+
     def __init__(self):
         super().__init__()
-        self.name = 'ShuffledFrogLeapingSearch'
-        self.can_solve_problems = ['blackbox']
+        self.name = "ShuffledFrogLeapingSearch"
+        self.can_solve_problems = ["blackbox"]
         self.frogs = None
         self.memeplexes = None
         # params
@@ -55,7 +51,6 @@ class ShuffledFrogLeapingSearch(BaseSearch):
         self.n_memetic_iter = 100
         self.n_trial = int(1e10)
         self.max_step = int(1e10)
-
 
     def available(self, prob, verbose=False):
         """
@@ -72,14 +67,15 @@ class ShuffledFrogLeapingSearch(BaseSearch):
         for var in prob.getVariables():
             if var.type() == VariableType.Permutation:
                 if verbose:
-                    logger.error(f"variable: \n{var}\n must be not permutation, but got {var.type()}")
+                    logger.error(
+                        f"variable: \n{var}\n must be not permutation, but got {var.type()}"
+                    )
                 return False
         if prob.constraints:
             if verbose:
                 logger.error(f"this solver can not handle constraints")
             return False
         return True
-
 
     def search(self):
         status = SolverTerminateState.Normal
@@ -99,11 +95,11 @@ class ShuffledFrogLeapingSearch(BaseSearch):
                 self.updateSolution(self.frogs[0])
                 self.best_obj_value = obj_value
                 if self.msg:
-                    self.during_solver_message('*')
+                    self.during_solver_message("*")
                 self.recordLog()
 
-            if self.msg and i%100 == 0:
-                self.during_solver_message(' ')
+            if self.msg and i % 100 == 0:
+                self.during_solver_message(" ")
 
             # callback
             for callback in self.callbacks:
@@ -111,30 +107,29 @@ class ShuffledFrogLeapingSearch(BaseSearch):
 
         return status
 
-
     def _memetic_evolution(self):
-        '''
+        """
         memetic evolution
         This function is the key to this method.
-        '''
+        """
         M = self.n_memeplex
         N = self.n_frog_per_memeplex
         for j, memeplex in enumerate(self.memeplexes):
             for k in range(self.n_memetic_iter):
                 # make sub memeplex
-                sub_mmplx_ids = random.sample(range(N), N//2)
+                sub_mmplx_ids = random.sample(range(N), N // 2)
                 sub_mmplx = [memeplex[i] for i in sorted(sub_mmplx_ids)]
 
                 # move frog which has the worst objective
                 best_frog = sub_mmplx[0]
                 worst_frog = sub_mmplx[-1]
-                step = random.random()*(best_frog - worst_frog)
+                step = random.random() * (best_frog - worst_frog)
                 if step.norm() > self.max_step:
                     step = step * self.max_step / step.norm()
                 new_frog = worst_frog + step
 
                 # feasible guard
-                if self.feasible_guard == 'clip':
+                if self.feasible_guard == "clip":
                     new_frog.clip()
 
                 # evaluate solutions
@@ -144,13 +139,13 @@ class ShuffledFrogLeapingSearch(BaseSearch):
 
                 # if it does not improve (1)
                 if fitness_new > fitness_worst:
-                    step = random.random()*(self.best_solution - worst_frog)
-                    if  step.norm() > self.max_step:
+                    step = random.random() * (self.best_solution - worst_frog)
+                    if step.norm() > self.max_step:
                         step = step * self.max_step / step.norm()
                     new_frog = worst_frog + step
 
                     # feasible guard
-                    if self.feasible_guard == 'clip':
+                    if self.feasible_guard == "clip":
                         new_frog.clip()
 
                     fitness_new = self.getObjValue(new_frog)
@@ -159,30 +154,30 @@ class ShuffledFrogLeapingSearch(BaseSearch):
                         new_frog.setRandom()
 
                 # the worst_frog is replaced to the new_frog
-                self.memeplexes[j] = sub_mmplx[:-1] + [new_frog]\
+                self.memeplexes[j] = (
+                    sub_mmplx[:-1]
+                    + [new_frog]
                     + [memeplex[i] for i in range(N) if i not in sub_mmplx_ids]
+                )
 
                 # evaluate and sort memeplex
                 for flog in self.memeplexes[j]:
-                    if not hasattr(flog, '__flog_obj'):
-                        setattr(flog, '__flog_obj', self.getObjValue(flog))
-                self.memeplexes[j].sort(key=lambda frog: getattr(flog, '__flog_obj'))
+                    if not hasattr(flog, "__flog_obj"):
+                        setattr(flog, "__flog_obj", self.getObjValue(flog))
+                self.memeplexes[j].sort(key=lambda frog: getattr(flog, "__flog_obj"))
 
         # sort entire memeplexes
         self.frogs = [frog for memeplex in self.memeplexes for frog in memeplex]
         self.frogs.sort(key=lambda frog: self.getObjValue(frog))
-        self.memeplexes = [[self.frogs[i*M+j] for i in range(N)]
-                                              for j in range(M)]
+        self.memeplexes = [[self.frogs[i * M + j] for i in range(N)] for j in range(M)]
 
     def startProcess(self):
         super().startProcess()
         M = self.n_memeplex
         N = self.n_frog_per_memeplex
-        self.frogs = [self.solution.clone() for _ in range(M*N)]
+        self.frogs = [self.solution.clone() for _ in range(M * N)]
         for frog in self.frogs:
             frog.setRandom()
         self.frogs.sort(key=lambda frog: self.getObjValue(frog))
-        self.memeplexes=[[self.frogs[i*M+j] for i in range(N)]
-                                            for j in range(M)]
+        self.memeplexes = [[self.frogs[i * M + j] for i in range(N)] for j in range(M)]
         self.updateSolution(self.frogs[0])
-

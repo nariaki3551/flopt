@@ -1,6 +1,11 @@
 import random
 from .base_sequential_update import SequentialUpdateSearch
 from flopt.constants import VariableType
+from flopt.env import setup_logger
+
+
+logger = setup_logger(__name__)
+
 
 class TwoOpt(SequentialUpdateSearch):
     """2-Opt: a kind of local search for permutation.
@@ -11,11 +16,11 @@ class TwoOpt(SequentialUpdateSearch):
     neighborhood of perm for all i, j in {0..n} and i is neq j.
 
     """
+
     def __init__(self):
         super().__init__()
-        self.name = '2-Opt'
-        self.can_solve_problems = ['permutation']
-
+        self.name = "2-Opt"
+        self.can_solve_problems = ["permutation"]
 
     def available(self, prob, verbose=False):
         """
@@ -32,14 +37,15 @@ class TwoOpt(SequentialUpdateSearch):
         for var in prob.getVariables():
             if not var.type() == VariableType.Permutation:
                 if verbose:
-                    logger.error(f"variable: \n{var}\n must be permutation, but got {var.type()}")
+                    logger.error(
+                        f"variable: \n{var}\n must be permutation, but got {var.type()}"
+                    )
                 return False
         if prob.constraints:
             if verbose:
                 logger.error(f"this solver can not handle constraints")
             return False
         return True
-
 
     def setNewSolution(self, *args, **kwargs):
         """
@@ -55,5 +61,3 @@ class TwoOpt(SequentialUpdateSearch):
             var.setValue(new_perm)
             if self.getObjValue(self.solution) >= self.best_obj_value:
                 var.setValue(perm)
-
-

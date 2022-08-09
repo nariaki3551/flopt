@@ -16,13 +16,13 @@ class Monomial:
     -----
     If terms is empty dictionary, then this monomial is constant whose value is self.coeff
     """
+
     def __init__(self, terms=dict(), coeff=1):
         self.terms = terms
         self.coeff = coeff
         self.max_degree = None
         self.is_linear = None
         self._hash = None
-
 
     def copy(self):
         """
@@ -31,16 +31,6 @@ class Monomial:
         Monomial
         """
         return Monomial(dict(self.terms), self.coeff)
-
-
-    def variables(self):
-        """
-        Returns
-        -------
-        set of VarElement family
-        """
-        return set(self.terms.keys())
-
 
     def maxDegree(self):
         """
@@ -52,7 +42,6 @@ class Monomial:
         if self.max_degree is None:
             self.max_degree = max([0] + [exp for val, exp in self.terms.items()])
         return self.max_degree
-
 
     def diff(self, x):
         """
@@ -75,7 +64,6 @@ class Monomial:
                 del terms[x]
             return Monomial(terms, coeff)
 
-
     def isConstant(self):
         """
         Returns
@@ -85,8 +73,6 @@ class Monomial:
         """
         return len(self.terms) == 0
 
-
-
     def isLinear(self):
         """
         Returns
@@ -95,9 +81,8 @@ class Monomial:
             Return True if it is linear else False
         """
         if self.is_linear is None:
-            self.is_linear = (self.maxDegree() <= 1 and len(self.terms) <= 1)
+            self.is_linear = self.maxDegree() <= 1 and len(self.terms) <= 1
         return self.is_linear
-
 
     def isQuadratic(self):
         """
@@ -107,7 +92,6 @@ class Monomial:
             Return True if it is quadratic else False
         """
         return sum(self.terms.values()) <= 2
-
 
     def toPolynomial(self):
         """
@@ -119,7 +103,6 @@ class Monomial:
             return Polynomial({Monomial(self.terms): self.coeff})
         else:
             return Polynomial(constant=self.coeff)
-
 
     def simplify(self):
         """Simplify this monomial
@@ -140,7 +123,6 @@ class Monomial:
             else:
                 terms[x] = self.terms[x]
         return Monomial(terms, self.coeff)
-
 
     def __mul__(self, other):
         if isinstance(other, (int, float)):
@@ -179,14 +161,19 @@ class Monomial:
     def __pow__(self, other):
         assert isinstance(other, int)
         terms = {x: exp * other for x, exp in self.terms.items()}
-        return Monomial(terms, self.coeff ** other )
+        return Monomial(terms, self.coeff**other)
 
     def __getitem__(self, item):
         return self.terms[item]
 
     def __hash__(self):
         if self._hash is None:
-            self._hash = hash(tuple(sorted([(x.name, exp) for x, exp in self.terms.items()])+[self.coeff]))
+            self._hash = hash(
+                tuple(
+                    sorted([(x.name, exp) for x, exp in self.terms.items()])
+                    + [self.coeff]
+                )
+            )
         return self._hash
 
     def __eq__(self, other):
@@ -194,23 +181,22 @@ class Monomial:
             return hash(self) == hash(other)
 
     def __str__(self):
-        s = ''
+        s = ""
         for x, exp in self.terms.items():
             if exp == 1:
-                s += '*' + f'{x.name}'
+                s += "*" + f"{x.name}"
             else:
-                s += '*' + f'{x.name}^{exp}'
+                s += "*" + f"{x.name}^{exp}"
         if self.coeff == 1:
             if s:
                 return s[1:]
             else:
-                return '1'
+                return "1"
         else:
-            return f'{self.coeff}' + s
+            return f"{self.coeff}" + s
 
     def __repr__(self):
         return str(self)
-
 
 
 class Polynomial:
@@ -222,10 +208,10 @@ class Polynomial:
     constant : int of float
         constant of polynomial
     """
+
     def __init__(self, terms=dict(), constant=0):
         self.terms = terms
         self._constant = constant
-
 
     def monos(self):
         """
@@ -234,7 +220,6 @@ class Polynomial:
         set of Monomial
         """
         return set(self.terms.keys())
-
 
     def coeff(self, *args):
         """
@@ -293,7 +278,6 @@ class Polynomial:
         else:
             return 0
 
-
     def constant(self):
         """
         Returns
@@ -301,7 +285,6 @@ class Polynomial:
         int or float
         """
         return self._constant
-
 
     def isConstant(self):
         """
@@ -312,7 +295,6 @@ class Polynomial:
         """
         return len(self.terms) == 0
 
-
     def isMonomial(self):
         """
         Returns
@@ -321,7 +303,6 @@ class Polynomial:
             return True if it is monomial else False
         """
         return len(self.terms) == 0 or (len(self.terms) == 1 and self._constant == 0)
-
 
     def toMonomial(self):
         """
@@ -336,7 +317,6 @@ class Polynomial:
             mono = list(self.terms.keys())[0]
             return Monomial(mono.terms, self.terms[mono])
 
-
     def diff(self, x):
         """
         Returns
@@ -349,7 +329,6 @@ class Polynomial:
             poly += mono.diff(x)
         return poly
 
-
     def maxDegree(self):
         """
         Returns
@@ -357,7 +336,6 @@ class Polynomial:
         int
         """
         return max(mono.maxDegree() for mono in self.terms)
-
 
     def isLinear(self):
         """
@@ -368,7 +346,6 @@ class Polynomial:
         """
         return all(mono.isLinear() for mono in self.terms)
 
-
     def isQuadratic(self):
         """
         Returns
@@ -377,7 +354,6 @@ class Polynomial:
             return True if it is quadratic else False
         """
         return all(mono.isQuadratic() for mono in self.terms)
-
 
     def simplify(self):
         """
@@ -395,8 +371,6 @@ class Polynomial:
             else:
                 terms[_mono] = self.terms[mono]
         return Polynomial(terms, constant + self._constant)
-
-
 
     def __add__(self, other):
         if isinstance(other, (int, float)):
@@ -464,7 +438,7 @@ class Polynomial:
             constant = self._constant * other._constant
             return Polynomial(terms, constant)
         else:
-            return NotImpremented
+            return NotImplemented
 
     def __rmul__(self, other):
         return self * other
@@ -487,25 +461,24 @@ class Polynomial:
         return self.coeff(item)
 
     def __hash__(self):
-        return hash(tuple(sorted([(hash(x), coeff) for x, coeff in self.terms.items()])))
+        return hash(
+            tuple(sorted([(hash(x), coeff) for x, coeff in self.terms.items()]))
+        )
 
     def __eq__(self, other):
         if isinstance(other, Polynomial):
             return hash(self) == hash(other)
 
     def __str__(self):
-        s = ''
+        s = ""
         for mono, coeff in self.terms.items():
             if coeff == 1:
-                s += f'{str(mono)}+'
+                s += f"{str(mono)}+"
             elif coeff > 0:
-                s += f'{coeff}*{str(mono)}+'
+                s += f"{coeff}*{str(mono)}+"
             else:
-                s += f'({coeff}*{str(mono)})+'
-        return s + f'{self._constant}'
+                s += f"({coeff}*{str(mono)})+"
+        return s + f"{self._constant}"
 
     def __repr__(self):
         return str(self)
-
-
-

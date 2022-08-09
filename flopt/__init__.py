@@ -1,4 +1,5 @@
 from flopt.env import Environment
+
 env = Environment()
 
 from flopt.variable import Variable

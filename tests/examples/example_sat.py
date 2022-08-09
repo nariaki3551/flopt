@@ -13,8 +13,8 @@ DISPLAY = False
 
 
 # literals
-x0 = Variable('x0', cat='Binary')
-x1 = Variable('x1', cat='Binary')
+x0 = Variable("x0", cat="Binary")
+x1 = Variable("x1", cat="Binary")
 
 # clauses
 clause1 = x0 | x1
@@ -24,15 +24,15 @@ clause4 = ~x0 | ~x1
 
 clauses = [clause1, clause2, clause3, clause4]
 weights = [1, 2, 3, 4]
-obj = sum(w*c for c, w in zip(clauses, weights))
+obj = sum(w * c for c, w in zip(clauses, weights))
 
-prob = Problem('MaxSat', sense='maximize')
+prob = Problem("MaxSat", sense="maximize")
 prob += obj
 
-solver = Solver(algo='RandomSearch')
+solver = Solver(algo="RandomSearch")
 prob.solve(solver, timelimit=2, msg=True)
 
-print('value x0', x0.value())
-print('value x1', x1.value())
+print("value x0", x0.value())
+print("value x1", x1.value())
 for clause in clauses:
     print(clause)

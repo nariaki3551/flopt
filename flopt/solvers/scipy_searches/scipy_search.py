@@ -4,9 +4,6 @@ from scipy import optimize as scipy_optimize
 import numpy as np
 
 from flopt.solvers.base import BaseSearch
-from flopt.solvers.solver_utils import (
-    during_solver_message,
-)
 from flopt.env import setup_logger
 from flopt.expression import Const
 from flopt.solution import Solution
@@ -23,13 +20,13 @@ class ScipySearch(BaseSearch):
     --------
     scipy.optimize.minimize
     """
+
     def __init__(self):
         super().__init__()
         self.name = "ScipySearch"
         self.n_trial = 1e10
         self.method = None
-        self.can_solve_problems = ['blackbox']
-
+        self.can_solve_problems = ["blackbox"]
 
     def available(self, prob, verbose=False):
         """
@@ -46,10 +43,11 @@ class ScipySearch(BaseSearch):
         for var in prob.getVariables():
             if not var.type() == VariableType.Continuous:
                 if verbose:
-                    logger.error(f"variable: \n{var}\n must be continouse, but got {var.type()}")
+                    logger.error(
+                        f"variable: \n{var}\n must be continouse, but got {var.type()}"
+                    )
                 return False
         return True
-
 
     def search(self):
         status = SolverTerminateState.Normal
@@ -60,8 +58,9 @@ class ScipySearch(BaseSearch):
                 variables = []
                 for var_name, value in zip(var_names, values):
                     variables.append(Const(value, name=var_name))
-                solution = Solution('tmp', variables)
+                solution = Solution("tmp", variables)
                 return expression.value(solution)
+
             return func
 
         # function
@@ -81,19 +80,20 @@ class ScipySearch(BaseSearch):
         for const in self.prob.constraints:
             const_func = gen_func(const)
             lb, ub = 0, 0
-            if const.type == 'le':
+            if const.type == "le":
                 lb = -np.inf
-            elif const.type == 'ge':
+            elif const.type == "ge":
                 ub = np.inf
-            nonlinear_const = \
-                scipy_optimize.NonlinearConstraint(const_func, lb, ub)
+            nonlinear_const = scipy_optimize.NonlinearConstraint(const_func, lb, ub)
             constraints.append(nonlinear_const)
 
         # options
-        options = {'maxiter': self.n_trial}
+        options = {"maxiter": self.n_trial}
 
         # callback
-        def callback(values, ):
+        def callback(
+            values,
+        ):
             self.trial_ix += 1
             obj_value = func(values)
             for var, value in zip(self.solution, values):
@@ -105,15 +105,24 @@ class ScipySearch(BaseSearch):
                 self.updateSolution(self.solution, obj_value)
                 self.recordLog()
                 if self.msg and diff > 1e-8:
-                    self.during_solver_message('*')
+                    self.during_solver_message("*")
             for _callback in self.callbacks:
                 _callback([self.solution], self.best_solution, self.best_obj_value)
 
         try:
             res = scipy_optimize.minimize(
-                func, x0, bounds=bounds, constraints=constraints, options=options,
-                callback=callback, args=(), method=self.method,
-                jac=None, hess=None, hessp=None, tol=None,
+                func,
+                x0,
+                bounds=bounds,
+                constraints=constraints,
+                options=options,
+                callback=callback,
+                args=(),
+                method=self.method,
+                jac=None,
+                hess=None,
+                hessp=None,
+                tol=None,
             )
             # get result of solver
             for var, value in zip(self.solution, res.x):
@@ -123,4 +132,3 @@ class ScipySearch(BaseSearch):
             status = SolverTerminateState.Timelimit
 
         return status
-

@@ -2,6 +2,10 @@ import numpy as np
 
 from flopt.solvers.base import BaseSearch
 from flopt.constants import VariableType, SolverTerminateState
+from flopt.env import setup_logger
+
+
+logger = setup_logger(__name__)
 
 
 class AmplifySearch(BaseSearch):
@@ -80,13 +84,13 @@ class AmplifySearch(BaseSearch):
         >>>
         >>>   C 0, name None, 0.5*x_s+(0.5*y_s)+1.0 >= 0
     """
+
     def __init__(self):
         super().__init__()
-        self.name = 'AmplifySearch'
+        self.name = "AmplifySearch"
         self.timelimit = 1
         self.token = None
-        self.can_solve_problems = ['ising']
-
+        self.can_solve_problems = ["ising"]
 
     def available(self, prob, verbose=False):
         """
@@ -103,7 +107,9 @@ class AmplifySearch(BaseSearch):
         for var in prob.getVariables():
             if not var.type() == VariableType.Spin:
                 if verbose:
-                    logger.error(f"variable: \n{var}\n must be spin, but got {var.type()}")
+                    logger.error(
+                        f"variable: \n{var}\n must be spin, but got {var.type()}"
+                    )
                 return False
         if not prob.obj.isIsing():
             if verbose:
@@ -116,29 +122,29 @@ class AmplifySearch(BaseSearch):
                 return False
         return True
 
-
-
     def search(self):
         from amplify import IsingPoly, gen_symbols, Solver, decode_solution
         from amplify.constraint import equal_to, greater_equal, less_equal
         from amplify.client import FixstarsClient
 
-        assert self.token is not None, f'token is None, set token as .solve(..., token="xxx")'
+        assert (
+            self.token is not None
+        ), f'token is None, set token as .solve(..., token="xxx")'
 
         x = self.prob.getVariables()
         s = np.array(gen_symbols(IsingPoly, len(x)), dtype=object)
 
         # objective function
         ising = self.prob.obj.toIsing()
-        f = - s.T.dot(ising.J).dot(s) - ising.h.T.dot(s) + ising.C
+        f = -s.T.dot(ising.J).dot(s) - ising.h.T.dot(s) + ising.C
 
         # constraints
         for const in self.prob.constraints:
             ising = const.expression.toIsing()
             g = s.T.dot(ising.J).dot(s) - ising.h.T.dot(s) + ising.C
-            if const.type == 'le':
+            if const.type == "le":
                 f += less_equal(g, 0)
-            elif const.type == 'ge':
+            elif const.type == "ge":
                 f += greater_equal(g, 0)
             else:
                 f += equal_to(g, 0)
@@ -162,8 +168,6 @@ class AmplifySearch(BaseSearch):
                 self.updateSolution(self.solution, obj_value)
                 self.recordLog()
                 if self.msg:
-                    self.during_solver_message('*')
+                    self.during_solver_message("*")
 
         return SolverTerminateState.Normal
-
-
