@@ -1,7 +1,7 @@
 Sequential Update Search
 ------------------------
 
-.. autoclass:: flopt.solvers.SequentialUpdateSearch
+.. autoclass:: flopt.solvers.sequential_update_searches.base_sequential_update.SequentialUpdateSearch
 
 Random Search (RandomSearch)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^

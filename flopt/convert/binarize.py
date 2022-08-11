@@ -125,7 +125,7 @@ def binarize_traverse(e, binarizes):
             update = False
             if node.elmA.type() == VariableType.Integer:
                 if node.elmA not in binarizes:
-                    binarizes[node.elmA] = list(node.elmA.toBinary().getVariables())
+                    binarizes[node.elmA] = list(node.elmA.getBinaries())
                 node.elmA = node.elmA.toBinary()
                 node.elmA.parents.append(node)
                 update = True
@@ -135,7 +135,7 @@ def binarize_traverse(e, binarizes):
                 update = True
             if node.elmB.type() == VariableType.Integer:
                 if node.elmB not in binarizes:
-                    binarizes[node.elmB] = list(node.elmB.toBinary().getVariables())
+                    binarizes[node.elmB] = list(node.elmB.getBinaries())
                 node.elmB = node.elmB.toBinary()
                 node.elmB.parents.append(node)
                 update = True

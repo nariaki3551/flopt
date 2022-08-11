@@ -100,6 +100,7 @@ class AutoSearch(BaseSearch):
             algo_lists = [
                 "2-Opt",
                 "RandomSearch",
+                "ScipyMilpSearch",
                 "ScipySearch",
                 "HyperoptTPESearch",
                 "SFLA",
@@ -114,6 +115,7 @@ class AutoSearch(BaseSearch):
             algo_lists = [
                 "2-Opt",
                 "RandomSearch",
+                "ScipyMilpSearch",
                 "ScipySearch",
                 "SFLA",
                 "OptunaCmaEsSearch",
@@ -128,13 +130,13 @@ class AutoSearch(BaseSearch):
             algo_lists = [
                 "2-Opt",
                 "OptunaCmaEsSearch",
+                "ScipyMilpSearch",
                 "RandomSearch",
                 "ScipySearch",
                 "OptunaTPESearch",
                 "HyperoptTPESearch",
                 "SFLA",
                 "PulpSearch",
-                "ScipyMilpSearch",
                 "CvxoptQpSearch",
                 "ScipyLpSearch",
             ]
@@ -143,11 +145,11 @@ class AutoSearch(BaseSearch):
                 "2-Opt",
                 "OptunaCmaEsSearch",
                 "SFLA",
+                "ScipyMilpSearch",
                 "ScipySearch",
                 "RandomSearch",
                 "OptunaTPESearch",
                 "HyperoptTPESearch",
-                "ScipyMilpSearch",
                 "PulpSearch",
                 "CvxoptQpSearch",
                 "ScipyLpSearch",

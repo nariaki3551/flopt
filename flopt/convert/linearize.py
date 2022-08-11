@@ -78,6 +78,8 @@ def linearize(prob):
             f"problem will be binarized because it includes dislinearable multipry"
         )
         return linearize(binarize(prob))
+    except LinearizeError as e:
+        logger.error(f"this problem can not be linearized")
     except Exception as e:
         raise e
 

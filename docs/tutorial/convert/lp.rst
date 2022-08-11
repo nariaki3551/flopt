@@ -18,12 +18,12 @@ For example, the following problem is one of the LP.
   from flopt import Variable, Problem
 
   # variables
-  a = Variable(name='a', lowBound=0, upBound=1, cat='Integer')
-  b = Variable(name='b', lowBound=1, upBound=2, cat='Continuous')
-  c = Variable(name='c', lowBound=1, upBound=3, cat='Continuous')
+  a = Variable(name="a", lowBound=0, upBound=1, cat="Integer")
+  b = Variable(name="b", lowBound=1, upBound=2, cat="Continuous")
+  c = Variable(name="c", lowBound=1, upBound=3, cat="Continuous")
 
   # problem
-  prob = Problem(name='LP')
+  prob = Problem(name="LP")
   prob += a + b + c + 2
   prob += a + b == 2
   prob += b - c <= 3
@@ -205,7 +205,7 @@ LP to flopt
   b = [2, 3]
   lb = [1, 1, 0]
   ub = [2, 3, 1]
-  var_types=['Binary', 'Continuous', 'Continuous']
+  types=["Binary", "Continuous", "Continuous"]
 
   from flopt.convert import LpStructure
   prob = LpStructure(c, C, A=A, b=b, lb=lb, ub=ub, types=types).toFlopt()

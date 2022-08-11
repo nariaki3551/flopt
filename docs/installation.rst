@@ -21,8 +21,15 @@ And also, we can install flopt via github:
 
     $ git clone https://github.com/flab-coder/flopt.git
 
-In addition, we have to install other applications using `requirements.txt`
+In addition, we can install flopt using setup.py.
 
 .. code-block:: bash
 
-    $ pip install -r requirements.txt
+    $ cd flopt
+    $ pip install .
+
+For developer, you can install dependent packages by `requirements.txt`.
+
+.. code-block:: bash
+
+    $ pip install -r requirements.txt.

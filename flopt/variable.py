@@ -592,6 +592,7 @@ class VarInteger(VarElement):
         super().__init__(name, lowBound, upBound, ini_value)
         self._type = VariableType.Integer
         self.binarized = None
+        self.binaries = set()
 
     def value(self, solution=None):
         """
@@ -614,11 +615,18 @@ class VarInteger(VarElement):
     def toBinary(self):
         if self.binarized is None:
             l, u = int(self.getLb()), int(self.getUb())
-            binaries = Variable.array(f"bin_{self.name}", u - l + 1, cat="Binary")
+            self.binaries = Variable.array(f"bin_{self.name}", u - l + 1, cat="Binary")
             self.binarized = sum(
-                Const(i) * var_bin for i, var_bin in zip(range(l, u + 1), binaries)
+                Const(i) * var_bin for i, var_bin in zip(range(l, u + 1), self.binaries)
             )
+            if isinstance(self.binarized, VarElement):
+                self.binarized = Expression(self.binarized, Const(0), "+")
         return self.binarized
+
+    def getBinaries(self):
+        if self.binarized is None:
+            self.toBinary()
+        return self.binaries
 
     def toSpin(self):
         return self.toBinary().toSpin()
@@ -703,9 +711,9 @@ class VarBinary(VarInteger):
         return super().__pow__(other)
 
     def __invert__(self):
-        # (self+1)%2
-        two = Const(2)
-        return Expression(self + 1, two, "%")
+        # 1 -> 0
+        # 0 -> 1
+        return Expression(Const(1), self, "-")
 
     def __and__(self, other):
         if isinstance(other, number_classes):

@@ -11,21 +11,32 @@ Overview
            we have the distance between all the cities.
 
 This is one of the most famous optimization problem, Traveling Salesman Problem (TSP).
-There are two ways of solving TSP:
+There are several ways of solving TSP:
 
 1. optimize the permutations directly
 2. optimize the permutations using the Linear Programming (LP) method.
+3. and others
 
-The former method is shown in the following.
+The first method is shown in the following.
 
 .. code-block:: python
 
-  from flopt import Variable, Problem, Solver
+  from flopt import Variable, Problem, Solver, CustomExpression
 
   # We have the distance matrix D, and the number of city is N
+  N = 4
+  D = [
+      [0.0, 3.0, 2.0, 1.0],
+      [2.0, 0.0, 1.0, 1.0],
+      [1.0, 3.0, 0.0, 4.0],
+      [1.0, 1.0, 2.0, 1.0],
+  ]
 
   # Variables
-  perm = Variable('perm', lowBound=0, upBound=N-1, cat='Permutation')
+  perm = Variable("perm", lowBound=0, upBound=N-1, cat="Permutation")
+
+  # Problem
+  prob = Problem(name="TSP")
 
   # Object
   def tsp_dist(perm):
@@ -33,35 +44,35 @@ The former method is shown in the following.
       for head, tail in zip(perm, perm[1:]+[perm[0]]):
           distance += D[head][tail]  # D is the distance matrix
       return distance
-  tsp_obj = CustomExpression(func=tsp_dist, variables=[perm])
-
-  # Problem
-  prob = Problem(name='TSP')
+  tsp_obj = CustomExpression(func=tsp_dist, arg=[perm])
   prob += tsp_obj
 
-  # Solver
-  solver = Solver(algo='2-Opt')
-  solver.setParams(timelimit=60)
+  # solver setting
+  solver = Solver(algo="2-Opt")
+  solver.setParams(timelimit=3)
+
+  # run solver
   prob.solve(solver, msg=True)
 
   # Result
-  print(perm.value())
+  print("result", perm.value())
+
 
 
 Permutation Variable
 --------------------
 
-We can get a variable representing the permutation by setting `cat='Permuation'`.
+We can get a variable representing the permutation by setting `cat="Permuation"`.
 It contains a list of [lowBound, ... , upBound].
 
 .. code-block:: python
 
   # Variables
-  perm = Variable('perm', lowBound=0, upBound=3, cat='Permutation')
+  perm = Variable("perm", lowBound=0, upBound=3, cat="Permutation")
   >> perm.value()
   >> [3, 1, 2, 0]  # permutation is shuffled
 
-  perm = Variable('perm', lowBound=0, upBound=3, ini_value=list(range(0, 4)), cat='Permutation')
+  perm = Variable("perm", lowBound=0, upBound=3, ini_value=list(range(0, 4)), cat="Permutation")
   >> perm.value()
   >> [0, 1, 2, 3]
 
@@ -91,9 +102,9 @@ In most cases, `2-Opt` is better.
 .. code-block:: python
 
   # Solver
-  solver = Solver(algo='2-Opt')
+  solver = Solver(algo="2-Opt")
   solver.setParams(timelimit=60)
-  prob.solve(solver, msg=True)
+  prob.solve(solver, msg=True)  # run solver
 
 
 Result

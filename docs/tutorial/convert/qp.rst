@@ -43,7 +43,7 @@ For example, the following problem is one of the QP.
 flopt to QP
 -----------
 
-We can convert this into QP form as follows.
+We convert problem modeled in flopt into QP form as follows.
 
 .. code-block:: python
 
@@ -51,7 +51,8 @@ We can convert this into QP form as follows.
   qp = QpStructure.fromFlopt(prob)
 
 
-To show the contents of qp,
+To show the contents of qp, use `.show()` method.
+In addition, we can access each element using attributes of QpStructure, for example, `qp.Q`.
 
 .. code-block:: python
 

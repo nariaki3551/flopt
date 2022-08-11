@@ -1,8 +1,16 @@
+import itertools
+
 import numpy as np
 
 from flopt.polynomial import Monomial, Polynomial
 from flopt.constraint import Constraint
-from flopt.constants import VariableType, ExpressionType, number_classes, np_float
+from flopt.constants import (
+    VariableType,
+    ExpressionType,
+    number_classes,
+    array_classes,
+    np_float,
+)
 from flopt.env import setup_logger
 
 logger = setup_logger(__name__)
@@ -121,7 +129,7 @@ class Expression:
             if self.operator in {"*", "/", "^", "%"}:
                 elmA_name = f"({elmA_name})"
         if isinstance(self.elmB, Expression):
-            if self.elmB.name.startswith("-"):
+            if self.operator != "+" or self.elmB.name.startswith("-"):
                 elmB_name = f"({elmB_name})"
         self.name = f"{elmA_name}{self.operator}{elmB_name}"
 
@@ -750,6 +758,30 @@ class Expression:
 # ------------------------------------------------
 
 
+def unpack_variables(var_or_array):
+    variables = set()
+    if isinstance(var_or_array, array_classes):
+        array = var_or_array
+        for var in array:
+            variables |= unpack_variables(var)
+    else:
+        var = var_or_array
+        variables.add(var)
+    return variables
+
+
+def pack_variables(var_or_array, var_dict):
+    if isinstance(var_or_array, array_classes):
+        cls = var_or_array.__class__
+        array = var_or_array
+        return cls(
+            itertools.starmap(pack_variables, [(var, var_dict) for var in array])
+        )
+    else:
+        var = var_or_array
+        return var_dict[var.name]
+
+
 class CustomExpression(Expression):
     """Objective function from using user defined function.
 
@@ -757,8 +789,7 @@ class CustomExpression(Expression):
     ----------
     func : function
       objective function
-    variables : list
-      variables
+    arg: list of variables
 
     Examples
     --------
@@ -774,13 +805,13 @@ class CustomExpression(Expression):
       b = Variable('b', cat='Continuous')
       def user_simulater(a, b):
           return simulater(a, b)
-      obj = CustomExpression(func=user_simulater, variables=[a, b])
+      obj = CustomExpression(func=user_simulater, arg=[a, b])
       prob = Problem('simulater')
       prob += obj
 
     .. note::
 
-      The order of variables in the variables list must be the same as
+      The order of variables in arg parameter must be the same as
       the func argument. (However even the name does not have to be the same.)
 
     In addition, we can use some operations ("+", "-", "*", "/") between CustomExpression and
@@ -808,9 +839,10 @@ class CustomExpression(Expression):
     flopt.expression.Expression
     """
 
-    def __init__(self, func, variables, name=None):
+    def __init__(self, func, arg, name=None):
         self.func = func
-        self.variables = variables
+        self.arg = arg
+        self.variables = unpack_variables(arg)
         self.operator = None
         self.name = "Custom"
         self._type = ExpressionType.Custom
@@ -819,11 +851,11 @@ class CustomExpression(Expression):
 
     def _value(self):
         if self.var_dict is None:
-            variables = self.variables
+            arg = self.arg
         else:
-            variables = [self.var_dict[var.name] for var in self.variables]
+            arg = pack_variables(self.arg, self.var_dict)
 
-        value = self.func(*variables)
+        value = self.func(*arg)
         if not isinstance(value, (int, float, np.number)):
             value = value.value()
 
@@ -831,7 +863,7 @@ class CustomExpression(Expression):
         return value
 
     def getVariables(self):
-        return set(self.variables)
+        return self.variables
 
     def isPolynomial(self):
         return False

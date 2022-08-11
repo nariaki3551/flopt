@@ -81,3 +81,5 @@ def Value(x):
 
         cast = np.frompyfunc(to_value, 1, 1)
         return cast(x)
+    else:
+        return x
