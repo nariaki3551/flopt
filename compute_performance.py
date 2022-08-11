@@ -1,8 +1,5 @@
-import os
-import pickle
 import random
 from argparse import ArgumentParser
-from itertools import product
 
 import flopt
 from flopt import Solver, Solver_list
@@ -31,8 +28,7 @@ def compute(algo, dataset_names, params):
     solver.setParams(params=params)
 
     datasets = [
-        flopt.performance.datasets[dataset_name]
-        for dataset_name in dataset_names
+        flopt.performance.datasets[dataset_name] for dataset_name in dataset_names
     ]
 
     flopt.performance.compute(datasets, solver, msg=True)
@@ -42,14 +38,14 @@ def read_paramfile(paramfile):
     params = dict()
     if paramfile is None:
         return params
-    for line in open(paramfile, 'r'):
+    for line in open(paramfile, "r"):
         line = line.strip()
         if line:
-            param_name, param_value = line.split('=')
-            param_name  = param_name.strip()
+            param_name, param_value = line.split("=")
+            param_name = param_name.strip()
             param_value = param_value.strip()
-            if param_value in {'infty', 'unlimited', "float('inf')", 'float("inf")'}:
-                param_value = float('inf')
+            if param_value in {"infty", "unlimited", "float('inf')", 'float("inf")'}:
+                param_value = float("inf")
             else:
                 param_value = float(param_value)
             params[param_name] = param_value
@@ -63,44 +59,33 @@ def setLogger(log_level):
 def argparser():
     parser = ArgumentParser()
     parser.add_argument(
-        'algorithm',
+        "algorithm",
         choices=Solver_list(),
     )
     parser.add_argument(
-        'savename',
+        "savename",
     )
     parser.add_argument(
-        '--datasets',
-        nargs='*',
-        choices=Dataset_list(),
-        help='instance dataset'
+        "--datasets", nargs="*", choices=Dataset_list(), help="instance dataset"
     )
+    parser.add_argument("--params", default=None, help="param file")
+    parser.add_argument("--seed", default=0, help="seed of random")
     parser.add_argument(
-        '--params',
-        default=None,
-        help='param file'
-    )
-    parser.add_argument(
-        '--seed',
-        default=0,
-        help='seed of random'
-    )
-    parser.add_argument(
-        '--log_level',
+        "--log_level",
         type=int,
         default=30,
-        help='10:DEBUG,20:INFO,30:WARNING,40:ERROR,50:CRITICAL'
+        help="10:DEBUG,20:INFO,30:WARNING,40:ERROR,50:CRITICAL",
     )
     return parser
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparser()
     args = parser.parse_args()
 
-    algo      = args.algorithm
-    savename  = args.savename
-    datasets  = args.datasets
+    algo = args.algorithm
+    savename = args.savename
+    datasets = args.datasets
     paramfile = args.params
     log_level = args.log_level
     random.seed(args.seed)
@@ -108,6 +93,6 @@ if __name__ == '__main__':
     flopt.env.setLogLevel(log_level)
 
     params = read_paramfile(paramfile)
-    params['name'] = savename
+    params["name"] = savename
 
     compute(algo, datasets, params)

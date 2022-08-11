@@ -27,10 +27,10 @@ Conversion Graph
 
 
 This is the `Conversion Graph` of flopt.
-Vertex represents a optimization problem structure, and tail of a edge can be convertable to head.
+Vertexes represent optimization problem structures, and tail problem of a edge can be convertable to head one.
 There exists paths connected any vertex pairs, so these optimization problem structures are convertabled to each other.
 
-For example, we want to convert Lp to Qubo, execute LpStructure.toQubo(), and the conversion chain is as follows, internally.
+For example, when we convert Lp to Qubo, flopt executes LpStructure.toQubo(), and the conversion chain is as follows, internally.
 
 .. mermaid::
 
@@ -71,6 +71,8 @@ Some solvers input a structure, and the Conversion Graph includes solvers and mo
   style Optuna fill:#fff,stroke:#000,stroke-width:1px
   Amplify(Amplify)
   style Amplify fill:#fff,stroke:#000,stroke-width:1px
+  SolversInFlopt(Solvers in flopt)
+  style SolversInFlopt fill:#fff,stroke:#000,stroke-width:1px
 
   QpStructure[QpStructure]
   LpStructure[LpStructure]
@@ -100,5 +102,6 @@ Some solvers input a structure, and the Conversion Graph includes solvers and mo
   flopt --> Hyperopt
   flopt --> Optuna
   flopt --> Scipy.optimize.minimize
+  flopt --> SolversInFlopt
 
 

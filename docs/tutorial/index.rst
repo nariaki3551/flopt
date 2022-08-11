@@ -4,6 +4,8 @@ Tutorial
 Declaration problem and solving
 -------------------------------
 
+We recommend reading them in order from the top.
+
 .. toctree::
    :maxdepth: 1
 
@@ -12,7 +14,8 @@ Declaration problem and solving
    black_box
    permutation
    max_satisfiability
-   expression_examples.rst
+   expression_examples
+   solver
 
 
 Conversion to different formulations

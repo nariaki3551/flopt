@@ -3,7 +3,6 @@
 
 Overview
 --------
-
 ::
 
   minimize  2*(3*a+b)*c**2 + 3
@@ -20,24 +19,28 @@ This problem can be formulated using `flopt` as follows,
   from flopt import Variable, Problem, Solver, Value
 
   # variables
-  a = Variable(name='a', lowBound=0, upBound=1, cat='Integer')
-  b = Variable(name='b', lowBound=1, upBound=2, cat='Continuous')
-  c = Variable(name='c', lowBound=1, upBound=3, cat='Continuous')
+  a = Variable(name="a", lowBound=0, upBound=1, cat="Integer")
+  b = Variable(name="b", lowBound=1, upBound=2, cat="Continuous")
+  c = Variable(name="c", lowBound=1, upBound=3, cat="Continuous")
 
   # problem
-  prob = Problem(name='Test')
-  prob += 2*(3*a+b)*c**2+3   # set the objective function
+  prob = Problem(name="Test")
 
-  # solver
-  solver = Solver(algo='RandomSearch')  # select the random search algorithm
+  # set objective function
+  prob += 2*(3*a+b)*c**2+3
+
+  # solver setting
+  solver = Solver(algo="RandomSearch")  # select the random search algorithm
   solver.setParams(n_trial=1000)  # set the parameters for solver
-  prob.solve(solver, msg=True)    # run solver
+
+  # run solver
+  prob.solve(solver, msg=True)
 
   # get best solution
-  print('obj value', prob.getObjectiveValue())
-  print('a', Value(a))  # or a.value()
-  print('b', Value(b))
-  print('c', Value(c))
+  print("obj value", prob.getObjectiveValue())
+  print("a", Value(a))  # or a.value()
+  print("b", Value(b))
+  print("c", Value(c))
 
 
 Variable
@@ -55,43 +58,43 @@ In flopt, we denote these as
 
 .. code-block:: python
 
-  a = Variable(name='a', lowBound=0, upBound=1, cat='Integer')
-  b = Variable(name='b', lowBound=1, upBound=2, cat='Continuous')
-  c = Variable(name='c', lowBound=1, upBound=3, cat='Continuous')
+  a = Variable(name="a", lowBound=0, upBound=1, cat="Integer")
+  b = Variable(name="b", lowBound=1, upBound=2, cat="Continuous")
+  c = Variable(name="c", lowBound=1, upBound=3, cat="Continuous")
 
-, more simplify
-
-.. code-block:: python
-
-  a = Variable('a', 0, 1, 'Integer')
-  b = Variable('b', 1, 2, 'Continuous')
-  c = Variable('c', 1, 3, 'Continuous')
-
-If we want to set an initial value into each variable, we use `ini_value` option.
+Or,
 
 .. code-block:: python
 
-  b = Variable('b', 1, 2, 'Continuous', ini_value=1.5)
+  a = Variable("a", 0, 1, "Integer")
+  b = Variable("b", 1, 2)
+  c = Variable("c", 1, 3)
+
+We can set an initial value to each variable by `ini_value` option.
+
+.. code-block:: python
+
+  b = Variable("b", 1, 2, "Continuous", ini_value=1.5)
 
 
 Problem
 -------
 
-We can create the objective function by arithmetic operation of variables for example :math:`2(3a+b)c^2 + 3`, or the CustomExpression.
+In flont, we can create the objective function by arithmetic operation of variables for example :math:`2(3a+b)c^2 + 3`, or :doc:`../api_reference/CustomExpression`.
 
-We set the object function in *Problem* using `+=` operation or `.setObjective` function.
+We set the object function to *Problem* using `+=` operation or `.setObjective` function.
 
 .. code-block:: python
 
-  prob = Problem(name='Test', sense='minimize')
+  prob = Problem(name="Test", sense="minimize")
   prob += 2*(3*a+b)*c**2+3   # set the objective function
   # prob.setObjective(2*(3*a+b)*c**2+3)   # same above
 
-If we want to solve a maximize problem, then we set `sense='maximize'` (default is sense=minimize).
+When we solve a maximize problem, we set `sense="maximize"` (default is sense=minimize).
 
 .. code-block:: python
 
-  prob = Problem(name='Test', sense='maximize')
+  prob = Problem(name="Test", sense="maximize")
 
 
 Solver
@@ -101,31 +104,31 @@ We select algorithm from :doc:`../solvers/index` for the problem. We can see the
 
 .. code-block:: python
 
-  solver = Solver(algo='RandomSearch')  # select the heuristic algorithm
+  solver = Solver(algo="RandomSearch")  # select the heuristic algorithm
   solver.setParams(n_trial=1000, timelimit=3600)  # setting of the parameters
-  # solver.setParams({'n_trial'; 1000, 'timelimit': 3600})  # same above
+  # solver.setParams({"n_trial"; 1000, "timelimit": 3600})  # same above
 
 Solve
 -----
 
 .. code-block:: python
 
-  prob.solve(solver, msg=True)    # run solver
+  prob.solve(solver, msg=True)  # run solver
 
 
 
 Result
 ------
 
-The results of the solver are reflected in the problem and variable objects.
+The result of the solver is reflected in Problem and Variable objects.
 
-- `getObjectiveValue()` in problem shows the objective value of the best solution solver found.<br>
+- `getObjectiveValue()` in problem shows the objective value of the best solution solver found.
 
 - `Value()` in variable shows the value of variable of the best solution.
 
 .. code-block:: python
 
-  print('obj value', prob.getObjectiveValue())
-  print('a', Value(a))  # or a.value()
-  print('b', Value(b))
-  print('c', Value(c))
+  print("obj value", prob.getObjectiveValue())
+  print("a", Value(a))  # or a.value()
+  print("b", Value(b))
+  print("c", Value(c))

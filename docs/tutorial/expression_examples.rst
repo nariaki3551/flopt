@@ -11,7 +11,7 @@ Expression Examples
 
 .. code-block:: python
 
-  x = Variable.array('x', 4)
+  x = Variable.array("x", 4)
   f = Sum(x)
 
   print(f)
@@ -27,7 +27,7 @@ Expression Examples
 
   import itertools
 
-  x = Variable.array('x', 4)
+  x = Variable.array("x", 4)
   f = Sum(xi * xj for xi, xj in itertools.product(x, x))
 
   print(f)
@@ -37,7 +37,7 @@ Expression Examples
 
 .. code-block:: python
 
-  x = Variable.array('x', (4, 1))
+  x = Variable.array("x", (4, 1))
   f = Sum(x.dot(x.T))
 
   print(f)
@@ -51,7 +51,7 @@ Expression Examples
 
 .. code-block:: python
 
-  x = Variable.matrix('x', 2, 2)
+  x = Variable.matrix("x", 2, 2)
   f = Sum( (Sum(xi) - 1) ** 2 for xi in x )
 
   print(f)
@@ -67,7 +67,7 @@ Expression Examples
 
   import itertools
 
-  x = Variable.array('x', 4)
+  x = Variable.array("x", 4)
   f = Sum(xi * xj for xi, xj in itertools.combinations(x, 2))
 
   print(f)
@@ -81,7 +81,7 @@ Expression Examples
 
 .. code-block:: python
 
-  x = Variable.array('x', 4)
+  x = Variable.array("x", 4)
   f = Prod(x)
 
   print(f)

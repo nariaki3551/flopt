@@ -12,8 +12,7 @@ performance_dir = flopt_env.performance_dir
 logger = setup_logger(__name__)
 
 
-def compute(datasets, solvers='all',
-    timelimit=None, msg=True, save_prefix=None):
+def compute(datasets, solvers="all", timelimit=None, msg=True, save_prefix=None):
     """
     Measure the performance of (dataset, solver)
 
@@ -86,13 +85,13 @@ def compute(datasets, solvers='all',
     """
     # datasets settings
     if isinstance(datasets, Problem):
-      cd = CustomDataset(name='user', probs=[datasets])
-      datasets = [cd]
+        cd = CustomDataset(name="user", probs=[datasets])
+        datasets = [cd]
     elif not isinstance(datasets, list):
         datasets = [datasets]
 
     # solvers settings
-    if solvers == 'all':
+    if solvers == "all":
         solvers = [Solver(algo=algo) for algo in Solver_list()]
     elif not isinstance(solvers, list):
         solvers = [solvers]
@@ -126,16 +125,23 @@ def save_log(log, solver, dataset, instance, save_prefix):
     """
     save log as save_prefix/solver.name/dataset.name/instance.name/log.pickle
     """
-    save_dir = f'{save_prefix}/{solver.name}/{dataset.name}/{instance.name}'
+    save_dir = f"{save_prefix}/{solver.name}/{dataset.name}/{instance.name}"
     os.makedirs(save_dir, exist_ok=True)
-    with open(f'{save_dir}/log.pickle', 'wb') as pf:
+    with open(f"{save_dir}/log.pickle", "wb") as pf:
         pickle.dump(log, pf)
 
 
-def performance(datasets, solver_names=None,
-    xitem='time', yscale='linear',
-    plot_type='all', save_prefix=None,
-    time=None, iteration=None, load_prefix=None):
+def performance(
+    datasets,
+    solver_names=None,
+    xitem="time",
+    yscale="linear",
+    plot_type="all",
+    save_prefix=None,
+    time=None,
+    iteration=None,
+    load_prefix=None,
+):
     """
     plot performance of each (dataset, algo) where algo is solver.name
 
@@ -169,7 +175,7 @@ def performance(datasets, solver_names=None,
     if isinstance(datasets, list):
         dataset_names = [dataset.name for dataset in datasets]
     elif isinstance(datasets, Problem):
-        dataset_names = ['user']
+        dataset_names = ["user"]
     else:
         dataset_names = [datasets.name]
     if solver_names is None:
@@ -188,10 +194,7 @@ def performance(datasets, solver_names=None,
 
     if not plot_type == "noshow":
         log_visualizer.plot(
-            xitem=xitem,
-            yscale=yscale,
-            plot_type=plot_type,
-            save_prefix=save_prefix
+            xitem=xitem, yscale=yscale, plot_type=plot_type, save_prefix=save_prefix
         )
 
     log_visualizer.stat(time=time, iteration=iteration)

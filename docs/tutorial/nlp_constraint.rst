@@ -20,40 +20,69 @@ This problem can be formulated using `flopt` as follows,
   from flopt import Variable, Problem, Solver
 
   # variables
-  a = Variable(name='a', 0, 1, cat='Integer')
-  b = Variable(name='b', 1, 2, cat='Continuous')
+  a = Variable("a", 0, 1, cat="Continuous")
+  b = Variable("b", 1, 2, cat="Continuous")
 
   # problem
-  prob = Problem(name='Test')
+  prob = Problem(name="Test")
   prob += 2*(3*a+b**2)  # set the objective function
   prob += a*b >= 2      # add constraint
 
-  # solver
-  solver = Solver(algo='ScipySearch')  # select the scipy function
-  prob.solve(solver, timelimit=10, msg=True)    # run solver
+  # solver setting
+  solver = Solver(algo="ScipySearch")  # select the scipy function
+
+  # run solver
+  prob.solve(solver, timelimit=10, msg=True)
 
   # get best solution
-  print('obj value', prob.getObjectiveValue())
-  print('a', a.value())
-  print('b', b.value())
+  print("obj value", prob.getObjectiveValue())
+  print("a", a.value())
+  print("b", b.value())
 
 
 Constraint
 ----------
 
-We set constraints to the problem using `+=` operation or `.addConstraint`.
+We can set constraints to the problem using `+=` operation or `.addConstraint`.
 
 
 .. code-block:: python
 
-  prob = Problem(name='Test', sense='minimize')
+  prob = Problem(name="Test", sense="minimize")
   prob += a*b >= 2   # set the objective function
   # prob.addConstraint(a*b >= 2)   # same above
 
-We can set equality and inequality constraint.
+Equality and inequality constraints are able to be used.
 
 .. code-block:: python
 
   prob += a*b >= 2
   prob += a*b == 2
   prob += a*b <= 2
+
+
+To show the added constraints, we use `.show()` method.
+
+.. code-block:: python
+
+  # variables
+  a = Variable("a", 0, 1, cat="Continuous")
+  b = Variable("b", 1, 2, cat="Continuous")
+
+  # problem
+  prob = Problem(name="Test")
+  prob += 2*(3*a+b**2)  # set the objective function
+  prob += a*b >= 2      # add constraint
+  prob += a+b >= 2      # add constraint
+
+  print(prob.show())
+  >>> Name: Show Test
+  >>>   Type         : Problem
+  >>>   sense        : minimize
+  >>>   objective    : 2*3*a+b^2
+  >>>   #constraints : 2
+  >>>   #variables   : 2 (Continuous 2)
+  >>>
+  >>>   C 0, name None, a*b-2 >= 0
+  >>>   C 1, name None, a+b-2 >= 0
+

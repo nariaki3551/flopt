@@ -1,10 +1,16 @@
-import collections
+import itertools
 
 import numpy as np
 
 from flopt.polynomial import Monomial, Polynomial
 from flopt.constraint import Constraint
-from flopt.constants import VariableType, ExpressionType, number_classes, np_float
+from flopt.constants import (
+    VariableType,
+    ExpressionType,
+    number_classes,
+    array_classes,
+    np_float,
+)
 from flopt.env import setup_logger
 
 logger = setup_logger(__name__)
@@ -13,6 +19,7 @@ logger = setup_logger(__name__)
 class SelfReturn:
     def __init__(self, var):
         self.var = var
+
     def value(self):
         return self.var
 
@@ -20,6 +27,7 @@ class SelfReturn:
 # ------------------------------------------------
 #   Expression Base Class
 # ------------------------------------------------
+
 
 class Expression:
     """Expression Base Class
@@ -91,6 +99,7 @@ class Expression:
     >>> Expression(a, b, '|').value().value()  # a&b bitwise or
     >>> 1
     """
+
     def __init__(self, elmA, elmB, operator, name=None):
         self.elmA = elmA
         self.elmB = elmB
@@ -113,18 +122,16 @@ class Expression:
         if isinstance(self.elmB, Expression):
             self.elmB.parents.append(self)
 
-
     def setName(self):
         elmA_name = self.elmA.name
         elmB_name = self.elmB.name
         if isinstance(self.elmA, Expression):
-            if self.operator in {'*', '/', '^', '%'}:
-                elmA_name = f'({elmA_name})'
+            if self.operator in {"*", "/", "^", "%"}:
+                elmA_name = f"({elmA_name})"
         if isinstance(self.elmB, Expression):
-            if self.elmB.name.startswith('-'):
-                elmB_name = f'({elmB_name})'
-        self.name = f'{elmA_name}{self.operator}{elmB_name}'
-
+            if self.operator != "+" or self.elmB.name.startswith("-"):
+                elmB_name = f"({elmB_name})"
+        self.name = f"{elmA_name}{self.operator}{elmB_name}"
 
     def setPolynomial(self):
         if self.elmA.isPolynomial() and self.elmB.isPolynomial():
@@ -141,14 +148,11 @@ class Expression:
         else:
             self.polynomial = None
 
-
     def setVarDict(self, var_dict):
         self.var_dict = var_dict
 
-
     def unsetVarDict(self):
         self.var_dict = None
-
 
     def value(self, solution=None):
         if solution is None:
@@ -157,7 +161,6 @@ class Expression:
             self.setVarDict(solution.toDict())
             return self._value()
 
-
     def _value(self):
         """
         Returns
@@ -165,7 +168,6 @@ class Expression:
         float or int
             return value of expression
         """
-        assert self.operator != '' or isinstance(self.elmB, ExpressionNull)
         elmA = self.elmA
         elmB = self.elmB
         if self.var_dict is not None:
@@ -178,25 +180,24 @@ class Expression:
             elif self.elmB.name in self.var_dict:
                 elmB = self.var_dict[self.elmB.name]
 
-        if self.operator == '+':
+        if self.operator == "+":
             return elmA.value() + elmB.value()
-        elif self.operator == '-':
+        elif self.operator == "-":
             return elmA.value() - elmB.value()
-        elif self.operator == '*':
+        elif self.operator == "*":
             return elmA.value() * elmB.value()
-        elif self.operator == '/':
+        elif self.operator == "/":
             return elmA.value() / elmB.value()
-        elif self.operator == '^':
+        elif self.operator == "^":
             return elmA.value() ** elmB.value()
-        elif self.operator == '%':
+        elif self.operator == "%":
             return elmA.value() % elmB.value()
-        elif self.operator == '&':
+        elif self.operator == "&":
             return elmA.value() and elmB.value()
-        elif self.operator == '|':
+        elif self.operator == "|":
             return elmA.value() or elmB.value()
 
         self.unsetVarDict()
-
 
     def type(self):
         """
@@ -207,7 +208,6 @@ class Expression:
         """
         return self._type
 
-
     def getVariables(self):
         """
         Returns
@@ -217,7 +217,6 @@ class Expression:
         """
         variables = self.elmA.getVariables() | self.elmB.getVariables()
         return variables
-
 
     def constant(self):
         """
@@ -230,8 +229,8 @@ class Expression:
             return self.polynomial.constant()
         else:
             import sympy
-            return float(sympy.sympify(self.name).expand().as_coefficients_dict()[1])
 
+            return float(sympy.sympify(self.name).expand().as_coefficients_dict()[1])
 
     def isNeg(self):
         """
@@ -240,26 +239,23 @@ class Expression:
         bool
             return if it is - value form else false
         """
-        return self.operator == '*'\
-                and isinstance(self.elmA, Const) \
-                and self.elmA.value() == -1
-
+        return (
+            self.operator == "*"
+            and isinstance(self.elmA, Const)
+            and self.elmA.value() == -1
+        )
 
     def isMonomial(self):
         return self.isPolynomial() and self.polynomial.isMonomial()
 
-
     def toMonomial(self):
         return self.polynomial.toMonomial()
-
 
     def isPolynomial(self):
         return self.polynomial is not None
 
-
     def toPolynomial(self):
         return self.polynomial
-
 
     def isQuadratic(self):
         """
@@ -271,7 +267,6 @@ class Expression:
         if not self.isPolynomial():
             return False
         return self.polynomial.isQuadratic() or self.polynomial.simplify().isQuadratic()
-
 
     def toQuadratic(self, x=None):
         """
@@ -287,8 +282,12 @@ class Expression:
         """
         assert self.isQuadratic()
         from flopt.variable import VariableArray
-        assert x is None or isinstance(x, VariableArray), f"x must be None or VariableArray"
+
+        assert x is None or isinstance(
+            x, VariableArray
+        ), f"x must be None or VariableArray"
         from flopt.convert import QuadraticStructure
+
         polynomial = self.polynomial.simplify()
         if x is None:
             x = VariableArray(sorted(self.getVariables(), key=lambda var: var.name))
@@ -296,7 +295,7 @@ class Expression:
         num_variables = len(x)
 
         Q = np.zeros((num_variables, num_variables), dtype=np_float)
-        c = np.zeros((num_variables, ), dtype=np_float)
+        c = np.zeros((num_variables,), dtype=np_float)
 
         # set matrix Q and vector c
         # psude-code
@@ -322,7 +321,6 @@ class Expression:
         C = polynomial.constant()
         return QuadraticStructure(Q, c, C, x=x)
 
-
     def isLinear(self):
         """
         Returns
@@ -344,7 +342,6 @@ class Expression:
             return False
         return self.polynomial.isLinear() or self.polynomial.simplify().isLinear()
 
-
     def toLinear(self, x=None):
         """
         Parameters
@@ -359,20 +356,23 @@ class Expression:
         """
         assert self.isLinear()
         from flopt.variable import VariableArray
-        assert x is None or isinstance(x, VariableArray), f"x must be None or VariableArray"
+
+        assert x is None or isinstance(
+            x, VariableArray
+        ), f"x must be None or VariableArray"
         from flopt.convert import LinearStructure
+
         if x is None:
             x = VariableArray(sorted(self.getVariables(), key=lambda var: var.name))
 
         num_variables = len(x)
 
-        c = np.zeros((num_variables, ), dtype=np_float)
+        c = np.zeros((num_variables,), dtype=np_float)
         for mono, coeff in self.polynomial:
             c[x.index(mono)] = coeff
 
         C = self.polynomial.constant()
         return LinearStructure(c, C, x=x)
-
 
     def isIsing(self):
         """
@@ -381,11 +381,12 @@ class Expression:
         bool
             return true if this expression is ising else false
         """
-        if any( var.type() not in {VariableType.Spin, VariableType.Binary}
-                for var in self.getVariables() ):
+        if any(
+            var.type() not in {VariableType.Spin, VariableType.Binary}
+            for var in self.getVariables()
+        ):
             return False
         return self.isQuadratic()
-
 
     def toIsing(self, x=None):
         """
@@ -403,13 +404,13 @@ class Expression:
         """
         assert self.isIsing()
         from flopt.convert import IsingStructure
-        if any( var.type() == VariableType.Binary for var in self.getVariables() ):
+
+        if any(var.type() == VariableType.Binary for var in self.getVariables()):
             return self.toSpin().toIsing()
         quadratic = self.toQuadratic(x)
-        J = - np.triu(quadratic.Q)
-        np.fill_diagonal(J, 0.5*np.diag(J))
+        J = -np.triu(quadratic.Q)
+        np.fill_diagonal(J, 0.5 * np.diag(J))
         return IsingStructure(J, -quadratic.c, quadratic.C, quadratic.x)
-
 
     def simplify(self):
         """
@@ -418,15 +419,15 @@ class Expression:
         Expression
         """
         import sympy
+
         expr = eval(
             str(sympy.sympify(self.name).simplify()),
-            {var.name: var for var in self.getVariables()}
-            )
+            {var.name: var for var in self.getVariables()},
+        )
         if isinstance(expr, number_classes):
             expr = Const(expr)
         expr.parents += self.parents
         return expr
-
 
     def expand(self):
         """
@@ -435,10 +436,11 @@ class Expression:
         Expression
         """
         import sympy
+
         expr = eval(
             str(sympy.simplify(self.name).expand()),
-            {var.name: var for var in self.getVariables()}
-            )
+            {var.name: var for var in self.getVariables()},
+        )
         if isinstance(expr, number_classes):
             expr = Const(expr)
             expr.parents += self.parents
@@ -446,14 +448,13 @@ class Expression:
         elif isinstance(expr, Expression):
             expr = eval(
                 str(sympy.sympify(expr.name).expand()),
-                {var.name: var for var in self.getVariables()}
-                )
+                {var.name: var for var in self.getVariables()},
+            )
             expr.parents += self.parents
             return expr
         else:
             # VarElement family
-            return Expression(expr, Const(0), '+')
-
+            return Expression(expr, Const(0), "+")
 
     def toBinary(self):
         """create expression replased binary to spin
@@ -462,19 +463,22 @@ class Expression:
         -------
         Expression
         """
-        assert all(var.type() in {VariableType.Binary, VariableType.Spin, VariableType.Integer}
-                for var in self.getVariables())
-        if all( var.type() == VariableType.Binary for var in self.getVariables() ):
+        assert all(
+            var.type() in {VariableType.Binary, VariableType.Spin, VariableType.Integer}
+            for var in self.getVariables()
+        )
+        if all(var.type() == VariableType.Binary for var in self.getVariables()):
             return self
         var_dict = {
             var.name: SelfReturn(
-                var.toBinary() if var.type() in {VariableType.Spin, VariableType.Integer} else var
-                )
+                var.toBinary()
+                if var.type() in {VariableType.Spin, VariableType.Integer}
+                else var
+            )
             for var in self.getVariables()
         }
         self.setVarDict(var_dict)
         return self.value().expand()
-
 
     def toSpin(self):
         """create expression replased binary to spin
@@ -483,19 +487,22 @@ class Expression:
         -------
         Expression
         """
-        assert all(var.type() in {VariableType.Binary, VariableType.Spin, VariableType.Integer}
-                for var in self.getVariables())
-        if all( var.type() == VariableType.Spin for var in self.getVariables() ):
+        assert all(
+            var.type() in {VariableType.Binary, VariableType.Spin, VariableType.Integer}
+            for var in self.getVariables()
+        )
+        if all(var.type() == VariableType.Spin for var in self.getVariables()):
             return self
         var_dict = {
             var.name: SelfReturn(
-                var.toSpin() if var.type() in {VariableType.Binary, VariableType.Integer} else var
-                )
+                var.toSpin()
+                if var.type() in {VariableType.Binary, VariableType.Integer}
+                else var
+            )
             for var in self.getVariables()
         }
         self.setVarDict(var_dict)
         return self.value().expand()
-
 
     def traverse(self):
         """traverse Expression tree as root is self
@@ -512,7 +519,6 @@ class Expression:
             for x in self.elmB.traverse():
                 yield x
 
-
     def traverseAncestors(self):
         """traverse ancestors of self
 
@@ -526,18 +532,17 @@ class Expression:
                 for x in parent.traverseAncestors():
                     yield x
 
-
     def __add__(self, other):
         if isinstance(other, number_classes):
             if other == 0:
                 return self
-            return Expression(self, Const(other), '+')
+            return Expression(self, Const(other), "+")
         elif isinstance(other, Expression):
             if other.isNeg():
                 # self + (-other) --> self - other
-                return Expression(self, other.elmB, '-')
+                return Expression(self, other.elmB, "-")
             else:
-                return Expression(self, other, '+')
+                return Expression(self, other, "+")
         else:
             return NotImplemented
 
@@ -545,9 +550,9 @@ class Expression:
         if isinstance(other, number_classes):
             if other == 0:
                 return self
-            return Expression(Const(other), self, '+')
+            return Expression(Const(other), self, "+")
         elif isinstance(other, Expression):
-            return Expression(other, self, '+')
+            return Expression(other, self, "+")
         else:
             return NotImplemented
 
@@ -556,14 +561,14 @@ class Expression:
             if other == 0:
                 return self
             elif other < 0:
-                return Expression(self, Const(-other), '+')
+                return Expression(self, Const(-other), "+")
             else:
-                return Expression(self, Const(other), '-')
+                return Expression(self, Const(other), "-")
         elif isinstance(other, Expression):
             if other.isNeg():
                 # self - (-1*other) -> self + other
-                return Expression(self, other.elmB, '+')
-            return Expression(self, other, '-')
+                return Expression(self, other.elmB, "+")
+            return Expression(self, other, "-")
         else:
             return NotImplemented
 
@@ -571,14 +576,14 @@ class Expression:
         if isinstance(other, number_classes):
             if other == 0:
                 # 0 - self --> -1 * self
-                return Expression(Const(-1), self, '*', name=f'-{self.name}')
+                return Expression(Const(-1), self, "*", name=f"-{self.name}")
             else:
-                return Expression(Const(other), self, '-')
+                return Expression(Const(other), self, "-")
         elif isinstance(other, Expression):
             if self.isNeg():
                 # other - (-1*self) -> other + self
-                return Expression(other, self.elmB, '+')
-            return Expression(other, self, '-')
+                return Expression(other, self.elmB, "+")
+            return Expression(other, self, "-")
         else:
             return NotImplemented
 
@@ -590,21 +595,23 @@ class Expression:
                 return self
             elif other == -1:
                 return -self
-            return Expression(Const(other), self, '*')
+            return Expression(Const(other), self, "*")
         elif isinstance(other, Expression):
-            if self.operator == '*' and isinstance(self.elmA, Const):
-                if other.operator == '*' and isinstance(other.elmA, Const):
+            if self.operator == "*" and isinstance(self.elmA, Const):
+                if other.operator == "*" and isinstance(other.elmA, Const):
                     # (a*self) * (b*other) --> a * b * (self*other)
-                    return self.elmA * other.elmA * Expression(self.elmB, other.elmB, '*')
+                    return (
+                        self.elmA * other.elmA * Expression(self.elmB, other.elmB, "*")
+                    )
                 else:
                     # (a*self) * other --> a * (self*other)
-                    return self.elmA * Expression(self.elmB, other, '*')
+                    return self.elmA * Expression(self.elmB, other, "*")
             else:
-                if other.operator == '*' and isinstance(other.elmA, Const):
+                if other.operator == "*" and isinstance(other.elmA, Const):
                     # self * (b*other) --> b * (self*other)
-                    return other.elmA * Expression(self, other.elmB, '*')
+                    return other.elmA * Expression(self, other.elmB, "*")
                 else:
-                    return Expression(self, other, '*')
+                    return Expression(self, other, "*")
         else:
             return NotImplemented
 
@@ -614,21 +621,23 @@ class Expression:
                 return Const(0)
             elif other == 1:
                 return self
-            return Expression(Const(other), self, '*')
+            return Expression(Const(other), self, "*")
         elif isinstance(other, Expression):
-            if self.operator == '*' and isinstance(self.elmA, Const):
-                if other.operator == '*' and isinstance(other.elmA, Const):
+            if self.operator == "*" and isinstance(self.elmA, Const):
+                if other.operator == "*" and isinstance(other.elmA, Const):
                     # (b*other) * (a*self) --> a * b * (other*self)
-                    return self.elmA * other.elmA * Expression(other.elmB, self.elmB, '*')
+                    return (
+                        self.elmA * other.elmA * Expression(other.elmB, self.elmB, "*")
+                    )
                 else:
                     # other * (a*self) --> a * (other*self)
-                    return self.elmA * Expression(other, self.elmB, '*')
+                    return self.elmA * Expression(other, self.elmB, "*")
             else:
-                if other.operator == '*' and isinstance(other.elmA, Const):
+                if other.operator == "*" and isinstance(other.elmA, Const):
                     # (b*other) * self --> b * (other*self)
-                    return other.elmA * Expression(other.elmB, self, '*')
+                    return other.elmA * Expression(other.elmB, self, "*")
                 else:
-                    return Expression(other, self, '*')
+                    return Expression(other, self, "*")
         else:
             return NotImplemented
 
@@ -636,9 +645,9 @@ class Expression:
         if isinstance(other, number_classes):
             if other == 1:
                 return self
-            return Expression(self, Const(other), '/')
+            return Expression(self, Const(other), "/")
         elif isinstance(other, Expression):
-            return Expression(self, other, '/')
+            return Expression(self, other, "/")
         else:
             return NotImplemented
 
@@ -646,9 +655,9 @@ class Expression:
         if isinstance(other, number_classes):
             if other == 0:
                 return Const(0)
-            return Expression(Const(other), self, '/')
+            return Expression(Const(other), self, "/")
         elif isinstance(other, Expression):
-            return Expression(other, self, '/')
+            return Expression(other, self, "/")
         else:
             return NotImplemented
 
@@ -656,9 +665,9 @@ class Expression:
         if isinstance(other, number_classes):
             if other == 1:
                 return self
-            return Expression(self, Const(other), '^')
+            return Expression(self, Const(other), "^")
         elif isinstance(other, Expression):
-            return Expression(self, other, '^')
+            return Expression(self, other, "^")
         else:
             return NotImplemented
 
@@ -666,17 +675,17 @@ class Expression:
         if isinstance(other, number_classes):
             if other == 1:
                 return Const(1)
-            return Expression(Const(other), self, '^')
+            return Expression(Const(other), self, "^")
         elif isinstance(other, Expression):
-            return Expression(other, self, '^')
+            return Expression(other, self, "^")
         else:
             return NotImplemented
 
     def __and__(self, other):
         if isinstance(other, number_classes):
-            return Expression(self, Const(other), '&')
+            return Expression(self, Const(other), "&")
         elif isinstance(other, Expression):
-            return Expression(self, other, '&')
+            return Expression(self, other, "&")
         else:
             return NotImplemented
 
@@ -685,9 +694,9 @@ class Expression:
 
     def __or__(self, other):
         if isinstance(other, number_classes):
-            return Expression(self, Const(other), '|')
+            return Expression(self, Const(other), "|")
         elif isinstance(other, Expression):
-            return Expression(self, other, '|')
+            return Expression(self, other, "|")
         else:
             return NotImplemented
 
@@ -696,7 +705,7 @@ class Expression:
 
     def __neg__(self):
         # -1 * self
-        return Expression(Const(-1), self, '*', name=f'-({self.name})')
+        return Expression(Const(-1), self, "*", name=f"-({self.name})")
 
     def __abs__(self):
         return abs(self.value())
@@ -714,29 +723,53 @@ class Expression:
         return hash((hash(self.elmA), hash(self.elmB), hash(self.operator)))
 
     def __eq__(self, other):
-        return Constraint(self, other, 'eq')
+        return Constraint(self, other, "eq")
 
     def __le__(self, other):
-        return Constraint(self, other, 'le')
+        return Constraint(self, other, "le")
 
     def __ge__(self, other):
-        return Constraint(self, other, 'ge')
+        return Constraint(self, other, "ge")
 
     def __str__(self):
-        s  = f'Name: {self.name}\n'
-        s += f'  Type    : {self._type}\n'
-        s += f'  Value   : {self.value()}\n'
+        s = f"Name: {self.name}\n"
+        s += f"  Type    : {self._type}\n"
+        s += f"  Value   : {self.value()}\n"
         return s
 
     def __repr__(self):
-        s = f'Expression({self.elmA.name}, {self.elmB.name}, {self.operator})'
+        s = f"Expression({self.elmA.name}, {self.elmB.name}, {self.operator})"
         return s
-
 
 
 # ------------------------------------------------
 #   CustomExpression Class
 # ------------------------------------------------
+
+
+def unpack_variables(var_or_array):
+    variables = set()
+    if isinstance(var_or_array, array_classes):
+        array = var_or_array
+        for var in array:
+            variables |= unpack_variables(var)
+    else:
+        var = var_or_array
+        variables.add(var)
+    return variables
+
+
+def pack_variables(var_or_array, var_dict):
+    if isinstance(var_or_array, array_classes):
+        cls = var_or_array.__class__
+        array = var_or_array
+        return cls(
+            itertools.starmap(pack_variables, [(var, var_dict) for var in array])
+        )
+    else:
+        var = var_or_array
+        return var_dict[var.name]
+
 
 class CustomExpression(Expression):
     """Objective function from using user defined function.
@@ -745,8 +778,7 @@ class CustomExpression(Expression):
     ----------
     func : function
       objective function
-    variables : list
-      variables
+    arg: list of variables
 
     Examples
     --------
@@ -762,13 +794,13 @@ class CustomExpression(Expression):
       b = Variable('b', cat='Continuous')
       def user_simulater(a, b):
           return simulater(a, b)
-      obj = CustomExpression(func=user_simulater, variables=[a, b])
+      obj = CustomExpression(func=user_simulater, arg=[a, b])
       prob = Problem('simulater')
       prob += obj
 
     .. note::
 
-      The order of variables in the variables list must be the same as
+      The order of variables in arg parameter must be the same as
       the func argument. (However even the name does not have to be the same.)
 
     In addition, we can use some operations ("+", "-", "*", "/") between CustomExpression and
@@ -795,22 +827,24 @@ class CustomExpression(Expression):
     --------
     flopt.expression.Expression
     """
-    def __init__(self, func, variables, name=None):
+
+    def __init__(self, func, arg, name=None):
         self.func = func
-        self.variables = variables
+        self.arg = arg
+        self.variables = unpack_variables(arg)
         self.operator = None
-        self.name = 'Custom'
+        self.name = "Custom"
         self._type = ExpressionType.Custom
         self.var_dict = None
         self.parents = list()
 
     def _value(self):
         if self.var_dict is None:
-            variables = self.variables
+            arg = self.arg
         else:
-            variables = [self.var_dict[var.name] for var in self.variables]
+            arg = pack_variables(self.arg, self.var_dict)
 
-        value = self.func(*variables)
+        value = self.func(*arg)
         if not isinstance(value, (int, float, np.number)):
             value = value.value()
 
@@ -818,7 +852,7 @@ class CustomExpression(Expression):
         return value
 
     def getVariables(self):
-        return set(self.variables)
+        return self.variables
 
     def isPolynomial(self):
         return False
@@ -836,7 +870,7 @@ class CustomExpression(Expression):
         return hash(tuple(tmp))
 
     def __repr__(self):
-        return 'CustomExpression'
+        return "CustomExpression"
 
 
 class Const(float):
@@ -850,15 +884,16 @@ class Const(float):
     name : str or None
         name of constant
     """
+
     def __init__(self, value, name=None):
         if name is None:
-            name = f'{value}'
+            name = f"{value}"
         self.name = name
         self._value = value
         self._type = ExpressionType.Const
-        self.parents = list()   # dummy
-        self.operator = None    # dummy
-        self.parents = list()   # dummy
+        self.parents = list()  # dummy
+        self.operator = None  # dummy
+        self.parents = list()  # dummy
 
     def type(self):
         return self._type
@@ -886,13 +921,13 @@ class Const(float):
         return True
 
     def toQuadratic(self, x=None):
-        return Expression(Const(0), Const(0), '+').toQuadratic(x)
+        return Expression(Const(0), Const(0), "+").toQuadratic(x)
 
     def isLinear(self):
         return True
 
     def toLinear(self, x=None):
-        return Expression(Const(0), Const(0), '+').toLinear(x)
+        return Expression(Const(0), Const(0), "+").toLinear(x)
 
     def isIsing(self):
         return True
@@ -934,10 +969,10 @@ class Const(float):
         return other / self._value
 
     def __pow__(self, other):
-        return self._value ** other
+        return self._value**other
 
     def __rpow__(self, other):
-        return other ** self._value
+        return other**self._value
 
     def __neg__(self):
         return Const(-self._value)
@@ -946,7 +981,5 @@ class Const(float):
         return hash((self._value, self._type))
 
     def __repr__(self):
-        s = f'Const({self._value})'
+        s = f"Const({self._value})"
         return s
-
-

@@ -55,7 +55,7 @@ We create Binary variables :math:`x_{ijk}` such that
     from flopt import Variable
 
     # The problem variables
-    x = Variable.array("x", (9, 9, 9), cat='Binary', ini_value=0)
+    x = Variable.array("x", (9, 9, 9), cat="Binary", ini_value=0)
 
 
 Following given hints, we replace some variable for constants.
@@ -101,14 +101,14 @@ We solve this problem using `AutoSolver`.
 
     from flopt import Solver
 
-    solver = Solver('auto')
+    solver = Solver("auto")
     prob.solve(solver, msg=True)
     >>> Welcome to the flopt Solver
     >>> Version 0.4
     >>> Date: August 12, 2021
 
     >>> Algorithm: PulpSearch
-    >>> Params: {'timelimit': inf}
+    >>> Params: {"timelimit": inf}
     >>> Number of variables 712 (continuous 0 , int 0, binary 712, permutation 0 (0))
 
 
@@ -130,21 +130,21 @@ The result is as follows.
 
    from flopt import Value
 
-    # display result
-    row_line = "+-------+-------+-------+"
-    print(row_line)
-    for r in Rows:
-        if r in {3, 6}:
-            print(row_line)
-        for c in Cols:
-            if c in {0, 3, 6}:
-                print("| ", end='')
-            for v in Vals:
-                if Value(x[v, r, c]) == 1:
-                    print(f'{v+1} ', end='')
-            if c == 8:
-                print("|")
-    print(row_line)
+   # display result
+   row_line = "+-------+-------+-------+"
+   print(row_line)
+   for r in Rows:
+       if r in {3, 6}:
+           print(row_line)
+       for c in Cols:
+           if c in {0, 3, 6}:
+               print("| ", end="")
+           for v in Vals:
+               if Value(x[v, r, c]) == 1:
+                   print(f"{v+1} ", end="")
+           if c == 8:
+               print("|")
+   print(row_line)
 
 
 ::

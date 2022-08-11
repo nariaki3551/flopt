@@ -1,6 +1,6 @@
 # flopt
 
-A python Non-Linear Programming API with Heuristic approach.
+A Python Modeler for Optimization Problems.
 
 [![Documentation Status](https://readthedocs.org/projects/flopt/badge/?version=latest)](https://flopt.readthedocs.io/en/latest/?badge=latest) [![PyPI version](https://badge.fury.io/py/flopt.svg)](https://badge.fury.io/py/flopt) ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/flopt) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
@@ -53,7 +53,7 @@ git clone https://github.com/flab-coder/flopt.git
             1 <= c <= 3
   ```
 
-- Finding the best permutation problem ( including TSP)
+- Finding the best permutation problem (including TSP)
 
 - Satisfiability problem (including MAX-SAT)
 
@@ -108,11 +108,11 @@ from flopt import Variable, Problem, CustomExpression
 a = Variable('a', lowBound=0, upBound=1, cat='Integer')
 b = Variable('b', lowBound=1, upBound=2, cat='Continuous')
 
-from math import sin, cos
 def user_func(a, b):
+    from math import sin, cos
     return (0.7*a + 0.3*cos(b)**2 + 0.1*sin(b))*abs(a)
 
-custom_obj = CustomExpression(func=user_func, variables=[a, b])
+custom_obj = CustomExpression(func=user_func, arg=[a, b])
 
 prob = Problem(name='CustomExpression')
 prob += custom_obj

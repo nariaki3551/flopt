@@ -1,4 +1,9 @@
 from .base_sequential_update import SequentialUpdateSearch
+from flopt.env import setup_logger
+
+
+logger = setup_logger(__name__)
+
 
 class RandomSearch(SequentialUpdateSearch):
     """
@@ -11,11 +16,11 @@ class RandomSearch(SequentialUpdateSearch):
       def setNewSolution(self, *args, **kwargs):
           self.solution.setRandom()
     """
+
     def __init__(self):
         super().__init__()
-        self.name = 'RandomSearch'
-        self.can_solve_problems = ['blackbox', 'permutation']
-
+        self.name = "RandomSearch"
+        self.can_solve_problems = ["blackbox", "permutation"]
 
     def available(self, prob, verbose=False):
         """
@@ -35,8 +40,6 @@ class RandomSearch(SequentialUpdateSearch):
             return False
         return True
 
-
     def setNewSolution(self, *args, **kwargs):
-        """generate new solution with random.
-        """
+        """generate new solution with random."""
         self.solution.setRandom()

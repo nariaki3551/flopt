@@ -62,10 +62,10 @@ class AutoSearch(BaseSearch):
         >>> RandomSearch
 
     """
+
     def __init__(self):
         super().__init__()
-        self.name = 'AutoSearch'
-
+        self.name = "AutoSearch"
 
     def available(self, prob, verbose=False):
         """
@@ -80,9 +80,11 @@ class AutoSearch(BaseSearch):
             return true if it can solve the problem else false
         """
         from flopt import Solver, Solver_list
-        return any(Solver(algo=algo).available(prob, verbose)
-                for algo in (set(Solver_list()) - {'auto'}) )
 
+        return any(
+            Solver(algo=algo).available(prob, verbose)
+            for algo in (set(Solver_list()) - {"auto"})
+        )
 
     def select(self, prob):
         """select solver
@@ -96,59 +98,61 @@ class AutoSearch(BaseSearch):
 
         if self.timelimit < 1:
             algo_lists = [
-                '2-Opt',
-                'RandomSearch',
-                'ScipySearch',
-                'HyperoptTPESearch',
-                'SFLA',
-                'OptunaCmaEsSearch',
-                'OptunaTPESearch',
-                'PulpSearch',
-                'ScipyMilpSearch',
-                'CvxoptQpSearch',
-                'ScipyLpSearch',
+                "2-Opt",
+                "RandomSearch",
+                "ScipyMilpSearch",
+                "ScipySearch",
+                "HyperoptTPESearch",
+                "SFLA",
+                "OptunaCmaEsSearch",
+                "OptunaTPESearch",
+                "PulpSearch",
+                "ScipyMilpSearch",
+                "CvxoptQpSearch",
+                "ScipyLpSearch",
             ]
         if self.timelimit < 5:
             algo_lists = [
-                '2-Opt',
-                'RandomSearch',
-                'ScipySearch',
-                'SFLA',
-                'OptunaCmaEsSearch',
-                'HyperoptTPESearch',
-                'OptunaTPESearch',
-                'PulpSearch',
-                'ScipyMilpSearch',
-                'CvxoptQpSearch',
-                'ScipyLpSearch',
+                "2-Opt",
+                "RandomSearch",
+                "ScipyMilpSearch",
+                "ScipySearch",
+                "SFLA",
+                "OptunaCmaEsSearch",
+                "HyperoptTPESearch",
+                "OptunaTPESearch",
+                "PulpSearch",
+                "ScipyMilpSearch",
+                "CvxoptQpSearch",
+                "ScipyLpSearch",
             ]
         elif self.timelimit < 30:
             algo_lists = [
-                '2-Opt',
-                'OptunaCmaEsSearch',
-                'RandomSearch',
-                'ScipySearch',
-                'OptunaTPESearch',
-                'HyperoptTPESearch',
-                'SFLA',
-                'PulpSearch',
-                'ScipyMilpSearch',
-                'CvxoptQpSearch',
-                'ScipyLpSearch',
+                "2-Opt",
+                "OptunaCmaEsSearch",
+                "ScipyMilpSearch",
+                "RandomSearch",
+                "ScipySearch",
+                "OptunaTPESearch",
+                "HyperoptTPESearch",
+                "SFLA",
+                "PulpSearch",
+                "CvxoptQpSearch",
+                "ScipyLpSearch",
             ]
         else:
             algo_lists = [
-                '2-Opt',
-                'OptunaCmaEsSearch',
-                'SFLA',
-                'ScipySearch',
-                'RandomSearch',
-                'OptunaTPESearch',
-                'HyperoptTPESearch',
-                'ScipyMilpSearch',
-                'PulpSearch',
-                'CvxoptQpSearch',
-                'ScipyLpSearch',
+                "2-Opt",
+                "OptunaCmaEsSearch",
+                "SFLA",
+                "ScipyMilpSearch",
+                "ScipySearch",
+                "RandomSearch",
+                "OptunaTPESearch",
+                "HyperoptTPESearch",
+                "PulpSearch",
+                "CvxoptQpSearch",
+                "ScipyLpSearch",
             ]
 
         for _algo in algo_lists:
@@ -161,14 +165,17 @@ class AutoSearch(BaseSearch):
         solver = Solver(algo=algo)
         # set params
         attrobjs = [
-            (attr, obj) for (attr, obj) in inspect.getmembers(self)
-            if not callable(obj) and attr[:2] != "__" and attr[-2:] != "__" and attr != 'name'
+            (attr, obj)
+            for (attr, obj) in inspect.getmembers(self)
+            if not callable(obj)
+            and attr[:2] != "__"
+            and attr[-2:] != "__"
+            and attr != "name"
         ]
         for attr, obj in attrobjs:
             setattr(solver, attr, obj)
 
         return solver
-
 
     def solve(self, solution, prob, *args, **kwargs):
         """
@@ -187,5 +194,3 @@ class AutoSearch(BaseSearch):
         """
         solver = self.select(prob)
         return solver.solve(solution, prob, *args, **kwargs)
-
-

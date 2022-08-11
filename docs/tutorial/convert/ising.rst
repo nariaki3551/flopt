@@ -19,8 +19,8 @@ For example, the following problem is one of the Ising using `Spin` variables.
   from flopt import Variable, Problem
 
   # Variables
-  a = Variable('a', cat='Spin')
-  b = Variable('b', cat='Spin')
+  a = Variable("a", cat="Spin")
+  b = Variable("b", cat="Spin")
 
   # Problem
   prob = Problem()
@@ -77,8 +77,8 @@ Binary variables are automatically replaced to spin variable.
   from flopt import Variable, Problem
 
   # Variables
-  a = Variable('a', cat='Spin')
-  b = Variable('b', cat='Binary') # Binary variable
+  a = Variable("a", cat="Spin")
+  b = Variable("b", cat="Binary") # Binary variable
 
   # Problem
   prob = Problem()
@@ -120,8 +120,8 @@ Binary variables are automatically replaced to spin variable.
 `b_s` is the spin variable as `b_s = 2 b - 1`.
 
 
-Convert QUBO
-^^^^^^^^^^^^
+Convert to QUBO
+^^^^^^^^^^^^^^^
 
 To convert this problem as QUBO formulation, we use `.toQubo()` function.
 

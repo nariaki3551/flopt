@@ -1,5 +1,14 @@
 # flopt
 
+### version 0.5.3 (Aug, 2022)
+
+**Update**
+
+1. Speed up to build LpStructure and QpStructure
+
+2. Fix bugs for CustomExpression
+
+
 ### version 0.5.2 (Aug, 2022)
 
 **Update**

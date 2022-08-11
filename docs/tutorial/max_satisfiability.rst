@@ -21,8 +21,8 @@ This problem can be formulated using `flopt` as follows,
   from flopt import Variable, Problem, Solver
 
   # literals
-  x0 = Variable('x0', cat='Binary')
-  x1 = Variable('x1', cat='Binary')
+  x0 = Variable("x0", cat="Binary")
+  x1 = Variable("x1", cat="Binary")
 
   # clauses
   c1 = x0 | x1
@@ -34,14 +34,14 @@ This problem can be formulated using `flopt` as follows,
   weights = [1, 2, 3, 4]
   obj = sum(w*c for c, w in zip(clauses, weights))
 
-  prob = Problem('MaxSat', sense='maximize')
+  prob = Problem("MaxSat", sense="maximize")
   prob += obj
 
-  solver = Solver(algo='RandomSearch')
+  solver = Solver(algo="RandomSearch")
   prob.solve(solver, timelimit=2, msg=True)
 
-  print('value x0', x0.value())
-  print('value x1', x1.value())
+  print("value x0", x0.value())
+  print("value x1", x1.value())
   for clause in clauses:
       print(clause)
 
@@ -54,8 +54,8 @@ We declear potitive literals using *Variable*.
 .. code-block:: python
 
   # literals
-  x0 = Variable('x0', cat='Binary')
-  x1 = Variable('x1', cat='Binary')
+  x0 = Variable("x0", cat="Binary")
+  x1 = Variable("x1", cat="Binary")
 
 `~x0` represents a non positive literal of `x0`, e.g. if `x0=0` then `~x0=1`.
 
@@ -91,7 +91,7 @@ We set object function in Problem.
 
 .. code-block:: python
 
-  prob = Problem('MaxSat', sense='maximize')
+  prob = Problem("MaxSat", sense="maximize")
   prob += obj
 
 Solve
@@ -101,7 +101,7 @@ We select algorithm of solver for the problem we create, and solve.
 
 .. code-block:: python
 
-  solver = Solver(algo='RandomSearch')
+  solver = Solver(algo="RandomSearch")
   solver.setParams(timelimit=2)
   prob.solve(solver, msg=True)
 
@@ -113,8 +113,8 @@ The results of the solver are reflected in the problem and variable objects.
 
 .. code-block:: python
 
-  print('value x0', x0.value())
-  print('value x1', x1.value())
+  print("value x0", x0.value())
+  print("value x1", x1.value())
   for clause in clauses:
       print(clause)
 

@@ -1,13 +1,6 @@
-from time import time
-
 from scipy import optimize as scipy_optimize
-import numpy as np
 
 from flopt.solvers.base import BaseSearch
-from flopt.solvers.solver_utils import (
-    during_solver_message,
-    end_solver_message
-)
 from flopt.convert import LpStructure
 from flopt.env import setup_logger
 from flopt.variable import VariableArray
@@ -35,13 +28,13 @@ class ScipyLpSearch(BaseSearch):
     ----------
     method : {"highs", "highs-ds", "highs-ipm", "simplex", "revised simplex", "interior-point"}
     """
+
     def __init__(self):
         super().__init__()
         self.name = "ScipyLpSearch"
         self.n_trial = 1e10
-        self.method = 'interior-point'
-        self.can_solve_problems = ['lp']
-
+        self.method = "interior-point"
+        self.can_solve_problems = ["lp"]
 
     def available(self, prob, verbose=False):
         """
@@ -58,7 +51,9 @@ class ScipyLpSearch(BaseSearch):
         for var in prob.getVariables():
             if not var.type() == VariableType.Continuous:
                 if verbose:
-                    logger.error(f"variable: \n{var}\n must be continouse, but got {var.type()}")
+                    logger.error(
+                        f"variable: \n{var}\n must be continouse, but got {var.type()}"
+                    )
                 return False
         if not prob.obj.isLinear():
             if verbose:
@@ -71,7 +66,6 @@ class ScipyLpSearch(BaseSearch):
                 return False
         return True
 
-
     def search(self):
         status = SolverTerminateState.Normal
         var_names = [var.name for var in self.solution]
@@ -81,8 +75,9 @@ class ScipyLpSearch(BaseSearch):
                 variables = []
                 for var_name, value in zip(var_names, values):
                     variables.append(Const(value, name=var_name))
-                solution = Solution('tmp', variables)
+                solution = Solution("tmp", variables)
                 return expression.value(solution)
+
             return func
 
         # function
@@ -92,13 +87,17 @@ class ScipyLpSearch(BaseSearch):
         lp = LpStructure.fromFlopt(
             self.prob,
             x=VariableArray(self.solution.getVariables()),
-            )
+        )
 
         # bounds
-        bounds = [ (_lb, _ub) for _lb, _ub in zip(lp.lb, lp.ub) ]
+        bounds = [(_lb, _ub) for _lb, _ub in zip(lp.lb, lp.ub)]
 
         # options
-        options = {'maxiter': self.n_trial, 'disp': self.msg, 'time_limit': self.timelimit}
+        options = {
+            "maxiter": self.n_trial,
+            "disp": self.msg,
+            "time_limit": self.timelimit,
+        }
 
         # callback
         def callback(optimize_result):
@@ -111,20 +110,22 @@ class ScipyLpSearch(BaseSearch):
                 self.updateSolution(self.solution, obj_value)
                 self.recordLog()
                 if self.msg and diff > 1e-8:
-                    self.during_solver_message('*')
+                    self.during_solver_message("*")
             for _callback in self.callbacks:
                 _callback([self.solution], self.best_solution, self.best_obj_value)
 
         # search
         res = scipy_optimize.linprog(
             c=lp.c,
-            A_ub=lp.G, b_ub=lp.h,
-            A_eq=lp.A, b_eq=lp.b,
+            A_ub=lp.G,
+            b_ub=lp.h,
+            A_eq=lp.A,
+            b_eq=lp.b,
             bounds=bounds,
             options=options,
             callback=callback,
             method=self.method,
-            )
+        )
         # res.status =  0: Optimal solution found.
         #               1: Iteration or time limit reached.
         #               2: Problem is infeasible.
@@ -145,4 +146,3 @@ class ScipyLpSearch(BaseSearch):
             status = SolverTerminateState.Abnormal
 
         return status
-

@@ -27,10 +27,10 @@ In flopt,
     from flopt import Variable, Problem, Dot
 
     # create variables
-    x = Variable.array('x', len(A), cat='Spin')
+    x = Variable.array("x", len(A), cat="Spin")
 
     # create problem
-    prob = Problem('Number Partitioning')
+    prob = Problem("Number Partitioning")
 
     # set objective function
     prob += Dot(x, A) ** 2
@@ -55,28 +55,10 @@ We search the optimal solution by RandomSearch.
 
     # solve until obtain the solution
     # whose objective value is lower than or equal to 0
-    solver = Solver('RandomSearch')
+    solver = Solver("RandomSearch")
     prob.solve(solver, msg=True, lowerbound=0)
-    >>> Welcome to the flopt Solver
-    >>> Version 0.4
-    >>> Date: August 12, 2021
-    >>>
-    >>> Algorithm: RandomSearch
-    >>> Params: {'timelimit': 1}
-    >>> Number of variables 4 (continuous 0 , int 0, binary 0, permutation 0 (0))
-    >>>
-    >>>
-    >>>      Trial Incumbent    BestBd  Gap[%] Time[s]
-    >>> ----------------------------------------------
-    >>> S        0   196.000         -       -    0.00
-    >>> *        1     4.000         -       -    0.01
-    >>> *        5   0.00000         -       -    0.01
-    >>>
-    >>> Status: timelimit termination
-    >>> Objective Value: 0
-    >>> Time: 1.0000360012054443
 
-    print('x', Value(x))
+    print("x", Value(x))
     >>> x [1 -1 1 -1]
 
 
@@ -127,26 +109,10 @@ To make sure we obtain the optimal solution, we use LP Solver to convert problem
 
     from flopt import Solver
 
-    solver = Solver('PulpSearch')
+    solver = Solver("auto")
     prob.solve(solver, msg=True, timelimit=1)
-    >>> Welcome to the flopt Solver
-    >>> Version 0.4
-    >>> Date: August 12, 2021
-    >>>
-    >>> Algorithm: PulpSearch
-    >>> Params: {'timelimit': 1}
-    >>> Number of variables 10 (continuous 0 , int 0, binary 10, permutation 0 (0))
-    >>>
-    >>>
-    >>>      Trial Incumbent    BestBd  Gap[%] Time[s]
-    >>> ----------------------------------------------
-    >>> S        0   0.00000         -       -    0.00
-    >>>
-    >>> Status: normal termination
-    >>> Objective Value: 0
-    >>> Time: 0.03738689422607422
 
-    print('x', Value(x))
+    print("x", Value(x))
     >>> x [1 -1 1 -1]
 
 

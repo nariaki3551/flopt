@@ -15,7 +15,8 @@ def Sum(x):
     all sum of x
     """
     if isinstance(x, VariableArray):
-        return x.sum().item()
+        # return x.sum().item()
+        return x.sum_with_divide_and_conquer().item()
     elif isinstance(x, np.ndarray):
         return x.sum()
     else:
@@ -74,8 +75,11 @@ def Value(x):
         cast = type(x)
         return cast([var.value() for var in x])
     elif isinstance(x, np.ndarray):
+
         def to_value(x):
             return x.value()
+
         cast = np.frompyfunc(to_value, 1, 1)
         return cast(x)
-
+    else:
+        return x

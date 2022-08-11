@@ -41,7 +41,7 @@ def flopt_to_pulp(prob):
         lp_prob, lp_solution = flopt_to_pulp(prob)
     """
     assert PulpSearch().available(prob)
-    solution = Solution('s', prob.getVariables())
+    solution = Solution("s", prob.getVariables())
     lp_prob, lp_solution = PulpSearch().createLpProblem(solution, prob)
     return lp_prob, lp_solution
 
@@ -88,13 +88,13 @@ def pulp_to_flopt(prob):
         flopt_variables[var.getName()] = flopt_var
 
     # convert Problem -> pulp.LpProblem
-    name = '' if prob.name is None else prob.name
+    name = "" if prob.name is None else prob.name
     flopt_prob = flopt.Problem(name=name)
 
     def flopt_exp(const, var_dicts):
         exp = const
         for var_dict in var_dicts:
-            name, value = var_dict['name'], var_dict['value']
+            name, value = var_dict["name"], var_dict["value"]
             exp += value * flopt_variables[name]
         return exp
 
@@ -103,15 +103,15 @@ def pulp_to_flopt(prob):
     flopt_prob.setObjective(obj)
 
     for const in prob.constraints.values():
-        if 'coefficients' in const.to_dict():
-            exp = flopt_exp(const.constant, const.to_dict()['coefficients'])
+        if "coefficients" in const.to_dict():
+            exp = flopt_exp(const.constant, const.to_dict()["coefficients"])
         else:
             exp = flopt_exp(const.constant, const.to_dict())
         if const.sense == 0:
-            flopt_prob.addConstraint( exp == 0, const.name )
+            flopt_prob.addConstraint(exp == 0, const.name)
         elif const.sense == -1:
-            flopt_prob.addConstraint( exp <= 0, const.name )
+            flopt_prob.addConstraint(exp <= 0, const.name)
         elif const.sense == 1:
-            flopt_prob.addConstraint( exp >= 0, const.name )
+            flopt_prob.addConstraint(exp >= 0, const.name)
 
     return flopt_prob
