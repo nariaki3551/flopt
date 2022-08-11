@@ -19,7 +19,7 @@ def user_func(a, b, c):
     return (0.7 * a + 0.3 * cos(b) ** 2 + 0.1 * sin(c)) * c
 
 
-custom_obj = CustomExpression(func=user_func, variables=[a, b, c])
+custom_obj = CustomExpression(func=user_func, arg=[a, b, c])
 
 
 # 1. Minimize

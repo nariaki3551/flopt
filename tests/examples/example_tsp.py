@@ -25,7 +25,7 @@ def tsp_dist(perm):
     return distance
 
 
-tsp_obj = CustomExpression(func=tsp_dist, variables=[perm])
+tsp_obj = CustomExpression(func=tsp_dist, arg=[perm])
 
 
 # Problem
