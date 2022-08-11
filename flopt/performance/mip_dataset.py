@@ -39,7 +39,8 @@ class MipDataset(BaseDataset):
         pattern = re.compile("=(?P<status>.*)=\s+(?P<name>.*)\s+(?P<value>.*)")
         for line in open(f"{mip_storage}/{sol_file}", "r"):
             line = line.strip()
-            if (m := pattern.match(line)) is not None:
+            m = pattern.match(line)
+            if m is not None:
                 d = m.groupdict()
                 if d["status"] in {"unkn", "inf", "unbd"}:
                     continue
