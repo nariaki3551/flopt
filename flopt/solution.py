@@ -1,4 +1,5 @@
-from math import sqrt
+import math
+import weakref
 
 from flopt.env import setup_logger
 
@@ -62,7 +63,9 @@ class Solution:
             value is VarElement family or Expression or Const
         """
         if self._var_dict is None:
-            self._var_dict = {variable.name: variable for variable in self._variables}
+            self._var_dict = weakref.WeakValueDictionary(
+                {var.name: var for var in self._variables}
+            )
         return self._var_dict
 
     def value(self):
@@ -105,15 +108,15 @@ class Solution:
         """
         Copy the values of a Solution to itself (call by value)
         """
-        for vb, ovb in zip(self._variables, other._variables):
-            vb.setValue(ovb.value())
+        for var, ovar in zip(self._variables, other._variables):
+            var.setValue(ovar.value())
 
     def setRandom(self):
         """
         Set the solution values uniformly random
         """
-        for vb in self._variables:
-            vb.setRandom()
+        for var in self._variables:
+            var.setRandom()
 
     def feasible(self):
         """
@@ -122,14 +125,14 @@ class Solution:
         bool
           Whether the solution is feasible or not
         """
-        return all(vb.feasible() for vb in self._variables)
+        return all(var.feasible() for var in self._variables)
 
     def clip(self):
         """
         Guarantee feasibility of the solution
         """
-        for vb in self._variables:
-            vb.clip()
+        for var in self._variables:
+            var.clip()
 
     def squaredNorm(self):
         """
@@ -138,7 +141,7 @@ class Solution:
         float
           Squared 2-norm of the solution as a vector in Euclid space
         """
-        return sum(vb.value() * vb.value() for vb in self._variables)
+        return sum(var.value() * var.value() for var in self._variables)
 
     def norm(self):
         """
@@ -147,7 +150,7 @@ class Solution:
         float
           2-norm of the solution as a vector in Euclid space
         """
-        return sqrt(self.squaredNorm())
+        return math.sqrt(self.squaredNorm())
 
     def dot(self, other):
         """
@@ -157,8 +160,8 @@ class Solution:
           Inner product between the Solution and another Solution
         """
         inner = 0
-        for vb1, vb2 in zip(self._variables, other._variables):
-            inner += vb1.value() * vb2.value()
+        for var1, var2 in zip(self._variables, other._variables):
+            inner += var1.value() * var2.value()
         return inner
 
     def __pos__(self):
@@ -281,6 +284,4 @@ class Solution:
         return self.__repr__()
 
     def __repr__(self):
-        return (
-            f'Solution({self.name}, [{", ".join([vb.name for vb in self._variables])}])'
-        )
+        return f'Solution({self.name}, [{", ".join([var.name for var in self._variables])}])'

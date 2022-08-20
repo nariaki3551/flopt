@@ -1,3 +1,4 @@
+import weakref
 import itertools
 
 import numpy as np
@@ -18,10 +19,10 @@ logger = setup_logger(__name__)
 
 class SelfReturn:
     def __init__(self, var):
-        self.var = var
+        self.var = weakref.ref(var)
 
     def value(self):
-        return self.var
+        return self.var()
 
 
 # ------------------------------------------------
@@ -135,13 +136,17 @@ class Expression:
 
     def setPolynomial(self):
         if self.elmA.isPolynomial() and self.elmB.isPolynomial():
-            if self.operator == '+':
+            if self.operator == "+":
                 self.polynomial = self.elmA.toPolynomial() + self.elmB.toPolynomial()
-            elif self.operator == '-':
+            elif self.operator == "-":
                 self.polynomial = self.elmA.toPolynomial() - self.elmB.toPolynomial()
-            elif self.operator == '*':
+            elif self.operator == "*":
                 self.polynomial = self.elmA.toPolynomial() * self.elmB.toPolynomial()
-            elif self.operator == '^' and isinstance(self.elmB, Const) and isinstance(self.elmB.value(), int):
+            elif (
+                self.operator == "^"
+                and isinstance(self.elmB, Const)
+                and isinstance(self.elmB.value(), int)
+            ):
                 self.polynomial = self.elmA.toPolynomial() ** self.elmB.value()
             else:
                 self.polynomial = None

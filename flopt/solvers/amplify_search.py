@@ -1,3 +1,5 @@
+import weakref
+
 import numpy as np
 
 from flopt.solvers.base import BaseSearch
@@ -156,7 +158,7 @@ class AmplifySearch(BaseSearch):
 
         result = Solver(client).solve(f)
 
-        var_dict = {var.name: var for var in self.solution}
+        var_dict = weakref.WeakValueDictionary({var.name: var for var in self.solution})
         for amplify_solution in list(result)[::-1]:
             values = decode_solution(s, amplify_solution.values)
             for var, value in zip(x, values):
