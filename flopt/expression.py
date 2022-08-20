@@ -113,7 +113,7 @@ class Expression:
         self.polynomial = None
 
         # set polynomial
-        self.setPolynomial()
+        # self.setPolynomial()
 
         # update parents
         self.parents = list()
@@ -135,13 +135,17 @@ class Expression:
 
     def setPolynomial(self):
         if self.elmA.isPolynomial() and self.elmB.isPolynomial():
-            if self.operator == '+':
+            if self.operator == "+":
                 self.polynomial = self.elmA.toPolynomial() + self.elmB.toPolynomial()
-            elif self.operator == '-':
+            elif self.operator == "-":
                 self.polynomial = self.elmA.toPolynomial() - self.elmB.toPolynomial()
-            elif self.operator == '*':
+            elif self.operator == "*":
                 self.polynomial = self.elmA.toPolynomial() * self.elmB.toPolynomial()
-            elif self.operator == '^' and isinstance(self.elmB, Const) and isinstance(self.elmB.value(), int):
+            elif (
+                self.operator == "^"
+                and isinstance(self.elmB, Const)
+                and isinstance(self.elmB.value(), int)
+            ):
                 self.polynomial = self.elmA.toPolynomial() ** self.elmB.value()
             else:
                 self.polynomial = None
@@ -225,7 +229,10 @@ class Expression:
         float
             constant value
         """
-        if self.isPolynomial():
+        if self.polynomial is not None:
+            return self.polynomial.constant()
+        elif self.isPolynomial():
+            self.setPolynomial()
             return self.polynomial.constant()
         else:
             import sympy
@@ -246,15 +253,34 @@ class Expression:
         )
 
     def isMonomial(self):
-        return self.isPolynomial() and self.polynomial.isMonomial()
+        if self.polynomial is not None:
+            return self.polynomial.isMonomial()
+        elif self.isPolynomial():
+            self.setPolynomial()
+            return self.polynomial.isMonomial()
+        else:
+            return False
 
     def toMonomial(self):
+        if self.polynomial is None:
+            self.setPolynomial()
         return self.polynomial.toMonomial()
 
     def isPolynomial(self):
-        return self.polynomial is not None
+        return (
+            self.elmA.isPolynomial()
+            and self.elmB.isPolynomial()
+            and (
+                self.operator == "+"
+                or self.operator == "-"
+                or self.operator == "*"
+                or self.operator == "^"
+            )
+        )
 
     def toPolynomial(self):
+        if self.polynomial is None:
+            self.setPolynomial()
         return self.polynomial
 
     def isQuadratic(self):
@@ -264,9 +290,19 @@ class Expression:
         bool
             return true if this expression is quadratic else false
         """
-        if not self.isPolynomial():
+        if self.polynomial is not None:
+            return (
+                self.polynomial.isQuadratic()
+                or self.polynomial.simplify().isQuadratic()
+            )
+        elif self.isPolynomial():
+            self.setPolynomial()
+            return (
+                self.polynomial.isQuadratic()
+                or self.polynomial.simplify().isQuadratic()
+            )
+        else:
             return False
-        return self.polynomial.isQuadratic() or self.polynomial.simplify().isQuadratic()
 
     def toQuadratic(self, x=None):
         """
@@ -288,6 +324,8 @@ class Expression:
         ), f"x must be None or VariableArray"
         from flopt.convert import QuadraticStructure
 
+        if self.polynomial is None:
+            self.setPolynomial()
         polynomial = self.polynomial.simplify()
         if x is None:
             x = VariableArray(sorted(self.getVariables(), key=lambda var: var.name))
@@ -338,9 +376,13 @@ class Expression:
         >>> (a*b).isLinear()
         >>> False
         """
-        if not self.isPolynomial():
+        if self.polynomial is not None:
+            return self.polynomial.isLinear() or self.polynomial.simplify().isLinear()
+        elif self.isPolynomial():
+            self.setPolynomial()
+            return self.polynomial.isLinear() or self.polynomial.simplify().isLinear()
+        else:
             return False
-        return self.polynomial.isLinear() or self.polynomial.simplify().isLinear()
 
     def toLinear(self, x=None):
         """
@@ -366,6 +408,8 @@ class Expression:
             x = VariableArray(sorted(self.getVariables(), key=lambda var: var.name))
 
         num_variables = len(x)
+        if self.polynomial is None:
+            self.setPolynomial()
 
         c = np.zeros((num_variables,), dtype=np_float)
         for mono, coeff in self.polynomial:
