@@ -135,13 +135,17 @@ class Expression:
 
     def setPolynomial(self):
         if self.elmA.isPolynomial() and self.elmB.isPolynomial():
-            if self.operator == '+':
+            if self.operator == "+":
                 self.polynomial = self.elmA.toPolynomial() + self.elmB.toPolynomial()
-            elif self.operator == '-':
+            elif self.operator == "-":
                 self.polynomial = self.elmA.toPolynomial() - self.elmB.toPolynomial()
-            elif self.operator == '*':
+            elif self.operator == "*":
                 self.polynomial = self.elmA.toPolynomial() * self.elmB.toPolynomial()
-            elif self.operator == '^' and isinstance(self.elmB, Const) and isinstance(self.elmB.value(), int):
+            elif (
+                self.operator == "^"
+                and isinstance(self.elmB, Const)
+                and isinstance(self.elmB.value(), int)
+            ):
                 self.polynomial = self.elmA.toPolynomial() ** self.elmB.value()
             else:
                 self.polynomial = None
@@ -513,11 +517,9 @@ class Expression:
         """
         yield self
         if isinstance(self.elmA, Expression):
-            for x in self.elmA.traverse():
-                yield x
+            yield from self.elmA.traverse()
         if isinstance(self.elmB, Expression):
-            for x in self.elmB.traverse():
-                yield x
+            yield from self.elmB.traverse()
 
     def traverseAncestors(self):
         """traverse ancestors of self
@@ -529,8 +531,7 @@ class Expression:
         for parent in self.parents:
             yield parent
             if isinstance(parent, Expression):
-                for x in parent.traverseAncestors():
-                    yield x
+                yield from parent.traverseAncestors()
 
     def __add__(self, other):
         if isinstance(other, number_classes):
