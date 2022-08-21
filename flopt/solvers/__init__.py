@@ -1,7 +1,5 @@
-from flopt.solvers.sequential_update_searches import (
-    RandomSearch,
-    TwoOpt,
-)
+from flopt.solvers.random_search import RandomSearch
+from flopt.solvers.two_opt import TwoOpt
 from flopt.solvers.scipy_searches import (
     ScipySearch,
     ScipyLpSearch,
