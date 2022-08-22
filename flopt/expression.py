@@ -29,124 +29,77 @@ class SelfReturn:
 # ------------------------------------------------
 
 
-class Expression:
+class ExpressionElement:
     """Expression Base Class
-
-    This represents the operation of two items
-    elmA (operator) elmB
-
-    Parameters
-    ----------
-    elmA : Variable family or Expression family
-      first element
-    elmB : Variable family or Expression family
-      later element
-    operator : str
-      operator between elmA and elmB
 
     Attributes
     ----------
     name : str
     type : str
-    elmA : Variable family or Expression family
-      first element
-    elmB : Variable family or Expression family
-      later element
-    operator : str
-      operator between elmA and elmB
     var_dict : None or dict
-    expr : None or sympy.sympify
-
-    Examples
-    --------
-
-    >>> a = Variable(name='a', ini_value=1, cat='Integer')
-    >>> b = Variable(name='b', ini_value=2, cat='Continuous')
-    >>> c = Expression(a, b, '+')
-    >>> print(c)
-    >>> Name: a+b
-         Type    : Expression
-         Value   : 3
-    >>> c.value()
-    >>> 3
-    >>> c.getVariables()
-    >>> {VarElement("b", 1, 2, 2), VarElement("a", 0, 1, 1)}
-
-    operator "+", "-", "*", "/", "^" and "%" are supported for Integer, Binary and
-    Continuous Variables.
-
-    >>> a = Variable(name='a', ini_value=1, cat='Integer')  # a.value() is 1
-    >>> b = Variable(name='b', ini_value=2, cat='Continuous')  # b.value() is 2
-    >>> Expression(a, b, '+').value()  # a+b addition
-    >>> 3
-    >>> Expression(a, b, '-').value()  # a-b substraction
-    >>> -1
-    >>> Expression(a, b, '*').value()  # a*b multiplication
-    >>> 2
-    >>> Expression(a, b, '/').value()  # a/b division
-    >>> 0.5
-    >>> Expression(a, b, '^').value()  # a/b division
-    >>> 1
-    >>> Expression(a, b, '%').value()  # a%b modulo
-    >>> 1
-
-    operator "&", "|" are supported for Binary Variable.
-
-    >>> a = Variable(name='a', ini_value=1, cat='Binary')
-    >>> b = Variable(name='b', ini_value=0, cat='Binary')
-    >>> Expression(a, b, '&').value().value()  # a&b bitwise and
-    >>> 0
-    >>> Expression(a, b, '|').value().value()  # a&b bitwise or
-    >>> 1
+    polynomial : None or Polynomial
+    parents : list of ExpressionElement
     """
 
-    def __init__(self, elmA, elmB, operator, name=None):
-        self.elmA = elmA
-        self.elmB = elmB
-        self.operator = operator
+    def __init__(self, name=None):
         if name is not None:
             self.name = name
         else:
             self.setName()
-        self._type = ExpressionType.Normal
         self.var_dict = None
-        self.polynomial = None
 
         # set polynomial
+        self.polynomial = None
         self.setPolynomial()
 
         # update parents
         self.parents = list()
-        if isinstance(self.elmA, Expression):
-            self.elmA.parents.append(self)
-        if isinstance(self.elmB, Expression):
-            self.elmB.parents.append(self)
+        self.linkChildren()
 
     def setName(self):
-        elmA_name = self.elmA.name
-        elmB_name = self.elmB.name
-        if isinstance(self.elmA, Expression):
-            if self.operator in {"*", "/", "^", "%"}:
-                elmA_name = f"({elmA_name})"
-        if isinstance(self.elmB, Expression):
-            if self.operator != "+" or self.elmB.name.startswith("-"):
-                elmB_name = f"({elmB_name})"
-        self.name = f"{elmA_name}{self.operator}{elmB_name}"
+        raise NotImplementedError
+
+    def linkChildren(self):
+        raise NotImplementedError
 
     def setPolynomial(self):
-        if self.elmA.isPolynomial() and self.elmB.isPolynomial():
-            if self.operator == '+':
-                self.polynomial = self.elmA.toPolynomial() + self.elmB.toPolynomial()
-            elif self.operator == '-':
-                self.polynomial = self.elmA.toPolynomial() - self.elmB.toPolynomial()
-            elif self.operator == '*':
-                self.polynomial = self.elmA.toPolynomial() * self.elmB.toPolynomial()
-            elif self.operator == '^' and isinstance(self.elmB, Const) and isinstance(self.elmB.value(), int):
-                self.polynomial = self.elmA.toPolynomial() ** self.elmB.value()
-            else:
-                self.polynomial = None
-        else:
-            self.polynomial = None
+        raise NotImplementedError
+
+    def _value(self):
+        """
+        Returns
+        -------
+        float or int
+            return value of expression
+        """
+        raise NotImplementedError
+
+    def getVariables(self):
+        """
+        Returns
+        -------
+        set
+          return the variable object used in this expressiono
+        """
+        raise NotImplementedError
+
+    def traverse(self):
+        """traverse Expression tree as root is self
+
+        Yield
+        -----
+        Expression or VarElement
+        """
+        raise NotImplementedError
+
+    def isNeg(self):
+        """
+        Returns
+        -------
+        bool
+            return if it is - value form else false
+        """
+        raise NotImplementedError
 
     def setVarDict(self, var_dict):
         self.var_dict = var_dict
@@ -161,89 +114,16 @@ class Expression:
             self.setVarDict(solution.toDict())
             return self._value()
 
-    def _value(self):
-        """
-        Returns
-        -------
-        float or int
-            return value of expression
-        """
-        elmA = self.elmA
-        elmB = self.elmB
-        if self.var_dict is not None:
-            if isinstance(self.elmA, Expression):
-                self.elmA.setVarDict(self.var_dict)
-            elif self.elmA.name in self.var_dict:
-                elmA = self.var_dict[self.elmA.name]
-            if isinstance(self.elmB, Expression):
-                self.elmB.setVarDict(self.var_dict)
-            elif self.elmB.name in self.var_dict:
-                elmB = self.var_dict[self.elmB.name]
-
-        if self.operator == "+":
-            return elmA.value() + elmB.value()
-        elif self.operator == "-":
-            return elmA.value() - elmB.value()
-        elif self.operator == "*":
-            return elmA.value() * elmB.value()
-        elif self.operator == "/":
-            return elmA.value() / elmB.value()
-        elif self.operator == "^":
-            return elmA.value() ** elmB.value()
-        elif self.operator == "%":
-            return elmA.value() % elmB.value()
-        elif self.operator == "&":
-            return elmA.value() and elmB.value()
-        elif self.operator == "|":
-            return elmA.value() or elmB.value()
-
-        self.unsetVarDict()
-
     def type(self):
-        """
-        Returns
-        -------
-        str
-          return type of expressiono
-        """
         return self._type
 
-    def getVariables(self):
-        """
-        Returns
-        -------
-        set
-          return the variable object used in this expressiono
-        """
-        variables = self.elmA.getVariables() | self.elmB.getVariables()
-        return variables
-
     def constant(self):
-        """
-        Returns
-        -------
-        float
-            constant value
-        """
         if self.isPolynomial():
             return self.polynomial.constant()
         else:
             import sympy
 
             return float(sympy.sympify(self.name).expand().as_coefficients_dict()[1])
-
-    def isNeg(self):
-        """
-        Returns
-        -------
-        bool
-            return if it is - value form else false
-        """
-        return (
-            self.operator == "*"
-            and isinstance(self.elmA, Const)
-            and self.elmA.value() == -1
-        )
 
     def isMonomial(self):
         return self.isPolynomial() and self.polynomial.isMonomial()
@@ -504,21 +384,6 @@ class Expression:
         self.setVarDict(var_dict)
         return self.value().expand()
 
-    def traverse(self):
-        """traverse Expression tree as root is self
-
-        Yield
-        -----
-        Expression or VarElement
-        """
-        yield self
-        if isinstance(self.elmA, Expression):
-            for x in self.elmA.traverse():
-                yield x
-        if isinstance(self.elmB, Expression):
-            for x in self.elmB.traverse():
-                yield x
-
     def traverseAncestors(self):
         """traverse ancestors of self
 
@@ -529,15 +394,14 @@ class Expression:
         for parent in self.parents:
             yield parent
             if isinstance(parent, Expression):
-                for x in parent.traverseAncestors():
-                    yield x
+                yield from parent.traverseAncestors()
 
     def __add__(self, other):
         if isinstance(other, number_classes):
             if other == 0:
                 return self
             return Expression(self, Const(other), "+")
-        elif isinstance(other, Expression):
+        elif isinstance(other, ExpressionElement):
             if other.isNeg():
                 # self + (-other) --> self - other
                 return Expression(self, other.elmB, "-")
@@ -551,7 +415,7 @@ class Expression:
             if other == 0:
                 return self
             return Expression(Const(other), self, "+")
-        elif isinstance(other, Expression):
+        elif isinstance(other, ExpressionElement):
             return Expression(other, self, "+")
         else:
             return NotImplemented
@@ -564,7 +428,7 @@ class Expression:
                 return Expression(self, Const(-other), "+")
             else:
                 return Expression(self, Const(other), "-")
-        elif isinstance(other, Expression):
+        elif isinstance(other, ExpressionElement):
             if other.isNeg():
                 # self - (-1*other) -> self + other
                 return Expression(self, other.elmB, "+")
@@ -579,7 +443,7 @@ class Expression:
                 return Expression(Const(-1), self, "*", name=f"-{self.name}")
             else:
                 return Expression(Const(other), self, "-")
-        elif isinstance(other, Expression):
+        elif isinstance(other, ExpressionElement):
             if self.isNeg():
                 # other - (-1*self) -> other + self
                 return Expression(other, self.elmB, "+")
@@ -596,22 +460,8 @@ class Expression:
             elif other == -1:
                 return -self
             return Expression(Const(other), self, "*")
-        elif isinstance(other, Expression):
-            if self.operator == "*" and isinstance(self.elmA, Const):
-                if other.operator == "*" and isinstance(other.elmA, Const):
-                    # (a*self) * (b*other) --> a * b * (self*other)
-                    return (
-                        self.elmA * other.elmA * Expression(self.elmB, other.elmB, "*")
-                    )
-                else:
-                    # (a*self) * other --> a * (self*other)
-                    return self.elmA * Expression(self.elmB, other, "*")
-            else:
-                if other.operator == "*" and isinstance(other.elmA, Const):
-                    # self * (b*other) --> b * (self*other)
-                    return other.elmA * Expression(self, other.elmB, "*")
-                else:
-                    return Expression(self, other, "*")
+        elif isinstance(other, ExpressionElement):
+            return Expression(self, other, "*")
         else:
             return NotImplemented
 
@@ -622,22 +472,8 @@ class Expression:
             elif other == 1:
                 return self
             return Expression(Const(other), self, "*")
-        elif isinstance(other, Expression):
-            if self.operator == "*" and isinstance(self.elmA, Const):
-                if other.operator == "*" and isinstance(other.elmA, Const):
-                    # (b*other) * (a*self) --> a * b * (other*self)
-                    return (
-                        self.elmA * other.elmA * Expression(other.elmB, self.elmB, "*")
-                    )
-                else:
-                    # other * (a*self) --> a * (other*self)
-                    return self.elmA * Expression(other, self.elmB, "*")
-            else:
-                if other.operator == "*" and isinstance(other.elmA, Const):
-                    # (b*other) * self --> b * (other*self)
-                    return other.elmA * Expression(other.elmB, self, "*")
-                else:
-                    return Expression(other, self, "*")
+        elif isinstance(other, ExpressionElement):
+            return Expression(other, self, "*")
         else:
             return NotImplemented
 
@@ -646,7 +482,7 @@ class Expression:
             if other == 1:
                 return self
             return Expression(self, Const(other), "/")
-        elif isinstance(other, Expression):
+        elif isinstance(other, ExpressionElement):
             return Expression(self, other, "/")
         else:
             return NotImplemented
@@ -656,7 +492,7 @@ class Expression:
             if other == 0:
                 return Const(0)
             return Expression(Const(other), self, "/")
-        elif isinstance(other, Expression):
+        elif isinstance(other, ExpressionElement):
             return Expression(other, self, "/")
         else:
             return NotImplemented
@@ -666,7 +502,7 @@ class Expression:
             if other == 1:
                 return self
             return Expression(self, Const(other), "^")
-        elif isinstance(other, Expression):
+        elif isinstance(other, ExpressionElement):
             return Expression(self, other, "^")
         else:
             return NotImplemented
@@ -676,7 +512,7 @@ class Expression:
             if other == 1:
                 return Const(1)
             return Expression(Const(other), self, "^")
-        elif isinstance(other, Expression):
+        elif isinstance(other, ExpressionElement):
             return Expression(other, self, "^")
         else:
             return NotImplemented
@@ -684,7 +520,7 @@ class Expression:
     def __and__(self, other):
         if isinstance(other, number_classes):
             return Expression(self, Const(other), "&")
-        elif isinstance(other, Expression):
+        elif isinstance(other, ExpressionElement):
             return Expression(self, other, "&")
         else:
             return NotImplemented
@@ -695,7 +531,7 @@ class Expression:
     def __or__(self, other):
         if isinstance(other, number_classes):
             return Expression(self, Const(other), "|")
-        elif isinstance(other, Expression):
+        elif isinstance(other, ExpressionElement):
             return Expression(self, other, "|")
         else:
             return NotImplemented
@@ -730,6 +566,253 @@ class Expression:
 
     def __ge__(self, other):
         return Constraint(self, other, "ge")
+
+    def __str__(self):
+        raise NotImplementedError
+
+    def __repr__(self):
+        raise NotImplementedError
+
+
+# ------------------------------------------------
+#   Expression Class
+# ------------------------------------------------
+
+
+class Expression(ExpressionElement):
+    """Expression Base Class
+
+    This represents the operation of two items
+    elmA (operator) elmB
+
+    Parameters
+    ----------
+    elmA : Variable family or Expression family
+      first element
+    elmB : Variable family or Expression family
+      later element
+    operator : str
+      operator between elmA and elmB
+
+    Attributes
+    ----------
+    elmA : Variable family or Expression family
+      first element
+    elmB : Variable family or Expression family
+      later element
+    operator : str
+      operator between elmA and elmB
+
+    Examples
+    --------
+
+    >>> a = Variable(name='a', ini_value=1, cat='Integer')
+    >>> b = Variable(name='b', ini_value=2, cat='Continuous')
+    >>> c = Expression(a, b, '+')
+    >>> print(c)
+    >>> Name: a+b
+         Type    : Expression
+         Value   : 3
+    >>> c.value()
+    >>> 3
+    >>> c.getVariables()
+    >>> {VarElement("b", 1, 2, 2), VarElement("a", 0, 1, 1)}
+
+    operator "+", "-", "*", "/", "^" and "%" are supported for Integer, Binary and
+    Continuous Variables.
+
+    >>> a = Variable(name='a', ini_value=1, cat='Integer')  # a.value() is 1
+    >>> b = Variable(name='b', ini_value=2, cat='Continuous')  # b.value() is 2
+    >>> Expression(a, b, '+').value()  # a+b addition
+    >>> 3
+    >>> Expression(a, b, '-').value()  # a-b substraction
+    >>> -1
+    >>> Expression(a, b, '*').value()  # a*b multiplication
+    >>> 2
+    >>> Expression(a, b, '/').value()  # a/b division
+    >>> 0.5
+    >>> Expression(a, b, '^').value()  # a/b division
+    >>> 1
+    >>> Expression(a, b, '%').value()  # a%b modulo
+    >>> 1
+
+    operator "&", "|" are supported for Binary Variable.
+
+    >>> a = Variable(name='a', ini_value=1, cat='Binary')
+    >>> b = Variable(name='b', ini_value=0, cat='Binary')
+    >>> Expression(a, b, '&').value().value()  # a&b bitwise and
+    >>> 0
+    >>> Expression(a, b, '|').value().value()  # a&b bitwise or
+    >>> 1
+    """
+
+    def __init__(self, elmA, elmB, operator, name=None):
+        self.elmA = elmA
+        self.elmB = elmB
+        self.operator = operator
+        self._type = ExpressionType.Normal
+        super().__init__(name=name)
+
+    def setName(self):
+        elmA_name = self.elmA.name
+        elmB_name = self.elmB.name
+        if isinstance(self.elmA, Expression):
+            if self.operator in {"*", "/", "^", "%"}:
+                elmA_name = f"({elmA_name})"
+        if isinstance(self.elmB, Expression):
+            if self.operator != "+" or self.elmB.name.startswith("-"):
+                elmB_name = f"({elmB_name})"
+        self.name = f"{elmA_name}{self.operator}{elmB_name}"
+
+    def linkChildren(self):
+        if isinstance(self.elmA, Expression):
+            self.elmA.parents.append(self)
+        if isinstance(self.elmB, Expression):
+            self.elmB.parents.append(self)
+
+    def setPolynomial(self):
+        if self.elmA.isPolynomial() and self.elmB.isPolynomial():
+            if self.operator == "+":
+                self.polynomial = self.elmA.toPolynomial() + self.elmB.toPolynomial()
+            elif self.operator == "-":
+                self.polynomial = self.elmA.toPolynomial() - self.elmB.toPolynomial()
+            elif self.operator == "*":
+                self.polynomial = self.elmA.toPolynomial() * self.elmB.toPolynomial()
+            elif (
+                self.operator == "^"
+                and isinstance(self.elmB, Const)
+                and isinstance(self.elmB.value(), int)
+            ):
+                self.polynomial = self.elmA.toPolynomial() ** self.elmB.value()
+            else:
+                self.polynomial = None
+        else:
+            self.polynomial = None
+
+    def _value(self):
+        """
+        Returns
+        -------
+        float or int
+            return value of expression
+        """
+        elmA = self.elmA
+        elmB = self.elmB
+        if self.var_dict is not None:
+            if isinstance(self.elmA, Expression):
+                self.elmA.setVarDict(self.var_dict)
+            elif self.elmA.name in self.var_dict:
+                elmA = self.var_dict[self.elmA.name]
+            if isinstance(self.elmB, Expression):
+                self.elmB.setVarDict(self.var_dict)
+            elif self.elmB.name in self.var_dict:
+                elmB = self.var_dict[self.elmB.name]
+            self.unsetVarDict()
+
+        if self.operator == "+":
+            return elmA.value() + elmB.value()
+        elif self.operator == "-":
+            return elmA.value() - elmB.value()
+        elif self.operator == "*":
+            return elmA.value() * elmB.value()
+        elif self.operator == "/":
+            return elmA.value() / elmB.value()
+        elif self.operator == "^":
+            return elmA.value() ** elmB.value()
+        elif self.operator == "%":
+            return elmA.value() % elmB.value()
+        elif self.operator == "&":
+            return elmA.value() and elmB.value()
+        elif self.operator == "|":
+            return elmA.value() or elmB.value()
+
+    def getVariables(self):
+        """
+        Returns
+        -------
+        set
+          return the variable object used in this expressiono
+        """
+        variables = self.elmA.getVariables() | self.elmB.getVariables()
+        return variables
+
+    def traverse(self):
+        """traverse Expression tree as root is self
+
+        Yield
+        -----
+        Expression or VarElement
+        """
+        yield self
+        if isinstance(self.elmA, Expression):
+            yield from self.elmA.traverse()
+        if isinstance(self.elmB, Expression):
+            yield from self.elmB.traverse()
+
+    def isNeg(self):
+        return (
+            self.operator == "*"
+            and isinstance(self.elmA, Const)
+            and self.elmA.value() == -1
+        )
+
+    def __mul__(self, other):
+        if isinstance(other, number_classes):
+            if other == 0:
+                return Const(0)
+            elif other == 1:
+                return self
+            elif other == -1:
+                return -self
+            return Expression(Const(other), self, "*")
+        elif isinstance(other, Expression):
+            if self.operator == "*" and isinstance(self.elmA, Const):
+                if other.operator == "*" and isinstance(other.elmA, Const):
+                    # (a*self) * (b*other) --> a * b * (self*other)
+                    return (
+                        self.elmA * other.elmA * Expression(self.elmB, other.elmB, "*")
+                    )
+                else:
+                    # (a*self) * other --> a * (self*other)
+                    return self.elmA * Expression(self.elmB, other, "*")
+            else:
+                if other.operator == "*" and isinstance(other.elmA, Const):
+                    # self * (b*other) --> b * (self*other)
+                    return other.elmA * Expression(self, other.elmB, "*")
+                else:
+                    return Expression(self, other, "*")
+        elif isinstance(other, CustomExpression):
+            return Expression(self, other, "*")
+        else:
+            return NotImplemented
+
+    def __rmul__(self, other):
+        if isinstance(other, number_classes):
+            if other == 0:
+                return Const(0)
+            elif other == 1:
+                return self
+            return Expression(Const(other), self, "*")
+        elif isinstance(other, Expression):
+            if self.operator == "*" and isinstance(self.elmA, Const):
+                if other.operator == "*" and isinstance(other.elmA, Const):
+                    # (b*other) * (a*self) --> a * b * (other*self)
+                    return (
+                        self.elmA * other.elmA * Expression(other.elmB, self.elmB, "*")
+                    )
+                else:
+                    # other * (a*self) --> a * (other*self)
+                    return self.elmA * Expression(other, self.elmB, "*")
+            else:
+                if other.operator == "*" and isinstance(other.elmA, Const):
+                    # (b*other) * self --> b * (other*self)
+                    return other.elmA * Expression(other.elmB, self, "*")
+                else:
+                    return Expression(other, self, "*")
+        elif isinstance(other, CustomExpression):
+            return Expression(other, self, "*")
+        else:
+            return NotImplemented
 
     def __str__(self):
         s = f"Name: {self.name}\n"
@@ -771,7 +854,7 @@ def pack_variables(var_or_array, var_dict):
         return var_dict[var.name]
 
 
-class CustomExpression(Expression):
+class CustomExpression(ExpressionElement):
     """Objective function from using user defined function.
 
     Parameters
@@ -832,11 +915,18 @@ class CustomExpression(Expression):
         self.func = func
         self.arg = arg
         self.variables = unpack_variables(arg)
-        self.operator = None
-        self.name = "Custom"
         self._type = ExpressionType.Custom
-        self.var_dict = None
-        self.parents = list()
+        name = name if name is not None else "Custom"
+        super().__init__(name=name)
+
+    def setName(self):
+        return NotImplemented
+
+    def linkChildren(self):
+        return
+
+    def setPolynomial(self):
+        self.polynomial = None
 
     def _value(self):
         if self.var_dict is None:
@@ -851,17 +941,14 @@ class CustomExpression(Expression):
         self.unsetVarDict()
         return value
 
+    def traverse(self):
+        yield self
+
     def getVariables(self):
         return self.variables
 
-    def isPolynomial(self):
+    def isNeg(self):
         return False
-
-    def isLinear(self):
-        return False
-
-    def traverse(self):
-        yield self
 
     def __hash__(self):
         tmp = [hash(self.func)]
@@ -873,7 +960,7 @@ class CustomExpression(Expression):
         return "CustomExpression"
 
 
-class Const(float):
+class Const(float, ExpressionElement):
     """
     It is the expression of constant value.
 
@@ -888,15 +975,30 @@ class Const(float):
     def __init__(self, value, name=None):
         if name is None:
             name = f"{value}"
-        self.name = name
         self._value = value
         self._type = ExpressionType.Const
-        self.parents = list()  # dummy
-        self.operator = None  # dummy
-        self.parents = list()  # dummy
+        super().__init__(name=name)
 
-    def type(self):
-        return self._type
+    def setName(self):
+        return NotImplemented
+
+    def linkChildren(self):
+        return
+
+    def setPolynomial(self):
+        self.polynomial = Polynomial(constant=self._value)
+
+    def _value(self):
+        return NotImplemented
+
+    def getVariables(self):
+        return set()
+
+    def traverse(self):
+        return NotImplemented
+
+    def isNeg(self):
+        return self._value < 0
 
     def value(self, *args, **kwargs):
         return self._value
@@ -904,15 +1006,14 @@ class Const(float):
     def constant(self):
         return self._value
 
-    def getVariables(self):
-        # for getVariables() in Expression calss
-        return set()
-
-    def isPolynomial(self):
+    def isMonomial(self):
         return True
 
     def toMonomial(self):
         return Monomial(coeff=self._value)
+
+    def isPolynomial(self):
+        return True
 
     def toPolynomial(self):
         return Polynomial(constant=self._value)
@@ -932,14 +1033,11 @@ class Const(float):
     def isIsing(self):
         return True
 
-    def clone(self):
+    def simplify(self):
         return Const(self._value)
 
-    def simplify(self):
-        return self.clone()
-
     def expand(self, *args, **kwargs):
-        return self.clone()
+        return Const(self._value)
 
     def __add__(self, other):
         return self._value + other

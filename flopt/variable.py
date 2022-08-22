@@ -5,7 +5,7 @@ import itertools
 import numpy as np
 
 from flopt.polynomial import Monomial, Polynomial
-from flopt.expression import Expression, Const
+from flopt.expression import ExpressionElement, Expression, Const
 from flopt.constraint import Constraint
 from flopt.constants import VariableType, number_classes, array_classes, np_float
 from flopt.env import setup_logger
@@ -372,7 +372,6 @@ class VarElement:
         return {self.name: self}
 
     def getVariables(self):
-        # for getVariables() in Expression class
         return {self}
 
     def isPolynomial(self):
@@ -404,7 +403,7 @@ class VarElement:
             return Expression(self, Const(other), "+")
         elif isinstance(other, VarElement):
             return Expression(self, other, "+")
-        elif isinstance(other, Expression):
+        elif isinstance(other, ExpressionElement):
             if other.isNeg():
                 # self + (-other) --> self - other
                 return Expression(self, other.elmB, "-")
@@ -418,7 +417,7 @@ class VarElement:
             if other == 0:
                 return self
             return Expression(Const(other), self, "+")
-        elif isinstance(other, (VarElement, Expression)):
+        elif isinstance(other, (VarElement, ExpressionElement)):
             return Expression(other, self, "+")
         else:
             return NotImplemented
@@ -433,7 +432,7 @@ class VarElement:
                 return Expression(self, Const(other), "-")
         elif isinstance(other, VarElement):
             return Expression(self, other, "-")
-        elif isinstance(other, Expression):
+        elif isinstance(other, ExpressionElement):
             if other.isNeg():
                 # self - (-1*other) --> self + other
                 return Expression(self, other.elmB, "+")
@@ -448,7 +447,7 @@ class VarElement:
                 return Expression(Const(-1), self, "*", name=f"-{self.name}")
             else:
                 return Expression(Const(other), self, "-")
-        elif isinstance(other, (VarElement, Expression)):
+        elif isinstance(other, (VarElement, ExpressionElement)):
             return Expression(other, self, "-")
         else:
             return NotImplemented
@@ -464,10 +463,13 @@ class VarElement:
             return Expression(Const(other), self, "*")
         elif isinstance(other, VarElement):
             return Expression(self, other, "*")
-        elif isinstance(other, Expression):
-            if other.operator == "*" and isinstance(other.elmA, Const):
-                # self * (a*other) -> a * (self * other)
-                return other.elmA * Expression(self, other.elmB, "*")
+        elif isinstance(other, ExpressionElement):
+            if isinstance(other, Expression):
+                if other.operator == "*" and isinstance(other.elmA, Const):
+                    # self * (a*other) -> a * (self * other)
+                    return other.elmA * Expression(self, other.elmB, "*")
+                else:
+                    return Expression(other, self, "*")
             else:
                 return Expression(other, self, "*")
         else:
@@ -484,10 +486,13 @@ class VarElement:
             return Expression(Const(other), self, "*")
         elif isinstance(other, VarElement):
             return Expression(other, self, "*")
-        elif isinstance(other, Expression):
-            if other.operator == "*" and isinstance(other.elmA, Const):
-                # (a*other) * self -> a * (self * other)
-                return other.elmA * Expression(other.elmB, self, "*")
+        elif isinstance(other, ExpressionElement):
+            if isinstance(other, Expression):
+                if other.operator == "*" and isinstance(other.elmA, Const):
+                    # (a*other) * self -> a * (self * other)
+                    return other.elmA * Expression(other.elmB, self, "*")
+                else:
+                    return Expression(other, self, "*")
             else:
                 return Expression(other, self, "*")
         else:
@@ -500,7 +505,7 @@ class VarElement:
             elif other == -1:
                 return -self
             return Expression(self, Const(other), "/")
-        elif isinstance(other, (VarElement, Expression)):
+        elif isinstance(other, (VarElement, ExpressionElement)):
             return Expression(self, other, "/")
         else:
             return NotImplemented
@@ -510,7 +515,7 @@ class VarElement:
             if other == 0:
                 return Const(0)
             return Expression(Const(other), self, "/")
-        elif isinstance(other, (VarElement, Expression)):
+        elif isinstance(other, (VarElement, ExpressionElement)):
             return Expression(other, self, "/")
         else:
             return NotImplemented
@@ -518,7 +523,7 @@ class VarElement:
     def __mod__(self, other):
         if isinstance(other, int):
             return Expression(self, Const(other), "%")
-        elif isinstance(other, (VarInteger, Expression)):
+        elif isinstance(other, (VarInteger, ExpressionElement)):
             return Expression(self, other, "%")
         else:
             raise NotImplementedError()
@@ -530,7 +535,7 @@ class VarElement:
             elif other == 1:
                 return self
             return Expression(self, Const(other), "^")
-        elif isinstance(other, (VarElement, Expression)):
+        elif isinstance(other, (VarElement, ExpressionElement)):
             return Expression(self, other, "^")
         else:
             return NotImplemented
@@ -540,7 +545,7 @@ class VarElement:
             if other == 1:
                 return Const(1)
             return Expression(Const(other), self, "^")
-        elif isinstance(other, (VarElement, Expression)):
+        elif isinstance(other, (VarElement, ExpressionElement)):
             return Expression(other, self, "^")
         else:
             return NotImplemented
@@ -698,7 +703,7 @@ class VarBinary(VarInteger):
         if id(other) == id(self):
             # a * a = a
             return self
-        elif isinstance(other, Expression) and other.operator == "*":
+        elif isinstance(other, ExpressionElement) and other.operator == "*":
             if id(other.elmA) == id(self) or id(other.elmB) == id(self):
                 # a * (a * b) = a * b
                 # a * (b * a) = b * a
@@ -803,7 +808,7 @@ class VarSpin(VarElement):
     def __mul__(self, other):
         if id(other) == id(self):
             return Const(1)
-        elif isinstance(other, Expression) and other.operator == "*":
+        elif isinstance(other, ExpressionElement) and other.operator == "*":
             if id(other.elmA) == id(self):
                 # a * (a * b) = b
                 if isinstance(other.elmB, number_classes):
@@ -821,7 +826,7 @@ class VarSpin(VarElement):
     def __rmul__(self, other):
         if id(other) == id(self):
             return Const(1)
-        elif isinstance(other, Expression) and other.operator == "*":
+        elif isinstance(other, ExpressionElement) and other.operator == "*":
             if id(other.elmA) == id(self):
                 # (a * b) * a = b
                 if isinstance(other.elmB, number_classes):
