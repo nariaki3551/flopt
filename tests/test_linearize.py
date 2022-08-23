@@ -2,6 +2,7 @@ import pytest
 
 import numpy as np
 
+import flopt
 from flopt import Variable, Problem, CustomExpression
 from flopt.convert import linearize, binarize
 
@@ -115,6 +116,36 @@ def test_convert_binarize4():
 
     prob = Problem()
     prob += x[2] * x[0] + x[1]
+    print("[ original ]\n", prob.show())
+
+    binarize(prob)
+    print("[ binarized ]\n", prob.show())
+
+    linearize(prob)
+    print(prob.show())
+
+
+def test_convert_binarize5():
+    x = Variable.array("x", 2, lowBound=1, upBound=2, cat="Integer")
+    y = x * x
+
+    prob = Problem()
+    prob += flopt.Sum(y)
+    print("[ original ]\n", prob.show())
+
+    binarize(prob)
+    print("[ binarized ]\n", prob.show())
+
+    linearize(prob)
+    print(prob.show())
+    print("[ linearized ]\n", prob.show())
+
+
+def test_convert_binarize6():
+    x = Variable.array("x", 2, lowBound=1, upBound=2, cat="Integer")
+
+    prob = Problem()
+    prob += flopt.Prod(x)
     print("[ original ]\n", prob.show())
 
     binarize(prob)

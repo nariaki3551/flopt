@@ -1,5 +1,4 @@
-from math import exp, sqrt, e, cos, pi
-from flopt import Variable
+import flopt
 
 
 def create_objective(n):
@@ -9,16 +8,13 @@ def create_objective(n):
         def obj_i(i):
             return 100 * (x[i + 1] - x[i] ** 2) ** 2 + (x[i] - 1) ** 2
 
-        return sum(obj_i(i) for i in range(n - 1))
+        return flopt.Sum(obj_i(i) for i in range(n - 1))
 
     return obj
 
 
 def create_variables(n):
-    variables = [
-        Variable(name=f"x{i}", lowBound=-5, upBound=5, cat="Continuous")
-        for i in range(n)
-    ]
+    variables = flopt.Variable.array("x", n, lowBound=-5, upBound=5, cat="Continuous")
     return variables
 
 

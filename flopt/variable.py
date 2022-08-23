@@ -27,18 +27,22 @@ class VariableArray(np.ndarray):
             shape = array.shape
         obj = super().__new__(cls, shape, dtype=VarElement)
         obj.mono_to_index = dict()
+        obj.set_mono = False
         return obj
 
-    def __init__(self, array, *args, **kwargs):
-        array = np.array(array)
+    def __init__(self, array, set_mono=True, *args, **kwargs):
+        array = np.array(array, dtype=object)
         for i in itertools.product(*map(range, self.shape)):
             self[i] = array[i]
-            self.mono_to_index[array[i].toMonomial()] = i
+            if set_mono:
+                self.mono_to_index[array[i].toMonomial()] = i
+        self.set_mono = set_mono
 
     def __array_finalize__(self, obj):
         self.mono_to_index = getattr(obj, "mono_to_index", None)
 
     def index(self, mono):
+        assert self.set_mono
         if not isinstance(mono, Monomial):
             mono = mono.toMonomial()
         i = self.mono_to_index[mono]
@@ -46,14 +50,12 @@ class VariableArray(np.ndarray):
             return i[0]
         return i
 
-    def sum_with_divide_and_conquer(self):
-        if self.size < 20 or self.shape[0] == 1:
-            return self.sum()
-        else:
-            mid = self.shape[0] // 2
-            return (self[:mid]).sum_with_divide_and_conquer() + (
-                self[mid:]
-            ).sum_with_divide_and_conquer()
+    @classmethod
+    def init_ufunc(cls, shape, ufunc, set_mono=True):
+        x = np.ndarray(shape, dtype=object)
+        for i in itertools.product(*map(range, shape)):
+            x[i] = ufunc(i)
+        return cls(x, set_mono=set_mono)
 
 
 # -------------------------------------------------------

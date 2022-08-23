@@ -659,6 +659,9 @@ class Expression(ExpressionElement):
         if isinstance(self.elmA, Expression):
             if self.operator in {"*", "/", "^", "%"}:
                 elmA_name = f"({elmA_name})"
+        elif self.elmA.type() in {ExpressionType.Sum, ExpressionType.Prod}:
+            if self.operator in {"*", "/", "^", "%"}:
+                elmA_name = f"({elmA_name})"
         if isinstance(self.elmB, Expression):
             if self.operator != "+" or self.elmB.name.startswith("-"):
                 elmB_name = f"({elmB_name})"
@@ -846,9 +849,18 @@ def pack_variables(var_or_array, var_dict):
     if isinstance(var_or_array, array_classes):
         cls = var_or_array.__class__
         array = var_or_array
-        return cls(
-            itertools.starmap(pack_variables, [(var, var_dict) for var in array])
-        )
+        import flopt.variable
+
+        if isinstance(array, flopt.variable.VariableArray):
+            return flopt.variable.VariableArray.init_ufunc(
+                var_or_array.shape,
+                lambda i: var_dict[array[i].name],
+                set_mono=False,
+            )
+        else:
+            return cls(
+                itertools.starmap(pack_variables, [(var, var_dict) for var in array])
+            )
     else:
         var = var_or_array
         return var_dict[var.name]
@@ -1040,36 +1052,56 @@ class Const(float, ExpressionElement):
         return Const(self._value)
 
     def __add__(self, other):
+        if isinstance(other, number_classes):
+            return Const(self._value + other)
         return self._value + other
 
     def __radd__(self, other):
+        if isinstance(other, number_classes):
+            return Const(other + self._value)
         return other + self._value
 
     def __sub__(self, other):
+        if isinstance(other, number_classes):
+            return Const(self._value - other)
         return self._value - other
 
     def __rsub__(self, other):
+        if isinstance(other, number_classes):
+            return Const(other - self._value)
         if self._value < 0:
             return other + (-self)
         else:
             return other - self._value
 
     def __mul__(self, other):
+        if isinstance(other, number_classes):
+            return Const(self._value * other)
         return self._value * other
 
     def __rmul__(self, other):
+        if isinstance(other, number_classes):
+            return Const(other * self._value)
         return other * self._value
 
     def __truediv__(self, other):
+        if isinstance(other, number_classes):
+            return Const(self._value / other)
         return self._value / other
 
     def __rtruediv__(self, other):
+        if isinstance(other, number_classes):
+            return Const(other / self._value)
         return other / self._value
 
     def __pow__(self, other):
+        if isinstance(other, number_classes):
+            return Const(self._value**other)
         return self._value**other
 
     def __rpow__(self, other):
+        if isinstance(other, number_classes):
+            return Const(other**self._value)
         return other**self._value
 
     def __neg__(self):
@@ -1077,6 +1109,9 @@ class Const(float, ExpressionElement):
 
     def __hash__(self):
         return hash((self._value, self._type))
+
+    def __str__(self):
+        return str(self._value)
 
     def __repr__(self):
         s = f"Const({self._value})"
