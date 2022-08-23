@@ -4,6 +4,7 @@ import itertools
 
 import numpy as np
 
+import flopt
 from flopt.polynomial import Monomial, Polynomial
 from flopt.expression import ExpressionElement, Expression, Const
 from flopt.constraint import Constraint
@@ -623,7 +624,7 @@ class VarInteger(VarElement):
         if self.binarized is None:
             l, u = int(self.getLb()), int(self.getUb())
             self.binaries = Variable.array(f"bin_{self.name}", u - l + 1, cat="Binary")
-            self.binarized = sum(
+            self.binarized = flopt.Sum(
                 Const(i) * var_bin for i, var_bin in zip(range(l, u + 1), self.binaries)
             )
             if isinstance(self.binarized, VarElement):
