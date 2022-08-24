@@ -19,10 +19,10 @@ logger = setup_logger(__name__)
 
 class SelfReturn:
     def __init__(self, var):
-        self.var = weakref.ref(var)
+        self.var = var
 
     def value(self):
-        return self.var()
+        return self.var
 
 
 # ------------------------------------------------
