@@ -77,8 +77,6 @@ class HyperoptTPESearch(BaseSearch):
     def search(self):
         import hyperopt
 
-        status = SolverTerminateState.Normal
-
         # make the search space
         space = dict()
         for var in self.solution:
@@ -104,9 +102,9 @@ class HyperoptTPESearch(BaseSearch):
                 show_progressbar=self.show_progressbar,
             )
         except TimeoutError:
-            status = SolverTerminateState.Timelimit
+            return SolverTerminateState.Timelimit
 
-        return status
+        return SolverTerminateState.Normal
 
     def objective(self, var_value_dict):
         # check timelimit
@@ -119,12 +117,8 @@ class HyperoptTPESearch(BaseSearch):
             self.var_dict[name].setValue(value)
         obj_value = self.getObjValue(self.solution)
 
-        # check whether update or not
-        if obj_value < self.best_obj_value:
-            self.updateSolution(self.solution, obj_value)
-            self.recordLog()
-            if self.msg:
-                self.during_solver_message("*")
+        # if solution is better thatn incumbent, then update best solution
+        self.registerSolution(self.solution, obj_value)
 
         # callbacks
         for callback in self.callbacks:
