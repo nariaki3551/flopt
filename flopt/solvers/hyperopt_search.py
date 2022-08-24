@@ -1,4 +1,5 @@
-from time import time
+import time
+import weakref
 
 from flopt.env import setup_logger
 from flopt.solvers.base import BaseSearch
@@ -89,7 +90,9 @@ class HyperoptTPESearch(BaseSearch):
             space[var.name] = var_space
 
         # for objective
-        self.var_dict = {var.name: var for var in self.solution}
+        self.var_dict = weakref.WeakValueDictionary(
+            {var.name: var for var in self.solution}
+        )
 
         # search
         try:
@@ -107,7 +110,7 @@ class HyperoptTPESearch(BaseSearch):
 
     def objective(self, var_value_dict):
         # check timelimit
-        if time() > self.start_time + self.timelimit:
+        if time.time() > self.start_time + self.timelimit:
             raise TimeoutError
 
         # set value into self.solution
