@@ -7,7 +7,13 @@ import numpy as np
 from flopt.polynomial import Monomial, Polynomial
 from flopt.expression import Expression, Const
 from flopt.constraint import Constraint
-from flopt.constants import VariableType, number_classes, array_classes, np_float
+from flopt.constants import (
+    VariableType,
+    ConstraintType,
+    number_classes,
+    array_classes,
+    np_float,
+)
 from flopt.env import setup_logger
 
 
@@ -445,7 +451,7 @@ class VarElement:
         if isinstance(other, number_classes):
             if other == 0:
                 # 0 - self --> -1 * self
-                return Expression(Const(-1), self, "*", name=f"-{self.name}")
+                return -self
             else:
                 return Expression(Const(other), self, "-")
         elif isinstance(other, (VarElement, Expression)):
@@ -565,13 +571,20 @@ class VarElement:
         return hash(self.name)
 
     def __eq__(self, other):
-        return Constraint(Expression(self, Const(0), "+", name=self.name), other, "eq")
+        # self == other --> self - other == 0
+        return Constraint(
+            Expression(self, Const(0), "+", name=self.name) - other, ConstraintType.Eq
+        )
 
     def __le__(self, other):
-        return Constraint(Expression(self, Const(0), "+", name=self.name), other, "le")
+        # self <= other --> self - other <= 0
+        return Constraint(
+            Expression(self, Const(0), "+", name=self.name) - other, ConstraintType.Le
+        )
 
     def __ge__(self, other):
-        return Constraint(Expression(self, Const(0), "+", name=self.name), other, "ge")
+        # self >= other --> other - self <= 0
+        return Constraint(other - self, ConstraintType.Le)
 
     def __str__(self):
         s = f"Name: {self.name}\n"

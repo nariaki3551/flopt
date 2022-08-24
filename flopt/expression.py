@@ -7,6 +7,7 @@ from flopt.constraint import Constraint
 from flopt.constants import (
     VariableType,
     ExpressionType,
+    ConstraintType,
     number_classes,
     array_classes,
     np_float,
@@ -135,13 +136,17 @@ class Expression:
 
     def setPolynomial(self):
         if self.elmA.isPolynomial() and self.elmB.isPolynomial():
-            if self.operator == '+':
+            if self.operator == "+":
                 self.polynomial = self.elmA.toPolynomial() + self.elmB.toPolynomial()
-            elif self.operator == '-':
+            elif self.operator == "-":
                 self.polynomial = self.elmA.toPolynomial() - self.elmB.toPolynomial()
-            elif self.operator == '*':
+            elif self.operator == "*":
                 self.polynomial = self.elmA.toPolynomial() * self.elmB.toPolynomial()
-            elif self.operator == '^' and isinstance(self.elmB, Const) and isinstance(self.elmB.value(), int):
+            elif (
+                self.operator == "^"
+                and isinstance(self.elmB, Const)
+                and isinstance(self.elmB.value(), int)
+            ):
                 self.polynomial = self.elmA.toPolynomial() ** self.elmB.value()
             else:
                 self.polynomial = None
@@ -576,7 +581,7 @@ class Expression:
         if isinstance(other, number_classes):
             if other == 0:
                 # 0 - self --> -1 * self
-                return Expression(Const(-1), self, "*", name=f"-{self.name}")
+                return -self
             else:
                 return Expression(Const(other), self, "-")
         elif isinstance(other, Expression):
@@ -720,16 +725,41 @@ class Expression:
         return self
 
     def __hash__(self):
-        return hash((hash(self.elmA), hash(self.elmB), hash(self.operator)))
+        if (
+            self.operator == "+"
+            and isinstance(self.elmB, number_classes)
+            and self.elmB == 0
+        ):
+            # a + 0
+            return hash(self.elmA)
+        elif (
+            self.operator == "-"
+            and isinstance(self.elmB, number_classes)
+            and self.elmB == 0
+        ):
+            # a - 0
+            return hash(self.elmA)
+        elif (
+            self.operator == "*"
+            and isinstance(self.elmA, number_classes)
+            and self.elmA == 1
+        ):
+            # 1 * b
+            return hash(self.elmB)
+        else:
+            return hash((hash(self.elmA), hash(self.elmB), hash(self.operator)))
 
     def __eq__(self, other):
-        return Constraint(self, other, "eq")
+        # self == other --> self - other == 0
+        return Constraint(self - other, ConstraintType.Eq)
 
     def __le__(self, other):
-        return Constraint(self, other, "le")
+        # self <= other --> self - other <= 0
+        return Constraint(self - other, ConstraintType.Le)
 
     def __ge__(self, other):
-        return Constraint(self, other, "ge")
+        # self >= other --> other - self <= 0
+        return Constraint(other - self, ConstraintType.Le)
 
     def __str__(self):
         s = f"Name: {self.name}\n"
