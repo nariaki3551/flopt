@@ -4,7 +4,7 @@ import numpy as np
 
 from flopt.variable import VarElement, VariableArray
 from flopt.expression import Expression, Const
-import flopt.operation
+import flopt.expression
 
 
 def Sum(x):
@@ -18,11 +18,11 @@ def Sum(x):
     all sum of x
     """
     if isinstance(x, types.GeneratorType):
-        return flopt.operation.Sum(list(x))
+        return flopt.expression.Sum(list(x))
     elif isinstance(x, np.ndarray):
-        return flopt.operation.Sum(x.ravel())
+        return flopt.expression.Sum(x.ravel())
     else:
-        return flopt.operation.Sum(x)
+        return flopt.expression.Sum(x)
 
 
 def Prod(x):
@@ -36,11 +36,11 @@ def Prod(x):
     all product of x
     """
     if isinstance(x, types.GeneratorType):
-        return flopt.operation.Prod(list(x))
+        return flopt.expression.Prod(list(x))
     elif isinstance(x, np.ndarray):
-        return flopt.operation.Prod(x.ravel())
+        return flopt.expression.Prod(x.ravel())
     else:
-        return flopt.operation.Prod(x)
+        return flopt.expression.Prod(x)
 
 
 def Dot(x, y):

@@ -3,8 +3,7 @@ import pulp
 from flopt.solvers.base import BaseSearch
 from flopt.expression import Const
 from flopt.solution import Solution
-from flopt.constants import VariableType, SolverTerminateState
-
+from flopt.constants import VariableType, ConstraintType, SolverTerminateState
 
 from flopt.env import setup_logger
 
@@ -148,11 +147,9 @@ class PulpSearch(BaseSearch):
 
         for const in prob.constraints:
             const_exp = const.expression
-            if const.type == "eq":
+            if const.type == ConstraintType.Eq:
                 lp_prob.addConstraint(const_exp.value(lp_solution) == 0, const.name)
-            elif const.type == "le":
+            else:  # const.type == ConstraintType.Le
                 lp_prob.addConstraint(const_exp.value(lp_solution) <= 0, const.name)
-            elif const.type == "ge":
-                lp_prob.addConstraint(const_exp.value(lp_solution) >= 0, const.name)
 
         return lp_prob, lp_solution

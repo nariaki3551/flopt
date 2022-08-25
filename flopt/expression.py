@@ -1,4 +1,6 @@
 import weakref
+import functools
+import operator
 import itertools
 
 import numpy as np
@@ -8,6 +10,7 @@ from flopt.constraint import Constraint
 from flopt.constants import (
     VariableType,
     ExpressionType,
+    ConstraintType,
     number_classes,
     array_classes,
     np_float,
@@ -482,7 +485,7 @@ class ExpressionElement:
         if isinstance(other, number_classes):
             if other == 0:
                 # 0 - self --> -1 * self
-                return Expression(Const(-1), self, "*", name=f"-{self.name}")
+                return -self
             else:
                 return Expression(Const(other), self, "-")
         elif isinstance(other, ExpressionElement):
@@ -598,16 +601,41 @@ class ExpressionElement:
         return self
 
     def __hash__(self):
-        return hash((hash(self.elmA), hash(self.elmB), hash(self.operator)))
+        if (
+            self.operator == "+"
+            and isinstance(self.elmB, number_classes)
+            and self.elmB == 0
+        ):
+            # a + 0
+            return hash(self.elmA)
+        elif (
+            self.operator == "-"
+            and isinstance(self.elmB, number_classes)
+            and self.elmB == 0
+        ):
+            # a - 0
+            return hash(self.elmA)
+        elif (
+            self.operator == "*"
+            and isinstance(self.elmA, number_classes)
+            and self.elmA == 1
+        ):
+            # 1 * b
+            return hash(self.elmB)
+        else:
+            return hash((hash(self.elmA), hash(self.elmB), hash(self.operator)))
 
     def __eq__(self, other):
-        return Constraint(self, other, "eq")
+        # self == other --> self - other == 0
+        return Constraint(self - other, ConstraintType.Eq)
 
     def __le__(self, other):
-        return Constraint(self, other, "le")
+        # self <= other --> self - other <= 0
+        return Constraint(self - other, ConstraintType.Le)
 
     def __ge__(self, other):
-        return Constraint(self, other, "ge")
+        # self >= other --> other - self <= 0
+        return Constraint(other - self, ConstraintType.Le)
 
     def __str__(self):
         raise NotImplementedError
@@ -699,10 +727,7 @@ class Expression(ExpressionElement):
     def setName(self):
         elmA_name = self.elmA.name
         elmB_name = self.elmB.name
-        if isinstance(self.elmA, Expression):
-            if self.operator in {"*", "/", "^", "%"}:
-                elmA_name = f"({elmA_name})"
-        elif self.elmA.type() in {ExpressionType.Sum, ExpressionType.Prod}:
+        if isinstance(self.elmA, (Expression, Operation)):
             if self.operator in {"*", "/", "^", "%"}:
                 elmA_name = f"({elmA_name})"
         if isinstance(self.elmB, Expression):
@@ -1172,4 +1197,191 @@ class Const(float, ExpressionElement):
 
     def __repr__(self):
         s = f"Const({self._value})"
+        return s
+
+
+# ------------------------------------------------
+#   Utilities
+# ------------------------------------------------
+to_value_ufunc = np.frompyfunc(lambda x: x.value(), 1, 1)
+
+
+# ------------------------------------------------
+#   Operation Class
+# ------------------------------------------------
+class Operation(ExpressionElement):
+    def __init__(self, var_or_exps, name=None):
+        assert len(var_or_exps) > 0
+        self.elms = np.array(var_or_exps, dtype=object)
+        super().__init__(name=name)
+
+    def linkChildren(self):
+        for elm in self.elms:
+            if isinstance(elm, ExpressionElement):
+                elm.parents.append(self)
+
+    def getVariables(self):
+        variables = set()
+        for elm in self.elms:
+            variables |= elm.getVariables()
+        return variables
+
+    def traverse(self):
+        """traverse Expression tree as root is self
+
+        Yield
+        -----
+        Expression or VarElement
+        """
+        yield self
+        for elm in self.elms:
+            if isinstance(elm, ExpressionElement):
+                yield from elm.traverse()
+
+    def isNeg(self):
+        return False
+
+
+class Sum(Operation):
+    """
+    Parameters
+    ----------
+    var_of_exps : list of VarELement or ExpressionElement
+    """
+
+    _type = ExpressionType.Sum
+
+    def setName(self):
+        self.name = ""
+        const = 0
+
+        elm = self.elms[0]
+        if isinstance(elm, number_classes):
+            const += elm
+        elif isinstance(elm, ExpressionElement) and elm.name.startswith("-"):
+            self.name += f"({elm.name})"
+        else:
+            self.name += f"{elm.name}"
+
+        for elm in self.elms[1:]:
+            if isinstance(elm, number_classes):
+                const += elm
+            elif isinstance(elm, ExpressionElement) and elm.name.startswith("-"):
+                self.name += f"+({elm.name})"
+            else:
+                self.name += f"+{elm.name}"
+
+        if const > 0:
+            self.name += f"+{const}"
+        elif const < 0:
+            self.name += f"-{-const}"
+
+    def isPolynomial(self):
+        return all(elm.isPolynomial() for elm in self.elms)
+
+    def setPolynomial(self):
+        self.polynomial = sum(elm.toPolynomial() for elm in self.elms)
+
+    def _value(self):
+        """
+        Returns
+        -------
+        float or int
+            return value of expression
+        """
+
+        if self.var_dict is not None:
+            ret = 0
+            for elm in self.elms:
+                if isinstance(elm, ExpressionElement):
+                    elm.setVarDict(self.var_dict)
+                    ret += elm.value()
+                elif elm.name in self.var_dict:
+                    ret += self.var_dict[elm.name].value()
+                else:
+                    ret += elm.value()
+            return ret
+        else:
+            return to_value_ufunc(self.elms).sum()
+
+    def __str__(self):
+        s = f"Name: {self.name}\n"
+        s += f"  Type    : {self._type}\n"
+        s += f"  Value   : {self.value()}\n"
+        return s
+
+    def __repr__(self):
+        s = f"Sum({self.elms})"
+        return s
+
+
+class Prod(Operation):
+    """
+    Parameters
+    ----------
+    var_of_exps : list of VarELement or ExpressionElement
+    """
+
+    _type = ExpressionType.Prod
+
+    def setName(self):
+        self.name = ""
+        const = 0
+
+        elm = self.elms[0]
+        if isinstance(elm, number_classes):
+            const += elm
+        elif isinstance(elm, ExpressionElement) and elm.name.startswith("-"):
+            self.name += f"({elm.name})"
+        else:
+            self.name += f"{elm.name}"
+
+        for elm in self.elms[1:]:
+            if isinstance(elm, number_classes):
+                const += elm
+            elif isinstance(elm, ExpressionElement) and elm.name.startswith("-"):
+                self.name += f"*({elm.name})"
+            else:
+                self.name += f"*{elm.name}"
+
+        if const != 0:
+            self.name = f"{const}*" + self.name
+
+    def isPolynomial(self):
+        return all(elm.isPolynomial() for elm in self.elms)
+
+    def setPolynomial(self):
+        self.polynomial = functools.reduce(
+            operator.mul, (elm.toPolynomial() for elm in self.elms)
+        )
+
+    def _value(self):
+        """
+        Returns
+        -------
+        float or int
+            return value of expression
+        """
+        if self.var_dict is not None:
+            ret = 1
+            for elm in self.elms:
+                if isinstance(elm, ExpressionElement):
+                    elm.setVarDict(self.var_dict)
+                    ret *= elm.value()
+                elif elm.name in self.var_dict:
+                    ret *= self.var_dict[elm.name].value()
+                else:
+                    ret *= elm.value()
+            return ret
+        else:
+            return to_value_ufunc(self.elms).prod()
+
+    def __str__(self):
+        s = f"Name: {self.name}\n"
+        s += f"  Type    : {self._type}\n"
+        s += f"  Value   : {self.value()}\n"
+        return s
+
+    def __repr__(self):
+        s = f"Prod({self.elms})"
         return s

@@ -3,7 +3,7 @@ import weakref
 import numpy as np
 
 from flopt.solvers.base import BaseSearch
-from flopt.constants import VariableType, SolverTerminateState
+from flopt.constants import VariableType, ConstraintType, SolverTerminateState
 from flopt.env import setup_logger
 
 
@@ -144,12 +144,10 @@ class AmplifySearch(BaseSearch):
         for const in self.prob.constraints:
             ising = const.expression.toIsing()
             g = s.T.dot(ising.J).dot(s) - ising.h.T.dot(s) + ising.C
-            if const.type == "le":
-                f += less_equal(g, 0)
-            elif const.type == "ge":
-                f += greater_equal(g, 0)
-            else:
+            if const.type == ConstraintType.Eq:
                 f += equal_to(g, 0)
+            else:  # ConstraintType.Le
+                f += less_equal(g, 0)
 
         # solve
         client = FixstarsClient()  # Fixstars Optigan

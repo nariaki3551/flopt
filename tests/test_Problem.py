@@ -1,38 +1,34 @@
 import pytest
-
-from flopt import Variable, Problem, CustomExpression, Solver
 import numpy as np
 
-
-@pytest.fixture(scope="function")
-def a():
-    return Variable("a", ini_value=0, cat="Binary")
+from flopt import Variable, Problem, CustomExpression, Solver
 
 
-@pytest.fixture(scope="function")
-def b():
-    return Variable("b", ini_value=2, cat="Continuous")
+def test_Problem_obj():
+    a = Variable("a", ini_value=1, cat="Integer")
+    b = Variable("b", ini_value=1, cat="Continuous")
 
-
-def test_Problem_obj(a, b):
     prob = Problem()
     prob.setObjective(a + b)
     assert prob.getObjectiveValue() == 2
 
 
-def test_Problem_obj2(a, b):
+def test_Problem_obj2():
+    a = Variable("a", ini_value=1, cat="Integer")
+    b = Variable("b", ini_value=1, cat="Continuous")
+
     prob = Problem()
     prob += a + 2 * b
-    assert prob.getObjectiveValue() == 4
+    assert prob.getObjectiveValue() == 3
 
 
-def test_Problem_obj3(a, b):
+def test_Problem_obj3():
     prob = Problem()
     prob += 1
     assert prob.getObjectiveValue() == 1
 
 
-def test_Problem_getSolution(a, b):
+def test_Problem_getSolution():
     # Variables
     a = Variable("a", lowBound=0, upBound=1, cat="Integer")
     b = Variable("b", lowBound=1, upBound=2, cat="Continuous")
@@ -66,3 +62,21 @@ def test_Problem_getSolution(a, b):
             f"{k:2d}-th obj = {prob.obj.value():.4f}",
             {name: f"{var.value():.4f}" for name, var in var_dict.items()},
         )
+
+
+def test_Problem_duplicate_constraint():
+    # Variables
+    a = Variable("a", lowBound=0, upBound=1, cat="Integer")
+    b = Variable("b", lowBound=1, upBound=2, cat="Continuous")
+    c = Variable("c", lowBound=1, upBound=3, cat="Continuous")
+
+    # Problem
+    prob = Problem(name="Test")
+    prob += a + b >= 0
+    prob += a + b >= 0
+    prob += a >= -b
+    prob += 0 >= -a - b
+
+    prob.removeDuplicatedConstraints()
+
+    assert len(prob.constraints) == 1

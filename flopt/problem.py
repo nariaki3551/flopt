@@ -114,6 +114,11 @@ class Problem:
         self.constraints.append(const)
         self.variables |= const.getVariables()
 
+    def removeDuplicatedConstraints(self):
+        for const in self.constraints:
+            const.expression = const.expression.expand()
+        self.constraints = list(set(self.constraints))
+
     def getObjectiveValue(self):
         """
         Returns
