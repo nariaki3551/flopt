@@ -113,9 +113,6 @@ class Expression:
         self.var_dict = None
         self.polynomial = None
 
-        # set polynomial
-        # self.setPolynomial()
-
         # update parents
         self.parents = list()
         if isinstance(self.elmA, Expression):
