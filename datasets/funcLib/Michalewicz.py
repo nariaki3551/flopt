@@ -1,5 +1,6 @@
-from math import exp, sqrt, e, sin, cos, pi, sin
-from flopt import Variable
+from math import sin, pi, sin
+
+import flopt
 
 
 def create_objective(*args, **kwargs):
@@ -12,10 +13,7 @@ def create_objective(*args, **kwargs):
 
 
 def create_variables(n):
-    variables = [
-        Variable(name=f"x{i}", lowBound=0, upBound=pi, cat="Continuous")
-        for i in range(2)
-    ]
+    variables = flopt.Variable.array("x", 2, lowBound=0, upBound=pi, cat="Continuous")
     return variables
 
 

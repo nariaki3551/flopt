@@ -4,8 +4,9 @@ import itertools
 
 import numpy as np
 
+import flopt
 from flopt.polynomial import Monomial, Polynomial
-from flopt.expression import Expression, Const
+from flopt.expression import ExpressionElement, Expression, Const
 from flopt.constraint import Constraint
 from flopt.constants import VariableType, number_classes, array_classes, np_float
 from flopt.env import setup_logger
@@ -27,18 +28,22 @@ class VariableArray(np.ndarray):
             shape = array.shape
         obj = super().__new__(cls, shape, dtype=VarElement)
         obj.mono_to_index = dict()
+        obj.set_mono = False
         return obj
 
-    def __init__(self, array, *args, **kwargs):
-        array = np.array(array)
+    def __init__(self, array, set_mono=True, *args, **kwargs):
+        array = np.array(array, dtype=object)
         for i in itertools.product(*map(range, self.shape)):
             self[i] = array[i]
-            self.mono_to_index[array[i].toMonomial()] = i
+            if set_mono:
+                self.mono_to_index[array[i].toMonomial()] = i
+        self.set_mono = set_mono
 
     def __array_finalize__(self, obj):
         self.mono_to_index = getattr(obj, "mono_to_index", None)
 
     def index(self, mono):
+        assert self.set_mono
         if not isinstance(mono, Monomial):
             mono = mono.toMonomial()
         i = self.mono_to_index[mono]
@@ -46,14 +51,12 @@ class VariableArray(np.ndarray):
             return i[0]
         return i
 
-    def sum_with_divide_and_conquer(self):
-        if self.size < 20 or self.shape[0] == 1:
-            return self.sum()
-        else:
-            mid = self.shape[0] // 2
-            return (self[:mid]).sum_with_divide_and_conquer() + (
-                self[mid:]
-            ).sum_with_divide_and_conquer()
+    @classmethod
+    def init_ufunc(cls, shape, ufunc, set_mono=True):
+        x = np.ndarray(shape, dtype=object)
+        for i in itertools.product(*map(range, shape)):
+            x[i] = ufunc(i)
+        return cls(x, set_mono=set_mono)
 
 
 # -------------------------------------------------------
@@ -372,7 +375,6 @@ class VarElement:
         return {self.name: self}
 
     def getVariables(self):
-        # for getVariables() in Expression class
         return {self}
 
     def isPolynomial(self):
@@ -404,7 +406,7 @@ class VarElement:
             return Expression(self, Const(other), "+")
         elif isinstance(other, VarElement):
             return Expression(self, other, "+")
-        elif isinstance(other, Expression):
+        elif isinstance(other, ExpressionElement):
             if other.isNeg():
                 # self + (-other) --> self - other
                 return Expression(self, other.elmB, "-")
@@ -418,7 +420,7 @@ class VarElement:
             if other == 0:
                 return self
             return Expression(Const(other), self, "+")
-        elif isinstance(other, (VarElement, Expression)):
+        elif isinstance(other, (VarElement, ExpressionElement)):
             return Expression(other, self, "+")
         else:
             return NotImplemented
@@ -433,7 +435,7 @@ class VarElement:
                 return Expression(self, Const(other), "-")
         elif isinstance(other, VarElement):
             return Expression(self, other, "-")
-        elif isinstance(other, Expression):
+        elif isinstance(other, ExpressionElement):
             if other.isNeg():
                 # self - (-1*other) --> self + other
                 return Expression(self, other.elmB, "+")
@@ -448,7 +450,7 @@ class VarElement:
                 return Expression(Const(-1), self, "*", name=f"-{self.name}")
             else:
                 return Expression(Const(other), self, "-")
-        elif isinstance(other, (VarElement, Expression)):
+        elif isinstance(other, (VarElement, ExpressionElement)):
             return Expression(other, self, "-")
         else:
             return NotImplemented
@@ -464,10 +466,13 @@ class VarElement:
             return Expression(Const(other), self, "*")
         elif isinstance(other, VarElement):
             return Expression(self, other, "*")
-        elif isinstance(other, Expression):
-            if other.operator == "*" and isinstance(other.elmA, Const):
-                # self * (a*other) -> a * (self * other)
-                return other.elmA * Expression(self, other.elmB, "*")
+        elif isinstance(other, ExpressionElement):
+            if isinstance(other, Expression):
+                if other.operator == "*" and isinstance(other.elmA, Const):
+                    # self * (a*other) -> a * (self * other)
+                    return other.elmA * Expression(self, other.elmB, "*")
+                else:
+                    return Expression(other, self, "*")
             else:
                 return Expression(other, self, "*")
         else:
@@ -484,10 +489,13 @@ class VarElement:
             return Expression(Const(other), self, "*")
         elif isinstance(other, VarElement):
             return Expression(other, self, "*")
-        elif isinstance(other, Expression):
-            if other.operator == "*" and isinstance(other.elmA, Const):
-                # (a*other) * self -> a * (self * other)
-                return other.elmA * Expression(other.elmB, self, "*")
+        elif isinstance(other, ExpressionElement):
+            if isinstance(other, Expression):
+                if other.operator == "*" and isinstance(other.elmA, Const):
+                    # (a*other) * self -> a * (self * other)
+                    return other.elmA * Expression(other.elmB, self, "*")
+                else:
+                    return Expression(other, self, "*")
             else:
                 return Expression(other, self, "*")
         else:
@@ -500,7 +508,7 @@ class VarElement:
             elif other == -1:
                 return -self
             return Expression(self, Const(other), "/")
-        elif isinstance(other, (VarElement, Expression)):
+        elif isinstance(other, (VarElement, ExpressionElement)):
             return Expression(self, other, "/")
         else:
             return NotImplemented
@@ -510,7 +518,7 @@ class VarElement:
             if other == 0:
                 return Const(0)
             return Expression(Const(other), self, "/")
-        elif isinstance(other, (VarElement, Expression)):
+        elif isinstance(other, (VarElement, ExpressionElement)):
             return Expression(other, self, "/")
         else:
             return NotImplemented
@@ -518,7 +526,7 @@ class VarElement:
     def __mod__(self, other):
         if isinstance(other, int):
             return Expression(self, Const(other), "%")
-        elif isinstance(other, (VarInteger, Expression)):
+        elif isinstance(other, (VarInteger, ExpressionElement)):
             return Expression(self, other, "%")
         else:
             raise NotImplementedError()
@@ -530,7 +538,7 @@ class VarElement:
             elif other == 1:
                 return self
             return Expression(self, Const(other), "^")
-        elif isinstance(other, (VarElement, Expression)):
+        elif isinstance(other, (VarElement, ExpressionElement)):
             return Expression(self, other, "^")
         else:
             return NotImplemented
@@ -540,7 +548,7 @@ class VarElement:
             if other == 1:
                 return Const(1)
             return Expression(Const(other), self, "^")
-        elif isinstance(other, (VarElement, Expression)):
+        elif isinstance(other, (VarElement, ExpressionElement)):
             return Expression(other, self, "^")
         else:
             return NotImplemented
@@ -588,9 +596,10 @@ class VarElement:
 class VarInteger(VarElement):
     """Integer Variable class"""
 
+    _type = VariableType.Integer
+
     def __init__(self, name, lowBound, upBound, ini_value):
         super().__init__(name, lowBound, upBound, ini_value)
-        self._type = VariableType.Integer
         self.binarized = None
         self.binaries = set()
 
@@ -616,7 +625,7 @@ class VarInteger(VarElement):
         if self.binarized is None:
             l, u = int(self.getLb()), int(self.getUb())
             self.binaries = Variable.array(f"bin_{self.name}", u - l + 1, cat="Binary")
-            self.binarized = sum(
+            self.binarized = flopt.Sum(
                 Const(i) * var_bin for i, var_bin in zip(range(l, u + 1), self.binaries)
             )
             if isinstance(self.binarized, VarElement):
@@ -656,9 +665,10 @@ class VarBinary(VarInteger):
       >>> 0
     """
 
+    _type = VariableType.Binary
+
     def __init__(self, name, ini_value, spin=None):
         super().__init__(name, 0, 1, ini_value)
-        self._type = VariableType.Binary
         self.spin = spin
 
     def setValue(self, value):
@@ -698,7 +708,7 @@ class VarBinary(VarInteger):
         if id(other) == id(self):
             # a * a = a
             return self
-        elif isinstance(other, Expression) and other.operator == "*":
+        elif isinstance(other, ExpressionElement) and other.operator == "*":
             if id(other.elmA) == id(self) or id(other.elmB) == id(self):
                 # a * (a * b) = a * b
                 # a * (b * a) = b * a
@@ -742,9 +752,10 @@ class VarBinary(VarInteger):
 class VarSpin(VarElement):
     """Spin Variable class, which takes only 1 or -1"""
 
+    _type = VariableType.Spin
+
     def __init__(self, name, ini_value, binary=None):
         super().__init__(name, -1, 1, ini_value)
-        self._type = VariableType.Spin
         self.binary = binary
 
     def setValue(self, value):
@@ -803,7 +814,7 @@ class VarSpin(VarElement):
     def __mul__(self, other):
         if id(other) == id(self):
             return Const(1)
-        elif isinstance(other, Expression) and other.operator == "*":
+        elif isinstance(other, ExpressionElement) and other.operator == "*":
             if id(other.elmA) == id(self):
                 # a * (a * b) = b
                 if isinstance(other.elmB, number_classes):
@@ -821,7 +832,7 @@ class VarSpin(VarElement):
     def __rmul__(self, other):
         if id(other) == id(self):
             return Const(1)
-        elif isinstance(other, Expression) and other.operator == "*":
+        elif isinstance(other, ExpressionElement) and other.operator == "*":
             if id(other.elmA) == id(self):
                 # (a * b) * a = b
                 if isinstance(other.elmB, number_classes):
@@ -855,9 +866,7 @@ class VarSpin(VarElement):
 class VarContinuous(VarElement):
     """Continuous Variable class"""
 
-    def __init__(self, name, lowBound, upBound, ini_value):
-        super().__init__(name, lowBound, upBound, ini_value)
-        self._type = VariableType.Continuous
+    _type = VariableType.Continuous
 
     def getIniValue(self):
         return (self.getLb() + self.getUb()) / 2
@@ -897,9 +906,7 @@ class VarPermutation(VarElement):
     >>> [1, 2]
     """
 
-    def __init__(self, name, lowBound, upBound, ini_value):
-        super().__init__(name, lowBound, upBound, ini_value)
-        self._type = VariableType.Permutation
+    _type = VariableType.Permutation
 
     def getIniValue(self):
         return list(range(self.getLb(), self.getUb() + 1))

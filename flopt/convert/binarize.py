@@ -1,3 +1,4 @@
+import flopt
 from flopt.variable import VarElement
 from flopt.expression import Expression, Const
 from flopt.constants import VariableType
@@ -80,7 +81,7 @@ def binarize(prob):
         const.expression = binarize_expression(const.expression, binarizes)
 
     for source, binaries in binarizes.items():
-        prob += sum(binaries) == 1, f"for_bin_{source.name}_sum"
+        prob += flopt.Sum(binaries) == 1, f"for_bin_{source.name}_sum"
         prob += source == source.toBinary(), f"for_bin_{source.name}_eq"
 
     prob.resetVariables()
@@ -98,7 +99,7 @@ def binarize_expression(e, binarizes):
     """
     if isinstance(e, (VarElement, Const)):
         return e
-    e = e.expand()
+    e = e.expand()  # also, Operation obj convert to Expression
     finish = False
     while not finish:
         finish = not binarize_traverse(e, binarizes)

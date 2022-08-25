@@ -32,16 +32,16 @@ class Solution:
     ----------
     Create a Solution which has Integer, Continuous and Binary Variables
 
-    >>> a = Variable(name='a', lowBound=0, upBound=1, cat='Integer')
-    >>> b = Variable(name='b', lowBound=1, upBound=2, cat='Continuous')
-    >>> c = Variable(name='c', cat='Binary')
-    >>> sol = Solution(name='abc', [a, b, c])
+    >>> a = Variable(name="a", lowBound=0, upBound=1, cat="Integer")
+    >>> b = Variable(name="b", lowBound=1, upBound=2, cat="Continuous")
+    >>> c = Variable(name="c", cat="Binary")
+    >>> sol = Solution("abc", [a, b, c])
 
     Four arithmetic operations are supported
     between Solutions or between a Solution and a constant.
 
-    >>> sol1 = Solution(name='sol1', [a, b])
-    >>> sol2 = Solution(name='sol2', [a, c])
+    >>> sol1 = Solution("sol1", [a, b])
+    >>> sol2 = Solution("sol2", [a, c])
     >>> sol_plus = sol1 + sol2  # (Solution + Solution or Solution + list)
     >>> sol_minus = sol1 - sol2  # (Solution - Solution or Solution - list)
     >>> sol_product = sol1 * 2  # (Solution * constant)
@@ -284,4 +284,4 @@ class Solution:
         return self.__repr__()
 
     def __repr__(self):
-        return f'Solution({self.name}, [{", ".join([var.name for var in self._variables])}])'
+        return f"Solution({self.name}, [{', '.join([var.name for var in self._variables])}])"

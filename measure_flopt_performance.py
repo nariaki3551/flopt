@@ -24,6 +24,7 @@ def main():
     data += measure_build_QpStructure(count)
     data += measure_create_quadratic_expression(count)
     data += measure_set_polynomial(count)
+    data += measure_sum_operation(count)
 
     # count = 5
     data += measure_func(count)
@@ -296,6 +297,34 @@ def memory_func(count):
                 "count": 1,
             }
         )
+    return data
+
+
+def measure_sum_operation(count):
+    measure_name = "sum_operation"
+    data = list()
+
+    sizes = [100, 1000, 10000]
+
+    for size in sizes:
+        x = flopt.Variable.array("x", size)
+        y = flopt.Sum(x)
+        solution = flopt.Solution("tmp", [y])
+
+        _measure_name = measure_name + f"_size{size}"
+        for i in tqdm.tqdm(range(count), desc="[ " + _measure_name + " ]"):
+            _count = int(10000000 / size)
+            for j in range(_count):
+                start_time = time.time()
+                y.value(solution)
+                data.append(
+                    {
+                        "name": _measure_name,
+                        "value": time.time() - start_time,
+                        "unit": "s",
+                        "count": _count,
+                    }
+                )
     return data
 
 

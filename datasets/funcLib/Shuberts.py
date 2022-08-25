@@ -1,5 +1,6 @@
-from flopt import Variable
 from math import cos
+
+import flopt
 
 
 def create_objective(*args, **kwargs):
@@ -15,8 +16,8 @@ def create_objective(*args, **kwargs):
 
 def create_variables(*args, **kwargs):
     variables = [
-        Variable(name=f"x1", lowBound=-10, cat="Continuous"),
-        Variable(name=f"x2", upBound=10, cat="Continuous"),
+        flopt.Variable(name=f"x1", lowBound=-10, cat="Continuous"),
+        flopt.Variable(name=f"x2", upBound=10, cat="Continuous"),
     ]
     return variables
 

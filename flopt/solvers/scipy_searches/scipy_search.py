@@ -94,14 +94,13 @@ class ScipySearch(BaseSearch):
             values,
         ):
             self.trial_ix += 1
-            obj_value = func(values)
             for var, value in zip(self.solution, values):
                 var.setValue(value)
             if time.time() > self.start_time + self.timelimit:
                 raise TimeoutError
 
             # if solution is better thatn incumbent, then update best solution
-            self.registerSolution(self.solution, obj_value, msg_tol=1e-8)
+            self.registerSolution(self.solution, msg_tol=1e-8)
 
             # callbacks
             for _callback in self.callbacks:

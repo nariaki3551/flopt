@@ -101,12 +101,11 @@ class ScipyLpSearch(BaseSearch):
         # callback
         def callback(optimize_result):
             self.trial_ix += 1
-            obj_value = func(optimize_result.x)
             for var, value in zip(self.solution, optimize_result.x):
                 var.setValue(value)
 
             # if solution is better thatn incumbent, then update best solution
-            self.registerSolution(self.solution, obj_value, msg_tol=1e-8)
+            self.registerSolution(self.solution, msg_tol=1e-8)
 
             # callbacks
             for _callback in self.callbacks:
