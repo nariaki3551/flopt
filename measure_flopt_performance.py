@@ -210,8 +210,7 @@ def measure_func(count):
     measure_name = "func"
     data = list()
 
-    dataset = flopt.performance.datasets["func"]
-    # dataset = flopt.performance.get_dataset("func")
+    dataset = flopt.performance.get_dataset("func")
     instances = {"Ackley", "Goldstain", "Rosenbrock ", "WeitedSphere"}
     for instance in dataset:
         if instance.name not in instances:

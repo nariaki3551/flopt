@@ -1,37 +1,18 @@
-from flopt.solvers.random_search import RandomSearch
-from flopt.solvers.two_opt import TwoOpt
-from flopt.solvers.scipy_searches import (
-    ScipySearch,
-    ScipyLpSearch,
-    ScipyMilpSearch,
-)
-from flopt.solvers.optuna_searches import (
-    OptunaTPESearch,
-    OptunaCmaEsSearch,
-)
-from flopt.solvers.hyperopt_search import HyperoptTPESearch
-from flopt.solvers.swarm_intelligence_searches import ShuffledFrogLeapingSearch
-from flopt.solvers.pulp_search import PulpSearch
-from flopt.solvers.cvxopt_qp_search import CvxoptQpSearch
-from flopt.solvers.amplify_search import AmplifySearch
-from flopt.solvers.auto_search import AutoSearch
-
-
-algos = {
-    "RandomSearch": RandomSearch,
-    "2-Opt": TwoOpt,
-    "OptunaTPESearch": OptunaTPESearch,
-    "OptunaCmaEsSearch": OptunaCmaEsSearch,
-    "HyperoptTPESearch": HyperoptTPESearch,
-    "SFLA": ShuffledFrogLeapingSearch,
-    "PulpSearch": PulpSearch,
-    "ScipySearch": ScipySearch,
-    "ScipyLpSearch": ScipyLpSearch,
-    "ScipyMilpSearch": ScipyMilpSearch,
-    "CvxoptQpSearch": CvxoptQpSearch,
-    "AmplifySearch": AmplifySearch,
-    "auto": AutoSearch,
-}
+algo_list = [
+    "RandomSearch",
+    "2-Opt",
+    "OptunaTPESearch",
+    "OptunaCmaEsSearch",
+    "HyperoptTPESearch",
+    "SFLA",
+    "PulpSearch",
+    "ScipySearch",
+    "ScipyLpSearch",
+    "ScipyMilpSearch",
+    "CvxoptQpSearch",
+    "AmplifySearch",
+    "auto",
+]
 
 
 def Solver(algo="RandomSearch"):
@@ -48,7 +29,60 @@ def Solver(algo="RandomSearch"):
     Solver object
        return Solver
     """
-    return algos[algo]()
+    if algo == "RandomSearch":
+        from flopt.solvers.random_search import RandomSearch
+
+        return RandomSearch()
+    elif algo == "2-Opt":
+        from flopt.solvers.two_opt import TwoOpt
+
+        return TwoOpt()
+    elif algo == "OptunaTPESearch":
+        from flopt.solvers.optuna_searches import OptunaTPESearch
+
+        return OptunaTPESearch()
+    elif algo == "OptunaCmaEsSearch":
+        from flopt.solvers.optuna_searches import OptunaCmaEsSearch
+
+        return OptunaCmaEsSearch()
+    elif algo == "HyperoptTPESearch":
+        from flopt.solvers.hyperopt_search import HyperoptTPESearch
+
+        return HyperoptTPESearch()
+    elif algo == "SFLA":
+        from flopt.solvers.swarm_intelligence_searches import ShuffledFrogLeapingSearch
+
+        return ShuffledFrogLeapingSearch()
+    elif algo == "PulpSearch":
+        from flopt.solvers.pulp_search import PulpSearch
+
+        return PulpSearch()
+    elif algo == "ScipySearch":
+        from flopt.solvers.scipy_searches import ScipySearch
+
+        return ScipySearch()
+    elif algo == "ScipyLpSearch":
+        from flopt.solvers.scipy_searches import ScipyLpSearch
+
+        return ScipyLpSearch()
+    elif algo == "ScipyMilpSearch":
+        from flopt.solvers.scipy_searches import ScipyMilpSearch
+
+        return ScipyMilpSearch()
+    elif algo == "CvxoptQpSearch":
+        from flopt.solvers.cvxopt_qp_search import CvxoptQpSearch
+
+        return CvxoptQpSearch()
+    elif algo == "AmplifySearch":
+        from flopt.solvers.amplify_search import AmplifySearch
+
+        return AmplifySearch()
+    elif algo == "auto":
+        from flopt.solvers.auto_search import AutoSearch
+
+        return AutoSearch()
+    else:
+        assert f"{algo} is not available, choices from {Solver_list()}"
 
 
 def Solver_list():
@@ -60,7 +94,7 @@ def Solver_list():
     list
       return list of algorithm names
     """
-    return list(algos)
+    return algo_list
 
 
 def allAvailableSolvers(prob):
