@@ -1,3 +1,4 @@
+import weakref
 import itertools
 
 import numpy as np
@@ -47,10 +48,7 @@ class ExpressionElement:
         else:
             self.setName()
         self.var_dict = None
-
-        # set polynomial
         self.polynomial = None
-        self.setPolynomial()
 
         # update parents
         self.parents = list()
@@ -60,6 +58,9 @@ class ExpressionElement:
         raise NotImplementedError
 
     def linkChildren(self):
+        raise NotImplementedError
+
+    def isPolynomial(self):
         raise NotImplementedError
 
     def setPolynomial(self):
@@ -118,7 +119,10 @@ class ExpressionElement:
         return self._type
 
     def constant(self):
-        if self.isPolynomial():
+        if self.polynomial is not None:
+            return self.polynomial.constant()
+        elif self.isPolynomial():
+            self.setPolynomial()
             return self.polynomial.constant()
         else:
             import sympy
@@ -126,15 +130,22 @@ class ExpressionElement:
             return float(sympy.sympify(self.name).expand().as_coefficients_dict()[1])
 
     def isMonomial(self):
-        return self.isPolynomial() and self.polynomial.isMonomial()
+        if self.polynomial is not None:
+            return self.polynomial.isMonomial()
+        elif self.isPolynomial():
+            self.setPolynomial()
+            return self.polynomial.isMonomial()
+        else:
+            return False
 
     def toMonomial(self):
+        if self.polynomial is None:
+            self.setPolynomial()
         return self.polynomial.toMonomial()
 
-    def isPolynomial(self):
-        return self.polynomial is not None
-
     def toPolynomial(self):
+        if self.polynomial is None:
+            self.setPolynomial()
         return self.polynomial
 
     def isQuadratic(self):
@@ -144,9 +155,19 @@ class ExpressionElement:
         bool
             return true if this expression is quadratic else false
         """
-        if not self.isPolynomial():
+        if self.polynomial is not None:
+            return (
+                self.polynomial.isQuadratic()
+                or self.polynomial.simplify().isQuadratic()
+            )
+        elif self.isPolynomial():
+            self.setPolynomial()
+            return (
+                self.polynomial.isQuadratic()
+                or self.polynomial.simplify().isQuadratic()
+            )
+        else:
             return False
-        return self.polynomial.isQuadratic() or self.polynomial.simplify().isQuadratic()
 
     def toQuadratic(self, x=None):
         """
@@ -168,6 +189,8 @@ class ExpressionElement:
         ), f"x must be None or VariableArray"
         from flopt.convert import QuadraticStructure
 
+        if self.polynomial is None:
+            self.setPolynomial()
         polynomial = self.polynomial.simplify()
         if x is None:
             x = VariableArray(sorted(self.getVariables(), key=lambda var: var.name))
@@ -218,9 +241,13 @@ class ExpressionElement:
         >>> (a*b).isLinear()
         >>> False
         """
-        if not self.isPolynomial():
+        if self.polynomial is not None:
+            return self.polynomial.isLinear() or self.polynomial.simplify().isLinear()
+        elif self.isPolynomial():
+            self.setPolynomial()
+            return self.polynomial.isLinear() or self.polynomial.simplify().isLinear()
+        else:
             return False
-        return self.polynomial.isLinear() or self.polynomial.simplify().isLinear()
 
     def toLinear(self, x=None):
         """
@@ -246,6 +273,8 @@ class ExpressionElement:
             x = VariableArray(sorted(self.getVariables(), key=lambda var: var.name))
 
         num_variables = len(x)
+        if self.polynomial is None:
+            self.setPolynomial()
 
         c = np.zeros((num_variables,), dtype=np_float)
         for mono, coeff in self.polynomial:
@@ -383,6 +412,19 @@ class ExpressionElement:
         }
         self.setVarDict(var_dict)
         return self.value().expand()
+
+    def traverse(self):
+        """traverse Expression tree as root is self
+
+        Yield
+        -----
+        Expression or VarElement
+        """
+        yield self
+        if isinstance(self.elmA, Expression):
+            yield from self.elmA.traverse()
+        if isinstance(self.elmB, Expression):
+            yield from self.elmB.traverse()
 
     def traverseAncestors(self):
         """traverse ancestors of self
@@ -646,11 +688,12 @@ class Expression(ExpressionElement):
     >>> 1
     """
 
+    _type = ExpressionType.Normal
+
     def __init__(self, elmA, elmB, operator, name=None):
         self.elmA = elmA
         self.elmB = elmB
         self.operator = operator
-        self._type = ExpressionType.Normal
         super().__init__(name=name)
 
     def setName(self):
@@ -673,24 +716,33 @@ class Expression(ExpressionElement):
         if isinstance(self.elmB, Expression):
             self.elmB.parents.append(self)
 
+    def isPolynomial(self):
+        return (
+            self.elmA.isPolynomial()
+            and self.elmB.isPolynomial()
+            and (
+                self.operator == "+"
+                or self.operator == "-"
+                or self.operator == "*"
+                or self.operator == "^"
+            )
+        )
+
     def setPolynomial(self):
-        if self.elmA.isPolynomial() and self.elmB.isPolynomial():
-            if self.operator == "+":
-                self.polynomial = self.elmA.toPolynomial() + self.elmB.toPolynomial()
-            elif self.operator == "-":
-                self.polynomial = self.elmA.toPolynomial() - self.elmB.toPolynomial()
-            elif self.operator == "*":
-                self.polynomial = self.elmA.toPolynomial() * self.elmB.toPolynomial()
-            elif (
-                self.operator == "^"
-                and isinstance(self.elmB, Const)
-                and isinstance(self.elmB.value(), int)
-            ):
-                self.polynomial = self.elmA.toPolynomial() ** self.elmB.value()
-            else:
-                self.polynomial = None
+        if self.operator == "+":
+            self.polynomial = self.elmA.toPolynomial() + self.elmB.toPolynomial()
+        elif self.operator == "-":
+            self.polynomial = self.elmA.toPolynomial() - self.elmB.toPolynomial()
+        elif self.operator == "*":
+            self.polynomial = self.elmA.toPolynomial() * self.elmB.toPolynomial()
+        elif (
+            self.operator == "^"
+            and isinstance(self.elmB, Const)
+            and isinstance(self.elmB.value(), int)
+        ):
+            self.polynomial = self.elmA.toPolynomial() ** self.elmB.value()
         else:
-            self.polynomial = None
+            assert "check whethere this expresson is polynomial or not by .isPolynomial() before execution of setPolynomial()"
 
     def _value(self):
         """
@@ -702,11 +754,11 @@ class Expression(ExpressionElement):
         elmA = self.elmA
         elmB = self.elmB
         if self.var_dict is not None:
-            if isinstance(self.elmA, Expression):
+            if isinstance(self.elmA, ExpressionElement):
                 self.elmA.setVarDict(self.var_dict)
             elif self.elmA.name in self.var_dict:
                 elmA = self.var_dict[self.elmA.name]
-            if isinstance(self.elmB, Expression):
+            if isinstance(self.elmB, ExpressionElement):
                 self.elmB.setVarDict(self.var_dict)
             elif self.elmB.name in self.var_dict:
                 elmB = self.var_dict[self.elmB.name]
@@ -923,11 +975,12 @@ class CustomExpression(ExpressionElement):
     flopt.expression.Expression
     """
 
+    _type = ExpressionType.Custom
+
     def __init__(self, func, arg, name=None):
         self.func = func
         self.arg = arg
         self.variables = unpack_variables(arg)
-        self._type = ExpressionType.Custom
         name = name if name is not None else "Custom"
         super().__init__(name=name)
 
@@ -936,6 +989,9 @@ class CustomExpression(ExpressionElement):
 
     def linkChildren(self):
         return
+
+    def isPolynomial(self):
+        return False
 
     def setPolynomial(self):
         self.polynomial = None
@@ -984,11 +1040,12 @@ class Const(float, ExpressionElement):
         name of constant
     """
 
+    _type = ExpressionType.Const
+
     def __init__(self, value, name=None):
         if name is None:
             name = f"{value}"
         self._value = value
-        self._type = ExpressionType.Const
         super().__init__(name=name)
 
     def setName(self):

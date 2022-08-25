@@ -4,6 +4,7 @@ import operator
 import numpy as np
 
 from flopt.polynomial import Monomial, Polynomial
+from flopt.variable import VariableArray
 from flopt.expression import ExpressionElement
 from flopt.constants import (
     ExpressionType,
@@ -16,27 +17,14 @@ from flopt.constants import (
 # ------------------------------------------------
 to_value_ufunc = np.frompyfunc(lambda x: x.value(), 1, 1)
 
-
-def to_value_with_var_dict(elm, var_dict):
-    if isinstance(elm, ExpressionElement):
-        elm.setVarDict(self.var_dict)
-        return elm.value()
-    elif elm.name in var_dict:
-        return var_dict[elm.name].value()
-    else:
-        return elm.value()
-
-
-to_value_with_var_dict_ufunc = np.frompyfunc(to_value_with_var_dict, 2, 1)
-
-
 # ------------------------------------------------
 #   Operation Class
 # ------------------------------------------------
 class Operation(ExpressionElement):
     def __init__(self, var_or_exps, name=None):
         assert len(var_or_exps) > 0
-        self.elms = np.array(var_or_exps)
+        # self.elms = VariableArray(var_or_exps, set_mono=False)
+        self.elms = np.array(var_or_exps, dtype=object)
         super().__init__(name=name)
 
     def linkChildren(self):
@@ -73,9 +61,7 @@ class Sum(Operation):
     var_of_exps : list of VarELement or ExpressionElement
     """
 
-    def __init__(self, var_or_exps, name=None):
-        self._type = ExpressionType.Sum
-        super().__init__(var_or_exps, name=name)
+    _type = ExpressionType.Sum
 
     def setName(self):
         self.name = ""
@@ -97,14 +83,16 @@ class Sum(Operation):
             else:
                 self.name += f"+{elm.name}"
 
-        if const != 0:
+        if const > 0:
             self.name += f"+{const}"
+        elif const < 0:
+            self.name += f"-{-const}"
+
+    def isPolynomial(self):
+        return all(elm.isPolynomial() for elm in self.elms)
 
     def setPolynomial(self):
-        if any(not elm.isPolynomial() for elm in self.elms):
-            self.polynomial = None
-        else:
-            self.polynomial = sum(elm.toPolynomial() for elm in self.elms)
+        self.polynomial = sum(elm.toPolynomial() for elm in self.elms)
 
     def _value(self):
         """
@@ -115,7 +103,16 @@ class Sum(Operation):
         """
 
         if self.var_dict is not None:
-            return to_value_with_var_dict_ufunc(self.elms, self.var_dict).sum()
+            ret = 0
+            for elm in self.elms:
+                if isinstance(elm, ExpressionElement):
+                    elm.setVarDict(self.var_dict)
+                    ret += elm.value()
+                elif elm.name in self.var_dict:
+                    ret += self.var_dict[elm.name].value()
+                else:
+                    ret += elm.value()
+            return ret
         else:
             return to_value_ufunc(self.elms).sum()
 
@@ -137,9 +134,7 @@ class Prod(Operation):
     var_of_exps : list of VarELement or ExpressionElement
     """
 
-    def __init__(self, var_or_exps, name=None):
-        self._type = ExpressionType.Prod
-        super().__init__(var_or_exps, name=name)
+    _type = ExpressionType.Prod
 
     def setName(self):
         self.name = ""
@@ -164,13 +159,13 @@ class Prod(Operation):
         if const != 0:
             self.name = f"{const}*" + self.name
 
+    def isPolynomial(self):
+        return all(elm.isPolynomial() for elm in self.elms)
+
     def setPolynomial(self):
-        if any(not elm.isPolynomial() for elm in self.elms):
-            self.polynomial = None
-        else:
-            self.polynomial = functools.reduce(
-                operator.mul, (elm.toPolynomial() for elm in self.elms)
-            )
+        self.polynomial = functools.reduce(
+            operator.mul, (elm.toPolynomial() for elm in self.elms)
+        )
 
     def _value(self):
         """
@@ -180,7 +175,16 @@ class Prod(Operation):
             return value of expression
         """
         if self.var_dict is not None:
-            return to_value_with_var_dict_ufunc(self.elms, self.var_dict).prod()
+            ret = 1
+            for elm in self.elms:
+                if isinstance(elm, ExpressionElement):
+                    elm.setVarDict(self.var_dict)
+                    ret *= elm.value()
+                elif elm.name in self.var_dict:
+                    ret *= self.var_dict[elm.name].value()
+                else:
+                    ret *= elm.value()
+            return ret
         else:
             return to_value_ufunc(self.elms).prod()
 

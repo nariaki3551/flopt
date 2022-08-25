@@ -596,9 +596,10 @@ class VarElement:
 class VarInteger(VarElement):
     """Integer Variable class"""
 
+    _type = VariableType.Integer
+
     def __init__(self, name, lowBound, upBound, ini_value):
         super().__init__(name, lowBound, upBound, ini_value)
-        self._type = VariableType.Integer
         self.binarized = None
         self.binaries = set()
 
@@ -664,9 +665,10 @@ class VarBinary(VarInteger):
       >>> 0
     """
 
+    _type = VariableType.Binary
+
     def __init__(self, name, ini_value, spin=None):
         super().__init__(name, 0, 1, ini_value)
-        self._type = VariableType.Binary
         self.spin = spin
 
     def setValue(self, value):
@@ -750,9 +752,10 @@ class VarBinary(VarInteger):
 class VarSpin(VarElement):
     """Spin Variable class, which takes only 1 or -1"""
 
+    _type = VariableType.Spin
+
     def __init__(self, name, ini_value, binary=None):
         super().__init__(name, -1, 1, ini_value)
-        self._type = VariableType.Spin
         self.binary = binary
 
     def setValue(self, value):
@@ -863,9 +866,7 @@ class VarSpin(VarElement):
 class VarContinuous(VarElement):
     """Continuous Variable class"""
 
-    def __init__(self, name, lowBound, upBound, ini_value):
-        super().__init__(name, lowBound, upBound, ini_value)
-        self._type = VariableType.Continuous
+    _type = VariableType.Continuous
 
     def getIniValue(self):
         return (self.getLb() + self.getUb()) / 2
@@ -905,9 +906,7 @@ class VarPermutation(VarElement):
     >>> [1, 2]
     """
 
-    def __init__(self, name, lowBound, upBound, ini_value):
-        super().__init__(name, lowBound, upBound, ini_value)
-        self._type = VariableType.Permutation
+    _type = VariableType.Permutation
 
     def getIniValue(self):
         return list(range(self.getLb(), self.getUb() + 1))

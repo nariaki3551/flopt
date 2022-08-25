@@ -166,6 +166,19 @@ class BaseSearch:
 
         return status, self.log, time.time() - self.start_time
 
+    def registerSolution(self, solution, obj_value=None, msg_tol=None):
+        """update solution if the solution is better than the incumbent"""
+        if obj_value is None:
+            obj_value = self.getObjValue(solution)
+        if obj_value < self.best_obj_value:
+            if msg_tol is not None:
+                diff = self.best_obj_value - obj_value
+            self.updateSolution(solution, obj_value)
+            self.recordLog()
+            if self.msg:
+                if msg_tol is None or diff > msg_tol:
+                    self.during_solver_message("*")
+
     def updateSolution(self, solution, obj_value=None):
         """update self.best_solution"""
         self.best_solution.copy(solution)
