@@ -1,3 +1,4 @@
+import weakref
 import itertools
 
 import numpy as np

@@ -30,11 +30,11 @@ def Solver(algo="RandomSearch"):
        return Solver
     """
     if algo == "RandomSearch":
-        from flopt.solvers.sequential_update_searches import RandomSearch
+        from flopt.solvers.random_search import RandomSearch
 
         return RandomSearch()
     elif algo == "2-Opt":
-        from flopt.solvers.sequential_update_searches import TwoOpt
+        from flopt.solvers.two_opt import TwoOpt
 
         return TwoOpt()
     elif algo == "OptunaTPESearch":
