@@ -1,7 +1,7 @@
 import os
 from logging import getLogger, StreamHandler
 
-from colorlog import ColoredFormatter
+import colorlog
 
 log_name = {
     "CRITICAL": 50,
@@ -36,7 +36,7 @@ class Environment:
 
 def setup_logger(name):
     """Return a logger with a ColoredFormatter."""
-    formatter = ColoredFormatter(
+    formatter = colorlog.ColoredFormatter(
         "%(log_color)s%(levelname)s:%(filename)s:%(funcName)s:%(message)s",
         datefmt=None,
         reset=True,

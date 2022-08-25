@@ -59,14 +59,13 @@ class OptunaSearch(BaseSearch):
         return True
 
     def search(self):
-        status = SolverTerminateState.Normal
         self.createStudy()
         try:
             self.study.optimize(self.objective, self.n_trial, timeout=self.timelimit)
         except Exception as e:
             logger.info(f"Exception {e}")
-            status = flopt.constants.SolverTerminateState.Abnormal
-        return status
+            return SolverTerminateState.Abnormal
+        return SolverTerminateState.Normal
 
     def objective(self, trial):
         # set value into self.solution
@@ -80,12 +79,8 @@ class OptunaSearch(BaseSearch):
         # get objective value by self.solution
         obj_value = self.getObjValue(self.solution)
 
-        # check whether update or not
-        if obj_value < self.best_obj_value:
-            self.updateSolution(self.solution, obj_value)
-            self.recordLog()
-            if self.msg:
-                self.during_solver_message("*")
+        # if solution is better thatn incumbent, then update best solution
+        self.registerSolution(self.solution, obj_value)
 
         # callback
         for callback in self.callbacks:

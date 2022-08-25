@@ -1,3 +1,4 @@
+import weakref
 import itertools
 
 import numpy as np
@@ -557,11 +558,9 @@ class Expression:
         """
         yield self
         if isinstance(self.elmA, Expression):
-            for x in self.elmA.traverse():
-                yield x
+            yield from self.elmA.traverse()
         if isinstance(self.elmB, Expression):
-            for x in self.elmB.traverse():
-                yield x
+            yield from self.elmB.traverse()
 
     def traverseAncestors(self):
         """traverse ancestors of self
@@ -573,8 +572,7 @@ class Expression:
         for parent in self.parents:
             yield parent
             if isinstance(parent, Expression):
-                for x in parent.traverseAncestors():
-                    yield x
+                yield from parent.traverseAncestors()
 
     def __add__(self, other):
         if isinstance(other, number_classes):

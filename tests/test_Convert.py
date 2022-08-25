@@ -219,8 +219,6 @@ def test_flopt_to_ising1():
     prob = Problem()
 
     # make Ising model
-    import numpy as np
-
     x = np.array([a, b, c])
     J = np.array([[1, 2, 1], [0, 1, 1], [0, 0, 3]])
     h = np.array([1, 2, 0])

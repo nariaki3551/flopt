@@ -1,4 +1,5 @@
 import pytest
+import numpy as np
 
 from flopt import Variable
 from flopt.expression import Const
@@ -157,7 +158,6 @@ def test_Const_isLinear():
 
 
 def test_Expression_isIsing(a, b):
-    import numpy as np
 
     x = np.array([Variable("a", cat="Spin"), Variable("b", cat="Spin")])
     J = np.array(
@@ -172,8 +172,6 @@ def test_Expression_isIsing(a, b):
 
 
 def test_Expression_toIsing(a, b):
-    import numpy as np
-
     x = np.array([Variable("a", cat="Spin"), Variable("b", cat="Spin")])
     J = np.array(
         [
