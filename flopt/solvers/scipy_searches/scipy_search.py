@@ -1,4 +1,4 @@
-from time import time
+import time
 
 from scipy import optimize as scipy_optimize
 import numpy as np
@@ -50,7 +50,6 @@ class ScipySearch(BaseSearch):
         return True
 
     def search(self):
-        status = SolverTerminateState.Normal
         var_names = [var.name for var in self.solution]
 
         def gen_func(expression):
@@ -93,17 +92,15 @@ class ScipySearch(BaseSearch):
             values,
         ):
             self.trial_ix += 1
-            obj_value = func(values)
             for var, value in zip(self.solution, values):
                 var.setValue(value)
-            if time() > self.start_time + self.timelimit:
+            if time.time() > self.start_time + self.timelimit:
                 raise TimeoutError
-            if obj_value < self.best_obj_value:
-                diff = self.best_obj_value - obj_value
-                self.updateSolution(self.solution, obj_value)
-                self.recordLog()
-                if self.msg and diff > 1e-8:
-                    self.during_solver_message("*")
+
+            # if solution is better thatn incumbent, then update best solution
+            self.registerSolution(self.solution, msg_tol=1e-8)
+
+            # callbacks
             for _callback in self.callbacks:
                 _callback([self.solution], self.best_solution, self.best_obj_value)
 
@@ -127,6 +124,6 @@ class ScipySearch(BaseSearch):
                 var.setValue(value)
             self.updateSolution(self.solution, obj_value=None)
         except TimeoutError:
-            status = SolverTerminateState.Timelimit
+            return SolverTerminateState.Timelimit
 
-        return status
+        return SolverTerminateState.Normal

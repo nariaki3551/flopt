@@ -42,7 +42,7 @@ def view_performance(
         prefix of load logs
     """
     datasets = [
-        flopt.performance.datasets[dataset_name] for dataset_name in dataset_names
+        flopt.performance.get_dataset(dataset_name) for dataset_name in dataset_names
     ]
 
     flopt.performance.performance(

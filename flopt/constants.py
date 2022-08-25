@@ -49,6 +49,8 @@ class ExpressionType(enum.IntEnum):
     Normal = 200
     Custom = 201
     Const = 202
+    Sum = 203
+    Prod = 204
 
     def __str__(self):
         return self.name

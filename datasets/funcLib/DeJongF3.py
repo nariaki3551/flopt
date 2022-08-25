@@ -1,5 +1,6 @@
-from flopt import Variable
 from math import floor
+
+import flopt
 
 
 def create_objective(*args, **kwargs):
@@ -10,10 +11,9 @@ def create_objective(*args, **kwargs):
 
 
 def create_variables(*args, **kwargs):
-    variables = [
-        Variable(name=f"x{i}", lowBound=-5.12, upBound=5.12, cat="Continuous")
-        for i in range(5)
-    ]
+    variables = flopt.Variable.array(
+        "x", 5, lowBound=-5.12, upBound=5.12, cat="Continuous"
+    )
     return variables
 
 

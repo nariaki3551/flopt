@@ -1,5 +1,6 @@
-from flopt import Variable
 from math import sin
+
+import flopt
 
 
 def create_objective(*args, **kwargs):
@@ -12,8 +13,8 @@ def create_objective(*args, **kwargs):
 
 def create_variables(*args, **kwargs):
     variables = [
-        Variable(name=f"x1", lowBound=-1.5, upBound=4, cat="Continuous"),
-        Variable(name=f"x2", lowBound=-3, upBound=4, cat="Continuous"),
+        flopt.Variable(name=f"x1", lowBound=-1.5, upBound=4, cat="Continuous"),
+        flopt.Variable(name=f"x2", lowBound=-3, upBound=4, cat="Continuous"),
     ]
     return variables
 

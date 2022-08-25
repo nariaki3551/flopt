@@ -45,8 +45,8 @@ def compute(datasets, solvers="all", timelimit=None, msg=True, save_prefix=None)
         import flopt
 
         # datasets
-        tsp_dataset = flopt.performance.datasets['tsp']
-        func_dataset = flopt.performance.datasets['func']
+        tsp_dataset = flopt.performance.get_dataset("tsp")
+        func_dataset = flopt.performance.get_dataset("func")
 
         # compute the performance
         logs = flopt.performance.compute([func_dataset, tsp_dataset], timelimit=2, msg=True)
