@@ -35,14 +35,15 @@ class HyperoptTPESearch(BaseSearch):
         whether display a progress bar of search
     """
 
+    name = "HyperoptTPESearch"
+    can_solve_problems = ["blackbox"]
+
     def __init__(self):
         super().__init__()
         from hyperopt import STATUS_OK
 
-        self.name = "HyperoptTPESearch"
         self.n_trial = 1e100
         self.show_progressbar = False
-        self.can_solve_problems = ["blackbox"]
         self.hyperopt_STATUS_OK = STATUS_OK
 
     def available(self, prob, verbose=False):

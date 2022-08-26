@@ -29,12 +29,13 @@ class ScipyLpSearch(BaseSearch):
     method : {"highs", "highs-ds", "highs-ipm", "simplex", "revised simplex", "interior-point"}
     """
 
+    name = "ScipyLpSearch"
+    can_solve_problems = ["lp"]
+
     def __init__(self):
         super().__init__()
-        self.name = "ScipyLpSearch"
         self.n_trial = 1e10
         self.method = "interior-point"
-        self.can_solve_problems = ["lp"]
 
     def available(self, prob, verbose=False):
         """

@@ -66,7 +66,7 @@ class Problem:
         self.prob_type = ["blackbox"]
 
     def setObjective(self, obj):
-        """set objective function
+        """set objective function. __iadd__(), "+=" operations call this function.
 
         Parameters
         ----------
@@ -98,14 +98,24 @@ class Problem:
         self.solver = solver
 
     def addConstraint(self, const, name=None):
-        """add constraint
+        """add constraint into problem. __iadd__(), "+=" operations call this function.
 
         Parameters
         ----------
         const : Constraint
             constraint
-        name : str
+        name : str or None
             constraint name
+
+        Examples
+        --------
+
+        >>> import flopt
+        >>> prob = flopt.Problem(algo=...)
+        >>> x = flopt.Variable("x")
+        >>> y = flopt.Variable("y")
+        >>> prob.addConstraint(x + y >= 2)
+
         """
         assert isinstance(
             const, Constraint
@@ -115,6 +125,31 @@ class Problem:
         self.variables |= const.getVariables()
 
     def removeDuplicatedConstraints(self):
+        """Remove duplicated constraints in problem
+
+        Examples
+        --------
+
+        >>> import flopt
+        >>> a = flopt.Variable("a")
+        >>> b = flopt.Variable("b")
+        >>> c = flopt.Variable("c")
+        >>>
+        >>> prob = flopt.Problem(name="Test")
+        >>> prob += a + b >= 0
+        >>> prob += a + b >= 0
+        >>> prob += a >= -b
+        >>> prob += 0 >= -a - b
+        >>> prob += Sum([a, b]) >= 0
+        >>>
+        >>> len(prob.constraints)
+        >>> 5
+        >>>
+        >>> prob.removeDuplicatedConstraints()
+        >>> len(prob.constraints)
+        >>> 1
+
+        """
         for const in self.constraints:
             const.expression = const.expression.expand()
         self.constraints = list(set(self.constraints))
@@ -124,7 +159,7 @@ class Problem:
         Returns
         -------
         float or int
-            return the objective value
+            the objective value
         """
         return self.obj.value()
 
@@ -132,7 +167,8 @@ class Problem:
         """
         Returns
         -------
-        set of VarElement family
+        set
+            set of VarElement used in this problem
         """
         return self.variables
 
@@ -155,10 +191,26 @@ class Problem:
 
         Returns
         -------
-        int
+        Status
             return the status of solving
         Log
             return log object
+
+        Examples
+        --------
+
+        >>> import flopt
+        >>> a = flopt.Variable("a")
+        >>> b = flopt.Variable("b")
+        >>> c = flopt.Variable("c")
+        >>>
+        >>> prob = flopt.Problem(name="Test")
+        >>> prob += a + b
+        >>> prob += a + b >= 0
+        >>>
+        >>> solver = flopt.Solver("auto")
+        >>> status, logs = prob.solve(solver=solver)
+
         """
         assert solver is not None or self.solver is not None, f"solver is not specified"
         if solver is not None:
@@ -185,13 +237,25 @@ class Problem:
         return status, log
 
     def getSolution(self, k=0):
-        """get the k-top solution"""
+        """get the k-top solution
+        
+        Parameters
+        ----------
+        k : int
+            return k-top solution
+        """
         assert k < len(self.solver.log)
         solution = self.solver.log.getSolution(k=k)
         return solution
 
     def setSolution(self, k=0):
-        """set the k-top solution to variables"""
+        """set the k-top solution to variables
+
+        Parameters
+        ----------
+        k : int
+            set k-top solution data to variables
+        """
         assert k < len(self.solver.log)
         solution = self.getSolution(k)
         var_dict = solution.toDict()

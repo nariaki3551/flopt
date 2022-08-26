@@ -63,11 +63,12 @@ class CvxoptQpSearch(BaseSearch):
     `https://cvxopt.org/userguide/coneprog.html#quadratic-programming`
     """
 
+    name = "CvxoptQpSearch"
+    can_solve_problems = ["lp", "qp"]
+
     def __init__(self):
         super().__init__()
-        self.name = "CvxoptQpSearch"
         self.n_trial = None
-        self.can_solve_problems = ["lp", "qp"]
 
     def available(self, prob, verbose=False):
         """

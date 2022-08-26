@@ -19,11 +19,12 @@ class TwoOpt(BaseSearch):
 
     """
 
+    name = "2-Opt"
+    can_solve_problems = ["permutation"]
+
     def __init__(self):
         super().__init__()
-        self.name = "2-Opt"
         self.n_trial = 1e100
-        self.can_solve_problems = ["permutation"]
 
     def available(self, prob, verbose=False):
         """

@@ -4,5 +4,4 @@ Problem
 =======
 
 .. autoclass:: Problem
-  :members:
-  :inherited-members:
+   :members: 

@@ -66,9 +66,10 @@ class BaseSearch:
         flag for coping solution to log
     """
 
+    name = "BaseSearch(base)"
+
     def __init__(self):
         # base information
-        self.name = "BaseSearch(base)"
         self.feasible_guard = "clip"
         # each solver
         self.can_solve_problems = []
@@ -165,7 +166,16 @@ class BaseSearch:
         return status, self.log, time.time() - self.start_time
 
     def registerSolution(self, solution, obj_value=None, msg_tol=None):
-        """update solution if the solution is better than the incumbent"""
+        """update solution if the solution is better than the incumbent
+
+        Parameters
+        ----------
+        solution : Solution
+        obj_value : None or float
+            objective value of solution, if it is None, then calculate objective value in this function
+        msg_tol : None of float
+            output the message when solution is updated greater than msg_tol
+        """
         if obj_value is None:
             obj_value = self.getObjValue(solution)
         if obj_value < self.best_obj_value:
@@ -178,7 +188,14 @@ class BaseSearch:
                     self.during_solver_message("*")
 
     def updateSolution(self, solution, obj_value=None):
-        """update self.best_solution"""
+        """update self.best_solution
+
+        Parameters
+        ----------
+        solution : Solution
+        obj_value : None or float
+            objective value of solution, if it is None, then calculate objective value in this function
+        """
         self.best_solution.copy(solution)
         if obj_value is None:
             self.best_obj_value = self.prob.obj.value(solution)
@@ -187,7 +204,9 @@ class BaseSearch:
             self.save_solution = True
 
     def recordLog(self):
-        """write log in `self.log`"""
+        """
+        write log in `self.log`
+        """
         log_dict = {
             "obj_value": self.best_obj_value,
             "best_bd": self.best_bd,
@@ -204,6 +223,12 @@ class BaseSearch:
             raise flopt.error.RearchLowerbound()
 
     def during_solver_message(self, head):
+        """
+        Parameters
+        ----------
+        head : str
+            character of header
+        """
         during_solver_message(
             head,
             self.best_obj_value,

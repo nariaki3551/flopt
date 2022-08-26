@@ -21,12 +21,13 @@ class ScipySearch(BaseSearch):
     scipy.optimize.minimize
     """
 
+    name = "ScipySearch"
+    can_solve_problems = ["blackbox"]
+
     def __init__(self):
         super().__init__()
-        self.name = "ScipySearch"
         self.n_trial = 1e10
         self.method = None
-        self.can_solve_problems = ["blackbox"]
 
     def available(self, prob, verbose=False):
         """

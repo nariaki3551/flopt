@@ -31,10 +31,8 @@ class ScipyMilpSearch(BaseSearch):
         status of solver
     """
 
-    def __init__(self):
-        super().__init__()
-        self.name = "ScipyMilpSearch"
-        self.can_solve_problems = ["mip"]
+    name = "ScipyMilpSearch"
+    can_solve_problems = ["mip"]
 
     def available(self, prob, verbose=False):
         """

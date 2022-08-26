@@ -39,10 +39,11 @@ class ShuffledFrogLeapingSearch(BaseSearch):
       max size of step when frog move in memetic evolution.
     """
 
+    name = "ShuffledFrogLeapingSearch"
+    can_solve_problems = ["blackbox"]
+
     def __init__(self):
         super().__init__()
-        self.name = "ShuffledFrogLeapingSearch"
-        self.can_solve_problems = ["blackbox"]
         self.frogs = None
         self.memeplexes = None
         # params

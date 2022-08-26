@@ -87,12 +87,13 @@ class AmplifySearch(BaseSearch):
         >>>   C 0, name None, 0.5*x_s+(0.5*y_s)+1.0 >= 0
     """
 
+    name = "AmplifySearch"
+    can_solve_problems = ["ising"]
+
     def __init__(self):
         super().__init__()
-        self.name = "AmplifySearch"
         self.timelimit = 1
         self.token = None
-        self.can_solve_problems = ["ising"]
 
     def available(self, prob, verbose=False):
         """

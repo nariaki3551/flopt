@@ -37,11 +37,12 @@ class PulpSearch(BaseSearch):
         status of solver
     """
 
+    name = "PulpSearch"
+    can_solve_problems = ["lp"]
+
     def __init__(self):
         super().__init__()
-        self.name = "PulpSearch"
         self.solver = None
-        self.can_solve_problems = ["lp"]
 
     def available(self, prob, verbose=False):
         """

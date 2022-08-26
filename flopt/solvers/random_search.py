@@ -20,11 +20,12 @@ class RandomSearch(BaseSearch):
           self.solution.setRandom()
     """
 
+    name = "RandomSearch"
+    can_solve_problems = ["blackbox", "permutation"]
+
     def __init__(self):
         super().__init__()
-        self.name = "RandomSearch"
         self.n_trial = 1e100
-        self.can_solve_problems = ["blackbox", "permutation"]
 
     def available(self, prob, verbose=False):
         """
