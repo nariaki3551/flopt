@@ -67,12 +67,11 @@ class BaseSearch:
     """
 
     name = "BaseSearch(base)"
+    can_solve_problems = []
 
     def __init__(self):
         # base information
         self.feasible_guard = "clip"
-        # each solver
-        self.can_solve_problems = []
         # core variables
         self.best_solution = None
         self.best_obj_value = float("inf")

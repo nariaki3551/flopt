@@ -238,7 +238,7 @@ class Problem:
 
     def getSolution(self, k=0):
         """get the k-top solution
-        
+
         Parameters
         ----------
         k : int

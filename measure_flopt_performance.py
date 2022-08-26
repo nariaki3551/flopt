@@ -25,8 +25,6 @@ def main():
     data += measure_create_quadratic_expression(count)
     data += measure_set_polynomial(count)
     data += measure_sum_operation(count)
-
-    # count = 5
     data += measure_func(count)
 
     df = pandas.DataFrame(data)
@@ -92,34 +90,6 @@ def measure_build_LpStructure(count, prob=None):
     return data
 
 
-def memory_build_LpStructure(count):
-    measure_name = "memory_build_LpStructure"
-    data = list()
-    mip_storage = "./datasets/mipLib"
-    mps_file = f"{mip_storage}/30n20b8.mps"
-    _, pulp_prob = pulp.LpProblem.fromMPS(mps_file)
-    prob = flopt.convert.pulp_to_flopt(pulp_prob)
-
-    # set polynomial
-    prob.expression.setPolynomial()
-    for const in prob.constraints:
-        const.expression.setPolynomial()
-
-    for i in tqdm.tqdm(range(count), desc="[ " + measure_name + " ]"):
-        memory = max(
-            memory_profiler.memory_usage((measure_build_LpStructure, (1, prob)))
-        )
-        data.append(
-            {
-                "name": measure_name,
-                "value": memory,
-                "unit": "MB",
-                "count": 1,
-            }
-        )
-    return data
-
-
 def measure_build_QpStructure(count):
     measure_name = "build_QpStructure"
     data = list()
@@ -135,7 +105,7 @@ def measure_build_QpStructure(count):
 
         # create quadratic expression
         x = flopt.Variable.array("x", N, cat=cat)
-        q = x.T.dot(Q).dot(x)
+        q = flopt.Dot(x.T.dot(Q), x)
 
         # set polynomial
         q.setPolynomial()
@@ -152,22 +122,6 @@ def measure_build_QpStructure(count):
                     "count": 1,
                 }
             )
-    return data
-
-
-def memory_build_QpStructure(count):
-    measure_name = "memory_build_QpStructure"
-    data = list()
-    for i in tqdm.tqdm(range(count), desc="[ " + measure_name + " ]"):
-        memory = max(memory_profiler.memory_usage((measure_build_QpStructure, (1,))))
-        data.append(
-            {
-                "name": measure_name,
-                "value": memory,
-                "unit": "MB",
-                "count": 1,
-            }
-        )
     return data
 
 
@@ -201,24 +155,6 @@ def measure_create_quadratic_expression(count):
     return data
 
 
-def memory_create_quadratic_expression(count):
-    measure_name = "memory_create_quadratic_expression"
-    data = list()
-    for i in tqdm.tqdm(range(count), desc="[ " + measure_name + " ]"):
-        memory = max(
-            memory_profiler.memory_usage((measure_create_quadratic_expression, (1,)))
-        )
-        data.append(
-            {
-                "name": measure_name,
-                "value": memory,
-                "unit": "MB",
-                "count": 1,
-            }
-        )
-    return data
-
-
 def measure_set_polynomial(count):
     measure_name = "set_polynomial"
     data = list()
@@ -236,7 +172,7 @@ def measure_set_polynomial(count):
         # create quadratic expression
         x = flopt.Variable.array("x", N, cat=cat)
         for i in tqdm.tqdm(range(count), desc="[ " + _measure_name + " ]"):
-            q = x.T.dot(Q).dot(x)
+            q = flopt.Dot(x.T.dot(Q), x)
             start_time = time.time()
             q.setPolynomial()
             data.append(
@@ -281,22 +217,6 @@ def measure_func(count):
                     "count": _count,
                 }
             )
-    return data
-
-
-def memory_func(count):
-    measure_name = "memory_func"
-    data = list()
-    for i in tqdm.tqdm(range(count), desc="[ " + measure_name + " ]"):
-        memory = max(memory_profiler.memory_usage((measure_func, (1,))))
-        data.append(
-            {
-                "name": measure_name,
-                "value": memory,
-                "unit": "MB",
-                "count": 1,
-            }
-        )
     return data
 
 
