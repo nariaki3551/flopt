@@ -11,3 +11,6 @@ from flopt.utils import Sum, Prod, Dot, Value
 
 # performance
 import flopt.performance
+
+# visualize
+from flopt.utils import get_dot_graph

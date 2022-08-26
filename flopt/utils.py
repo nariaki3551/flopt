@@ -3,7 +3,7 @@ import types
 import numpy as np
 
 from flopt.variable import VarElement, VariableArray
-from flopt.expression import Expression, Const
+from flopt.expression import Expression, CustomExpression, Const
 import flopt.expression
 
 
@@ -90,3 +90,46 @@ def Value(x):
         return cast(x)
     else:
         return x
+
+
+def get_dot_graph(expression, save_file):
+    with open(save_file, "w") as writer:
+        print("digraph g {", file=writer)
+        _get_dot_graph(expression, writer)
+        print("}", file=writer)
+
+
+def _get_dot_graph(expression, writer):
+    node_self = id(expression)
+    node_str = '{} [label="{}", color=orange, style=filled]'
+    operation_str = '{} [label="{}", color=lightblue, style=filled]'
+    edge_str = "{} -> {}"
+    print(node_str.format(node_self, expression.name), file=writer)
+    if isinstance(expression, flopt.expression.CustomExpression):
+        node_operator = hash((expression, 1))
+        operator_str = "CustomFunction"
+        print(operation_str.format(node_operator, operator_str), file=writer)
+        print(edge_str.format(node_operator, node_self), file=writer)
+        for var in expression.arg:
+            node = _get_dot_graph(var, writer)
+            print(edge_str.format(node, node_operator), file=writer)
+    elif isinstance(expression, flopt.expression.Expression):
+        node_operator = hash((expression, expression.operator))
+        print(operation_str.format(node_operator, expression.operator), file=writer)
+        print(edge_str.format(node_operator, node_self), file=writer)
+        nodeA = _get_dot_graph(expression.elmA, writer)
+        nodeB = _get_dot_graph(expression.elmB, writer)
+        print(edge_str.format(nodeA, node_operator), file=writer)
+        print(edge_str.format(nodeB, node_operator), file=writer)
+    elif isinstance(expression, flopt.expression.Operation):
+        node_operator = hash((expression, 1))
+        operator_str = "+" if isinstance(expression, flopt.expression.Sum) else "*"
+        print(operation_str.format(node_operator, operator_str), file=writer)
+        print(edge_str.format(node_operator, node_self), file=writer)
+        for elm in expression.elms:
+            node = _get_dot_graph(elm, writer)
+            print(edge_str.format(node, node_operator), file=writer)
+    else:
+        # VarElement or Const
+        pass
+    return node_self

@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 
-from flopt import Variable, Problem, CustomExpression, Solver
+from flopt import Variable, Problem, CustomExpression, Solver, Sum
 
 
 def test_Problem_obj():
@@ -76,6 +76,7 @@ def test_Problem_duplicate_constraint():
     prob += a + b >= 0
     prob += a >= -b
     prob += 0 >= -a - b
+    prob += Sum([a, b]) >= 0
 
     prob.removeDuplicatedConstraints()
 

@@ -1006,11 +1006,10 @@ class CustomExpression(ExpressionElement):
         self.func = func
         self.arg = arg
         self.variables = unpack_variables(arg)
-        name = name if name is not None else "Custom"
         super().__init__(name=name)
 
     def setName(self):
-        return NotImplemented
+        self.name = f"{self.func.__name__}(*)"
 
     def linkChildren(self):
         return
@@ -1049,8 +1048,11 @@ class CustomExpression(ExpressionElement):
             tmp.append(hash(var))
         return hash(tuple(tmp))
 
+    def __str__(self):
+        return f"{self.func.__name__}(*)"
+
     def __repr__(self):
-        return "CustomExpression"
+        return f"CustomExpression({self.func.__name__, self.arg, self.name})"
 
 
 class Const(float, ExpressionElement):
@@ -1240,6 +1242,9 @@ class Operation(ExpressionElement):
 
     def isNeg(self):
         return False
+
+    def __hash__(self):
+        return hash((self.name, self._type))
 
 
 class Sum(Operation):

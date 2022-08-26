@@ -44,6 +44,7 @@ class VariableArray(np.ndarray):
             if set_mono:
                 self.mono_to_index[array[i].toMonomial()] = i
         self.set_mono = set_mono
+        self.name = f"VariableArray({array})"
 
     def __array_finalize__(self, obj):
         self.mono_to_index = getattr(obj, "mono_to_index", None)

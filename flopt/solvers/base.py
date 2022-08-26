@@ -44,8 +44,6 @@ class BaseSearch:
         solution
     obj : ObjectiveFunction
         objective function
-    feasible_guard : str
-        type of guarder to keep feasibility of solution
     timelimit : float
         timelimit, unit is second
     lowerbound : float

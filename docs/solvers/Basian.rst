@@ -10,7 +10,7 @@ OptunaTPESearch
 .. image:: https://img.shields.io/badge/Objective-any-orange.svg
 .. image:: https://img.shields.io/badge/Constraints-None-green.svg
 
-.. autoclass:: flopt.solvers.OptunaTPESearch
+.. autoclass:: flopt.solvers.optuna_searches.OptunaTPESearch
 
 
 HyperoptTPESearch
@@ -22,4 +22,4 @@ HyperoptTPESearch
 .. image:: https://img.shields.io/badge/Objective-any-orange.svg
 .. image:: https://img.shields.io/badge/Constraints-None-green.svg
 
-.. autoclass:: flopt.solvers.HyperoptTPESearch
+.. autoclass:: flopt.solvers.hyperopt_search.HyperoptTPESearch
