@@ -1208,13 +1208,22 @@ class Const(float, ExpressionElement):
 to_value_ufunc = np.frompyfunc(lambda x: x.value(), 1, 1)
 
 
+def to_const(x):
+    if isinstance(x, number_classes):
+        return Const(x)
+    return x
+
+
+to_const_ufunc = np.frompyfunc(to_const, 1, 1)
+
+
 # ------------------------------------------------
 #   Operation Class
 # ------------------------------------------------
 class Operation(ExpressionElement):
     def __init__(self, var_or_exps, name=None):
         assert len(var_or_exps) > 0
-        self.elms = np.array(var_or_exps, dtype=object)
+        self.elms = to_const_ufunc(np.array(var_or_exps, dtype=object))
         super().__init__(name=name)
 
     def linkChildren(self):

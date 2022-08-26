@@ -159,9 +159,9 @@ def measure_set_polynomial(count):
     measure_name = "set_polynomial"
     data = list()
 
-    scales = [1, 100]
+    scales = [100]
     Ns = [250]
-    cats = ["Continuous", "Integer", "Binary"]
+    cats = ["Continuous"]
 
     for scale, N, cat in itertools.product(scales, Ns, cats):
         _measure_name = measure_name + f"_scale{scale}_N{N}_cat{cat}"

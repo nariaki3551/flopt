@@ -134,6 +134,7 @@ class VariableFactory:
         >>> upBound : 10
         """
         self.checkName(name)
+        cat = str(cat)
         if cat == "Continuous":
             return VarContinuous(name, lowBound, upBound, ini_value)
         elif cat == "Integer":

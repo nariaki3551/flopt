@@ -3,7 +3,7 @@ from flopt.env import Environment
 env = Environment()
 
 from flopt.variable import Variable
-from flopt.expression import CustomExpression, Const
+from flopt.expression import CustomExpression
 from flopt.problem import Problem
 from flopt.solvers import Solver, Solver_list, allAvailableSolvers
 from flopt.solution import Solution
@@ -14,3 +14,12 @@ import flopt.performance
 
 # visualize
 from flopt.utils import get_dot_graph
+
+# constants
+import flopt.constants
+
+VarContious = flopt.constants.VariableType.Continuous
+VarInteger = flopt.constants.VariableType.Integer
+VarBinary = flopt.constants.VariableType.Binary
+VarSpin = flopt.constants.VariableType.Spin
+VerPermutation = flopt.constants.VariableType.Permutation
