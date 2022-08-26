@@ -1,7 +1,6 @@
 Sequential Update Search
 ------------------------
 
-.. autoclass:: flopt.solvers.sequential_update_searches.base_sequential_update.SequentialUpdateSearch
 
 Random Search (RandomSearch)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -10,7 +9,7 @@ Random Search (RandomSearch)
 .. image:: https://img.shields.io/badge/Objective-any-orange.svg
 .. image:: https://img.shields.io/badge/Constraints-None-green.svg
 
-.. autoclass:: flopt.solvers.RandomSearch
+.. autoclass:: flopt.solvers.random_search.RandomSearch
 
 
 2-Opt
@@ -20,4 +19,4 @@ Random Search (RandomSearch)
 .. image:: https://img.shields.io/badge/Objective-any-orange.svg
 .. image:: https://img.shields.io/badge/Constraints-None-green.svg
 
-.. autoclass:: flopt.solvers.TwoOpt
+.. autoclass:: flopt.solvers.two_opt.TwoOpt

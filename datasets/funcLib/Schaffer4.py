@@ -1,5 +1,6 @@
-from flopt import Variable
 from math import sin, cos
+
+import flopt
 
 
 def create_objective(*args, **kwargs):
@@ -15,10 +16,9 @@ def create_objective(*args, **kwargs):
 
 
 def create_variables(*args, **kwargs):
-    variables = [
-        Variable(name=f"x{i}", lowBound=-100, upBound=100, cat="Continuous")
-        for i in [0, 1]
-    ]
+    variables = flopt.Variable.array(
+        "x", 2, lowBound=-100, upBound=100, cat="Continuous"
+    )
     return variables
 
 

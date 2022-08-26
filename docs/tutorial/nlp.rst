@@ -132,3 +132,16 @@ The result of the solver is reflected in Problem and Variable objects.
   print("a", Value(a))  # or a.value()
   print("b", Value(b))
   print("c", Value(c))
+
+
+Solver Profiling
+----------------
+
+You can easily see the transition of the incumbent solution.
+
+.. code-block:: python
+
+  status, logs = prob.solve(solver, msg=True)  # run solver
+  fig, ax = logs.plot(label="objective value of best solution", marker="o")
+
+.. image:: https://cdn-ak.f.st-hatena.com/images/fotolife/i/inarizuuuushi/20220826/20220826103011.png

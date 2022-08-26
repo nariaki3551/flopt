@@ -3,7 +3,7 @@ import pytest
 import numpy as np
 
 from flopt import Variable, Problem, CustomExpression
-from flopt import Sum, Prod, Dot, Value
+from flopt import Sum, Prod, Dot, Value, get_dot_graph
 
 
 def test_Sum1():
@@ -50,3 +50,46 @@ def test_Value3():
 def test_Value4():
     x = Variable.array("x", 2, ini_value=2)
     assert np.all(Value(x) == 2)
+
+
+def test_dot_graph_Expression(tmpdir):
+    a = Variable("a", lowBound=0, upBound=1, cat="Continuous")
+    b = Variable("b", lowBound=1, upBound=2, cat="Continuous")
+    c = Variable("c", upBound=3, cat="Continuous")
+
+    z = 2 * (3 * a + b) * c**2 + 3
+
+    path = tmpdir.mkdir("save").join("tmp1.txt")
+    get_dot_graph(z, path)
+
+
+def test_dot_graph_CustomExpression(tmpdir):
+    a = Variable("a", lowBound=0, upBound=1, cat="Continuous")
+    b = Variable("b", lowBound=1, upBound=2, cat="Continuous")
+    c = Variable("c", upBound=3, cat="Continuous")
+
+    def custom(a, b, c):
+        return a + b * c
+
+    z = CustomExpression(func=custom, arg=[a, b, c])
+
+    path = tmpdir.mkdir("save").join("tmp2.txt")
+    get_dot_graph(z, path)
+
+
+def test_dot_graph_Sum(tmpdir):
+    x = Variable.array("x", 6)
+
+    z = Sum(x)
+
+    path = tmpdir.mkdir("save").join("tmp3.txt")
+    get_dot_graph(z, path)
+
+
+def test_dot_graph_Prod(tmpdir):
+    x = Variable.array("x", 6)
+
+    z = Prod(x)
+
+    path = tmpdir.mkdir("save").join("tmp4.txt")
+    get_dot_graph(z, path)

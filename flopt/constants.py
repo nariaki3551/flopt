@@ -46,9 +46,20 @@ class VariableType(enum.IntEnum):
 
 # expression type
 class ExpressionType(enum.IntEnum):
-    Normal = 1000
-    Custom = 1001
-    Const = 1002
+    Normal = 200
+    Custom = 201
+    Const = 202
+    Sum = 203
+    Prod = 204
+
+    def __str__(self):
+        return self.name
+
+
+# expression type
+class ConstraintType(enum.IntEnum):
+    Le = 300
+    Eq = 301
 
     def __str__(self):
         return self.name

@@ -10,7 +10,7 @@ PulpSearch
 .. image:: https://img.shields.io/badge/Objective-Linear-orange.svg
 .. image:: https://img.shields.io/badge/Constraints-Linear-green.svg
 
-.. autoclass:: flopt.solvers.PulpSearch
+.. autoclass:: flopt.solvers.pulp_search.PulpSearch
 
 
 ScipyLpSearch
@@ -20,7 +20,7 @@ ScipyLpSearch
 .. image:: https://img.shields.io/badge/Objective-Linear-orange.svg
 .. image:: https://img.shields.io/badge/Constraints-Linear-green.svg
 
-.. autoclass:: flopt.solvers.ScipyLpSearch
+.. autoclass:: flopt.solvers.scipy_searches.ScipyLpSearch
 
 
 ScipyMilpSearch
@@ -32,4 +32,4 @@ ScipyMilpSearch
 .. image:: https://img.shields.io/badge/Objective-Linear-orange.svg
 .. image:: https://img.shields.io/badge/Constraints-Linear-green.svg
 
-.. autoclass:: flopt.solvers.ScipyMilpSearch
+.. autoclass:: flopt.solvers.scipy_searches.ScipyMilpSearch

@@ -89,3 +89,25 @@ Expression Examples
   >>>   Type    : Normal
   >>>   Value   : 0.0
 
+
+Show a calculation graph
+------------------------
+
+You can easily see the calculation graphs of expressions by using `get_dot_graph`
+
+
+.. code-block:: python
+
+  import itertools
+  x = flopt.Variable.array("x", 3)
+  f = flopt.Sum(xi * xj for xi, xj in itertools.product(x, x))
+  save_path = "tmp.txt"
+  flopt.get_dot_graph(f, save_path)
+
+In addition, you execute Graphviz command.
+
+.. code-block:: shell
+
+  dot tmp.txt -T png -o tmp.png
+
+.. image:: https://cdn-ak.f.st-hatena.com/images/fotolife/i/inarizuuuushi/20220826/20220826103019.png

@@ -92,11 +92,11 @@ def pulp_to_flopt(prob):
     flopt_prob = flopt.Problem(name=name)
 
     def flopt_exp(const, var_dicts):
-        exp = const
+        elms = list()
         for var_dict in var_dicts:
             name, value = var_dict["name"], var_dict["value"]
-            exp += value * flopt_variables[name]
-        return exp
+            elms.append(value * flopt_variables[name])
+        return flopt.Sum(elms) + const
 
     # convert objective function
     obj = flopt_exp(prob.objective.constant, prob.objective.to_dict())

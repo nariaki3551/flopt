@@ -8,5 +8,5 @@ AmplifySolver
 .. image:: https://img.shields.io/badge/Objective-Ising-orange.svg
 .. image:: https://img.shields.io/badge/Constraints-Ising-green.svg
 
-.. autoclass:: flopt.solvers.AmplifySearch
+.. autoclass:: flopt.solvers.amplify_search.AmplifySearch
 

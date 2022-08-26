@@ -1,4 +1,4 @@
-from flopt import Variable
+import flopt
 
 
 def create_objective(*args, **kwargs):
@@ -15,8 +15,8 @@ def create_objective(*args, **kwargs):
 
 def create_variables(*args, **kwargs):
     variables = [
-        Variable(name=f"x1", lowBound=-3, upBound=3, cat="Continuous"),
-        Variable(name=f"x2", lowBound=-2, upBound=2, cat="Continuous"),
+        flopt.Variable(name=f"x1", lowBound=-3, upBound=3, cat="Continuous"),
+        flopt.Variable(name=f"x2", lowBound=-2, upBound=2, cat="Continuous"),
     ]
     return variables
 
