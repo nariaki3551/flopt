@@ -1318,6 +1318,9 @@ class Sum(Operation):
         else:
             return to_value_ufunc(self.elms).sum()
 
+    def isLinear(self):
+        return all(elm.isLinear() for elm in self.elms)
+
     def __str__(self):
         s = f"Name: {self.name}\n"
         s += f"  Type    : {self._type}\n"
@@ -1389,6 +1392,9 @@ class Prod(Operation):
             return ret
         else:
             return to_value_ufunc(self.elms).prod()
+
+    def isLinear(self):
+        return sum(not isinstance(elm, number_classes) for elm in self.elms) <= 1
 
     def __str__(self):
         s = f"Name: {self.name}\n"

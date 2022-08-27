@@ -2,6 +2,7 @@ from flopt.variable import VarElement
 from flopt.expression import Expression, Const
 from flopt.constraint import Constraint
 from flopt.solution import Solution
+from flopt.constants import OptimizationType, array_classes
 from flopt.env import setup_logger
 
 
@@ -28,7 +29,9 @@ class Problem:
         minimize, maximize
         (future satisfiability is added)
     obj : Expression family
-    variables : set of VarElement family
+    obj_name : str
+        name of objective
+    __variables : set of VarElement family
     solver : Solver or None
     time : float
         solving time
@@ -54,18 +57,23 @@ class Problem:
     >>> prob.getObjectiveValue()
     """
 
-    def __init__(self, name=None, sense="minimize"):
+    def __init__(self, name=None, sense=OptimizationType.Minimize):
+        if sense == "minimize" or sense == "maximize":
+            logger.warning(
+                f"'minimize' and 'maximize' is deprecated. You have to use 'Minimize', 'Maximize', flopt.Minimize or flopt.Maximize"
+            )
         self.type = "Problem"
         self.name = name
-        self.sense = sense
+        self.sense = str(sense)
         self.obj = Const(0)
+        self.obj_name = None
         self.constraints = []
-        self.variables = set()
+        self.__variables = set()
         self.solver = None
         self.time = None
         self.prob_type = ["blackbox"]
 
-    def setObjective(self, obj):
+    def setObjective(self, obj, name=None):
         """set objective function. __iadd__(), "+=" operations call this function.
 
         Parameters
@@ -78,14 +86,15 @@ class Problem:
         elif isinstance(obj, VarElement):
             obj = Expression(obj, Const(0), "+")
         self.obj = obj
+        self.obj_name = name
         try:
-            self.variables |= obj.getVariables()
+            self.__variables |= obj.getVariables()
         except RecursionError:
             import sys
 
             logger.warning(f"recursion reaches {sys.getrecursionlimit}")
             sys.setrecursionlimit(sys.getrecursionlimit() * 100)
-            self.variables |= obj.getVariables()
+            self.__variables |= obj.getVariables()
         except Exception as e:
             raise e
 
@@ -122,7 +131,12 @@ class Problem:
         ), f"assume Constraint class, but got {type(const)}"
         const.name = name
         self.constraints.append(const)
-        self.variables |= const.getVariables()
+        self.__variables |= const.getVariables()
+
+    def addConstraints(self, consts, name=None):
+        for i, const in enumerate(consts):
+            _name = None if name is None else name + f"_{i}"
+            self.addConstraint(const, _name)
 
     def removeDuplicatedConstraints(self):
         """Remove duplicated constraints in problem
@@ -170,12 +184,12 @@ class Problem:
         set
             set of VarElement used in this problem
         """
-        return self.variables
+        return self.__variables
 
     def resetVariables(self):
-        self.variables = self.obj.getVariables()
+        self.__variables = self.obj.getVariables()
         for const in self.constraints:
-            self.variables |= const.getVariables()
+            self.__variables |= const.getVariables()
 
     def solve(self, solver=None, timelimit=None, lowerbound=None, msg=False):
         """solve this problem
@@ -220,7 +234,7 @@ class Problem:
         if lowerbound is not None:
             solver.setParams(lowerbound=lowerbound)
 
-        if self.sense == "maximize":
+        if self.sense == "maximize" or self.sense == "Maximize":
             self.obj = -self.obj
 
         solution = Solution("s", self.getVariables())
@@ -231,7 +245,7 @@ class Problem:
             msg=msg,
         )
 
-        if self.sense == "maximize":
+        if self.sense == "maximize" or self.sense == "Maximize":
             self.obj = -self.obj
 
         return status, log
@@ -267,6 +281,8 @@ class Problem:
             other = (other,)
         if isinstance(other[0], Constraint):
             self.addConstraint(*other)
+        elif isinstance(other[0], array_classes):
+            self.addConstraints(*other)
         else:
             self.setObjective(*other)
         return self
@@ -283,12 +299,13 @@ class Problem:
                 for key, value in sorted(variables_dict.items())
             ]
         )
+        obj_name = "" if self.obj_name is None else f"{self.obj_name}, "
         s = f"Name: {self.name}\n"
         s += f"  Type         : {self.type}\n"
         s += f"  sense        : {self.sense}\n"
-        s += f"  objective    : {self.obj.name}\n"
+        s += f"  objective    : {obj_name}{self.obj.name}\n"
         s += f"  #constraints : {len(self.constraints)}\n"
-        s += f"  #variables   : {len(self.variables)} ({variables_str})"
+        s += f"  #variables   : {len(self.getVariables())} ({variables_str})"
         return s
 
     def show(self):
