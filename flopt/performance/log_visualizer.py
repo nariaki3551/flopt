@@ -215,6 +215,10 @@ class LogVisualizer:
                 messages[i] = message
             for message in messages:
                 print(" ".join(message))
+            print()
+            print(f"stas")
+            print(f"s# time,{','.join(solvers)}")
+            print(f"s## {time},{','.join(list(map(str, ranks)))}")
 
     def __len__(self):
         return len(self.logs)
