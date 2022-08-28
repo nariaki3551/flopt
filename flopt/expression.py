@@ -87,15 +87,6 @@ class ExpressionElement:
         """
         raise NotImplementedError
 
-    def traverse(self):
-        """traverse Expression tree as root is self
-
-        Yield
-        -----
-        Expression or VarElement
-        """
-        raise NotImplementedError
-
     def isNeg(self):
         """
         Returns
@@ -424,10 +415,6 @@ class ExpressionElement:
         Expression or VarElement
         """
         yield self
-        if isinstance(self.elmA, Expression):
-            yield from self.elmA.traverse()
-        if isinstance(self.elmB, Expression):
-            yield from self.elmB.traverse()
 
     def traverseAncestors(self):
         """traverse ancestors of self
@@ -438,8 +425,7 @@ class ExpressionElement:
         """
         for parent in self.parents:
             yield parent
-            if isinstance(parent, Expression):
-                yield from parent.traverseAncestors()
+            yield from parent.traverseAncestors()
 
     def __add__(self, other):
         if isinstance(other, number_classes):
@@ -824,10 +810,8 @@ class Expression(ExpressionElement):
         Expression or VarElement
         """
         yield self
-        if isinstance(self.elmA, Expression):
-            yield from self.elmA.traverse()
-        if isinstance(self.elmB, Expression):
-            yield from self.elmB.traverse()
+        yield from self.elmA.traverse()
+        yield from self.elmB.traverse()
 
     def isNeg(self):
         return (
@@ -1033,9 +1017,6 @@ class CustomExpression(ExpressionElement):
         self.unsetVarDict()
         return value
 
-    def traverse(self):
-        yield self
-
     def getVariables(self):
         return self.variables
 
@@ -1089,9 +1070,6 @@ class Const(float, ExpressionElement):
 
     def getVariables(self):
         return set()
-
-    def traverse(self):
-        return NotImplemented
 
     def isNeg(self):
         return self._value < 0
@@ -1246,8 +1224,7 @@ class Operation(ExpressionElement):
         """
         yield self
         for elm in self.elms:
-            if isinstance(elm, ExpressionElement):
-                yield from elm.traverse()
+            yield from elm.traverse()
 
     def isNeg(self):
         return False
@@ -1317,6 +1294,9 @@ class Sum(Operation):
             return ret
         else:
             return to_value_ufunc(self.elms).sum()
+
+    def isLinear(self):
+        return all(elm.isLinear() for elm in self.elms)
 
     def __str__(self):
         s = f"Name: {self.name}\n"
@@ -1389,6 +1369,9 @@ class Prod(Operation):
             return ret
         else:
             return to_value_ufunc(self.elms).prod()
+
+    def isLinear(self):
+        return sum(not isinstance(elm, number_classes) for elm in self.elms) <= 1
 
     def __str__(self):
         s = f"Name: {self.name}\n"

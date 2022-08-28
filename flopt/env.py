@@ -12,7 +12,29 @@ log_name = {
 }
 
 
+class create_variable_mode:
+    def __enter__(self):
+        Environment.CREATE_VARIABLE_MODE = True
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        Environment.CREATE_VARIABLE_MODE = False
+
+
+def is_create_variable_mode():
+    return Environment.CREATE_VARIABLE_MODE
+
+
+def get_variable_id():
+    var_id = Environment.variable_id
+    Environment.variable_id += 1
+    return var_id
+
+
 class Environment:
+
+    variable_id = 0
+    CREATE_VARIABLE_MODE = False
+
     def __init__(self):
         src_dir = os.path.dirname(__file__)
         self.src_dir = src_dir

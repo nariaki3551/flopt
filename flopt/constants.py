@@ -63,3 +63,12 @@ class ConstraintType(enum.IntEnum):
 
     def __str__(self):
         return self.name
+
+
+# optimization type
+class OptimizationType(enum.IntEnum):
+    Minimize = 400
+    Maximize = 401
+
+    def __str__(self):
+        return self.name

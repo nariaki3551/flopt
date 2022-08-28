@@ -5,6 +5,7 @@ import numpy as np
 from flopt.variable import VarElement, VariableArray
 from flopt.expression import Expression, CustomExpression, Const
 import flopt.expression
+from flopt.constants import array_classes
 
 
 def Sum(x):
@@ -55,6 +56,18 @@ def Dot(x, y):
     inner product of x and y
     """
     return Sum(_x * _y for _x, _y in zip(x, y))
+
+
+def Sqrt(x):
+    return x**0.5
+
+
+def Norm(x):
+    return Sqrt(Dot(x, x))
+
+
+def Sqnorm(x):
+    return Dot(x, x)
 
 
 def Value(x):

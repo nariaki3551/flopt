@@ -40,7 +40,7 @@ def flopt_to_pulp(prob):
         from flopt.solvers.convert import flopt_to_pulp
         lp_prob, lp_solution = flopt_to_pulp(prob)
     """
-    assert PulpSearch().available(prob)
+    assert PulpSearch().available(prob, verbose=True)
     solution = Solution("s", prob.getVariables())
     lp_prob, lp_solution = PulpSearch().createLpProblem(solution, prob)
     return lp_prob, lp_solution

@@ -142,7 +142,12 @@ class PulpSearch(BaseSearch):
 
         # conver Problem -> pulp.LpProblem
         name = "" if self.name is None else self.name
-        lp_prob = pulp.LpProblem(name=name)
+        sense = (
+            pulp.LpMinimize
+            if prob.sense in {"minimize", "Minimize"}
+            else pulp.LpMaximize
+        )
+        lp_prob = pulp.LpProblem(name=name, sense=sense)
         if not isinstance(prob.obj, Const):
             lp_prob.setObjective(prob.obj.value(lp_solution))
 

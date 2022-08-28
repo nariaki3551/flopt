@@ -5,7 +5,7 @@ from flopt.variable import VariableArray
 from flopt.convert.linearize import linearize
 from flopt.constants import VariableType, ConstraintType, np_float
 from flopt.error import ConversionError
-from flopt.env import setup_logger
+from flopt.env import setup_logger, create_variable_mode
 
 logger = setup_logger(__name__)
 
@@ -309,7 +309,8 @@ class QpStructure:
         else:
             types = self.types
         if self.x is not None:
-            s = Variable.array("__s", num_stack, lowBound=0, cat="Continuous")
+            with create_variable_mode():
+                s = Variable.array("slack", num_stack, lowBound=0, cat="Continuous")
             x = np.hstack([self.x, s])
         else:
             x = self.x

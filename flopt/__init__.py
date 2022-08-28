@@ -18,8 +18,11 @@ from flopt.utils import get_dot_graph
 # constants
 import flopt.constants
 
-VarContious = flopt.constants.VariableType.Continuous
+VarContinuous = flopt.constants.VariableType.Continuous
 VarInteger = flopt.constants.VariableType.Integer
 VarBinary = flopt.constants.VariableType.Binary
 VarSpin = flopt.constants.VariableType.Spin
 VerPermutation = flopt.constants.VariableType.Permutation
+
+Minimize = flopt.constants.OptimizationType.Minimize
+Maximize = flopt.constants.OptimizationType.Maximize

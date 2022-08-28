@@ -15,7 +15,12 @@ from flopt.constants import (
     array_classes,
     np_float,
 )
-from flopt.env import setup_logger
+from flopt.env import (
+    setup_logger,
+    create_variable_mode,
+    is_create_variable_mode,
+    get_variable_id,
+)
 
 
 logger = setup_logger(__name__)
@@ -86,6 +91,12 @@ class VariableFactory:
         assert "^" not in name, f"The ^ character cannot be used in the name."
         assert "(" not in name, f"The ( character cannot be used in the name."
         assert ")" not in name, f"The ) character cannot be used in the name."
+        if is_create_variable_mode():
+            assert name.startswith("__"), f"The name must be started with __ characters"
+        else:
+            assert not name.startswith(
+                "__"
+            ), f"The name must not be started with __ characters"
 
     def __call__(
         self, name, lowBound=None, upBound=None, cat="Continuous", ini_value=None
@@ -133,6 +144,9 @@ class VariableFactory:
         >>> lowBound: 0
         >>> upBound : 10
         """
+        if is_create_variable_mode():
+            assert name is not None
+            name = f"__{get_variable_id()}_" + name
         self.checkName(name)
         cat = str(cat)
         if cat == "Continuous":
@@ -140,6 +154,14 @@ class VariableFactory:
         elif cat == "Integer":
             return VarInteger(name, lowBound, upBound, ini_value)
         elif cat == "Binary":
+            if lowBound is not None and lowBound != 0:
+                logger.warning(
+                    f"lowBound of {name} is ignored because its category is Binary"
+                )
+            if upBound is not None and upBound != 1:
+                logger.warning(
+                    f"upBound of {name} is ignored because its category is Binary"
+                )
             return VarBinary(name, ini_value)
         elif cat == "Spin":
             return VarSpin(name, ini_value)
@@ -148,8 +170,75 @@ class VariableFactory:
         else:
             raise ValueError(f"cat {cat} cannot be used")
 
+    @classmethod
+    def dicts(
+        cls,
+        name,
+        indices=None,
+        lowBound=None,
+        upBound=None,
+        cat=VariableType.Continuous,
+        ini_value=None,
+        index_start=[],
+    ):
+        """
+        Parameters
+        ----------
+        name : str
+          name of variable
+        indices : tuple or generator
+            keys of variable dictionary
+        lowBound : float, optional
+          lowBound
+        upBound : float, optional
+          upBound
+        cat : str, optional
+          category of variable
+        ini_value : float, optional
+          set value to variable
+
+        Returns
+        -------
+        dict
+
+        """
+
+        if indices is None:
+            raise TypeError(
+                "LpVariable.dicts missing both 'indices' and deprecated 'indexs' arguments."
+            )
+
+        if isinstance(indices, types.GeneratorType):
+            indices = tuple(indices)
+        elif not isinstance(indices, tuple):
+            indices = (indices,)
+
+        index = indices[0]
+        indices = indices[1:]
+        variables = dict()
+        if len(indices) == 0:
+            for i in index:
+                if isinstance(i, array_classes):
+                    var_name = f"{name}_" + "_".join(map(str, i))
+                else:
+                    var_name = f"{name}_{i}"
+                variables[i] = Variable(
+                    var_name,
+                    lowBound,
+                    upBound,
+                    cat,
+                    ini_value,
+                )
+        else:
+            for i in index:
+                variables[i] = Variable.dicts(
+                    name, indices, lowBound, upBound, cat, ini_value, index_start + [i]
+                )
+        return variables
+
+    @classmethod
     def dict(
-        self, name, keys, lowBound=None, upBound=None, cat="Continuous", ini_value=None
+        cls, name, keys, lowBound=None, upBound=None, cat="Continuous", ini_value=None
     ):
         """
         Parameters
@@ -204,7 +293,7 @@ class VariableFactory:
                 var_name = f"{name}_" + "_".join(map(str, key))
             else:
                 var_name = f"{name}_{key}"
-            variables[key] = self(var_name, lowBound, upBound, cat, ini_value)
+            variables[key] = Variable(var_name, lowBound, upBound, cat, ini_value)
         return variables
 
     def array(
@@ -263,11 +352,12 @@ class VariableFactory:
             _ini_value = (
                 ini_value[i] if isinstance(ini_value, array_classes) else ini_value
             )
-            variables[i] = self(var_name, _lowBound, _upBound, _cat, _ini_value)
+            variables[i] = Variable(var_name, _lowBound, _upBound, _cat, _ini_value)
         return VariableArray(variables)
 
+    @classmethod
     def matrix(
-        self,
+        cls,
         name,
         n_row,
         n_col,
@@ -309,7 +399,7 @@ class VariableFactory:
         >>>         Variable(x_1_1, cat="Binary", ini_value=0)]], dtype=object)
 
         """
-        return self.array(name, (n_row, n_col), lowBound, upBound, cat, ini_value)
+        return Variable.array(name, (n_row, n_col), lowBound, upBound, cat, ini_value)
 
 
 # -------------------------------------------------------
@@ -320,7 +410,7 @@ class VariableFactory:
 class VarElement:
     """Base Variable class"""
 
-    def __init__(self, name, lowBound, upBound, ini_value):
+    def __init__(self, name, lowBound=None, upBound=None, ini_value=None):
         self.name = name
         self.lowBound = lowBound
         self.upBound = upBound
@@ -406,6 +496,12 @@ class VarElement:
 
     def clone(self):
         raise NotImplementedError()
+
+    def traverse(self):
+        yield self
+
+    def traverseAncestors(self):
+        raise NotImplementedError
 
     def __add__(self, other):
         if isinstance(other, number_classes):
@@ -639,7 +735,10 @@ class VarInteger(VarElement):
     def toBinary(self):
         if self.binarized is None:
             l, u = int(self.getLb()), int(self.getUb())
-            self.binaries = Variable.array(f"bin_{self.name}", u - l + 1, cat="Binary")
+            with create_variable_mode():
+                self.binaries = Variable.array(
+                    f"__bin_{self.name}", u - l + 1, cat="Binary"
+                )
             self.binarized = flopt.Sum(
                 Const(i) * var_bin for i, var_bin in zip(range(l, u + 1), self.binaries)
             )
@@ -682,7 +781,7 @@ class VarBinary(VarInteger):
 
     _type = VariableType.Binary
 
-    def __init__(self, name, ini_value, spin=None):
+    def __init__(self, name, ini_value=None, spin=None):
         super().__init__(name, 0, 1, ini_value)
         self.spin = spin
 
@@ -709,11 +808,12 @@ class VarBinary(VarInteger):
         {0, 1} to {-1, 1}
         """
         if self.spin is None:
-            self.spin = VarSpin(
-                f"{self.name}_s",
-                ini_value=int(2 * self._value - 1),
-                binary=self,
-            )
+            with create_variable_mode():
+                self.spin = VarSpin(
+                    f"{self.name}_s",
+                    ini_value=int(2 * self._value - 1),
+                    binary=self,
+                )
         return (self.spin + 1) * 0.5
 
     def clone(self):
@@ -813,11 +913,12 @@ class VarSpin(VarElement):
         {-1, 1} to {0, 1}
         """
         if self.binary is None:
-            self.binary = VarBinary(
-                f"{self.name}_b",
-                ini_value=int((self._value + 1) / 2),
-                spin=self,
-            )
+            with create_variable_mode():
+                self.binary = VarBinary(
+                    f"{self.name}_b",
+                    ini_value=int((self._value + 1) / 2),
+                    spin=self,
+                )
         return 2 * self.binary - 1
 
     def toSpin(self):
