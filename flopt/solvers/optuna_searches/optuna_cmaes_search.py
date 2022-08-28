@@ -16,10 +16,11 @@ class OptunaCmaEsSearch(OptunaSearch):
     seed
     """
 
+    name = "OptunaCmaEsSearch"
+    can_solve_problems = ["blackbox"]
+
     def __init__(self):
         super().__init__()
-        self.name = "OptunaCmaEsSearch"
-        self.can_solve_problems = ["blackbox"]
         self.x0 = None
         self.sigma0 = None
         self.n_startup_trials = 1

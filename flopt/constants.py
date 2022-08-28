@@ -2,8 +2,8 @@ import enum
 
 import numpy as np
 
-VERSION = "0.5.3"
-DATE = "August 12, 2022"
+VERSION = "0.5.4"
+DATE = "September 1, 2022"
 
 
 # number classes
@@ -46,9 +46,29 @@ class VariableType(enum.IntEnum):
 
 # expression type
 class ExpressionType(enum.IntEnum):
-    Normal = 1000
-    Custom = 1001
-    Const = 1002
+    Normal = 200
+    Custom = 201
+    Const = 202
+    Sum = 203
+    Prod = 204
+
+    def __str__(self):
+        return self.name
+
+
+# expression type
+class ConstraintType(enum.IntEnum):
+    Le = 300
+    Eq = 301
+
+    def __str__(self):
+        return self.name
+
+
+# optimization type
+class OptimizationType(enum.IntEnum):
+    Minimize = 400
+    Maximize = 401
 
     def __str__(self):
         return self.name

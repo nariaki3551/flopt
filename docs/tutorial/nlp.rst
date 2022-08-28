@@ -58,17 +58,9 @@ In flopt, we denote these as
 
 .. code-block:: python
 
-  a = Variable(name="a", lowBound=0, upBound=1, cat="Integer")
-  b = Variable(name="b", lowBound=1, upBound=2, cat="Continuous")
-  c = Variable(name="c", lowBound=1, upBound=3, cat="Continuous")
-
-Or,
-
-.. code-block:: python
-
-  a = Variable("a", 0, 1, "Integer")
-  b = Variable("b", 1, 2)
-  c = Variable("c", 1, 3)
+  a = Variable(name="a", lowBound=0, upBound=1, cat="Integer")    # is equal to Variable("a", 0, 1, flopt.VarInteger)
+  b = Variable(name="b", lowBound=1, upBound=2, cat="Continuous") # is equal to Variable("b", 1, 2, "Continuous")
+  c = Variable(name="c", lowBound=1, upBound=3, cat="Continuous") # is equal to Variable("c", 1, 3, flopt.VarContinuous)
 
 We can set an initial value to each variable by `ini_value` option.
 
@@ -132,3 +124,16 @@ The result of the solver is reflected in Problem and Variable objects.
   print("a", Value(a))  # or a.value()
   print("b", Value(b))
   print("c", Value(c))
+
+
+Solver Profiling
+----------------
+
+You can easily see the transition of the incumbent solution.
+
+.. code-block:: python
+
+  status, logs = prob.solve(solver, msg=True)  # run solver
+  fig, ax = logs.plot(label="objective value of best solution", marker="o")
+
+.. image:: https://cdn-ak.f.st-hatena.com/images/fotolife/i/inarizuuuushi/20220826/20220826103011.png

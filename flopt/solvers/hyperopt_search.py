@@ -1,4 +1,5 @@
-from time import time
+import time
+import weakref
 
 from flopt.env import setup_logger
 from flopt.solvers.base import BaseSearch
@@ -34,14 +35,15 @@ class HyperoptTPESearch(BaseSearch):
         whether display a progress bar of search
     """
 
+    name = "HyperoptTPESearch"
+    can_solve_problems = ["blackbox"]
+
     def __init__(self):
         super().__init__()
         from hyperopt import STATUS_OK
 
-        self.name = "HyperoptTPESearch"
         self.n_trial = 1e100
         self.show_progressbar = False
-        self.can_solve_problems = ["blackbox"]
         self.hyperopt_STATUS_OK = STATUS_OK
 
     def available(self, prob, verbose=False):
@@ -76,8 +78,6 @@ class HyperoptTPESearch(BaseSearch):
     def search(self):
         import hyperopt
 
-        status = SolverTerminateState.Normal
-
         # make the search space
         space = dict()
         for var in self.solution:
@@ -89,7 +89,9 @@ class HyperoptTPESearch(BaseSearch):
             space[var.name] = var_space
 
         # for objective
-        self.var_dict = {var.name: var for var in self.solution}
+        self.var_dict = weakref.WeakValueDictionary(
+            {var.name: var for var in self.solution}
+        )
 
         # search
         try:
@@ -101,13 +103,13 @@ class HyperoptTPESearch(BaseSearch):
                 show_progressbar=self.show_progressbar,
             )
         except TimeoutError:
-            status = SolverTerminateState.Timelimit
+            return SolverTerminateState.Timelimit
 
-        return status
+        return SolverTerminateState.Normal
 
     def objective(self, var_value_dict):
         # check timelimit
-        if time() > self.start_time + self.timelimit:
+        if time.time() > self.start_time + self.timelimit:
             raise TimeoutError
 
         # set value into self.solution
@@ -116,12 +118,8 @@ class HyperoptTPESearch(BaseSearch):
             self.var_dict[name].setValue(value)
         obj_value = self.getObjValue(self.solution)
 
-        # check whether update or not
-        if obj_value < self.best_obj_value:
-            self.updateSolution(self.solution, obj_value)
-            self.recordLog()
-            if self.msg:
-                self.during_solver_message("*")
+        # if solution is better thatn incumbent, then update best solution
+        self.registerSolution(self.solution, obj_value)
 
         # callbacks
         for callback in self.callbacks:

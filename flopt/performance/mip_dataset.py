@@ -3,6 +3,7 @@ import re
 import pulp
 
 import flopt
+import flopt.convert
 from flopt import env as flopt_env
 from .base_dataset import BaseDataset, BaseInstance
 from flopt.env import setup_logger

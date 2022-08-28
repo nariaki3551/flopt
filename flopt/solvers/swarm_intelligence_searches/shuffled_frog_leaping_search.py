@@ -39,10 +39,11 @@ class ShuffledFrogLeapingSearch(BaseSearch):
       max size of step when frog move in memetic evolution.
     """
 
+    name = "ShuffledFrogLeapingSearch"
+    can_solve_problems = ["blackbox"]
+
     def __init__(self):
         super().__init__()
-        self.name = "ShuffledFrogLeapingSearch"
-        self.can_solve_problems = ["blackbox"]
         self.frogs = None
         self.memeplexes = None
         # params
@@ -78,34 +79,26 @@ class ShuffledFrogLeapingSearch(BaseSearch):
         return True
 
     def search(self):
-        status = SolverTerminateState.Normal
-
         for i in range(self.n_trial):
             self.trial_ix += 1
 
             # check time limit
             if time.time() > self.start_time + self.timelimit:
-                status = SolverTerminateState.Timelimit
-                return status
+                return SolverTerminateState.Timelimit
 
             self._memetic_evolution()
 
-            obj_value = self.getObjValue(self.frogs[0])
-            if obj_value < self.best_obj_value:
-                self.updateSolution(self.frogs[0])
-                self.best_obj_value = obj_value
-                if self.msg:
-                    self.during_solver_message("*")
-                self.recordLog()
+            # if solution is better thatn incumbent, then update best solution
+            self.registerSolution(self.frogs[0])
 
             if self.msg and i % 100 == 0:
                 self.during_solver_message(" ")
 
-            # callback
+            # callbacks
             for callback in self.callbacks:
                 callback(self.frogs, self.best_solution, self.best_obj_value)
 
-        return status
+        return SolverTerminateState.Normal
 
     def _memetic_evolution(self):
         """

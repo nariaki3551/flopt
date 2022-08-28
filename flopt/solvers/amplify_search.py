@@ -1,7 +1,9 @@
+import weakref
+
 import numpy as np
 
 from flopt.solvers.base import BaseSearch
-from flopt.constants import VariableType, SolverTerminateState
+from flopt.constants import VariableType, ConstraintType, SolverTerminateState
 from flopt.env import setup_logger
 
 
@@ -85,12 +87,13 @@ class AmplifySearch(BaseSearch):
         >>>   C 0, name None, 0.5*x_s+(0.5*y_s)+1.0 >= 0
     """
 
+    name = "AmplifySearch"
+    can_solve_problems = ["ising"]
+
     def __init__(self):
         super().__init__()
-        self.name = "AmplifySearch"
         self.timelimit = 1
         self.token = None
-        self.can_solve_problems = ["ising"]
 
     def available(self, prob, verbose=False):
         """
@@ -142,12 +145,10 @@ class AmplifySearch(BaseSearch):
         for const in self.prob.constraints:
             ising = const.expression.toIsing()
             g = s.T.dot(ising.J).dot(s) - ising.h.T.dot(s) + ising.C
-            if const.type == "le":
-                f += less_equal(g, 0)
-            elif const.type == "ge":
-                f += greater_equal(g, 0)
-            else:
+            if const.type == ConstraintType.Eq:
                 f += equal_to(g, 0)
+            else:  # ConstraintType.Le
+                f += less_equal(g, 0)
 
         # solve
         client = FixstarsClient()  # Fixstars Optigan
@@ -156,18 +157,13 @@ class AmplifySearch(BaseSearch):
 
         result = Solver(client).solve(f)
 
-        var_dict = {var.name: var for var in self.solution}
+        var_dict = weakref.WeakValueDictionary({var.name: var for var in self.solution})
         for amplify_solution in list(result)[::-1]:
             values = decode_solution(s, amplify_solution.values)
             for var, value in zip(x, values):
                 self.solution.setValue(var.name, value.constant())
 
-            # check whether update or not
-            obj_value = self.getObjValue(self.solution)
-            if obj_value < self.best_obj_value:
-                self.updateSolution(self.solution, obj_value)
-                self.recordLog()
-                if self.msg:
-                    self.during_solver_message("*")
+            # if solution is better thatn incumbent, then update best solution
+            self.registerSolution(self.solution)
 
         return SolverTerminateState.Normal

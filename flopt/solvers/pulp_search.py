@@ -3,9 +3,9 @@ import pulp
 from flopt.solvers.base import BaseSearch
 from flopt.expression import Const
 from flopt.solution import Solution
-from flopt.env import setup_logger
-from flopt.constants import VariableType, SolverTerminateState
+from flopt.constants import VariableType, ConstraintType, SolverTerminateState
 
+from flopt.env import setup_logger
 
 logger = setup_logger(__name__)
 
@@ -37,11 +37,12 @@ class PulpSearch(BaseSearch):
         status of solver
     """
 
+    name = "PulpSearch"
+    can_solve_problems = ["lp"]
+
     def __init__(self):
         super().__init__()
-        self.name = "PulpSearch"
         self.solver = None
-        self.can_solve_problems = ["lp"]
 
     def available(self, prob, verbose=False):
         """
@@ -79,7 +80,6 @@ class PulpSearch(BaseSearch):
 
     def search(self):
 
-        status = SolverTerminateState.Normal
         lp_prob, lp_solution = self.createLpProblem(self.solution, self.prob)
 
         if self.solver is not None:
@@ -94,20 +94,22 @@ class PulpSearch(BaseSearch):
             if var.type() in {VariableType.Integer, VariableType.Binary}:
                 value = round(value)
             var.setValue(value)
-        self.updateSolution(self.solution)
+
+        # if solution is better thatn incumbent, then update best solution
+        self.registerSolution(self.solution)
 
         # lp_status =   -1: infeasible
         #               -2: unbounded
         #               -3: undefined
-        if lp_status == -1:
-            status = SolverTerminateState.Infeasible
-        elif lp_status == -2:
-            status = SolverTerminateState.Unbounded
-        else:
-            status = SolverTerminateState.Abnormal
         logger.info(f"PuLP LpStatus {pulp.constants.LpStatus[lp_status]}")
-
-        return status
+        if lp_status == -1:
+            return SolverTerminateState.Infeasible
+        elif lp_status == -2:
+            return SolverTerminateState.Unbounded
+        elif lp_status == -3:
+            return SolverTerminateState.Abnormal
+        else:
+            return SolverTerminateState.Normal
 
     def createLpProblem(self, solution, prob):
         """Convert Problem into pulp.LpProblem
@@ -140,17 +142,20 @@ class PulpSearch(BaseSearch):
 
         # conver Problem -> pulp.LpProblem
         name = "" if self.name is None else self.name
-        lp_prob = pulp.LpProblem(name=name)
+        sense = (
+            pulp.LpMinimize
+            if prob.sense in {"minimize", "Minimize"}
+            else pulp.LpMaximize
+        )
+        lp_prob = pulp.LpProblem(name=name, sense=sense)
         if not isinstance(prob.obj, Const):
             lp_prob.setObjective(prob.obj.value(lp_solution))
 
         for const in prob.constraints:
             const_exp = const.expression
-            if const.type == "eq":
+            if const.type == ConstraintType.Eq:
                 lp_prob.addConstraint(const_exp.value(lp_solution) == 0, const.name)
-            elif const.type == "le":
+            else:  # const.type == ConstraintType.Le
                 lp_prob.addConstraint(const_exp.value(lp_solution) <= 0, const.name)
-            elif const.type == "ge":
-                lp_prob.addConstraint(const_exp.value(lp_solution) >= 0, const.name)
 
         return lp_prob, lp_solution

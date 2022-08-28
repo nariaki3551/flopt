@@ -1,15 +1,15 @@
-from flopt import Variable
+import flopt
 
 
 def create_objective(n):
     def obj(x):
-        return sum(xi * xi for xi in x)
+        return flopt.Sum(xi * xi for xi in x)
 
     return obj
 
 
 def create_variables(n):
-    variables = [Variable(name=f"x{i}", cat="Continuous") for i in range(n)]
+    variables = flopt.Variable.array("x", n, cat="Continuous")
     return variables
 
 

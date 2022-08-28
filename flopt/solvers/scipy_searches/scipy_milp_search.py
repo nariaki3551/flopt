@@ -31,10 +31,8 @@ class ScipyMilpSearch(BaseSearch):
         status of solver
     """
 
-    def __init__(self):
-        super().__init__()
-        self.name = "ScipyMilpSearch"
-        self.can_solve_problems = ["mip"]
+    name = "ScipyMilpSearch"
+    can_solve_problems = ["mip"]
 
     def available(self, prob, verbose=False):
         """
@@ -71,7 +69,6 @@ class ScipyMilpSearch(BaseSearch):
         return True
 
     def search(self):
-        status = SolverTerminateState.Normal
         var_names = [var.name for var in self.solution]
 
         # lp structure
@@ -117,17 +114,17 @@ class ScipyMilpSearch(BaseSearch):
         #               3: Problem is unbounded.
         #               4: Other; see message for details.
         if res.status == 0:
-            # get result of solver
             for var, value in zip(self.solution, res.x):
                 var.setValue(value)
-            self.updateSolution(self.solution, obj_value=None)
-        elif res.status == 1:
-            status = SolverTerminateState.Timelimit
-        elif res.status == 2:
-            status = SolverTerminateState.Infeasible
-        elif res.status == 3:
-            status = SolverTerminateState.Unbounded
-        else:
-            status = SolverTerminateState.Abnormal
 
-        return status
+            # if solution is better thatn incumbent, then update best solution
+            self.registerSolution(self.solution)
+            return SolverTerminateState.Normal
+        elif res.status == 1:
+            return SolverTerminateState.Timelimit
+        elif res.status == 2:
+            return SolverTerminateState.Infeasible
+        elif res.status == 3:
+            return SolverTerminateState.Unbounded
+        else:
+            return SolverTerminateState.Abnormal

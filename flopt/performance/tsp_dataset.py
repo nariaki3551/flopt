@@ -4,7 +4,7 @@ from itertools import combinations, product
 import numpy as np
 from tqdm import tqdm
 
-from flopt import Variable, Const, CustomExpression, Problem, Sum
+from flopt import Variable, CustomExpression, Problem, Sum
 from flopt import env as flopt_env
 from .base_dataset import BaseDataset, BaseInstance
 from flopt.env import setup_logger
@@ -185,7 +185,7 @@ class TSPInstance(BaseInstance):
         # Variables
         cities = list(range(self.dim))
         x = Variable.matrix("x", len(cities), len(cities), cat="Binary")
-        np.fill_diagonal(x, Const(0))
+        np.fill_diagonal(x, 0)
 
         # Problem
         prob = Problem(name=f"TSP(LP):{self.name}")

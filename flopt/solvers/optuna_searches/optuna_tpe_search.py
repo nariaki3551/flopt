@@ -20,10 +20,11 @@ class OptunaTPESearch(OptunaSearch):
         seed of random generater
     """
 
+    name = "OptunaTPESearch"
+    can_solve_problems = ["blackbox"]
+
     def __init__(self):
         super().__init__()
-        self.name = "OptunaTPESearch"
-        self.can_solve_problems = ["blackbox"]
         self.consider_prior = True
         self.prior_weight = 1.0
         self.consider_magic_clip = True

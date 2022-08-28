@@ -1,5 +1,6 @@
-from flopt import Variable
 from math import sqrt
+
+import flopt
 
 
 def create_objective(*args, **kwargs):
@@ -12,8 +13,8 @@ def create_objective(*args, **kwargs):
 
 def create_variables(*args, **kwargs):
     variables = [
-        Variable(name=f"x1", lowBound=-15, upBound=-5, cat="Continuous"),
-        Variable(name=f"x2", lowBound=-3, upBound=3, cat="Continuous"),
+        flopt.Variable(name=f"x1", lowBound=-15, upBound=-5, cat="Continuous"),
+        flopt.Variable(name=f"x2", lowBound=-3, upBound=3, cat="Continuous"),
     ]
     return variables
 

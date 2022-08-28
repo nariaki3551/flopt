@@ -4,7 +4,7 @@ Solver Selector
 AutoSearch
 ^^^^^^^^^^
 
-.. autoclass:: flopt.solvers.AutoSearch
+.. autoclass:: flopt.solvers.auto_search.AutoSearch
 
 
 How solver is selected?

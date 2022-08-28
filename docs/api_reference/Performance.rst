@@ -21,10 +21,13 @@ Datasets
 .. autoclass:: BaseDataset
    :members:
 
-.. autoclass:: TSPDataset
+.. autoclass:: flopt.performance.tsp_dataset.TSPDataset
    :members:
 
-.. autoclass:: FuncDataset
+.. autoclass:: flopt.performance.func_dataset.FuncDataset
+   :members:
+
+.. autoclass:: flopt.performance.mip_dataset.MipDataset
    :members:
 
 

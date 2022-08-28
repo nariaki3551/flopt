@@ -3,9 +3,9 @@ import numpy as np
 from flopt import Variable, Problem
 from flopt.variable import VariableArray
 from flopt.convert.linearize import linearize
-from flopt.constants import VariableType, np_float
+from flopt.constants import VariableType, ConstraintType, np_float
 from flopt.error import ConversionError
-from flopt.env import setup_logger
+from flopt.env import setup_logger, create_variable_mode
 
 logger = setup_logger(__name__)
 
@@ -191,7 +191,9 @@ class QpStructure:
                 return x
 
         # create G, h
-        num_neq_consts = sum(const.type != "eq" for const in prob.constraints)
+        num_neq_consts = sum(
+            const.type == ConstraintType.Le for const in prob.constraints
+        )
         if num_neq_consts == 0:
             G = None
             h = None
@@ -200,22 +202,18 @@ class QpStructure:
             h = np.zeros((num_neq_consts,), dtype=np_float)
             i = 0
             for const in iter_wrapper(prob.constraints, desc="convert neq constraints"):
-                if const.type == "le":
+                if const.type == ConstraintType.Le:
                     # c.T.dot(x) + C <= 0
                     linear = const.expression.toLinear(x)
                     G[i, :] = linear.c.T
                     h[i] = -linear.C
                     i += 1
-                elif const.type == "ge":
-                    # c.T.dot(x) + C >= 0
-                    linear = const.expression.toLinear(x)
-                    G[i, :] = -linear.c.T
-                    h[i] = linear.C
-                    i += 1
             assert i == num_neq_consts
 
         # create A, b
-        num_eq_consts = sum(const.type == "eq" for const in prob.constraints)
+        num_eq_consts = sum(
+            const.type == ConstraintType.Eq for const in prob.constraints
+        )
         if num_eq_consts == 0:
             A = None
             b = None
@@ -224,7 +222,7 @@ class QpStructure:
             b = np.zeros((num_eq_consts,), dtype=np_float)
             i = 0
             for const in iter_wrapper(prob.constraints, desc="convert eq constraints"):
-                if const.type == "eq":
+                if const.type == ConstraintType.Eq:
                     linear = const.expression.toLinear(x)
                     A[i, :] = linear.c.T
                     b[i] = -linear.C
@@ -311,7 +309,8 @@ class QpStructure:
         else:
             types = self.types
         if self.x is not None:
-            s = Variable.array("__s", num_stack, lowBound=0, cat="Continuous")
+            with create_variable_mode():
+                s = Variable.array("slack", num_stack, lowBound=0, cat="Continuous")
             x = np.hstack([self.x, s])
         else:
             x = self.x

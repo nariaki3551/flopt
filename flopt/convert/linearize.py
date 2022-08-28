@@ -1,8 +1,8 @@
 from flopt.variable import Variable, VarElement
-from flopt.expression import Expression, Const
+from flopt.expression import Expression, Operation, Const
 from flopt.convert.binarize import binarize
 from flopt.constants import VariableType
-from flopt.env import setup_logger
+from flopt.env import setup_logger, create_variable_mode
 
 logger = setup_logger(__name__)
 
@@ -11,7 +11,7 @@ class LinearizeError(Exception):
     pass
 
 
-class NeedBinarize(Exception):
+class NeedToBinarize(Exception):
     pass
 
 
@@ -73,7 +73,7 @@ def linearize(prob):
         prob.obj = linearize_expression(prob.obj, var_muls)
         for const in prob.constraints:
             const.expression = linearize_expression(const.expression, var_muls)
-    except NeedBinarize:
+    except NeedToBinarize:
         logger.info(
             f"problem will be binarized because it includes dislinearable multipry"
         )
@@ -134,10 +134,14 @@ def linearize_expression(e, var_muls):
     """
     if isinstance(e, (VarElement, Const)):
         return e
-    e = e.expand()
+    if e.isLinear():
+        return e
     finish = False
     while not finish:
-        finish = not linearize_traverse(e, var_muls)
+        finish, e = linearize_traverse(e, var_muls)
+        if finish and not e.isLinear():
+            e = e.expand()
+            finish = False
     return e
 
 
@@ -156,13 +160,14 @@ def linearize_traverse(e, var_muls):
         return true if a expession is linearized else false
     """
     assert isinstance(e, Expression)
+
     if is_var_mul(e):
         if not is_linearable(e):
             raise LinearizeError()
         elif need_binarize(e):
-            raise NeedBinarize()
-        e = create_var_mul(e, var_muls)
-        return True
+            raise NeedToBinarize()
+        var_mul = create_var_mul(e, var_muls)
+        return True, var_mul
 
     for node in e.traverse():
         if isinstance(node, Expression):
@@ -171,14 +176,14 @@ def linearize_traverse(e, var_muls):
                 if not is_linearable(node.elmA):
                     raise LinearizeError()
                 elif need_binarize(node.elmA):
-                    raise NeedBinarize()
+                    raise NeedToBinarize()
                 node.elmA = create_var_mul(node.elmA, var_muls)
                 update = True
             if is_var_mul(node.elmB):
                 if not is_linearable(node.elmB):
                     raise LinearizeError()
                 elif need_binarize(node.elmB):
-                    raise NeedBinarize()
+                    raise NeedToBinarize()
                 node.elmB = create_var_mul(node.elmB, var_muls)
                 update = True
             if update:
@@ -187,8 +192,8 @@ def linearize_traverse(e, var_muls):
                 for parent in node.traverseAncestors():
                     parent.setName()
                     parent.setPolynomial()
-                return True
-    return False
+                return False, e
+    return True, e
 
 
 def create_var_mul(node, var_muls):
@@ -203,35 +208,38 @@ def create_var_mul(node, var_muls):
     if (var_a, var_b) not in var_muls:
         # (Binary, Binary)
         if {var_a.type(), var_b.type()} == {VariableType.Binary}:
-            var_mul = Variable(
-                f"mul_{len(var_muls)}",
-                cat="Binary",
-                ini_value=var_a.value() * var_b.value(),
-            )
+            with create_variable_mode():
+                var_mul = Variable(
+                    f"mul",
+                    cat="Binary",
+                    ini_value=var_a.value() * var_b.value(),
+                )
         # (Binary, Integer)
         elif {var_a.type(), var_b.type()} == {
             VariableType.Binary,
             VariableType.Integer,
         }:
-            var_mul = Variable(
-                f"mul_{len(var_muls)}",
-                lowBound=get_lower_bound(var_a, var_b),
-                upBound=get_upper_bound(var_a, var_b),
-                cat="Integer",
-                ini_value=var_a.value() * var_b.value(),
-            )
+            with create_variable_mode():
+                var_mul = Variable(
+                    f"mul",
+                    lowBound=get_lower_bound(var_a, var_b),
+                    upBound=get_upper_bound(var_a, var_b),
+                    cat="Integer",
+                    ini_value=var_a.value() * var_b.value(),
+                )
         #  (Binary, Continuous)
         elif {var_a.type(), var_b.type()} == {
             VariableType.Binary,
             VariableType.Continuous,
         }:
-            var_mul = Variable(
-                f"mul_{len(var_muls)}",
-                lowBound=get_lower_bound(var_a, var_b),
-                upBound=get_upper_bound(var_a, var_b),
-                cat="Continuous",
-                ini_value=var_a.value() * var_b.value(),
-            )
+            with create_variable_mode():
+                var_mul = Variable(
+                    f"mul",
+                    lowBound=get_lower_bound(var_a, var_b),
+                    upBound=get_upper_bound(var_a, var_b),
+                    cat="Continuous",
+                    ini_value=var_a.value() * var_b.value(),
+                )
         var_muls[var_a, var_b] = var_mul
     return var_muls[var_a, var_b]
 

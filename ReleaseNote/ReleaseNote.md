@@ -1,5 +1,35 @@
 # flopt
 
+### version 0.5.4 (Sep, 2022)
+
+**Update**
+
+1. Improvement the overall performance of flopt
+    - add performance measurement script
+    - deley to set the polynominal in expression
+    - 2.5x faster import flopt
+    - 2.5x faster create expression
+    - 2.0x faster calculate the value of functions
+    - 1.25x faster build QpStructure
+    - 1.25x faster sum, prod operation
+
+2. Add new api
+    - flopt.Problem.removeDuplicatedConstraints()
+        - remove the duplicated constraints in problem
+    - flopt.get_dot_graph(expression)
+        - visualize the calculation graph
+    - flopt.constants
+        - flopt.VarCOntinuous, flopt.VarInteger, flopt.VarBinary, flopt.VarSpin, flopt.VerPermutation
+        - flopt.Minimize, flopt.Maximize
+
+3. Simplifize implementations of solvers
+    - flopt.solvers.base.registerSolution(solution)
+        - check and update incumbent solution
+
+4. Manage dummy variable names to avoid duplication name
+    - flopt.env create_variable_mode, is_create_variable_mode, get_variable_id
+
+
 ### version 0.5.3 (Aug, 2022)
 
 **Update**
@@ -53,7 +83,7 @@
 
 
 
-### version 0.4 (August, 2021)
+### version 0.4 (Aug, 2021)
 
 **Update**
 
@@ -67,7 +97,7 @@
 
 
 
-### version 0.3 (3 July, 2021)
+### version 0.3 (Jul, 2021)
 
 **Update**
 
@@ -83,7 +113,7 @@
 
 
 
-### version 0.2 (30 May, 2020)
+### version 0.2 (May, 2020)
 
 **Update**
 
@@ -107,7 +137,7 @@
 
 
 
-### version0.1 (30 Apr, 2020)
+### version0.1 (Apr, 2020)
 
 1. Available Solvers are RandomSearch, 2-Opt, OptunaTPESearch, OptunaCmaEsSearch, HyperoptTPESearch
 

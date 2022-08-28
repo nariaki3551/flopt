@@ -1,16 +1,16 @@
 import pytest
 
-from flopt import Variable, CustomExpression
+import flopt
 
 
 @pytest.fixture(scope="function")
 def a():
-    return Variable("a", lowBound=1, upBound=3, ini_value=2, cat="Integer")
+    return flopt.Variable("a", lowBound=1, upBound=3, ini_value=2, cat="Integer")
 
 
 @pytest.fixture(scope="function")
 def b():
-    return Variable("b", lowBound=1, upBound=3, ini_value=2, cat="Continuous")
+    return flopt.Variable("b", lowBound=1, upBound=3, ini_value=2, cat="Continuous")
 
 
 @pytest.fixture(scope="function")
@@ -23,7 +23,7 @@ def obj():
 
 @pytest.fixture(scope="function")
 def custom_obj(obj, a, b):
-    return CustomExpression(obj, [a, b])
+    return flopt.CustomExpression(obj, [a, b])
 
 
 def test_CustomExpression(custom_obj):
@@ -151,3 +151,12 @@ def test_CustomExpression_repr(custom_obj):
 def test_CustomExpression_isLinear(custom_obj, a):
     assert (custom_obj).isLinear() == False
     assert (custom_obj + a).isLinear() == False
+
+
+def test_CustomExpression_matrix_arg():
+    def obj(x):
+        return x[0, 0] + x[1, 1]
+
+    x = flopt.Variable.matrix("x", 2, 2)
+    custom_obj = flopt.CustomExpression(obj, [x])
+    custom_obj.value()

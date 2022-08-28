@@ -63,9 +63,7 @@ class AutoSearch(BaseSearch):
 
     """
 
-    def __init__(self):
-        super().__init__()
-        self.name = "AutoSearch"
+    name = "AutoSearch"
 
     def available(self, prob, verbose=False):
         """
@@ -99,60 +97,58 @@ class AutoSearch(BaseSearch):
         if self.timelimit < 1:
             algo_lists = [
                 "2-Opt",
-                "RandomSearch",
+                "ScipyLpSearch",
                 "ScipyMilpSearch",
+                "PulpSearch",
+                "CvxoptQpSearch",
+                "RandomSearch",
+                "OptunaCmaEsSearch",
                 "ScipySearch",
+                "OptunaTPESearch",
                 "HyperoptTPESearch",
                 "SFLA",
-                "OptunaCmaEsSearch",
-                "OptunaTPESearch",
-                "PulpSearch",
-                "ScipyMilpSearch",
-                "CvxoptQpSearch",
-                "ScipyLpSearch",
             ]
         if self.timelimit < 5:
             algo_lists = [
                 "2-Opt",
-                "RandomSearch",
-                "ScipyMilpSearch",
-                "ScipySearch",
-                "SFLA",
-                "OptunaCmaEsSearch",
-                "HyperoptTPESearch",
-                "OptunaTPESearch",
-                "PulpSearch",
-                "ScipyMilpSearch",
-                "CvxoptQpSearch",
                 "ScipyLpSearch",
+                "ScipyMilpSearch",
+                "PulpSearch",
+                "CvxoptQpSearch",
+                "OptunaCmaEsSearch",
+                "OptunaTPESearch",
+                "ScipySearch",
+                "RandomSearch",
+                "HyperoptTPESearch",
+                "SFLA",
             ]
-        elif self.timelimit < 30:
+        elif self.timelimit < 60:
             algo_lists = [
                 "2-Opt",
-                "OptunaCmaEsSearch",
+                "ScipyLpSearch",
                 "ScipyMilpSearch",
-                "RandomSearch",
-                "ScipySearch",
-                "OptunaTPESearch",
-                "HyperoptTPESearch",
-                "SFLA",
                 "PulpSearch",
                 "CvxoptQpSearch",
-                "ScipyLpSearch",
+                "OptunaCmaEsSearch",
+                "ScipySearch",
+                "SFLA",
+                "OptunaTPESearch",
+                "RandomSearch",
+                "HyperoptTPESearch",
             ]
         else:
             algo_lists = [
                 "2-Opt",
-                "OptunaCmaEsSearch",
-                "SFLA",
+                "ScipyLpSearch",
                 "ScipyMilpSearch",
-                "ScipySearch",
-                "RandomSearch",
-                "OptunaTPESearch",
-                "HyperoptTPESearch",
                 "PulpSearch",
                 "CvxoptQpSearch",
-                "ScipyLpSearch",
+                "OptunaCmaEsSearch",
+                "SFLA",
+                "ScipySearch",
+                "OptunaTPESearch",
+                "HyperoptTPESearch",
+                "RandomSearch",
             ]
 
         for _algo in algo_lists:

@@ -29,12 +29,13 @@ class ScipyLpSearch(BaseSearch):
     method : {"highs", "highs-ds", "highs-ipm", "simplex", "revised simplex", "interior-point"}
     """
 
+    name = "ScipyLpSearch"
+    can_solve_problems = ["lp"]
+
     def __init__(self):
         super().__init__()
-        self.name = "ScipyLpSearch"
         self.n_trial = 1e10
         self.method = "interior-point"
-        self.can_solve_problems = ["lp"]
 
     def available(self, prob, verbose=False):
         """
@@ -67,7 +68,6 @@ class ScipyLpSearch(BaseSearch):
         return True
 
     def search(self):
-        status = SolverTerminateState.Normal
         var_names = [var.name for var in self.solution]
 
         def gen_func(expression):
@@ -102,15 +102,13 @@ class ScipyLpSearch(BaseSearch):
         # callback
         def callback(optimize_result):
             self.trial_ix += 1
-            obj_value = func(optimize_result.x)
             for var, value in zip(self.solution, optimize_result.x):
                 var.setValue(value)
-            if obj_value < self.best_obj_value:
-                diff = self.best_obj_value - obj_value
-                self.updateSolution(self.solution, obj_value)
-                self.recordLog()
-                if self.msg and diff > 1e-8:
-                    self.during_solver_message("*")
+
+            # if solution is better thatn incumbent, then update best solution
+            self.registerSolution(self.solution, msg_tol=1e-8)
+
+            # callbacks
             for _callback in self.callbacks:
                 _callback([self.solution], self.best_solution, self.best_obj_value)
 
@@ -135,14 +133,13 @@ class ScipyLpSearch(BaseSearch):
             # get result of solver
             for var, value in zip(self.solution, res.x):
                 var.setValue(value)
-            self.updateSolution(self.solution, obj_value=None)
+            self.registerSolution(self.solution)
+            return SolverTerminateState.Normal
         elif res.status == 1:
-            status = SolverTerminateState.Timelimit
+            return SolverTerminateState.Timelimit
         elif res.status == 2:
-            status = SolverTerminateState.Infeasible
+            return SolverTerminateState.Infeasible
         elif res.status == 3:
-            status = SolverTerminateState.Unbounded
+            return SolverTerminateState.Unbounded
         else:
-            status = SolverTerminateState.Abnormal
-
-        return status
+            return SolverTerminateState.Abnormal

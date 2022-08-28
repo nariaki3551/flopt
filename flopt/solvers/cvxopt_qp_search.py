@@ -63,11 +63,12 @@ class CvxoptQpSearch(BaseSearch):
     `https://cvxopt.org/userguide/coneprog.html#quadratic-programming`
     """
 
+    name = "CvxoptQpSearch"
+    can_solve_problems = ["lp", "qp"]
+
     def __init__(self):
         super().__init__()
-        self.name = "CvxoptQpSearch"
         self.n_trial = None
-        self.can_solve_problems = ["lp", "qp"]
 
     def available(self, prob, verbose=False):
         """
@@ -109,11 +110,8 @@ class CvxoptQpSearch(BaseSearch):
         for var, value in zip(qp.x, sol["x"]):
             self.solution.setValue(var.name, value)
 
-        # check whether update or not
-        obj_value = self.getObjValue(self.solution)
-        if obj_value < self.best_obj_value:
-            self.updateSolution(self.solution, obj_value)
-            self.recordLog()
+        # if solution is better thatn incumbent, then update best solution
+        self.registerSolution(self.solution)
 
         return SolverTerminateState.Normal
 
