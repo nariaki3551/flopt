@@ -212,16 +212,18 @@ class VariableFactory:
             indices = tuple(indices)
         elif not isinstance(indices, tuple):
             indices = (indices,)
-        if "%" not in name:
-            name += "_%s" * len(indices)
 
         index = indices[0]
         indices = indices[1:]
         variables = dict()
         if len(indices) == 0:
             for i in index:
+                if isinstance(i, array_classes):
+                    var_name = f"{name}_" + "_".join(map(str, i))
+                else:
+                    var_name = f"{name}_{i}"
                 variables[i] = Variable(
-                    name % tuple(index_start + [str(i)]),
+                    var_name,
                     lowBound,
                     upBound,
                     cat,
@@ -294,9 +296,8 @@ class VariableFactory:
             variables[key] = Variable(var_name, lowBound, upBound, cat, ini_value)
         return variables
 
-    @classmethod
     def array(
-        cls, name, shape, lowBound=None, upBound=None, cat="Continuous", ini_value=None
+        self, name, shape, lowBound=None, upBound=None, cat="Continuous", ini_value=None
     ):
         """
         Parameters
@@ -409,7 +410,7 @@ class VariableFactory:
 class VarElement:
     """Base Variable class"""
 
-    def __init__(self, name, lowBound, upBound, ini_value):
+    def __init__(self, name, lowBound=None, upBound=None, ini_value=None):
         self.name = name
         self.lowBound = lowBound
         self.upBound = upBound
@@ -495,6 +496,12 @@ class VarElement:
 
     def clone(self):
         raise NotImplementedError()
+
+    def traverse(self):
+        yield self
+
+    def traverseAncestors(self):
+        raise NotImplementedError
 
     def __add__(self, other):
         if isinstance(other, number_classes):
@@ -774,7 +781,7 @@ class VarBinary(VarInteger):
 
     _type = VariableType.Binary
 
-    def __init__(self, name, ini_value, spin=None):
+    def __init__(self, name, ini_value=None, spin=None):
         super().__init__(name, 0, 1, ini_value)
         self.spin = spin
 

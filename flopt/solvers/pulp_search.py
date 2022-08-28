@@ -144,7 +144,7 @@ class PulpSearch(BaseSearch):
         name = "" if self.name is None else self.name
         sense = (
             pulp.LpMinimize
-            if self.name in {"minimize", "Minimize"}
+            if prob.sense in {"minimize", "Minimize"}
             else pulp.LpMaximize
         )
         lp_prob = pulp.LpProblem(name=name, sense=sense)
