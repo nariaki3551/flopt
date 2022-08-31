@@ -99,7 +99,8 @@ def linearize(prob):
                 var_bin, var_int = var_a, var_b
             else:
                 var_bin, var_int = var_b, var_a
-            l, u = var_int.getLb(), var_int.getUb()
+            l = var_int.getLb(must_number=True)
+            u = var_int.getUb(must_number=True)
             prob += var_mul >= l * var_bin, f"for_{var_mul.name}_1"
             prob += var_mul <= u * var_bin, f"for_{var_mul.name}_2"
             prob += var_mul >= var_int - u * (1 - var_bin), f"for_{var_mul.name}_3"
@@ -113,7 +114,8 @@ def linearize(prob):
                 var_bin, var_con = var_a, var_b
             else:
                 var_bin, var_con = var_b, var_a
-            l, u = var_con.getLb(), var_con.getUb()
+            l = var_con.getLb(must_number=True)
+            u = var_con.getUb(must_number=True)
             prob += var_mul >= l * var_bin, f"for_{var_mul.name}_1"
             prob += var_mul <= u * var_bin, f"for_{var_mul.name}_2"
             prob += var_mul >= var_con - l * (1 - var_bin), f"for_{var_mul.name}_3"

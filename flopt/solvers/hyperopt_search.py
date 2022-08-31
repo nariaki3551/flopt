@@ -81,10 +81,12 @@ class HyperoptTPESearch(BaseSearch):
         space = dict()
         for var in self.solution:
             name = var.name
+            lb = var.getLb(must_number=True)
+            ub = var.getUb(must_number=True)
             if var.type() in {name, VariableType.Integer, VariableType.Binary}:
-                var_space = hyperopt.hp.quniform(name, var.getLb(), var.getUb(), 1)
+                var_space = hyperopt.hp.quniform(name, lb, ub, 1)
             elif var.type() == VariableType.Continuous:
-                var_space = hyperopt.hp.uniform(name, var.getLb(), var.getUb())
+                var_space = hyperopt.hp.uniform(name, lb, ub)
             space[var.name] = var_space
 
         # for objective

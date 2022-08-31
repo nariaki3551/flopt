@@ -69,8 +69,12 @@ class ScipySearch(BaseSearch):
         x0 = [var.value() for var in self.solution]
 
         # bounds
-        lb = [var.getLb() for var in self.solution]
-        ub = [var.getUb() for var in self.solution]
+        lb = [
+            var.getLb() if var.getLb() is not None else -np.inf for var in self.solution
+        ]
+        ub = [
+            var.getUb() if var.getUb() is not None else np.inf for var in self.solution
+        ]
         bounds = scipy_optimize.Bounds(lb, ub, keep_feasible=False)
 
         # constraints

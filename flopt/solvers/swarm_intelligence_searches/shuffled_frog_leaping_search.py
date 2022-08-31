@@ -24,16 +24,12 @@ class ShuffledFrogLeapingSearch(BaseSearch):
     ----------
     n_trial : int (default 1e10)
       number of memetic evolution
-
     n_memetic_iter : int (default 100)
       number of evolution in each memeplex
-
     n_memeplex : int (default 5)
       number of memeplex
-
     n_frog_per_memeplex : int (default 10)
       number of frog per memeplex
-
     max_step : float (default 0.01)
       max size of step when frog move in memetic evolution.
     """
