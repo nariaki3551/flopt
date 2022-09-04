@@ -151,7 +151,7 @@ class CvxoptQpSearch(BaseSearch):
                 logger.error(e)
                 raise SolverError(e)
         except Exception as e:
-            logger.warning(e)
+            logger.error(e)
             raise SolverError(e)
 
         return sol
