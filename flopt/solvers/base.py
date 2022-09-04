@@ -152,6 +152,8 @@ class BaseSearch:
             self.startProcess()
             status = self.search()
             self.closeProcess()
+        except flopt.error.SolverError:
+            status = SolverTerminateState.Error
         except flopt.error.RearchLowerbound:
             status = SolverTerminateState.Lowerbound
         except KeyboardInterrupt:

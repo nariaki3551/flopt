@@ -84,9 +84,10 @@ def end_solver_message(status, obj_value, time):
         SolverTerminateState.Timelimit: "timelimit termination",
         SolverTerminateState.Lowerbound: "lowerbound termination",
         SolverTerminateState.Interrupt: "Ctrl-C termination",
-        SolverTerminateState.Abnormal: "abnormal termination",
-        SolverTerminateState.Infeasible: "found infeasibility",
         SolverTerminateState.Unbounded: "found unbounded",
+        SolverTerminateState.Infeasible: "found infeasibility",
+        SolverTerminateState.Abnormal: "abnormal termination",
+        SolverTerminateState.Error: "error",
     }
 
     message = (

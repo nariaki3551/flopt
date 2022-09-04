@@ -1,5 +1,6 @@
 from flopt.solvers.base import BaseSearch
 from flopt.convert import QpStructure
+from flopt.error import SolverError
 from flopt.env import setup_logger
 from flopt.constants import VariableType, SolverTerminateState
 
@@ -132,7 +133,27 @@ class CvxoptQpSearch(BaseSearch):
             solvers.options["maxiters"] = self.n_trial
         elif "maxiters" in solvers.options:
             del solvers.options["maxiters"]
-        sol = solvers.qp(Q, c, G, h, A, b)
+
+        try:
+            sol = solvers.qp(Q, c, G, h, A, b)
+        except ValueError as e:
+            logger.warning(e)
+            if G is not None and h is not None:
+                G, h = 2 * G, 2 * h
+            elif A is not None and b is not None:
+                A, b = 2 * A, 2 * b
+            else:
+                raise SolverError(e)
+            try:
+                # resolve
+                sol = solvers.qp(Q, c, G, h, A, b)
+            except Exception as e:
+                logger.error(e)
+                raise SolverError(e)
+        except Exception as e:
+            logger.warning(e)
+            raise SolverError(e)
+
         return sol
 
     def search_lp(self, lp):
