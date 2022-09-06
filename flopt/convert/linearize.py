@@ -159,8 +159,6 @@ def linearize_traverse(e, var_muls):
     bool
         return true if a expession is linearized else false
     """
-    assert isinstance(e, Expression)
-
     if is_var_mul(e):
         if not is_linearable(e):
             raise LinearizeError()
