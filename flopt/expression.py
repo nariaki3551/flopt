@@ -719,6 +719,8 @@ class Expression(ExpressionElement):
         if isinstance(self.elmB, Expression):
             if self.operator != "+" or self.elmB.name.startswith("-"):
                 elmB_name = f"({elmB_name})"
+        elif isinstance(self.elmB, Operation):
+            elmB_name = f"({elmB_name})"
         self.name = f"{elmA_name}{self.operator}{elmB_name}"
 
     def linkChildren(self):
