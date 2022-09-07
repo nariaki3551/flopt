@@ -145,7 +145,7 @@ class AmplifySearch(BaseSearch):
         for const in self.prob.constraints:
             ising = const.expression.toIsing()
             g = s.T.dot(ising.J).dot(s) - ising.h.T.dot(s) + ising.C
-            if const.type == ConstraintType.Eq:
+            if const.type() == ConstraintType.Eq:
                 f += equal_to(g, 0)
             else:  # ConstraintType.Le
                 f += less_equal(g, 0)

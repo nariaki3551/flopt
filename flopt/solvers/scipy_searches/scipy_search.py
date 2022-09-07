@@ -80,7 +80,7 @@ class ScipySearch(BaseSearch):
         for const in self.prob.constraints:
             const_func = gen_func(const)
             lb, ub = 0, 0
-            if const.type == ConstraintType.Le:
+            if const.type() == ConstraintType.Le:
                 lb = -np.inf
             nonlinear_const = scipy_optimize.NonlinearConstraint(const_func, lb, ub)
             constraints.append(nonlinear_const)
