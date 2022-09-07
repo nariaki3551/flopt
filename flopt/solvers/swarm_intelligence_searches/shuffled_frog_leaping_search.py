@@ -1,4 +1,3 @@
-import time
 import random
 
 from flopt.solvers.base import BaseSearch
@@ -82,10 +81,6 @@ class ShuffledFrogLeapingSearch(BaseSearch):
         for i in range(self.n_trial):
             self.trial_ix += 1
 
-            # check time limit
-            if time.time() > self.start_time + self.timelimit:
-                return SolverTerminateState.Timelimit
-
             self._memetic_evolution()
 
             # if solution is better thatn incumbent, then update best solution
@@ -97,6 +92,9 @@ class ShuffledFrogLeapingSearch(BaseSearch):
             # callbacks
             for callback in self.callbacks:
                 callback(self.frogs, self.best_solution, self.best_obj_value)
+
+            # check time limit
+            self.raiseTimeoutIfNeeded()
 
         return SolverTerminateState.Normal
 

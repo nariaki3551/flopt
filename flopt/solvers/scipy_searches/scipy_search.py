@@ -1,5 +1,3 @@
-import time
-
 from scipy import optimize as scipy_optimize
 import numpy as np
 
@@ -95,8 +93,6 @@ class ScipySearch(BaseSearch):
             self.trial_ix += 1
             for var, value in zip(self.solution, values):
                 var.setValue(value)
-            if time.time() > self.start_time + self.timelimit:
-                raise TimeoutError
 
             # if solution is better thatn incumbent, then update best solution
             self.registerSolution(self.solution, msg_tol=1e-8)
@@ -105,26 +101,26 @@ class ScipySearch(BaseSearch):
             for _callback in self.callbacks:
                 _callback([self.solution], self.best_solution, self.best_obj_value)
 
-        try:
-            res = scipy_optimize.minimize(
-                func,
-                x0,
-                bounds=bounds,
-                constraints=constraints,
-                options=options,
-                callback=callback,
-                args=(),
-                method=self.method,
-                jac=None,
-                hess=None,
-                hessp=None,
-                tol=None,
-            )
-            # get result of solver
-            for var, value in zip(self.solution, res.x):
-                var.setValue(value)
-            self.updateSolution(self.solution, obj_value=None)
-        except TimeoutError:
-            return SolverTerminateState.Timelimit
+            # check timelimit
+            self.raiseTimeoutIfNeeded()
+
+        res = scipy_optimize.minimize(
+            func,
+            x0,
+            bounds=bounds,
+            constraints=constraints,
+            options=options,
+            callback=callback,
+            args=(),
+            method=self.method,
+            jac=None,
+            hess=None,
+            hessp=None,
+            tol=None,
+        )
+        # get result of solver
+        for var, value in zip(self.solution, res.x):
+            var.setValue(value)
+        self.updateSolution(self.solution, obj_value=None)
 
         return SolverTerminateState.Normal
