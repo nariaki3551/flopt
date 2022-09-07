@@ -1,6 +1,8 @@
 # flopt
 
-A Python Modeler for Optimization Problems.
+A Python Flexible Modeler for Optimization Problems.<br><br>
+flopt allows modeling of various problems such as LP, QP, Ising, QUBO, etc.<br>
+Users can also solve the modeled problem using some solvers and obtain the optimal or good solutions.
 
 [![Documentation Status](https://readthedocs.org/projects/flopt/badge/?version=latest)](https://flopt.readthedocs.io/en/latest/?badge=latest) [![PyPI version](https://badge.fury.io/py/flopt.svg)](https://badge.fury.io/py/flopt) ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/flopt) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
@@ -27,15 +29,10 @@ git clone https://github.com/flab-coder/flopt.git
 ## Formulatable problems in flopt
 
 - Linear Programming (LP)
-
 - Quadratic Programming (QP)
-
 - Ising
-
 - Quadratic Unconstrainted Binary Programming  (QUBO)
-
 - Non-Linear problem
-
   ```
   minimize  2*(3*a+b)*c**2 + 3
   s.t       a + b * c <= 3
@@ -43,28 +40,22 @@ git clone https://github.com/flab-coder/flopt.git
             1 <= b <= 2
                  c <= 3
   ```
-
 - BlackBox problem
-
   ```
   minimize  simulator(a, b, c)
   s.t       0 <= a <= 1
             1 <= b <= 2
             1 <= c <= 3
   ```
-
 - Finding the best permutation problem (including TSP)
-
 - Satisfiability problem (including MAX-SAT)
 
 <br>
 
-## Heuristic Algorithms
+## Available Solvers and Heuristic Algorithms
 
-- Random Search
-- 2-Opt
-- Swarm Intelligence Search
-- Other applications
+- CBC, CVXOPT, scipy.optimize(minimize, linprog, milp), Optuna
+- Random Search, 2-Opt, Swarm Intelligence Search
 
 <br>
 
@@ -124,8 +115,6 @@ prob.solve(solver, msg=True)    # run solver to solve the problem
 
 # display the result, incumbent solution
 print('obj value', prob.getObjectiveValue())
-print('a', a.value())
-print('b', b.value())
 ```
 
 <br>
@@ -135,8 +124,8 @@ In the case you solve TSP, *Permutation Variable* is useful.
 ```python
 from flopt import Variable, Problem, Solver
 
-N = 4
-D = [[0,1,2,3],
+N = 4  # Number of city
+D = [[0,1,2,3],  # Distance matrix
      [3,0,2,1],
      [1,2,0,3],
      [2,3,1,0]]
@@ -166,5 +155,9 @@ print('obj value', prob.getObjectiveValue())
 print('x', x.value())
 ```
 
+## Learning more
+
+- document: https://flopt.readthedocs.io/en/latest/
+- tutorials: https://flopt.readthedocs.io/en/latest/tutorial/index.html
 
 
