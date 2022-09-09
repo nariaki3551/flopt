@@ -31,18 +31,21 @@ class Constraint:
     def __init__(self, expression, _type, name=None):
         assert isinstance(_type, ConstraintType)
         self.expression = expression
-        self.type = _type
+        self._type = _type
         self.name = name
         self.hash = None
+
+    def type(self):
+        return self._type
 
     def value(self, solution=None):
         return self.expression.value(solution)
 
     def feasible(self, solution=None):
         exp_value = self.value(solution)
-        if self.type == ConstraintType.Eq:
+        if self._type == ConstraintType.Eq:
             return exp_value == 0
-        else:  # self.type == ConstraintType.Le
+        else:  # self._type == ConstraintType.Le
             return exp_value <= 0
 
     def getVariables(self):
@@ -57,18 +60,18 @@ class Constraint:
 
     def __hash__(self):
         if self.hash is None:
-            self.hash = hash((Constraint, hash(self.expression), self.type))
+            self.hash = hash((Constraint, hash(self.expression), self._type))
         return self.hash
 
     def __eq__(self, other):
         return hash(self) == hash(other)
 
     def __str__(self):
-        if self.type == ConstraintType.Eq:
-            type_str = "=="
-        else:  # self.type == ConstraintType.Le
+        if self._type == ConstraintType.Eq:
+           type_str = "=="
+        else:  # self._type == ConstraintType.Le
             type_str = "<="
         return f"{self.expression.name} {type_str} 0"
 
     def __repr__(self):
-        return f"Constraint({repr(self.expression)}, {self.type}, {self.name})"
+        return f"Constraint({repr(self.expression)}, {self._type}, {self.name})"

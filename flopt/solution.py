@@ -86,6 +86,16 @@ class Solution:
         """
         self.toDict()[name].setValue(value)
 
+    def setValueFromDict(self, name_value_dict):
+        """
+        Parameters
+        ----------
+        name_value_dict : Dict
+            key is name of variable, value is value of variable
+        """
+        for name, value in name_value_dict.items():
+            self.setValue(name, value)
+
     def getVariables(self):
         """
         Returns

@@ -192,7 +192,7 @@ class QpStructure:
 
         # create G, h
         num_neq_consts = sum(
-            const.type == ConstraintType.Le for const in prob.constraints
+            const.type() == ConstraintType.Le for const in prob.constraints
         )
         if num_neq_consts == 0:
             G = None
@@ -202,7 +202,7 @@ class QpStructure:
             h = np.zeros((num_neq_consts,), dtype=np_float)
             i = 0
             for const in iter_wrapper(prob.constraints, desc="convert neq constraints"):
-                if const.type == ConstraintType.Le:
+                if const.type() == ConstraintType.Le:
                     # c.T.dot(x) + C <= 0
                     linear = const.expression.toLinear(x)
                     G[i, :] = linear.c.T
@@ -212,7 +212,7 @@ class QpStructure:
 
         # create A, b
         num_eq_consts = sum(
-            const.type == ConstraintType.Eq for const in prob.constraints
+            const.type() == ConstraintType.Eq for const in prob.constraints
         )
         if num_eq_consts == 0:
             A = None
@@ -222,7 +222,7 @@ class QpStructure:
             b = np.zeros((num_eq_consts,), dtype=np_float)
             i = 0
             for const in iter_wrapper(prob.constraints, desc="convert eq constraints"):
-                if const.type == ConstraintType.Eq:
+                if const.type() == ConstraintType.Eq:
                     linear = const.expression.toLinear(x)
                     A[i, :] = linear.c.T
                     b[i] = -linear.C

@@ -18,22 +18,22 @@ def b():
 
 
 def test_Constraint_type(a, b):
-    assert (a == 0).type == ConstraintType.Eq
-    assert (a <= 0).type == ConstraintType.Le
-    assert (a >= 0).type == ConstraintType.Le
-    assert (a + b == 0).type == ConstraintType.Eq
-    assert (a + b <= 0).type == ConstraintType.Le
-    assert (a + b >= 0).type == ConstraintType.Le
-    assert (0 == a + b).type == ConstraintType.Eq
-    assert (0 <= a + b).type == ConstraintType.Le
-    assert (0 >= a + b).type == ConstraintType.Le
+    assert (a == 0).type() == ConstraintType.Eq
+    assert (a <= 0).type() == ConstraintType.Le
+    assert (a >= 0).type() == ConstraintType.Le
+    assert (a + b == 0).type() == ConstraintType.Eq
+    assert (a + b <= 0).type() == ConstraintType.Le
+    assert (a + b >= 0).type() == ConstraintType.Le
+    assert (0 == a + b).type() == ConstraintType.Eq
+    assert (0 <= a + b).type() == ConstraintType.Le
+    assert (0 >= a + b).type() == ConstraintType.Le
 
-    assert (a + b == np.float64(0)).type == ConstraintType.Eq
-    assert (a + b <= np.float64(0)).type == ConstraintType.Le
-    assert (a + b >= np.float64(0)).type == ConstraintType.Le
-    # assert (np.float64(0) == a+b).type == ConstraintType.Eq
-    # assert (np.float64(0) <= a+b).type == ConstraintType.Le
-    # assert (np.float64(0) >= a+b).type == ConstraintType.Le
+    assert (a + b == np.float64(0)).type() == ConstraintType.Eq
+    assert (a + b <= np.float64(0)).type() == ConstraintType.Le
+    assert (a + b >= np.float64(0)).type() == ConstraintType.Le
+    # assert (np.float64(0) == a+b).type() == ConstraintType.Eq
+    # assert (np.float64(0) <= a+b).type() == ConstraintType.Le
+    # assert (np.float64(0) >= a+b).type() == ConstraintType.Le
 
 
 def test_Constraint_expression(a, b):

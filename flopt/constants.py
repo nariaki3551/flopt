@@ -5,7 +5,6 @@ import numpy as np
 VERSION = "0.5.4"
 DATE = "September 1, 2022"
 
-
 # number classes
 number_classes = (int, float, np.number)
 
@@ -27,6 +26,7 @@ class SolverTerminateState(enum.IntEnum):
     Infeasible = 4
     Unbounded = 5
     Abnormal = 6
+    Error = 7
 
     def __str__(self):
         return self.name

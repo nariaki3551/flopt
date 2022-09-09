@@ -153,9 +153,9 @@ class PulpSearch(BaseSearch):
 
         for const in prob.constraints:
             const_exp = const.expression
-            if const.type == ConstraintType.Eq:
+            if const.type() == ConstraintType.Eq:
                 lp_prob.addConstraint(const_exp.value(lp_solution) == 0, const.name)
-            else:  # const.type == ConstraintType.Le
+            else:  # const.type() == ConstraintType.Le
                 lp_prob.addConstraint(const_exp.value(lp_solution) <= 0, const.name)
 
         return lp_prob, lp_solution

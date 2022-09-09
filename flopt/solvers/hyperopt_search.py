@@ -1,4 +1,3 @@
-import time
 import weakref
 
 from flopt.env import setup_logger
@@ -82,10 +81,12 @@ class HyperoptTPESearch(BaseSearch):
         space = dict()
         for var in self.solution:
             name = var.name
+            lb = var.getLb(must_number=True)
+            ub = var.getUb(must_number=True)
             if var.type() in {name, VariableType.Integer, VariableType.Binary}:
-                var_space = hyperopt.hp.quniform(name, var.getLb(), var.getUb(), 1)
+                var_space = hyperopt.hp.quniform(name, lb, ub, 1)
             elif var.type() == VariableType.Continuous:
-                var_space = hyperopt.hp.uniform(name, var.getLb(), var.getUb())
+                var_space = hyperopt.hp.uniform(name, lb, ub)
             space[var.name] = var_space
 
         # for objective
@@ -94,24 +95,17 @@ class HyperoptTPESearch(BaseSearch):
         )
 
         # search
-        try:
-            hyperopt.fmin(
-                self.objective,
-                space=space,
-                algo=hyperopt.tpe.suggest,
-                max_evals=self.n_trial,
-                show_progressbar=self.show_progressbar,
-            )
-        except TimeoutError:
-            return SolverTerminateState.Timelimit
+        hyperopt.fmin(
+            self.objective,
+            space=space,
+            algo=hyperopt.tpe.suggest,
+            max_evals=self.n_trial,
+            show_progressbar=self.show_progressbar,
+        )
 
         return SolverTerminateState.Normal
 
     def objective(self, var_value_dict):
-        # check timelimit
-        if time.time() > self.start_time + self.timelimit:
-            raise TimeoutError
-
         # set value into self.solution
         self.trial_ix += 1
         for name, value in var_value_dict.items():
@@ -124,5 +118,8 @@ class HyperoptTPESearch(BaseSearch):
         # callbacks
         for callback in self.callbacks:
             callback([self.solution], self.best_solution, self.best_obj_value)
+
+        # check timelimit
+        self.raiseTimeoutIfNeeded()
 
         return {"loss": obj_value, "status": self.hyperopt_STATUS_OK}

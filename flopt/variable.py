@@ -20,6 +20,8 @@ from flopt.env import (
     create_variable_mode,
     is_create_variable_mode,
     get_variable_id,
+    get_variable_lower_bound,
+    get_variable_upper_bound,
 )
 
 
@@ -74,9 +76,6 @@ class VariableArray(np.ndarray):
 # -------------------------------------------------------
 #   Variable and Variable Container Factory
 # -------------------------------------------------------
-
-
-INI_BOUND = 1e20
 
 
 class VariableFactory:
@@ -414,9 +413,11 @@ class VarElement:
         self.name = name
         self.lowBound = lowBound
         self.upBound = upBound
-        if ini_value is None:
-            ini_value = self.getIniValue()
-        self._value = ini_value
+        self._value = None
+        if ini_value is not None:
+            self._value = ini_value
+        else:
+            self.setRandom()
         self.monomial = Monomial({self: 1})
 
     def type(self):
@@ -443,11 +444,25 @@ class VarElement:
     def setValue(self, value):
         self._value = value
 
-    def getLb(self):
-        return self.lowBound if self.lowBound is not None else -INI_BOUND
+    def getLb(self, must_number=False):
+        if must_number:
+            return (
+                self.lowBound
+                if self.lowBound is not None
+                else get_variable_lower_bound(to_int=True)
+            )
+        else:
+            return self.lowBound
 
-    def getUb(self):
-        return self.upBound if self.upBound is not None else INI_BOUND
+    def getUb(self, must_number=False):
+        if must_number:
+            return (
+                self.upBound
+                if self.upBound is not None
+                else get_variable_upper_bound(to_int=True)
+            )
+        else:
+            return self.upBound
 
     def feasible(self):
         """
@@ -456,7 +471,9 @@ class VarElement:
         bool
           return true if value of self is in between lowBound and upBound else false
         """
-        return self.getLb() <= self._value <= self.getUb()
+        return (
+            self.getLb(must_number=True) <= self._value <= self.getUb(must_number=True)
+        )
 
     def clip(self):
         """
@@ -464,10 +481,12 @@ class VarElement:
         ex. value < lowBound -> value = lowBound,
         value > upBound  -> value = upBound
         """
-        if self._value < self.getLb():
-            self._value = self.getLb()
-        elif self._value > self.getUb():
-            self._value = self.getUb()
+        if self.getLb() is not None:
+            lb = self.getLb(must_number=True)
+            self._value = max(self._value, lb)
+        if self.getUb() is not None:
+            ub = self.getUb(must_number=True)
+            self._value = min(self._value, ub)
 
     def toDict(self):
         return {self.name: self}
@@ -726,11 +745,30 @@ class VarInteger(VarElement):
         else:
             return solution.toDict()[self.name]
 
-    def getIniValue(self):
-        return (self.getLb() + self.getUb()) // 2
+    def getLb(self, must_number=False):
+        if must_number:
+            return (
+                self.lowBound
+                if self.lowBound is not None
+                else get_variable_lower_bound(to_int=True)
+            )
+        else:
+            return self.lowBound
+
+    def getUb(self, must_number=False):
+        if must_number:
+            return (
+                self.upBound
+                if self.upBound is not None
+                else get_variable_upper_bound(to_int=True)
+            )
+        else:
+            return self.upBound
 
     def setRandom(self):
-        self._value = random.randint(self.getLb(), self.getUb())
+        lb = self.getLb(must_number=True)
+        ub = self.getUb(must_number=True)
+        self._value = random.randint(lb, ub)
 
     def toBinary(self):
         if self.binarized is None:
@@ -887,16 +925,6 @@ class VarSpin(VarElement):
         """
         return self._value in {-1, 1}
 
-    def clip(self):
-        """map in an feasible area by clipping."""
-        if self._value <= 0:
-            self._value = self.lowBound
-        else:
-            self._value = self.upBound
-
-    def getIniValue(self):
-        return random.choice([-1, 1])
-
     def setRandom(self):
         """set random value to variable"""
         self._value = random.choice([-1, 1])
@@ -984,11 +1012,10 @@ class VarContinuous(VarElement):
 
     _type = VariableType.Continuous
 
-    def getIniValue(self):
-        return (self.getLb() + self.getUb()) / 2
-
     def setRandom(self):
-        self._value = random.uniform(self.getLb(), self.getUb())
+        lb = self.getLb(must_number=True)
+        ub = self.getUb(must_number=True)
+        self._value = random.uniform(lb, ub)
 
     def clone(self):
         return VarContinuous(self.name, self.lowBound, self.upBound, self._value)
@@ -1024,8 +1051,11 @@ class VarPermutation(VarElement):
 
     _type = VariableType.Permutation
 
-    def getIniValue(self):
-        return list(range(self.getLb(), self.getUb() + 1))
+    def __init__(self, name, lowBound=None, upBound=None, ini_value=None):
+        if ini_value is None:
+            ini_value = list(range(lowBound, upBound + 1))
+            random.shuffle(ini_value)
+        super().__init__(name, lowBound, upBound, ini_value)
 
     def value(self):
         """
