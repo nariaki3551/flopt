@@ -1,4 +1,3 @@
-import time
 import random
 
 from flopt.solvers.base import BaseSearch
@@ -25,16 +24,12 @@ class ShuffledFrogLeapingSearch(BaseSearch):
     ----------
     n_trial : int (default 1e10)
       number of memetic evolution
-
     n_memetic_iter : int (default 100)
       number of evolution in each memeplex
-
     n_memeplex : int (default 5)
       number of memeplex
-
     n_frog_per_memeplex : int (default 10)
       number of frog per memeplex
-
     max_step : float (default 0.01)
       max size of step when frog move in memetic evolution.
     """
@@ -82,10 +77,6 @@ class ShuffledFrogLeapingSearch(BaseSearch):
         for i in range(self.n_trial):
             self.trial_ix += 1
 
-            # check time limit
-            if time.time() > self.start_time + self.timelimit:
-                return SolverTerminateState.Timelimit
-
             self._memetic_evolution()
 
             # if solution is better thatn incumbent, then update best solution
@@ -97,6 +88,9 @@ class ShuffledFrogLeapingSearch(BaseSearch):
             # callbacks
             for callback in self.callbacks:
                 callback(self.frogs, self.best_solution, self.best_obj_value)
+
+            # check time limit
+            self.raiseTimeoutIfNeeded()
 
         return SolverTerminateState.Normal
 

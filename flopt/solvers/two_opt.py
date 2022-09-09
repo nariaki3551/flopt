@@ -1,4 +1,3 @@
-import time
 import random
 
 from flopt.solvers.base import BaseSearch
@@ -59,10 +58,6 @@ class TwoOpt(BaseSearch):
         best_obj_value = self.best_obj_value
 
         for self.trial_ix in range(1, int(self.n_trial) + 1):
-            # check time limit
-            if time.time() > self.start_time + self.timelimit:
-                return SolverTerminateState.Timelimit
-
             # generate new solution and set it into self.solution
             for var in self.solution:
                 perm = var.value()
@@ -82,5 +77,8 @@ class TwoOpt(BaseSearch):
             # callbacks
             for callback in self.callbacks:
                 callback([self.solution], self.best_solution, self.best_obj_value)
+
+            # check time limit
+            self.raiseTimeoutIfNeeded()
 
         return SolverTerminateState.Normal

@@ -1,3 +1,5 @@
+import time
+
 from scipy import optimize as scipy_optimize
 
 from flopt.solvers.base import BaseSearch
@@ -96,7 +98,6 @@ class ScipyLpSearch(BaseSearch):
         options = {
             "maxiter": self.n_trial,
             "disp": self.msg,
-            "time_limit": self.timelimit,
         }
 
         # callback
@@ -111,6 +112,10 @@ class ScipyLpSearch(BaseSearch):
             # callbacks
             for _callback in self.callbacks:
                 _callback([self.solution], self.best_solution, self.best_obj_value)
+
+            # check timelimit
+            if time.time() - self.start_time > self.timelimit:
+                raise TimeoutError
 
         # search
         res = scipy_optimize.linprog(

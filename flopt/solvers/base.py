@@ -152,6 +152,10 @@ class BaseSearch:
             self.startProcess()
             status = self.search()
             self.closeProcess()
+        except TimeoutError:
+            status = SolverTerminateState.Timelimit
+        except flopt.error.SolverError:
+            status = SolverTerminateState.Error
         except flopt.error.RearchLowerbound:
             status = SolverTerminateState.Lowerbound
         except KeyboardInterrupt:
@@ -201,6 +205,10 @@ class BaseSearch:
         else:
             self.best_obj_value = obj_value
             self.save_solution = True
+
+    def raiseTimeoutIfNeeded(self):
+        if time.time() - self.start_time > self.timelimit:
+            raise TimeoutError
 
     def recordLog(self):
         """

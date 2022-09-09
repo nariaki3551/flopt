@@ -1,4 +1,5 @@
 import os
+import configparser
 from logging import getLogger, StreamHandler
 
 import colorlog
@@ -30,18 +31,47 @@ def get_variable_id():
     return var_id
 
 
+def get_variable_lower_bound(to_int=False):
+    if to_int:
+        return int(Environment.VARIABLE_LOWER_BOUND)
+    else:
+        return Environment.VARIABLE_LOWER_BOUND
+
+
+def get_variable_upper_bound(to_int=False):
+    if to_int:
+        return int(Environment.VARIABLE_UPPER_BOUND)
+    else:
+        return Environment.VARIABLE_UPPER_BOUND
+
+
 class Environment:
 
     variable_id = 0
     CREATE_VARIABLE_MODE = False
+    VARIABLE_LOWER_BOUND = None
+    VARIABLE_UPPER_BOUND = None
 
     def __init__(self):
         src_dir = os.path.dirname(__file__)
         self.src_dir = src_dir
         self.datasets_dir = f"{src_dir}/../datasets"
         self.performance_dir = f"{src_dir}/../performance"
+
+        # logger
         self.root_logger = getLogger()
         self.root_logger.setLevel(0)
+
+        # config
+        config = configparser.ConfigParser()
+        config.read("flopt.config")
+
+        Environment.VARIABLE_LOWER_BOUND = float(
+            config["DEFAULT"]["VARIABLE_LOWER_BOUND"]
+        )
+        Environment.VARIABLE_UPPER_BOUND = float(
+            config["DEFAULT"]["VARIABLE_UPPER_BOUND"]
+        )
 
     def setLogLevel(self, log_level):
         if isinstance(log_level, str):
@@ -49,8 +79,12 @@ class Environment:
             log_level = log_name[log_level]
         self.root_logger.setLevel(log_level)
 
+    def getConfig(self, name, section="DEFAULT"):
+        return self.config[section][name]
+
     def __str__(self):
-        s = f"src_dir: {self.src_dir}\n"
+        s = f"config: flopt.config\n"
+        s += f"src_dir: {self.src_dir}\n"
         s += f"datasets_dir: {self.datasets_dir}\n"
         s += f"performance_dir: {self.performance_dir}"
         return s

@@ -71,10 +71,12 @@ class OptunaSearch(BaseSearch):
         # set value into self.solution
         self.trial_ix += 1
         for var in self.solution:
+            lb = var.getLb(must_number=True)
+            ub = var.getUb(must_number=True)
             if var.type() == VariableType.Integer:
-                var._value = trial.suggest_int(var.name, var.getLb(), var.getUb())
+                var._value = trial.suggest_int(var.name, lb, ub)
             elif var.type() == VariableType.Continuous:
-                var._value = trial.suggest_uniform(var.name, var.getLb(), var.getUb())
+                var._value = trial.suggest_uniform(var.name, lb, ub)
 
         # get objective value by self.solution
         obj_value = self.getObjValue(self.solution)

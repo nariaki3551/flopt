@@ -1,5 +1,3 @@
-import time
-
 from flopt.solvers.base import BaseSearch
 from flopt.constants import SolverTerminateState
 
@@ -51,10 +49,6 @@ class RandomSearch(BaseSearch):
         `self.setNewSolution()` generate new solution and set it into self.solution
         """
         for self.trial_ix in range(1, int(self.n_trial) + 1):
-            # check time limit
-            if time.time() > self.start_time + self.timelimit:
-                return SolverTerminateState.Timelimit
-
             # generate new solution and set it into self.solution
             self.solution.setRandom()
 
@@ -64,5 +58,8 @@ class RandomSearch(BaseSearch):
             # callbacks
             for callback in self.callbacks:
                 callback([self.solution], self.best_solution, self.best_obj_value)
+
+            # check time limit
+            self.raiseTimeoutIfNeeded()
 
         return SolverTerminateState.Normal

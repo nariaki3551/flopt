@@ -1,5 +1,3 @@
-import time
-
 from scipy import optimize as scipy_optimize
 import numpy as np
 
@@ -71,8 +69,12 @@ class ScipySearch(BaseSearch):
         x0 = [var.value() for var in self.solution]
 
         # bounds
-        lb = [var.getLb() for var in self.solution]
-        ub = [var.getUb() for var in self.solution]
+        lb = [
+            var.getLb() if var.getLb() is not None else -np.inf for var in self.solution
+        ]
+        ub = [
+            var.getUb() if var.getUb() is not None else np.inf for var in self.solution
+        ]
         bounds = scipy_optimize.Bounds(lb, ub, keep_feasible=False)
 
         # constraints
@@ -80,7 +82,7 @@ class ScipySearch(BaseSearch):
         for const in self.prob.constraints:
             const_func = gen_func(const)
             lb, ub = 0, 0
-            if const.type == ConstraintType.Le:
+            if const.type() == ConstraintType.Le:
                 lb = -np.inf
             nonlinear_const = scipy_optimize.NonlinearConstraint(const_func, lb, ub)
             constraints.append(nonlinear_const)
@@ -95,8 +97,6 @@ class ScipySearch(BaseSearch):
             self.trial_ix += 1
             for var, value in zip(self.solution, values):
                 var.setValue(value)
-            if time.time() > self.start_time + self.timelimit:
-                raise TimeoutError
 
             # if solution is better thatn incumbent, then update best solution
             self.registerSolution(self.solution, msg_tol=1e-8)
@@ -105,26 +105,26 @@ class ScipySearch(BaseSearch):
             for _callback in self.callbacks:
                 _callback([self.solution], self.best_solution, self.best_obj_value)
 
-        try:
-            res = scipy_optimize.minimize(
-                func,
-                x0,
-                bounds=bounds,
-                constraints=constraints,
-                options=options,
-                callback=callback,
-                args=(),
-                method=self.method,
-                jac=None,
-                hess=None,
-                hessp=None,
-                tol=None,
-            )
-            # get result of solver
-            for var, value in zip(self.solution, res.x):
-                var.setValue(value)
-            self.updateSolution(self.solution, obj_value=None)
-        except TimeoutError:
-            return SolverTerminateState.Timelimit
+            # check timelimit
+            self.raiseTimeoutIfNeeded()
+
+        res = scipy_optimize.minimize(
+            func,
+            x0,
+            bounds=bounds,
+            constraints=constraints,
+            options=options,
+            callback=callback,
+            args=(),
+            method=self.method,
+            jac=None,
+            hess=None,
+            hessp=None,
+            tol=None,
+        )
+        # get result of solver
+        for var, value in zip(self.solution, res.x):
+            var.setValue(value)
+        self.updateSolution(self.solution, obj_value=None)
 
         return SolverTerminateState.Normal

@@ -429,6 +429,16 @@ def test_CvxoptQpSearch2(prob_qp, callback):
     prob_qp.solve(solver, timelimit=0.5)
 
 
+def test_CvxoptQpSearch3(callback):
+    solver = Solver(algo="CvxoptQpSearch")
+    solver.setParams(n_trial=10, callbacks=[callback])
+
+    x = Variable("x", 1, 4, "Continuous")
+    prob_qp = Problem(name="issue72")
+    prob_qp += x * x
+    prob_qp.solve(solver)
+
+
 def test_ScipyLpSearch_available(
     prob, prob_only_continuous, prob_with_const, prob_qp, prob_nonlinear, prob_perm
 ):

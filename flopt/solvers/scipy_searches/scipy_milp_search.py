@@ -84,13 +84,11 @@ class ScipyMilpSearch(BaseSearch):
         bounds = scipy_optimize.Bounds(lbs, ubs)
 
         # integrality
-        integrality = [
-            False if var.type() == VariableType.Continuous else True for var in lp.x
-        ]
+        integrality = [var.type() != VariableType.Continuous for var in lp.x]
 
         # constraints (lp.G x <= lp.h)
-        no_constraints = lp.G is None
-        if not no_constraints:
+        has_constraints = lp.G is not None
+        if has_constraints:
             constraints = scipy_optimize.LinearConstraint(
                 lp.G, np.full_like(lp.h, -np.inf), lp.h
             )
