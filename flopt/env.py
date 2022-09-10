@@ -64,7 +64,7 @@ class Environment:
 
         # config
         config = configparser.ConfigParser()
-        config.read("flopt.config")
+        config.read(f"{src_dir}/flopt.config")
 
         Environment.VARIABLE_LOWER_BOUND = float(
             config["DEFAULT"]["VARIABLE_LOWER_BOUND"]

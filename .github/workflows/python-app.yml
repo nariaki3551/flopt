@@ -38,3 +38,6 @@ jobs:
     - name: Test to build docs
       run: |
         cd docs && make html
+    - name: Test to run package
+      run: |
+        mkdir test_tmp && cd test_tmp && python -c "import flopt"
