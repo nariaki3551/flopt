@@ -9,19 +9,11 @@ with open(path.join(here, "README.md"), encoding="utf-8") as f:
 
 setup(
     name="flopt",
-    packages=find_packages() + ["datasets"],
-    include_package_data=True,
+    packages=find_packages(),
     package_data={
-        "datasets": [
-            "tspLib/atsp/*.atsp",
-            "tspLib/hcp/*.hcp",
-            "tspLib/tsp/*.tsp",
-            "tspLib/vrp/*.vrp",
-            "tspLib/sop/*.sop",
-            "funcLib/*",
-            "mipLib/*",
-        ]
+        "flopt": ["flopt.config"],
     },
+    include_package_data=True,
     version="0.5.4",
     license="MIT",
     install_requires=[
