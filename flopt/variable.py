@@ -343,8 +343,9 @@ class VariableFactory:
             ini_value = np.array(ini_value, dtype=np_float)
         iterator = itertools.product(*map(range, shape))
         variables = np.ndarray(shape, dtype=object)
+        digits = list(map(lambda s: len(str(s)), shape,))
         for i in iterator:
-            var_name = f"{name}_" + "_".join(map(str, i))
+            var_name = f"{name}_" + "_".join(str(s).zfill(digit) for s, digit in zip(i, digits))
             _lowBound = lowBound[i] if isinstance(lowBound, array_classes) else lowBound
             _upBound = upBound[i] if isinstance(upBound, array_classes) else upBound
             _cat = cat[i] if isinstance(cat, array_classes) else cat
