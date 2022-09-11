@@ -138,6 +138,7 @@ class BaseSearch:
             status = SolverTerminateState.Abnormal
             raise flopt.error.SolverError
 
+        self.log = Log()
         self.solution = solution.clone()
         self.prob = prob
         self.msg = msg
@@ -161,6 +162,8 @@ class BaseSearch:
         except KeyboardInterrupt:
             print("Get user ctrl-cuser ctrl-c")
             status = SolverTerminateState.Interrupt
+
+        self.recordLog()
 
         if msg:
             obj_value = self.prob.obj.value(self.best_solution)
@@ -205,6 +208,10 @@ class BaseSearch:
         else:
             self.best_obj_value = obj_value
             self.save_solution = True
+        if self.best_obj_value < self.lowerbound + self.tol:
+            if self.msg:
+                self.during_solver_message("*")
+            raise flopt.error.RearchLowerbound()
 
     def raiseTimeoutIfNeeded(self):
         if time.time() - self.start_time > self.timelimit:
@@ -224,10 +231,6 @@ class BaseSearch:
             log_dict["solution"] = self.best_solution.clone()
             self.save_solution = False
         self.log.append(log_dict)
-        if self.best_obj_value < self.lowerbound + self.tol:
-            if self.msg:
-                self.during_solver_message("*")
-            raise flopt.error.RearchLowerbound()
 
     def during_solver_message(self, head):
         """

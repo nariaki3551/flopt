@@ -64,7 +64,8 @@ class Log:
         Y = [log[yitem] for log in self.logs]
 
         ax.plot(X, Y, *args, **kwargs)
-        ax.legend()
+        if "label" in kwargs:
+            ax.legend()
 
         if show:
             plt.show()
@@ -76,3 +77,22 @@ class Log:
 
     def __len__(self):
         return len(self.logs)
+
+    def __add__(self, other):
+        assert isinstance(other, Log)
+        last_time = self.logs[-1]["time"]
+        logs = list(other.logs)
+        for log in logs:
+            log["time"] += last_time
+        solver_log = Log()
+        solver_log.logs = self.logs + logs
+        return solver_log
+
+    def __iadd__(self, other):
+        assert isinstance(other, Log)
+        last_time = self.logs[-1]["time"]
+        logs = list(other.logs)
+        for log in logs:
+            log["time"] += last_time
+        self.logs += logs
+        return self
