@@ -68,7 +68,7 @@ class Constraint:
 
     def __str__(self):
         if self._type == ConstraintType.Eq:
-           type_str = "=="
+            type_str = "=="
         else:  # self._type == ConstraintType.Le
             type_str = "<="
         return f"{self.expression.name} {type_str} 0"

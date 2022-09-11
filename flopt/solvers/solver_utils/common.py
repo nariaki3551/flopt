@@ -19,9 +19,11 @@ def start_solver_message(algo_name, param_str, solution):
 
     message = (
         "\n",
-        "Welcome to the flopt Solver\n",
-        f"Version {VERSION}\n",
-        f"Date: {DATE}\n",
+        f"# - - - - - - - - - - - - - - #\n",
+        f"  Welcome to the flopt Solver\n",
+        f"  Version {VERSION}\n",
+        f"  Date: {DATE}\n",
+        f"# - - - - - - - - - - - - - - #\n",
         "\n",
         f"Algorithm: {algo_name}\n",
         f"Params: {param_str}\n",
@@ -36,9 +38,11 @@ def start_solver_message(algo_name, param_str, solution):
 
 
 def during_solver_message_header():
-    header = "     Trial Incumbent    BestBd  Gap[%] Time[s]"
-    line = "----------------------------------------------"
-    print(header)
+    header1 = "                               relative  absolute"
+    header2 = "     Trial Incumbent    BestBd   Gap[%]       Gap Time[s]"
+    line = "---------------------------------------------------------"
+    print(header1)
+    print(header2)
     print(line)
 
 
@@ -54,27 +58,40 @@ def value2str(value):
     return value_str
 
 
-def calculate_gap(obj_value, best_bd):
+def calculate_relative_gap(obj_value, best_bd):
     if obj_value is None or best_bd is None:
-        return " " * 6 + "-"
+        return " " * 7 + "-"
     else:
         gap = (obj_value - best_bd) / (abs(obj_value) + 1e-4) * 100
         if gap > 99.9:
-            return " " * 7
+            return " " * 8
         else:
-            return f"{gap:7.2f}"
+            return f"{gap:8.3f}"
+
+
+def calculate_abs_gap(obj_value, best_bd):
+    if obj_value is None or best_bd is None:
+        return " " * 8 + "-"
+    else:
+        gap = obj_value - best_bd
+        if gap > 10:
+            return " " * 9
+        else:
+            return f"{gap:9.6f}"
 
 
 def during_solver_message(head, obj_value, best_bd, time, iteration):
     obj_value_str = value2str(obj_value)
     best_bd_str = value2str(best_bd)
-    gap_str = calculate_gap(obj_value, best_bd)
+    relative_gap_str = calculate_relative_gap(obj_value, best_bd)
+    abs_gap_str = calculate_abs_gap(obj_value, best_bd)
     message = (
         f"{head:2s}",
         f"{iteration:7d}",
         f"{obj_value_str}",
         f"{best_bd_str}",
-        f"{gap_str}",
+        f"{relative_gap_str}",
+        f"{abs_gap_str}",
         f"{time:7.2f}",
     )
     print(" ".join(message))
