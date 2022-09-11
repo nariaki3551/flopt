@@ -2,44 +2,47 @@ Number Partitioning
 ===================
 
 We will solver the number partitioning problem.
-We try to find the partion of numbers A to B and C,
-such that sum of B and sum of C are equal.
+We try to find the partion of numbers A to two groups, B and C,
+such that summation of B and that of C are equal.
 
 .. code-block:: python
 
     # list of numbers
     A = [10, 8, 7, 9]
 
-The formulation is following,
-:math:`x_i` are spin variables, and if :math:`x_i = 1` then element A[i] is belong to B else belong to C.
-If the solution is satisfied that objective function value is 0, then sum of B and sum of C are equal.
+We use Spin variables :math:`s_i` to formulate this problem.
+A spin variable only takes +1 or -1.
+We regard :math:`s_i = +1` as that element A[i] is belong to B, and :math:`s_i = -1` as that element A[i] is belong to C.
+Then, the difference of the summation of B and that of C can be represented by :math:`\sum_i a_i s_i`.
+
+Hence, by optimizing the spin variables that takes minimum value of :math:`(\sum_i a_i s_i)^2`, we can obtain the desired partitioning.
 
 ::
 
-    min  sum( a_i x_i ) ^ 2
-    s.t. x_i in {-1, 1}
+    min  sum( a_i s_i ) ^ 2
+    s.t. s_i in {-1, 1}
 
 
-In flopt,
+In flopt, we model the problem as follows.
 
 .. code-block:: python
 
     from flopt import Variable, Problem, Dot
 
     # create variables
-    x = Variable.array("x", len(A), cat="Spin")
+    s = Variable.array("s", len(A), cat="Spin")
 
     # create problem
     prob = Problem("Number Partitioning")
 
     # set objective function
-    prob += Dot(x, A) ** 2
+    prob += Dot(s, A) ** 2
 
     print(prob)
     >>> Name: Number Partitioning
     >>>   Type         : Problem
     >>>   sense        : minimize
-    >>>   objective    : (10*x_0+(8*x_1)+(7*x_2)+(9*x_3))^2
+    >>>   objective    : (10*s_0+(8*s_1)+(7*s_2)+(9*s_3))^2
     >>>   #constraints : 0
     >>>   #variables   : 4 (Spin 4)
 
@@ -58,8 +61,8 @@ We search the optimal solution by RandomSearch.
     solver = Solver("RandomSearch")
     prob.solve(solver, msg=True, lowerbound=0)
 
-    print("x", Value(x))
-    >>> x [1 -1 1 -1]
+    print("s", Value(s))
+    >>> s [1 -1 1 -1]
 
 
 We caught obtain the optimal solution.
@@ -68,7 +71,9 @@ We caught obtain the optimal solution.
 Solving using LP Search
 -----------------------
 
-To make sure we obtain the optimal solution, we use LP Solver to convert problem after linearizing.
+To make sure we obtain the optimal solution, we can use LP Solver to convert problem after linearizing the problem.
+First, we linearize the objective function and constraints by flopt.convert.linearize.
+To linearize the product of spin variables, flopt replace spin variables to binary variables and add slack variables and constrains.
 
 .. code-block:: python
 
@@ -80,28 +85,28 @@ To make sure we obtain the optimal solution, we use LP Solver to convert problem
     >>> Name: Number Partitioning
     >>>   Type         : Problem
     >>>   sense        : minimize
-    >>>   objective    : 640*mul_0+(560*mul_1)+(720*mul_2)+(448*mul_3)+(576*mul_4)+(504*mul_5)-(960*x_0_b)-(832*x_1_b)-(756*x_2_b)-(900*x_3_b)+1156
+    >>>   objective    : 640*mul_0+(560*mul_1)+(720*mul_2)+(448*mul_3)+(576*mul_4)+(504*mul_5)-(960*s_0_b)-(832*s_1_b)-(756*s_2_b)-(900*s_3_b)+1156
     >>>   #constraints : 18
     >>>   #variables   : 10 (Binary 10)
     >>>
-    >>>   C 0, name for_mul_0_1, mul_0-x_0_b <= 0
-    >>>   C 1, name for_mul_0_2, mul_0-x_1_b <= 0
-    >>>   C 2, name for_mul_0_3, mul_0-x_0_b-x_1_b+1 >= 0
-    >>>   C 3, name for_mul_1_1, mul_1-x_0_b <= 0
-    >>>   C 4, name for_mul_1_2, mul_1-x_2_b <= 0
-    >>>   C 5, name for_mul_1_3, mul_1-x_0_b-x_2_b+1 >= 0
-    >>>   C 6, name for_mul_2_1, mul_2-x_0_b <= 0
-    >>>   C 7, name for_mul_2_2, mul_2-x_3_b <= 0
-    >>>   C 8, name for_mul_2_3, mul_2-x_0_b-x_3_b+1 >= 0
-    >>>   C 9, name for_mul_3_1, mul_3-x_1_b <= 0
-    >>>   C 10, name for_mul_3_2, mul_3-x_2_b <= 0
-    >>>   C 11, name for_mul_3_3, mul_3-x_1_b-x_2_b+1 >= 0
-    >>>   C 12, name for_mul_4_1, mul_4-x_1_b <= 0
-    >>>   C 13, name for_mul_4_2, mul_4-x_3_b <= 0
-    >>>   C 14, name for_mul_4_3, mul_4-x_1_b-x_3_b+1 >= 0
-    >>>   C 15, name for_mul_5_1, mul_5-x_2_b <= 0
-    >>>   C 16, name for_mul_5_2, mul_5-x_3_b <= 0
-    >>>   C 17, name for_mul_5_3, mul_5-x_2_b-x_3_b+1 >= 0
+    >>>   C 0, name for_mul_0_1, mul_0-s_0_b <= 0
+    >>>   C 1, name for_mul_0_2, mul_0-s_1_b <= 0
+    >>>   C 2, name for_mul_0_3, mul_0-s_0_b-s_1_b+1 >= 0
+    >>>   C 3, name for_mul_1_1, mul_1-s_0_b <= 0
+    >>>   C 4, name for_mul_1_2, mul_1-s_2_b <= 0
+    >>>   C 5, name for_mul_1_3, mul_1-s_0_b-s_2_b+1 >= 0
+    >>>   C 6, name for_mul_2_1, mul_2-s_0_b <= 0
+    >>>   C 7, name for_mul_2_2, mul_2-s_3_b <= 0
+    >>>   C 8, name for_mul_2_3, mul_2-s_0_b-s_3_b+1 >= 0
+    >>>   C 9, name for_mul_3_1, mul_3-s_1_b <= 0
+    >>>   C 10, name for_mul_3_2, mul_3-s_2_b <= 0
+    >>>   C 11, name for_mul_3_3, mul_3-s_1_b-s_2_b+1 >= 0
+    >>>   C 12, name for_mul_4_1, mul_4-s_1_b <= 0
+    >>>   C 13, name for_mul_4_2, mul_4-s_3_b <= 0
+    >>>   C 14, name for_mul_4_3, mul_4-s_1_b-s_3_b+1 >= 0
+    >>>   C 15, name for_mul_5_1, mul_5-s_2_b <= 0
+    >>>   C 16, name for_mul_5_2, mul_5-s_3_b <= 0
+    >>>   C 17, name for_mul_5_3, mul_5-s_2_b-s_3_b+1 >= 0
 
 , and solve it.
 
@@ -110,14 +115,17 @@ To make sure we obtain the optimal solution, we use LP Solver to convert problem
     from flopt import Solver
 
     solver = Solver("auto")
-    prob.solve(solver, msg=True, timelimit=1)
+    prob.solve(solver)
 
-    print("x", Value(x))
-    >>> x [1 -1 1 -1]
+    print("s", Value(s))
+    >>> s [1 -1 1 -1]
 
 
-Conversion to other formulations
---------------------------------
+Conversion to other formulations of number partitioning
+-------------------------------------------------------
+
+
+By using flopt.convert methods, we can obtain the data for another formulation of the number partitioning.
 
 
 QP
@@ -125,7 +133,15 @@ QP
 
 .. code-block:: python
 
+    from flopt import Variable, Problem, Dot
     from flopt.convert import QpStructure
+
+    s = Variable.array("x", len(A), cat="Spin")
+    prob = Problem("Number Partitioning")
+    prob += Dot(s, A) ** 2
+
+    # create QpStructure after binarize problem
+    flopt.convert.binarize(prob)
     qp = QpStructure.fromFlopt(prob)
 
     print(qp.show())

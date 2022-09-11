@@ -9,6 +9,7 @@ def start_solver_message(algo_name, param_str, solution):
     # stat about variables
     n_var = len(solution)
     n_binary_var = sum(var.type() == VariableType.Binary for var in solution)
+    n_spin_var = sum(var.type() == VariableType.Spin for var in solution)
     n_int_var = sum(var.type() == VariableType.Integer for var in solution)
     n_cont_var = sum(var.type() == VariableType.Continuous for var in solution)
     n_perm_var = sum(var.type() == VariableType.Permutation for var in solution)
@@ -28,6 +29,7 @@ def start_solver_message(algo_name, param_str, solution):
         f"(continuous {n_cont_var} ",
         f", int {n_int_var}",
         f", binary {n_binary_var}",
+        f", spin {n_spin_var}",
         f", permutation {n_perm_var} ({n_perm_var_elm}))\n" "\n",
     )
     print("".join(message))

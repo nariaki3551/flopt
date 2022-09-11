@@ -25,7 +25,7 @@ class OptunaCmaEsSearch(OptunaSearch):
         self.sigma0 = None
         self.n_startup_trials = 1
         self.independent_sampler = None
-        self.warn_independent_sampling = True
+        self.warn_independent_sampling = False
         self.seed = None
 
     def createStudy(self):
