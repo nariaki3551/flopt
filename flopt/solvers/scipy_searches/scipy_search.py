@@ -24,7 +24,7 @@ class ScipySearch(BaseSearch):
 
     def __init__(self):
         super().__init__()
-        self.n_trial = 1e10
+        self.n_trial = 1e8
         self.method = None
 
     def available(self, prob, verbose=False):
