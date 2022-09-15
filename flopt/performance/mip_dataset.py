@@ -24,17 +24,17 @@ class MipDataset(BaseDataset):
       instance name list
     """
 
-    def __init__(self):
-        self.name = "mip"
-        self.instance_names = [
-            "50v-10",
-            "enlight_hard",
-            "gen-ip054",
-            "neos-3046615-murg",
-            "gen-ip002",
-            "neos-3754480-nidda",
-        ]
+    name = "mip"
+    instance_names = [
+        "50v-10",
+        "enlight_hard",
+        "gen-ip054",
+        "neos-3046615-murg",
+        "gen-ip002",
+        "neos-3754480-nidda",
+    ]
 
+    def __init__(self):
         self.sol_data = dict()
         sol_file = "miplib2017-v23.solu"
         pattern = re.compile("=(?P<status>.*)=\s+(?P<name>.*)\s+(?P<value>.*)")

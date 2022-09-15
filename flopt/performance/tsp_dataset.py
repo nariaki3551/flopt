@@ -25,18 +25,17 @@ class TSPDataset(BaseDataset):
       instance name list
     """
 
-    def __init__(self):
-        self.name = "tsp"
-        self.instance_names = [
-            "test8",
-            "pa561",
-            "gr24",
-            "pr1002",
-            "fri26",
-            "fl3795",
-            "gr120",
-            "rl5915",
-        ]
+    name = "tsp"
+    instance_names = [
+        "test8",
+        "pa561",
+        "gr24",
+        "pr1002",
+        "fri26",
+        "fl3795",
+        "gr120",
+        "rl5915",
+    ]
 
     def createInstance(self, instance_name):
         """

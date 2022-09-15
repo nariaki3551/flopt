@@ -49,13 +49,18 @@ class ScipySearch(BaseSearch):
         return True
 
     def search(self):
+        self.start_build()
+
         var_names = [var.name for var in self.solution]
 
         def gen_func(expression):
             def func(values):
-                variables = []
-                for var_name, value in zip(var_names, values):
-                    variables.append(Const(value, name=var_name))
+                # check timelimit
+                self.raiseTimeoutIfNeeded()
+
+                variables = [None] * len(values)
+                for i in range(len(values)):
+                    variables[i] = Const(values[i], name=var_names[i])
                 solution = Solution("tmp", variables)
                 return expression.value(solution)
 
@@ -107,6 +112,8 @@ class ScipySearch(BaseSearch):
 
             # check timelimit
             self.raiseTimeoutIfNeeded()
+
+        self.end_build()
 
         res = scipy_optimize.minimize(
             func,

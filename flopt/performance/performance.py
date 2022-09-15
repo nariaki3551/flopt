@@ -41,7 +41,6 @@ def compute(datasets, solvers="all", timelimit=None, msg=True, save_prefix=None)
 
     .. code-block:: python
 
-        from flopt import Solver
         import flopt
 
         # datasets
@@ -60,7 +59,7 @@ def compute(datasets, solvers="all", timelimit=None, msg=True, save_prefix=None)
 
     .. code-block:: python
 
-        rs_solver = Solver('RandomSearch')
+        rs_solver = flopt.Solver("RandomSearch")
 
         # compute the performance
         logs = flopt.performance.compute(

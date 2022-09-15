@@ -250,7 +250,7 @@ class Problem:
 
         return status, log
 
-    def getSolution(self, k=0):
+    def getSolution(self, k=1):
         """get the k-top solution
 
         Parameters
@@ -258,11 +258,12 @@ class Problem:
         k : int
             return k-top solution
         """
-        assert k < len(self.solver.log)
-        solution = self.solver.log.getSolution(k=k)
-        return solution
+        assert k >= 1
+        if k == 1:
+            return self.solver.best_solution
+        return self.solver.log.getSolution(k=k)
 
-    def setSolution(self, k=0):
+    def setSolution(self, k=1):
         """set the k-top solution to variables
 
         Parameters
@@ -270,7 +271,7 @@ class Problem:
         k : int
             set k-top solution data to variables
         """
-        assert k < len(self.solver.log)
+        assert k >= 1
         solution = self.getSolution(k)
         var_dict = solution.toDict()
         for var in self.getVariables():

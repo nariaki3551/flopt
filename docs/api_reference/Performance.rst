@@ -1,18 +1,18 @@
 Performance
 ===========
 
+.. module:: flopt.performance
+
 User Interface
 --------------
 
-.. module:: flopt.performance
+.. autofunction:: flopt.performance.compute
 
-.. autofunction:: compute
-
-.. autoclass:: LogVisualizer
+.. autoclass:: flopt.performance.LogVisualizer
    :members:
 
 
-.. autoclass:: CustomDataset
+.. autoclass:: flopt.performance.CustomDataset
    :members:
 
 Datasets

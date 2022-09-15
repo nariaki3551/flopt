@@ -97,7 +97,7 @@ def during_solver_message(head, obj_value, best_bd, time, iteration):
     print(" ".join(message))
 
 
-def end_solver_message(status, obj_value, time):
+def end_solver_message(status, obj_value, build_time, elapsed_time):
     status_str = {
         SolverTerminateState.Normal: "normal termination",
         SolverTerminateState.Timelimit: "timelimit termination",
@@ -113,6 +113,8 @@ def end_solver_message(status, obj_value, time):
         "",
         f"Status: {status_str[status]}",
         f"Objective Value: {obj_value}",
-        f"Time: {time}" "",
+        f"Time: {elapsed_time}",
+        f"    Build Time: {build_time}",
+        f"    Search Time: {elapsed_time - build_time}",
     )
     print("\n".join(message))

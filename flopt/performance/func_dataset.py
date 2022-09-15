@@ -1,7 +1,6 @@
-from flopt import Variable, Problem, CustomExpression
+from flopt import Variable, Problem, CustomExpression, VarContinuous
 from .base_dataset import BaseDataset, BaseInstance
 from datasets.funcLib import benchmark_func
-
 import logging
 
 logger = logging.getLogger(__name__)
@@ -16,9 +15,8 @@ class FuncDataset(BaseDataset):
         instance name list
     """
 
-    def __init__(self):
-        self.name = "func"
-        self.instance_names = list(benchmark_func)
+    name = "func"
+    instance_names = list(benchmark_func)
 
     def createInstance(self, instance_name):
         """create FuncInstance"""
@@ -74,25 +72,32 @@ class FuncInstance(BaseInstance):
             (true, prob formulated according to solver)
         """
         if "blackbox" in solver.can_solve_problems:
-            return True, self.createProblemFunc()
+            return True, self.createProblemFunc(self.n)
         else:
             logger.info("this instance can be only `blackbox` formulation")
             return False, None
 
-    def createProblemFunc(self):
+    def createProblemFunc(self, n=10, cat=VarContinuous):
         """create problem from instance
+
+        Parameters
+        ----------
+        n: int
+            number of variables (for instance, this parameter will be ignored)
+        cat: string or VariableType
+            type of variables
 
         Returns
         -------
         Problem
             problem
         """
-        variables = self.create_variables(self.n)
+        variables = self.create_variables(n=n, cat=cat)
         for var in variables:
             var.setRandom()
-        func = self.create_objective(self.n)
+        func = self.create_objective(n)
         obj = CustomExpression(lambda *x: func(x), variables)
-        prob = Problem(name="Function:{self.name}")
+        prob = Problem(name=f"Function:{self.name}_n{n}")
         prob.setObjective(obj)
         return prob
 

@@ -22,6 +22,9 @@ from .Easom import minimum_obj as Easom_mo
 from .Eggholder import create_objective as Eggholder_co
 from .Eggholder import create_variables as Eggholder_cv
 from .Eggholder import minimum_obj as Eggholder_mo
+from .Ellipsoid import create_objective as Ellipsoid_co
+from .Ellipsoid import create_variables as Ellipsoid_cv
+from .Ellipsoid import minimum_obj as Ellipsoid_mo
 from .FiveWell import create_objective as FiveWell_co
 from .FiveWell import create_variables as FiveWell_cv
 from .FiveWell import minimum_obj as FiveWell_mo
@@ -99,6 +102,7 @@ benchmark_func = {
     "DeJongF3": {"co": DeJongF3_co, "cv": DeJongF3_cv, "mo": DeJongF3_mo},
     "Easom": {"co": Easom_co, "cv": Easom_cv, "mo": Easom_mo},
     "Eggholder": {"co": Eggholder_co, "cv": Eggholder_cv, "mo": Eggholder_mo},
+    "Ellipsoid": {"co": Ellipsoid_co, "cv": Ellipsoid_cv, "mo": Ellipsoid_mo},
     # 'FiveWell'    : {'co': FiveWell_co,     'cv': FiveWell_cv    , 'mo': FiveWell_mo},
     "Ktable": {"co": Ktable_co, "cv": Ktable_cv, "mo": Ktable_mo},
     "Levi": {"co": Levi_co, "cv": Levi_cv, "mo": Levi_mo},

@@ -7,17 +7,13 @@ def create_objective(n):
     def obj(x):
         n = len(x)
         k = ceil(n / 4)
-        return flopt.Sum(xi * xi for xi in x[:k]) + flopt.Sum(
-            10000 * xi * xi for xi in x[k:]
-        )
+        return flopt.Sqnorm(x[:k]) + 10000 * flopt.Sqnorm(x[k:])
 
     return obj
 
 
-def create_variables(n):
-    variables = flopt.Variable.array(
-        "x", n, lowBound=-5.12, upBound=5.12, cat="Continuous"
-    )
+def create_variables(n, cat="Continuous"):
+    variables = flopt.Variable.array("x", n, lowBound=-5.12, upBound=5.12, cat=cat)
     return variables
 
 

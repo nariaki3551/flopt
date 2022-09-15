@@ -67,7 +67,7 @@ print("c", c.value())
 
 # 2. Maximize
 # Problem
-prob = Problem(name="Test", sense="maximize")
+prob = Problem(name="Test", sense="Maximize")
 prob += custom_obj
 
 # Solver

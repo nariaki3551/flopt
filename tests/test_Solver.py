@@ -46,7 +46,7 @@ def prob_with_const():
 def prob_lp():
     a = flopt.Variable("a", cat="Continuous")
     b = flopt.Variable("b", cat="Continuous")
-    _prob = flopt.Problem("TestLp", sense="maximize")
+    _prob = flopt.Problem("TestLp", sense="Maximize")
     _prob += 1 * a + 3 * b <= 30
     _prob += 2 * a + 1 * b <= 40
     _prob += a >= 0

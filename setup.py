@@ -27,6 +27,7 @@ setup(
         "amplify",
         "pytest",
         "scipy",
+        "timeout_decorator",
     ],
     author="nariaki tateiwa",
     author_email="nariaki3551@gmail.com",

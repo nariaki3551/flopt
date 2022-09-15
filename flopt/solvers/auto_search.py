@@ -64,6 +64,7 @@ class AutoSearch(BaseSearch):
     """
 
     name = "AutoSearch"
+    can_solve_problems = ["blackbox"]
 
     def available(self, prob, verbose=False):
         """

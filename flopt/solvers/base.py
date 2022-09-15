@@ -56,8 +56,10 @@ class BaseSearch:
        in this order: list of solution object, best_solution, best_obj_value
     log : Log
         Solver Log class
+    build_time : float
+        time to build the problem for solver
     start_time : float
-        start_time of solver
+        start time at calling solve()
     trial_ix : int
         number of trials
     max_k : int
@@ -85,6 +87,7 @@ class BaseSearch:
         self.callbacks = []
         # for log
         self.log = Log()
+        self.build_time = 0.0
         self.start_time = None
         self.trial_ix = 0
         self.max_k = 1
@@ -133,6 +136,8 @@ class BaseSearch:
         -------
         status, Log
         """
+        self.start_search()
+
         if not self.available(prob, verbose=True):
             logger.error(f"Problem can not be solved by solver {self.name}.")
             status = SolverTerminateState.Abnormal
@@ -144,7 +149,6 @@ class BaseSearch:
         self.msg = msg
         self.best_solution = solution
 
-        self.start_time = time.time()
         if msg:
             params = {"timelimit": self.timelimit}
             start_solver_message(self.name, params, solution)
@@ -167,9 +171,20 @@ class BaseSearch:
 
         if msg:
             obj_value = self.prob.obj.value(self.best_solution)
-            end_solver_message(status, obj_value, time.time() - self.start_time)
+            end_solver_message(
+                status, obj_value, self.build_time, time.time() - self.start_time
+            )
 
         return status, self.log, time.time() - self.start_time
+
+    def start_build(self):
+        self.build_time = -time.time()
+
+    def end_build(self):
+        self.build_time += time.time()
+
+    def start_search(self):
+        self.start_time = time.time()
 
     def registerSolution(self, solution, obj_value=None, msg_tol=None):
         """update solution if the solution is better than the incumbent
@@ -207,7 +222,7 @@ class BaseSearch:
             self.best_obj_value = self.prob.obj.value(solution)
         else:
             self.best_obj_value = obj_value
-            self.save_solution = True
+        self.save_solution = True
         if self.best_obj_value < self.lowerbound + self.tol:
             if self.msg:
                 self.during_solver_message("*")
@@ -227,8 +242,11 @@ class BaseSearch:
             "time": time.time() - self.start_time,
             "iteration": self.trial_ix,
         }
+
         if self.max_k > 1 and self.save_solution:
-            log_dict["solution"] = self.best_solution.clone()
+            self.log.appendSolution(
+                self.best_solution.clone(), self.best_obj_value, self.max_k
+            )
             self.save_solution = False
         self.log.append(log_dict)
 

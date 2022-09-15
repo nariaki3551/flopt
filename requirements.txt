@@ -8,6 +8,7 @@ cvxopt
 amplify
 pytest
 scipy
+timeout_decorator
 Sphinx==3.5.4
 Jinja2==3.0.3
 sphinx-autobuild

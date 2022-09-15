@@ -26,7 +26,7 @@ clauses = [clause1, clause2, clause3, clause4]
 weights = [1, 2, 3, 4]
 obj = sum(w * c for c, w in zip(clauses, weights))
 
-prob = Problem("MaxSat", sense="maximize")
+prob = Problem("MaxSat", sense="Maximize")
 prob += obj
 
 solver = Solver(algo="RandomSearch")

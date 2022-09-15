@@ -69,6 +69,8 @@ class ScipyMilpSearch(BaseSearch):
         return True
 
     def search(self):
+        self.start_build()
+
         var_names = [var.name for var in self.solution]
 
         # lp structure
@@ -95,8 +97,10 @@ class ScipyMilpSearch(BaseSearch):
         else:
             constraints = None
 
+        self.end_build()
+
         # options
-        options = {"disp": self.msg, "time_limit": self.timelimit}
+        options = {"disp": self.msg, "time_limit": self.timelimit - self.build_time}
 
         # search
         res = scipy_optimize.milp(

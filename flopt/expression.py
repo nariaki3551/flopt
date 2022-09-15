@@ -1055,6 +1055,8 @@ class Const(float, ExpressionElement):
     def __init__(self, value, name=None):
         if name is None:
             name = f"{value}"
+        if isinstance(value, Const):
+            value = value._value
         self._value = value
         super().__init__(name=name)
 
