@@ -109,11 +109,10 @@ class CustomInstance(BaseInstance):
     def __init__(self, prob):
         self.name = prob.name
         self.prob = prob
-        self.prob_type = prob.prob_type
         self.var_values = {var.name: var.value() for var in prob.getVariables()}
 
     def createProblem(self, solver):
-        if set(self.prob_type) & set(solver.can_solve_problems):
+        if solver.available(self.prob):
             for variable in self.prob.getVariables():
                 variable.setValue(self.var_values[variable.name])
             return True, self.prob

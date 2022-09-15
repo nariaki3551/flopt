@@ -1,3 +1,5 @@
+import heapq
+
 from flopt.env import setup_logger
 
 
@@ -7,9 +9,17 @@ logger = setup_logger(__name__)
 class Log:
     def __init__(self):
         self.logs = list()
+        self.solutions = list()
+        heapq.heapify(self.solutions)
 
     def append(self, log_dict):
         self.logs.append(log_dict)
+
+    def appendSolution(self, solution, obj_value, max_k):
+        if len(self.solutions) < max_k:
+            heapq.heappush(self.solutions, (obj_value, solution))
+        else:
+            heapq.heappushpop(self.solutions, (obj_value, solution))
 
     def getLog(self, time=None, iteration=None):
         if time is None and iteration is None:
@@ -23,17 +33,10 @@ class Log:
                     return pre_log
         return self.logs[-1]
 
-    def getSolution(self, k=0):
-        """get the k-top solution"""
-        assert k < len(self.logs)
-        j = -1
-        for i in range(len(self.logs)):
-            if "solution" in self.logs[-i - 1]:
-                j += 1
-                if j == k:
-                    solution = self.logs[-i - 1]["solution"]
-                    return solution
-        raise KeyError
+    def getSolution(self, k=1):
+        """get the k-top solutions"""
+        self.solutions.sort()
+        return self.solutions[k - 1][1]
 
     def plot(
         self,

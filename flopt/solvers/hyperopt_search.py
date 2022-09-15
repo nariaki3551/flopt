@@ -1,5 +1,7 @@
 import weakref
 
+import hyperopt
+
 from flopt.env import setup_logger
 from flopt.solvers.base import BaseSearch
 from flopt.solvers.solver_utils import (
@@ -75,7 +77,8 @@ class HyperoptTPESearch(BaseSearch):
         return True
 
     def search(self):
-        import hyperopt
+
+        self.start_build()
 
         # make the search space
         space = dict()
@@ -93,6 +96,8 @@ class HyperoptTPESearch(BaseSearch):
         self.var_dict = weakref.WeakValueDictionary(
             {var.name: var for var in self.solution}
         )
+
+        self.end_build()
 
         # search
         hyperopt.fmin(

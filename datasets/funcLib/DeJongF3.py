@@ -10,10 +10,8 @@ def create_objective(*args, **kwargs):
     return obj
 
 
-def create_variables(*args, **kwargs):
-    variables = flopt.Variable.array(
-        "x", 5, lowBound=-5.12, upBound=5.12, cat="Continuous"
-    )
+def create_variables(cat="Continuous", *args, **kwargs):
+    variables = flopt.Variable.array("x", 5, lowBound=-5.12, upBound=5.12, cat=cat)
     return variables
 
 

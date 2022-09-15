@@ -35,6 +35,17 @@ class BaseDataset:
     def __iter__(self):
         return self.genInstances()
 
+    def __getitem__(self, instance_name):
+        assert isinstance(instance_name, str)
+        return self.createInstance(instance_name)
+
+    def __str__(self):
+        s = f"{self.name} Dataset\n\n"
+        s += f"instances\n"
+        s += f"---------\n"
+        s += "\n".join(self.instance_names)
+        return s
+
 
 class BaseInstance:
     """Base Instance"""

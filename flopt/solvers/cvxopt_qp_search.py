@@ -1,3 +1,5 @@
+from cvxopt import matrix, solvers
+
 from flopt.solvers.base import BaseSearch
 from flopt.convert import QpStructure
 from flopt.error import SolverError
@@ -102,6 +104,7 @@ class CvxoptQpSearch(BaseSearch):
         return True
 
     def search(self):
+        self.start_build()
         qp = QpStructure.fromFlopt(self.prob).boundsToNeq()
         if qp.isLp():
             sol = self.search_lp(qp.toLp())
@@ -117,7 +120,6 @@ class CvxoptQpSearch(BaseSearch):
         return SolverTerminateState.Normal
 
     def search_qp(self, qp):
-        from cvxopt import matrix, solvers
 
         qp = qp.boundsToNeq()
         Q = matrix(qp.Q)
@@ -127,13 +129,16 @@ class CvxoptQpSearch(BaseSearch):
         A = matrix(qp.A) if qp.A is not None else None
         b = matrix(qp.b) if qp.b is not None else None
 
-        # solve
+        # settings
         solvers.options["show_progress"] = self.msg
         if self.n_trial is not None:
             solvers.options["maxiters"] = self.n_trial
         elif "maxiters" in solvers.options:
             del solvers.options["maxiters"]
 
+        self.end_build()
+
+        # solve
         try:
             sol = solvers.qp(Q, c, G, h, A, b)
         except ValueError as e:
@@ -157,7 +162,6 @@ class CvxoptQpSearch(BaseSearch):
         return sol
 
     def search_lp(self, lp):
-        from cvxopt import matrix, solvers
 
         c = matrix(lp.c)
         G = matrix(lp.G) if lp.G is not None else None
@@ -165,23 +169,15 @@ class CvxoptQpSearch(BaseSearch):
         A = matrix(lp.A) if lp.A is not None else None
         b = matrix(lp.b) if lp.b is not None else None
 
-        # solve
+        # settings
         solvers.options["show_progress"] = self.msg
         if self.n_trial is not None:
             solvers.options["maxiters"] = self.n_trial
         elif "maxiters" in solvers.options:
             del solvers.options["maxiters"]
+
+        self.end_build()
+
+        # solve
         sol = solvers.lp(c, G, h, A, b)
         return sol
-
-    def startProcess(self):
-        """process of beginning of search"""
-        if all(const.feasible(self.best_solution) for const in self.prob.constraints):
-            self.best_obj_value = self.getObjValue(self.best_solution)
-        else:
-            self.best_obj_value = float("inf")
-        self.recordLog()
-
-    def closeProcess(self):
-        """process of ending of search"""
-        self.recordLog()

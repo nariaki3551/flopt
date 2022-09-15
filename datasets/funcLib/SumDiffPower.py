@@ -3,13 +3,13 @@ import flopt
 
 def create_objective(n):
     def obj(x):
-        return sum(abs(xi) ** (i + 1) for i, xi in enumerate(x, 1))
+        return flopt.Sum(abs(xi) ** (i + 1) for i, xi in enumerate(x, 1))
 
     return obj
 
 
-def create_variables(n):
-    variables = flopt.Variable.array("x", n, lowBound=-1, upBound=1, cat="Continuous")
+def create_variables(n, cat="Continuous"):
+    variables = flopt.Variable.array("x", n, lowBound=-1, upBound=1, cat=cat)
     return variables
 
 

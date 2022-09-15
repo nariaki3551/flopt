@@ -1,3 +1,5 @@
+import timeout_decorator
+
 import flopt
 from flopt.solvers.base import BaseSearch
 from flopt.env import setup_logger
@@ -21,9 +23,10 @@ class OptunaSearch(BaseSearch):
         number of trials
     """
 
+    name = "OptunaSearch(base)"
+
     def __init__(self):
         super().__init__()
-        self.name = "OptunaSearch(base)"
         self.n_trial = 1e100
 
     def createStudy(self):
@@ -42,15 +45,9 @@ class OptunaSearch(BaseSearch):
             return true if it can solve the problem else false
         """
         for var in prob.getVariables():
-            if not var.type() in {
-                VariableType.Continuous,
-                VariableType.Integer,
-                VariableType.Binary,
-            }:
+            if var.type() == VariableType.Permutation:
                 if verbose:
-                    logger.error(
-                        f"variable: \n{var}\n must be continuous, integer, or binary, but got {var.type()}"
-                    )
+                    logger.error(f"variable: \n{var}\n must not be permutation")
                 return False
         if prob.constraints:
             if verbose:
@@ -59,24 +56,37 @@ class OptunaSearch(BaseSearch):
         return True
 
     def search(self):
+        self.start_build()
+
         self.createStudy()
-        try:
-            self.study.optimize(self.objective, self.n_trial, timeout=self.timelimit)
-        except Exception as e:
-            logger.info(f"Exception {e}")
-            return SolverTerminateState.Abnormal
+
+        self.end_build()
+
+        search_timelimit = self.timelimit - self.build_time
+
+        @timeout_decorator.timeout(search_timelimit, timeout_exception=TimeoutError)
+        def optimize():
+            self.study.optimize(self.objective, self.n_trial, timeout=search_timelimit)
+
+        optimize()
+
         return SolverTerminateState.Normal
 
     def objective(self, trial):
         # set value into self.solution
         self.trial_ix += 1
         for var in self.solution:
+            if var.type() == VariableType.Binary:
+                var.setValue(trial.suggest_int(var.name, 0, 1))
+            elif var.type() == VariableType.Spin:
+                var.toBinary()
+                var.binary.setValue(trial.suggest_int(var.name, 0, 1))
             lb = var.getLb(must_number=True)
             ub = var.getUb(must_number=True)
             if var.type() == VariableType.Integer:
-                var._value = trial.suggest_int(var.name, lb, ub)
+                var.setValue(trial.suggest_int(var.name, lb, ub))
             elif var.type() == VariableType.Continuous:
-                var._value = trial.suggest_uniform(var.name, lb, ub)
+                var.setValue(trial.suggest_uniform(var.name, lb, ub))
 
         # get objective value by self.solution
         obj_value = self.getObjValue(self.solution)

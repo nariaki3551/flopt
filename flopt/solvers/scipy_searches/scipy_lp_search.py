@@ -70,6 +70,8 @@ class ScipyLpSearch(BaseSearch):
         return True
 
     def search(self):
+        self.start_build()
+
         var_names = [var.name for var in self.solution]
 
         def gen_func(expression):
@@ -114,8 +116,9 @@ class ScipyLpSearch(BaseSearch):
                 _callback([self.solution], self.best_solution, self.best_obj_value)
 
             # check timelimit
-            if time.time() - self.start_time > self.timelimit:
-                raise TimeoutError
+            self.raiseTimeoutIfNeeded()
+
+        self.end_build()
 
         # search
         res = scipy_optimize.linprog(

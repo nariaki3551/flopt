@@ -1,6 +1,5 @@
 import random
 from argparse import ArgumentParser
-
 import flopt
 from flopt import Solver, Solver_list
 from flopt.performance import Dataset_list

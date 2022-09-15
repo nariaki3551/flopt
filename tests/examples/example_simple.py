@@ -38,7 +38,7 @@ print("c", c.value())
 # 2. Maximize
 # Problem
 # in this case optimal solution (a, b, c) = (1, 2, 3), and objective value = 93
-prob = Problem(name="Test", sense="maximize")
+prob = Problem(name="Test", sense="Maximize")
 prob.setObjective(2 * (3 * a + b) * c * c + 3)
 
 # Solver

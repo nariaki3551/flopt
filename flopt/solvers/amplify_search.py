@@ -2,6 +2,11 @@ import weakref
 
 import numpy as np
 
+from amplify import IsingPoly, gen_symbols, Solver, decode_solution
+from amplify.constraint import equal_to, greater_equal, less_equal
+from amplify.client import FixstarsClient
+
+
 from flopt.solvers.base import BaseSearch
 from flopt.constants import VariableType, ConstraintType, SolverTerminateState
 from flopt.env import setup_logger
@@ -126,13 +131,11 @@ class AmplifySearch(BaseSearch):
         return True
 
     def search(self):
-        from amplify import IsingPoly, gen_symbols, Solver, decode_solution
-        from amplify.constraint import equal_to, greater_equal, less_equal
-        from amplify.client import FixstarsClient
-
         assert (
             self.token is not None
         ), f'token is None, set token as .solve(..., token="xxx")'
+
+        self.start_build()
 
         x = self.prob.getVariables()
         s = np.array(gen_symbols(IsingPoly, len(x)), dtype=object)
@@ -150,9 +153,11 @@ class AmplifySearch(BaseSearch):
             else:  # ConstraintType.Le
                 f += less_equal(g, 0)
 
+        self.end_build()
+
         # solve
         client = FixstarsClient()  # Fixstars Optigan
-        client.parameters.timeout = int(1000.0 * self.timelimit)
+        client.parameters.timeout = int(1000.0 * (self.timelimit - self.build_time))
         client.token = self.token
 
         result = Solver(client).solve(f)

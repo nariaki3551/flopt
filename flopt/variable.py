@@ -1,3 +1,4 @@
+import math
 import types
 import random
 import itertools
@@ -732,6 +733,8 @@ class VarInteger(VarElement):
     _type = VariableType.Integer
 
     def __init__(self, name, lowBound, upBound, ini_value):
+        lowBound = lowBound if lowBound is None else math.ceil(lowBound)
+        upBound = upBound if upBound is None else math.floor(upBound)
         super().__init__(name, lowBound, upBound, ini_value)
         self.binarized = None
         self.binaries = set()

@@ -10,8 +10,8 @@ def create_objective(n):
     return obj
 
 
-def create_variables(n):
-    variables = flopt.Variable.array("x", n, cat="Continuous")
+def create_variables(n, cat="Continuous"):
+    variables = flopt.Variable.array("x", n, cat=cat)
     return variables
 
 

@@ -1,5 +1,9 @@
 from .base_optuna import OptunaSearch
 
+from optuna.study import create_study
+from optuna.samplers import TPESampler
+from optuna.logging import disable_default_handler
+
 
 class OptunaTPESearch(OptunaSearch):
     """
@@ -37,9 +41,6 @@ class OptunaTPESearch(OptunaSearch):
         """
         create sampler and create Study object
         """
-        from optuna.study import create_study
-        from optuna.samplers import TPESampler
-        from optuna.logging import disable_default_handler
 
         disable_default_handler()
         sampler = TPESampler(

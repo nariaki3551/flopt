@@ -79,13 +79,19 @@ class PulpSearch(BaseSearch):
         return True
 
     def search(self):
+        self.start_build()
 
         lp_prob, lp_solution = self.createLpProblem(self.solution, self.prob)
 
         if self.solver is not None:
             solver = self.solver
         else:
-            solver = pulp.PULP_CBC_CMD(timeLimit=self.timelimit, msg=self.msg)
+            solver = pulp.PULP_CBC_CMD(
+                timeLimit=self.timelimit - self.build_time, msg=self.msg
+            )
+
+        self.end_build()
+
         lp_status = lp_prob.solve(solver)
 
         # get result
@@ -135,7 +141,7 @@ class PulpSearch(BaseSearch):
             else:
                 raise ValueError(var.type())
             lp_var = LpVariable(
-                var.name, lowBound=var.lowBound, upBound=var.upBound, cat=cat
+                var.name, lowBound=var.getLb(), upBound=var.getUb(), cat=cat
             )
             lp_variables.append(lp_var)
         lp_solution = Solution("lp_solution", lp_variables)

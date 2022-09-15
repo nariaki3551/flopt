@@ -3,13 +3,13 @@ import flopt
 
 def create_objective(n):
     def obj(x):
-        return flopt.Sum(xi * xi for xi in x)
+        return flopt.Sqnorm(x)
 
     return obj
 
 
-def create_variables(n):
-    variables = flopt.Variable.array("x", n, cat="Continuous")
+def create_variables(n, cat="Continuous"):
+    variables = flopt.Variable.array("x", n, cat=cat)
     return variables
 
 

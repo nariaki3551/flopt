@@ -7,7 +7,7 @@ from flopt.expression import CustomExpression
 from flopt.problem import Problem
 from flopt.solvers import Solver, Solver_list, allAvailableSolvers
 from flopt.solution import Solution
-from flopt.utils import Sum, Prod, Dot, Value
+from flopt.utils import Sum, Prod, Dot, Value, Sqnorm, Norm
 
 # performance
 import flopt.performance
