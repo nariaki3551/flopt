@@ -282,14 +282,23 @@ def test_ScipySearch1(prob_only_continuous, callback):
 
 
 def test_ScipySearch_available(
-    prob, prob_only_continuous, prob_with_const, prob_qp, prob_nonlinear, prob_perm
+    prob,
+    prob_only_continuous,
+    prob_with_const,
+    prob_qp,
+    prob_nonlinear,
+    prob_ising,
+    prob_ising_const,
+    prob_perm,
 ):
     solver = Solver(algo="ScipySearch")
-    assert solver.available(prob) == False
+    assert solver.available(prob) == True
     assert solver.available(prob_only_continuous) == True
-    assert solver.available(prob_with_const) == False
+    assert solver.available(prob_with_const) == True
     assert solver.available(prob_qp) == True
-    assert solver.available(prob_nonlinear) == False
+    assert solver.available(prob_nonlinear) == True
+    assert solver.available(prob_ising) == True
+    assert solver.available(prob_ising_const) == True
     assert solver.available(prob_perm) == False
 
 
@@ -482,7 +491,7 @@ def test_AutoSearch_available(
     assert solver.available(prob) == True
     assert solver.available(prob_with_const) == True
     assert solver.available(prob_qp) == True
-    assert solver.available(prob_nonlinear) == False
+    assert solver.available(prob_nonlinear) == True
     assert solver.available(prob_perm) == True
 
 

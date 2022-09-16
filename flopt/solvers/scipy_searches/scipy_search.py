@@ -2,10 +2,10 @@ from scipy import optimize as scipy_optimize
 import numpy as np
 
 from flopt.solvers.base import BaseSearch
-from flopt.env import setup_logger
 from flopt.expression import Const
 from flopt.solution import Solution
 from flopt.constants import VariableType, ConstraintType, SolverTerminateState
+from flopt.env import setup_logger
 
 
 logger = setup_logger(__name__)
@@ -40,18 +40,17 @@ class ScipySearch(BaseSearch):
             return true if it can solve the problem else false
         """
         for var in prob.getVariables():
-            if not var.type() == VariableType.Continuous:
+            if var.type() in {VariableType.Permutation}:
                 if verbose:
-                    logger.error(
-                        f"variable: \n{var}\n must be continouse, but got {var.type()}"
-                    )
+                    logger.error(f"variable: \n{var}\n must not be permutation")
                 return False
         return True
 
     def search(self):
         self.start_build()
 
-        var_names = [var.name for var in self.solution]
+        # cast spin to binary
+        self.solution.cast(VariableType.Spin, VariableType.Binary)
 
         def gen_func(expression):
             def func(values):
@@ -59,8 +58,8 @@ class ScipySearch(BaseSearch):
                 self.raiseTimeoutIfNeeded()
 
                 variables = [None] * len(values)
-                for i in range(len(values)):
-                    variables[i] = Const(values[i], name=var_names[i])
+                for i, (var, value) in enumerate(zip(self.solution, values)):
+                    variables[i] = Const(value, name=var.name)
                 solution = Solution("tmp", variables)
                 return expression.value(solution)
 
@@ -101,7 +100,11 @@ class ScipySearch(BaseSearch):
         ):
             self.trial_ix += 1
             for var, value in zip(self.solution, values):
-                var.setValue(value)
+                if var.type() == VariableType.Continuous:
+                    var.setValue(value)
+                else:  # var.type() == Integer, Binary
+                    var.setValue(round(value))
+                # var.setValue(value)
 
             # if solution is better thatn incumbent, then update best solution
             self.registerSolution(self.solution, msg_tol=1e-8)
