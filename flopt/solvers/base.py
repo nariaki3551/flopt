@@ -172,7 +172,11 @@ class BaseSearch:
         if msg:
             obj_value = self.prob.obj.value(self.best_solution)
             end_solver_message(
-                status, obj_value, self.build_time, time.time() - self.start_time
+                status,
+                obj_value,
+                self.build_time,
+                time.time() - self.start_time,
+                self.trial_ix,
             )
 
         return status, self.log, time.time() - self.start_time

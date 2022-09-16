@@ -176,14 +176,6 @@ class Solution:
         )
         return inner
 
-    def cast(self, before, after):
-        assert before == VariableType.Spin
-        assert after == VariableType.Binary
-        for i, var in enumerate(self._variables):
-            if var.type() == VariableType.Spin:
-                var.toBinary()
-                self._variables[i] = var.binary
-
     def __pos__(self):
         variables = [var.clone() for var in self._variables]
         return Solution(f"+({self.name})", variables)

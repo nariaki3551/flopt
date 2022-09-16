@@ -106,7 +106,6 @@ def compute(datasets, solvers="all", timelimit=None, msg=True, save_prefix=None)
 
     for dataset in datasets:
         for instance in dataset:
-            print(instance)
             for solver in solvers:
                 solver.reset()
                 formulatable, prob = instance.createProblem(solver)

@@ -75,6 +75,7 @@ class CustomDataset(BaseDataset):
     def __init__(self, name="CustomDataset", probs=[]):
         if not isinstance(probs, list):
             probs = [probs]
+        assert all(prob.name is not None for prob in probs), "problem must be named"
         self.name = name
         self.instance_names = [prob.name for prob in probs]
         self.instance_dict = {prob.name: prob for prob in probs}
@@ -88,6 +89,7 @@ class CustomDataset(BaseDataset):
         self.instance_dict[prob.name] = prob
 
     def __iadd__(self, prob):
+        assert prob.name is not None, "problem must be named"
         self.addProblem(prob)
         return self
 
@@ -110,6 +112,7 @@ class CustomInstance(BaseInstance):
         self.name = prob.name
         self.prob = prob
         self.var_values = {var.name: var.value() for var in prob.getVariables()}
+        self.best_value = None
 
     def createProblem(self, solver):
         if solver.available(self.prob):
@@ -121,4 +124,7 @@ class CustomInstance(BaseInstance):
 
     def getBestValue(self):
         """return the optimal value of objective function"""
-        return None
+        return self.best_value
+
+    def setBestValue(self, best_value):
+        self.best_value = best_value

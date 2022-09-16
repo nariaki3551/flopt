@@ -49,17 +49,20 @@ class ScipySearch(BaseSearch):
     def search(self):
         self.start_build()
 
-        # cast spin to binary
-        self.solution.cast(VariableType.Spin, VariableType.Binary)
-
         def gen_func(expression):
             def func(values):
                 # check timelimit
                 self.raiseTimeoutIfNeeded()
 
                 variables = [None] * len(values)
+                print(values)
                 for i, (var, value) in enumerate(zip(self.solution, values)):
-                    variables[i] = Const(value, name=var.name)
+                    if var.type() == VariableType.Spin:
+                        variables[i] = Const(
+                            2 * value - 1, name=var.name
+                        )  # binary -> spin
+                    else:
+                        variables[i] = Const(value, name=var.name)
                 solution = Solution("tmp", variables)
                 return expression.value(solution)
 
@@ -73,12 +76,14 @@ class ScipySearch(BaseSearch):
         x0 = [var.value() for var in self.solution]
 
         # bounds
-        lb = [
-            var.getLb() if var.getLb() is not None else -np.inf for var in self.solution
-        ]
-        ub = [
-            var.getUb() if var.getUb() is not None else np.inf for var in self.solution
-        ]
+        lb, ub = list(), list()
+        for var in self.solution:
+            if var.type() == VariableType.Spin:
+                lb.append(0)
+                ub.append(1)
+            else:
+                lb.append(l if (l := var.getLb()) is not None else -np.inf)
+                ub.append(u if (u := var.getUb()) is not None else np.inf)
         bounds = scipy_optimize.Bounds(lb, ub, keep_feasible=False)
 
         # constraints
