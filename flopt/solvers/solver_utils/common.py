@@ -58,38 +58,38 @@ def value2str(value):
     return value_str
 
 
-def calculate_relative_gap(obj_value, best_bd):
-    if obj_value is None or best_bd is None:
+def calculate_relative_gap(obj_value, best_bound):
+    if obj_value is None or best_bound is None:
         return " " * 7 + "-"
     else:
-        gap = (obj_value - best_bd) / (abs(obj_value) + 1e-4) * 100
+        gap = (obj_value - best_bound) / (abs(obj_value) + 1e-4) * 100
         if gap > 99.9:
             return " " * 8
         else:
             return f"{gap:8.3f}"
 
 
-def calculate_abs_gap(obj_value, best_bd):
-    if obj_value is None or best_bd is None:
+def calculate_abs_gap(obj_value, best_bound):
+    if obj_value is None or best_bound is None:
         return " " * 8 + "-"
     else:
-        gap = obj_value - best_bd
+        gap = obj_value - best_bound
         if gap > 10:
             return " " * 9
         else:
             return f"{gap:9.6f}"
 
 
-def during_solver_message(head, obj_value, best_bd, time, iteration):
+def during_solver_message(head, obj_value, best_bound, time, iteration):
     obj_value_str = value2str(obj_value)
-    best_bd_str = value2str(best_bd)
-    relative_gap_str = calculate_relative_gap(obj_value, best_bd)
-    abs_gap_str = calculate_abs_gap(obj_value, best_bd)
+    best_bound_str = value2str(best_bound)
+    relative_gap_str = calculate_relative_gap(obj_value, best_bound)
+    abs_gap_str = calculate_abs_gap(obj_value, best_bound)
     message = (
         f"{head:2s}",
         f"{iteration:7d}",
         f"{obj_value_str}",
-        f"{best_bd_str}",
+        f"{best_bound_str}",
         f"{relative_gap_str}",
         f"{abs_gap_str}",
         f"{time:7.2f}",

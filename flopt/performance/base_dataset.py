@@ -64,6 +64,6 @@ class BaseInstance:
         """
         raise NotImplementedError()
 
-    def getBestValue(self):
+    def getBestBound(self):
         """return the optimal value of objective function"""
         raise NotImplementedError()

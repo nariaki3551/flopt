@@ -82,7 +82,10 @@ class CustomDataset(BaseDataset):
 
     def createInstance(self, instance_name):
         prob = self.instance_dict[instance_name]
-        return CustomInstance(prob)
+        if isinstance(prob, CustomInstance):
+            return prob
+        else:
+            return CustomInstance(prob)
 
     def addProblem(self, prob):
         self.instance_names.append(prob.name)
@@ -109,10 +112,11 @@ class CustomInstance(BaseInstance):
     """
 
     def __init__(self, prob):
+        assert prob.sense in {"Minimize", "minimize"}
         self.name = prob.name
         self.prob = prob
         self.var_values = {var.name: var.value() for var in prob.getVariables()}
-        self.best_value = None
+        self.best_bound = None
 
     def createProblem(self, solver):
         if solver.available(self.prob):
@@ -122,9 +126,9 @@ class CustomInstance(BaseInstance):
         else:
             return False, None
 
-    def getBestValue(self):
+    def getBestBound(self):
         """return the optimal value of objective function"""
-        return self.best_value
+        return self.best_bound
 
-    def setBestValue(self, best_value):
-        self.best_value = best_value
+    def setBestBound(self, best_bound):
+        self.best_bound = best_bound

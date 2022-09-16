@@ -10,7 +10,7 @@ algo_list = [
     "ScipyLpSearch",
     "ScipyMilpSearch",
     "CvxoptQpSearch",
-    "AmplifySearch",
+    # "AmplifySearch",
     "auto",
 ]
 

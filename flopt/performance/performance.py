@@ -12,7 +12,9 @@ performance_dir = flopt_env.performance_dir
 logger = setup_logger(__name__)
 
 
-def compute(datasets, solvers="all", timelimit=None, msg=True, save_prefix=None):
+def compute(
+    datasets, solvers="all", timelimit=None, msg=True, save_prefix=None, **kwargs
+):
     """
     Measure the performance of (dataset, solver)
 
@@ -82,6 +84,7 @@ def compute(datasets, solvers="all", timelimit=None, msg=True, save_prefix=None)
       flopt.performance.compute(prob, timelimit=2, msg=True)
 
     """
+    assert timelimit is not None, "timelimit is required"
     # datasets settings
     if isinstance(datasets, Problem):
         cd = CustomDataset(name="user", probs=[datasets])
@@ -95,8 +98,7 @@ def compute(datasets, solvers="all", timelimit=None, msg=True, save_prefix=None)
     elif not isinstance(solvers, list):
         solvers = [solvers]
     for solver in solvers:
-        if timelimit is not None:
-            solver.setParams(timelimit=timelimit)
+        solver.setParams(timelimit=timelimit, **kwargs)
 
     # save_prefix setting
     if save_prefix is None:
@@ -111,8 +113,7 @@ def compute(datasets, solvers="all", timelimit=None, msg=True, save_prefix=None)
                 formulatable, prob = instance.createProblem(solver)
                 if not formulatable:
                     continue
-                best_bd = instance.getBestValue()
-                solver.setParams(best_bd=best_bd)
+                solver.setParams(best_bound=instance.getBestBound())
                 state, log = prob.solve(solver=solver, msg=msg)
                 save_log(log, solver, dataset, instance, save_prefix)
                 logs[dataset.name, instance.name, solver.name] = log

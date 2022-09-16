@@ -37,7 +37,7 @@ class MipDataset(BaseDataset):
     def __init__(self):
         self.sol_data = dict()
         sol_file = "miplib2017-v23.solu"
-        pattern = re.compile("=(?P<status>.*)=\s+(?P<name>.*)\s+(?P<value>.*)")
+        pattern = re.compile("=(?P<status>.*)=\s+(?P<name>.*)\s+(?P<best_value>.*)")
         for line in open(f"{mip_storage}/{sol_file}", "r"):
             line = line.strip()
             m = pattern.match(line)
@@ -46,9 +46,9 @@ class MipDataset(BaseDataset):
                 if d["status"] in {"unkn", "inf", "unbd"}:
                     continue
                 name = d["name"].strip()
-                value = float(d["value"].strip())
+                best_value = float(d["best_value"].strip())
                 status = d["status"].strip()
-                self.sol_data[name] = {"value": value, "status": status}
+                self.sol_data[name] = {"best_value": best_value, "status": status}
 
     def createInstance(self, instance_name):
         """
@@ -58,9 +58,9 @@ class MipDataset(BaseDataset):
         """
         mps_file = f"{mip_storage}/{instance_name}.mps"
         pulp_var, pulp_prob = pulp.LpProblem.fromMPS(mps_file)
-        value = self.sol_data[instance_name]["value"]
+        best_value = self.sol_data[instance_name]["best_value"]
         prob = flopt.convert.pulp_to_flopt(pulp_prob)
-        return MipInstance(instance_name, prob, value)
+        return MipInstance(instance_name, prob, best_value)
 
 
 class MipInstance(BaseInstance):
@@ -71,17 +71,17 @@ class MipInstance(BaseInstance):
     name : str
       problem name
     prob : Problem
-    value : optimal or best value of problem
+    best_value : optimal or best value of problem
     """
 
-    def __init__(self, name, prob, value):
+    def __init__(self, name, prob, best_value):
         self.name = name
         self.prob = prob
-        self.value = value
+        self.best_value = best_value
 
-    def getBestValue(self):
-        """return the optimal value of objective function"""
-        return self.value
+    def getBestBound(self):
+        """return the optimal or best value of objective function"""
+        return self.best_value
 
     def createProblem(self, solver):
         """

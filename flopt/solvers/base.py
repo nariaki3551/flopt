@@ -38,7 +38,7 @@ class BaseSearch:
         best solution
     best_obj_value : float
         incumbent objective value
-    best_bd : float
+    best_bound : float
         best lower bound value
     solution : Solution
         solution
@@ -77,7 +77,7 @@ class BaseSearch:
         # core variables
         self.best_solution = None
         self.best_obj_value = float("inf")
-        self.best_bd = None
+        self.best_bound = None
         self.solution = None
         # parameters
         self.timelimit = float("inf")
@@ -242,7 +242,7 @@ class BaseSearch:
         """
         log_dict = {
             "obj_value": self.best_obj_value,
-            "best_bd": self.best_bd,
+            "best_bound": self.best_bound,
             "time": time.time() - self.start_time,
             "iteration": self.trial_ix,
         }
@@ -264,7 +264,7 @@ class BaseSearch:
         during_solver_message(
             head,
             self.best_obj_value,
-            self.best_bd,
+            self.best_bound,
             time.time() - self.start_time,
             self.trial_ix,
         )

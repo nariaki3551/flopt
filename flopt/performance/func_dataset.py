@@ -53,7 +53,7 @@ class FuncInstance(BaseInstance):
         self.minimum_value = minimum_value
         self.n = n
 
-    def getBestValue(self):
+    def getBestBound(self):
         """return the optimal value of objective function"""
         return self.minimum_value(self.n)
 

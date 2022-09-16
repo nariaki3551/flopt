@@ -55,7 +55,6 @@ class ScipySearch(BaseSearch):
                 self.raiseTimeoutIfNeeded()
 
                 variables = [None] * len(values)
-                print(values)
                 for i, (var, value) in enumerate(zip(self.solution, values)):
                     if var.type() == VariableType.Spin:
                         variables[i] = Const(

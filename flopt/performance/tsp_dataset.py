@@ -132,7 +132,7 @@ class TSPInstance(BaseInstance):
         self.C = C  # Node Coordinate data
         logger.debug(self.__str__(detail=True))
 
-    def getBestValue(self):
+    def getBestBound(self):
         """return the optimal value of objective function"""
         return None
 
