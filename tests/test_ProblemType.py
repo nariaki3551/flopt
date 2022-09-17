@@ -5,11 +5,11 @@ from flopt.constants import VariableType, ExpressionType
 import flopt.solvers
 
 
-def test_to_problem_type1():
+def test_toProblemType1():
     x = flopt.Variable("x", cat="Continuous")
     prob = flopt.Problem()
     prob += x
-    problem_type = prob.to_problem_type()
+    problem_type = prob.toProblemType()
     assert problem_type == {
         "Variable": VariableType.Continuous,
         "Objective": ExpressionType.Linear,
@@ -17,11 +17,11 @@ def test_to_problem_type1():
     }
 
 
-def test_to_problem_type2():
+def test_toProblemType2():
     x = flopt.Variable("x", cat="Continuous")
     prob = flopt.Problem()
     prob += x * x
-    problem_type = prob.to_problem_type()
+    problem_type = prob.toProblemType()
     assert problem_type == {
         "Variable": VariableType.Continuous,
         "Objective": ExpressionType.Quadratic,
@@ -29,11 +29,11 @@ def test_to_problem_type2():
     }
 
 
-def test_to_problem_type3():
+def test_toProblemType3():
     x = flopt.Variable("x", cat="Continuous")
     prob = flopt.Problem()
     prob += x * x * x
-    problem_type = prob.to_problem_type()
+    problem_type = prob.toProblemType()
     assert problem_type == {
         "Variable": VariableType.Continuous,
         "Objective": ExpressionType.Any,
@@ -41,12 +41,12 @@ def test_to_problem_type3():
     }
 
 
-def test_to_problem_type4():
+def test_toProblemType4():
     x = flopt.Variable("x", cat="Continuous")
     prob = flopt.Problem()
     prob += x * x
     prob += x <= 3
-    problem_type = prob.to_problem_type()
+    problem_type = prob.toProblemType()
     assert problem_type == {
         "Variable": VariableType.Continuous,
         "Objective": ExpressionType.Quadratic,
@@ -54,12 +54,12 @@ def test_to_problem_type4():
     }
 
 
-def test_to_problem_type5():
+def test_toProblemType5():
     x = flopt.Variable("x", cat="Continuous")
     prob = flopt.Problem()
     prob += x * x
     prob += x * x <= 3
-    problem_type = prob.to_problem_type()
+    problem_type = prob.toProblemType()
     assert problem_type == {
         "Variable": VariableType.Continuous,
         "Objective": ExpressionType.Quadratic,
@@ -67,11 +67,11 @@ def test_to_problem_type5():
     }
 
 
-def test_to_problem_type6():
+def test_toProblemType6():
     x = flopt.Variable("x", lowBound=0, upBound=10, cat="Permutation")
     prob = flopt.Problem()
     prob += x
-    problem_type = prob.to_problem_type()
+    problem_type = prob.toProblemType()
     assert problem_type == {
         "Variable": VariableType.Permutation,
         "Objective": ExpressionType.Any,
@@ -79,11 +79,11 @@ def test_to_problem_type6():
     }
 
 
-def test_to_problem_type7():
+def test_toProblemType7():
     x = flopt.Variable.array("x", 1, cat="Spin")
     prob = flopt.Problem()
     prob += flopt.Prod(x)
-    problem_type = prob.to_problem_type()
+    problem_type = prob.toProblemType()
     assert problem_type == {
         "Variable": VariableType.Binary,
         "Objective": ExpressionType.Linear,
@@ -91,11 +91,11 @@ def test_to_problem_type7():
     }
 
 
-def test_to_problem_type8():
+def test_toProblemType8():
     x = flopt.Variable.array("x", 2, cat="Spin")
     prob = flopt.Problem()
     prob += flopt.Prod(x)
-    problem_type = prob.to_problem_type()
+    problem_type = prob.toProblemType()
     assert problem_type == {
         "Variable": VariableType.Binary,
         "Objective": ExpressionType.Quadratic,
@@ -103,11 +103,11 @@ def test_to_problem_type8():
     }
 
 
-def test_to_problem_type9():
+def test_toProblemType9():
     x = flopt.Variable.array("x", 10, cat="Spin")
     prob = flopt.Problem()
     prob += flopt.Prod(x)
-    problem_type = prob.to_problem_type()
+    problem_type = prob.toProblemType()
     assert problem_type == {
         "Variable": VariableType.Binary,
         "Objective": ExpressionType.Any,
@@ -115,11 +115,11 @@ def test_to_problem_type9():
     }
 
 
-def test_to_problem_type10():
+def test_toProblemType10():
     x = flopt.Variable.array("x", 10, cat="Spin")
     prob = flopt.Problem()
     prob += flopt.Sum(x)
-    problem_type = prob.to_problem_type()
+    problem_type = prob.toProblemType()
     assert problem_type == {
         "Variable": VariableType.Binary,
         "Objective": ExpressionType.Linear,

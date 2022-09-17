@@ -43,7 +43,7 @@ class VariableType(enum.IntEnum):
     Number = 106  # Continuous | Integer | Binary | Spin
 
     def __str__(self):
-        return f"VariableType.{self.name}"
+        return self.name
 
     def expand(self):
         vt = self.__class__
@@ -71,7 +71,7 @@ class ExpressionType(enum.IntEnum):
     Non = 207
 
     def __str__(self):
-        return f"ExpressionType.{self.name}"
+        return self.name
 
     def expand(self):
         et = self.__class__
@@ -86,11 +86,11 @@ class ExpressionType(enum.IntEnum):
                 et.Non,
             }
         elif self == et.Quadratic:
-            return {et.Const, et.Linear, et.Quadratic}
+            return {et.Const, et.Linear, et.Quadratic, et.Non}
         elif self == et.Linear:
-            return {et.Const, et.Linear}
+            return {et.Const, et.Linear, et.Non}
         else:
-            return {self}
+            return {self, et.Non}
 
 
 # expression type

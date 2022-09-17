@@ -79,8 +79,7 @@ class FuncInstance(BaseInstance):
             Objective=ExpressionType.BlackBox,
             Constraint=None,
         )
-        available_solvers = flopt.solvers.allAvailableSolversProblemType(problem_type)
-        if solver.name in available_solvers:
+        if solver.availableProblemType(problem_type):
             return True, self.createProblemFunc(self.n)
         else:
             logger.debug(f"{solver.name} cannot solve this instance")

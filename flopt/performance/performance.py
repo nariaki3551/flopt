@@ -110,6 +110,7 @@ def compute(
 
     for dataset in datasets:
         for instance in dataset:
+            logger.info(instance)
             for solver in solvers:
                 solver.reset()
                 formulatable, prob = instance.createProblem(solver)

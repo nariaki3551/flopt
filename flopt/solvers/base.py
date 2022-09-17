@@ -80,7 +80,7 @@ class BaseSearch:
         self.best_bound = None
         self.solution = None
         # parameters
-        self.timelimit = float("inf")
+        self.timelimit = 3600
         self.lowerbound = -float("inf")
         self.tol = 1e-10
         self.msg = False
@@ -318,6 +318,62 @@ class BaseSearch:
                     return False
 
         return True
+
+    def availableProblemType(self, problem_type):
+        """
+        Parameters
+        ----------
+        problem_type : dict
+            key is "Variable", "Objective", "Constraint"
+
+        Returns
+        -------
+        list of str
+            algorithm names that can solve the problem
+
+        Examples
+        --------
+
+        .. code-block:: python
+
+            import flopt.constants
+            import flopt.solvers
+
+            problem_type = dict(
+                Variable=flopt.constants.VariableType.Number,
+                Objective=flopt.constants.ExpressionType.BlackBox,
+                Constraint=None
+            )
+
+            solver.availableProblemType(problem_type)
+
+        """
+        assert isinstance(problem_type, dict)
+        assert {"Variable", "Objective", "Constraint"} == set(problem_type.keys())
+        assert isinstance(problem_type["Variable"], VariableType)
+        assert (
+            isinstance(problem_type["Objective"], ExpressionType)
+            or problem_type["Objective"] is None
+        )
+        assert (
+            isinstance(problem_type["Constraint"], ExpressionType)
+            or problem_type["Constraint"] is None
+        )
+
+        if problem_type["Objective"] is None:
+            problem_type["Objective"] = ExpressionType.Const
+
+        if problem_type["Constraint"] is None:
+            problem_type["Constraint"] = ExpressionType.Non
+
+        return (
+            problem_type["Variable"].expand()
+            <= self.can_solve_problems["Variable"].expand()
+            and problem_type["Objective"].expand()
+            <= self.can_solve_problems["Objective"].expand()
+            and problem_type["Constraint"].expand()
+            <= self.can_solve_problems["Constraint"].expand()
+        )
 
     def getObjValue(self, solution):
         """calculate objective value

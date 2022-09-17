@@ -52,19 +52,20 @@ class Environment:
     VARIABLE_LOWER_BOUND = None
     VARIABLE_UPPER_BOUND = None
 
-    def __init__(self):
-        src_dir = os.path.dirname(__file__)
-        self.src_dir = src_dir
-        self.datasets_dir = f"{src_dir}/../datasets"
-        self.performance_dir = f"{src_dir}/../performance"
+    src_dir = os.path.dirname(__file__)
+    datasets_dir = os.path.join(src_dir, "..", "datasets")
+    performance_dir = os.path.join(src_dir, "..", "performance")
+    models_dir = os.path.join(src_dir, "tuning")
 
+    root_logger = getLogger()
+
+    def __init__(self):
         # logger
-        self.root_logger = getLogger()
         self.root_logger.setLevel(0)
 
         # config
         config = configparser.ConfigParser()
-        config.read(f"{src_dir}/flopt.config")
+        config.read(os.path.join(self.src_dir, "flopt.config"))
 
         Environment.VARIABLE_LOWER_BOUND = float(
             config["DEFAULT"]["VARIABLE_LOWER_BOUND"]

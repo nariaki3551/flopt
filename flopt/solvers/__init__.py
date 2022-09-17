@@ -75,7 +75,7 @@ def Solver(algo="RandomSearch"):
 
         return AmplifySearch()
     elif algo == "auto":
-        from flopt.solvers.auto_search import AutoSearch
+        from flopt.solvers.auto_search.auto_search import AutoSearch
 
         return AutoSearch()
     else:
@@ -187,32 +187,9 @@ def allAvailableSolversProblemType(problem_type):
         flopt.solvers.allAvailableSolversProblemType(problem_type)
 
     """
-    assert isinstance(problem_type, dict)
-    assert {"Variable", "Objective", "Constraint"} == set(problem_type.keys())
-    assert isinstance(problem_type["Variable"], VariableType)
-    assert (
-        isinstance(problem_type["Objective"], ExpressionType)
-        or problem_type["Objective"] is None
-    )
-    assert (
-        isinstance(problem_type["Constraint"], ExpressionType)
-        or problem_type["Constraint"] is None
-    )
-
-    if problem_type["Objective"] is None:
-        problem_type["Objective"] = ExpressionType.Const
-
-    if problem_type["Constraint"] is None:
-        problem_type["Constraint"] = ExpressionType.Non
-
-    solvers = [
+    available_solvers = [
         algo
         for algo in Solver_list()
-        if problem_type["Variable"].expand()
-        <= Solver(algo=algo).can_solve_problems["Variable"].expand()
-        and problem_type["Objective"].expand()
-        <= Solver(algo=algo).can_solve_problems["Objective"].expand()
-        and problem_type["Constraint"].expand()
-        <= Solver(algo=algo).can_solve_problems["Constraint"].expand()
+        if Solver(algo=algo).availableProblemType(problem_type)
     ]
-    return solvers
+    return available_solvers

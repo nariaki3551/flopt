@@ -291,7 +291,7 @@ class Problem:
         for var in self.getVariables():
             var.setValue(var_dict[var.name].value())
 
-    def to_problem_type(self):
+    def toProblemType(self):
         """
         Returns
         -------
