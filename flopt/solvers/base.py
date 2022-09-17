@@ -303,7 +303,7 @@ class BaseSearch:
 
         # Constraint
         if self.can_solve_problems["Constraint"] == ExpressionType.Non:
-            if prob.constraints:
+            if prob.getConstraints():
                 if verbose:
                     logger.error(f"constraints are not available")
                 return False

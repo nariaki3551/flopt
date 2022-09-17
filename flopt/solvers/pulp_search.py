@@ -131,7 +131,7 @@ class PulpSearch(BaseSearch):
         if not isinstance(prob.obj, Const):
             lp_prob.setObjective(prob.obj.value(lp_solution))
 
-        for const in prob.constraints:
+        for const in prob.getConstraints():
             const_exp = const.expression
             if const.type() == ConstraintType.Eq:
                 lp_prob.addConstraint(const_exp.value(lp_solution) == 0, const.name)

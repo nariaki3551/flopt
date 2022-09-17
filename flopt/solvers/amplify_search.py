@@ -123,7 +123,7 @@ class AmplifySearch(BaseSearch):
         f = -s.T.dot(ising.J).dot(s) - ising.h.T.dot(s) + ising.C
 
         # constraints
-        for const in self.prob.constraints:
+        for const in self.prob.getConstraints():
             ising = const.expression.toIsing()
             g = s.T.dot(ising.J).dot(s) - ising.h.T.dot(s) + ising.C
             if const.type() == ConstraintType.Eq:

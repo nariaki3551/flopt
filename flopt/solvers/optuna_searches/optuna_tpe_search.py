@@ -35,8 +35,6 @@ class OptunaTPESearch(OptunaSearch):
         self.n_startup_trials = 10
         self.n_ei_candidates = 24
         self.seed = None
-        import warnings
-        warnings.simplefilter('ignore', TimeoutError)
 
     def createStudy(self):
         """

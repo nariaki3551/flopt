@@ -73,7 +73,7 @@ def measure_build_LpStructure(count, prob=None):
 
         # set polynomial
         prob.obj.setPolynomial()
-        for const in prob.constraints:
+        for const in prob.getConstraints():
             const.expression.setPolynomial()
 
     for i in tqdm.tqdm(range(count), desc="[ " + measure_name + " ]"):

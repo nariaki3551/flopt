@@ -166,6 +166,7 @@ class VariableFactory:
         elif cat == "Spin":
             return VarSpin(name, ini_value)
         elif cat == "Permutation":
+            assert lowBound is not None and upBound is not None
             return VarPermutation(name, lowBound, upBound, ini_value)
         else:
             raise ValueError(f"cat {cat} cannot be used")

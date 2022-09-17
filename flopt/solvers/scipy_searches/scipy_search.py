@@ -77,7 +77,7 @@ class ScipySearch(BaseSearch):
 
         # constraints
         constraints = []
-        for const in self.prob.constraints:
+        for const in self.prob.getConstraints():
             const_func = gen_func(const)
             lb, ub = 0, 0
             if const.type() == ConstraintType.Le:

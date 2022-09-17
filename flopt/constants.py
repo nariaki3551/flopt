@@ -43,11 +43,15 @@ class VariableType(enum.IntEnum):
     Number = 106  # Continuous | Integer | Binary | Spin
 
     def __str__(self):
-        return self.name
+        return f"VariableType.{self.name}"
 
     def expand(self):
         vt = self.__class__
-        if self == vt.Number:
+        if self == vt.Binary:
+            return {vt.Binary, vt.Spin}
+        elif self == vt.Spin:
+            return {vt.Binary, vt.Spin}
+        elif self == vt.Number:
             return {vt.Continuous, vt.Integer, vt.Binary, vt.Spin}
         elif self == vt.Any:
             return vt.Number.expand() | {vt.Permutation}
@@ -67,7 +71,7 @@ class ExpressionType(enum.IntEnum):
     Non = 207
 
     def __str__(self):
-        return self.name
+        return f"ExpressionType.{self.name}"
 
     def expand(self):
         et = self.__class__
