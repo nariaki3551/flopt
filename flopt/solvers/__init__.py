@@ -1,3 +1,5 @@
+from flopt.constants import VariableType, ExpressionType
+
 algo_list = [
     "RandomSearch",
     "2-Opt",
@@ -7,7 +9,6 @@ algo_list = [
     "SFLA",
     "PulpSearch",
     "ScipySearch",
-    "ScipyLpSearch",
     "ScipyMilpSearch",
     "CvxoptQpSearch",
     # "AmplifySearch",
@@ -61,10 +62,6 @@ def Solver(algo="RandomSearch"):
         from flopt.solvers.scipy_searches import ScipySearch
 
         return ScipySearch()
-    elif algo == "ScipyLpSearch":
-        from flopt.solvers.scipy_searches import ScipyLpSearch
-
-        return ScipyLpSearch()
     elif algo == "ScipyMilpSearch":
         from flopt.solvers.scipy_searches import ScipyMilpSearch
 
@@ -107,7 +104,8 @@ def allAvailableSolvers(prob):
 
     Returns
     -------
-    list of algorithm name
+    list of str
+        algorithm names that can solve the problem
 
     Examples
     --------
@@ -118,49 +116,103 @@ def allAvailableSolvers(prob):
         import flopt
         from flopt import Variable, Problem, CustomExpression
 
-        # Problem without constraint
-        a = Variable('a', 0, 1, 'Integer')
-        b = Variable('b', 1, 2, 'Continuous')
-        c = Variable('c', 1, 3, 'Continuous')
-        prob_linear = Problem(name='Test')
+        # Linear problem without constraint
+        a = Variable("a", 0, 1, "Integer")
+        b = Variable("b", 1, 2, "Continuous")
+        c = Variable("c", 1, 3, "Continuous")
+        prob_linear = Problem(name="Only objective")
         prob_linear += a + b + c
 
         # Problem with constraint
-        prob_with_const = Problem(name='TestC')
+        prob_with_const = Problem(name="With constraint")
         prob_with_const += a + b + c
         prob_with_const += a + b >= 2
 
         # Non-Linear problem
-        prob_nonlinear = Problem('Non-Linear')
+        prob_nonlinear = Problem("Non Linear")
         prob_nonlinear += a*b*c
         prob_nonlinear += a + b >= 2
 
         # Permutation Problem
-        p = Variable('p', 0, 4, 'Permutation')
-        prob_perm = Problem('TestP')
+        p = Variable("p", 0, 4, "Permutation")
+        prob_perm = Problem("TestP")
         def obj(p):
             return p[-1] - p[0]
         prob_perm +=  CustomExpression(obj, [p])
 
+        # display solvers can solve prob_linear
         print(flopt.allAvailableSolvers(prob_linear)
-        >>> ['RandomSearch',
-        >>> 'OptunaTPESearch',
-        >>> 'OptunaCmaEsSearch',
-        >>> 'HyperoptTPESearch',
-        >>> 'SFLA',
-        >>> 'PulpSearch',
-        >>> 'ScipySearch']
 
+        # display solvers can solve prob_with_const
         print(flopt.allAvailableSolvers(prob_with_const))
-        >>> ['PulpSearch', 'ScipySearch']
 
+        # display solvers can solve prob_nonlinear
         print(flopt.allAvailableSolvers(prob_nonlinear))
-        >>> ['ScipySearch']
 
+        # display solvers can solve prob_perm
         print(flopt.allAvailableSolvers(prob_perm))
-        >>> ['RandomSearch', '2-Opt']
     """
     available_solvers = [
         algo for algo in Solver_list() if Solver(algo=algo).available(prob)
     ]
     return available_solvers
+
+
+def allAvailableSolversProblemType(problem_type):
+    """
+    Parameters
+    ----------
+    problem_type : dict
+        key is "Variable", "Objective", "Constraint"
+
+    Returns
+    -------
+    list of str
+        algorithm names that can solve the problem
+
+    Examples
+    --------
+
+    .. code-block:: python
+
+        import flopt.constants
+        import flopt.solvers
+
+        problem_type = dict(
+            Variable=flopt.constants.VariableType.Number,
+            Objective=flopt.constants.ExpressionType.BlackBox,
+            Constraint=None
+        )
+
+        flopt.solvers.allAvailableSolversProblemType(problem_type)
+
+    """
+    assert isinstance(problem_type, dict)
+    assert {"Variable", "Objective", "Constraint"} == set(problem_type.keys())
+    assert isinstance(problem_type["Variable"], VariableType)
+    assert (
+        isinstance(problem_type["Objective"], ExpressionType)
+        or problem_type["Objective"] is None
+    )
+    assert (
+        isinstance(problem_type["Constraint"], ExpressionType)
+        or problem_type["Constraint"] is None
+    )
+
+    if problem_type["Objective"] is None:
+        problem_type["Objective"] = ExpressionType.Const
+
+    if problem_type["Constraint"] is None:
+        problem_type["Constraint"] = ExpressionType.Non
+
+    solvers = [
+        algo
+        for algo in Solver_list()
+        if problem_type["Variable"].expand()
+        <= Solver(algo=algo).can_solve_problems["Variable"].expand()
+        and problem_type["Objective"].expand()
+        <= Solver(algo=algo).can_solve_problems["Objective"].expand()
+        and problem_type["Constraint"].expand()
+        <= Solver(algo=algo).can_solve_problems["Constraint"].expand()
+    ]
+    return solvers

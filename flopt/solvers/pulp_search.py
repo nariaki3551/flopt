@@ -3,8 +3,12 @@ import pulp
 from flopt.solvers.base import BaseSearch
 from flopt.expression import Const
 from flopt.solution import Solution
-from flopt.constants import VariableType, ConstraintType, SolverTerminateState
-
+from flopt.constants import (
+    VariableType,
+    ExpressionType,
+    ConstraintType,
+    SolverTerminateState,
+)
 from flopt.env import setup_logger
 
 logger = setup_logger(__name__)
@@ -38,45 +42,15 @@ class PulpSearch(BaseSearch):
     """
 
     name = "PulpSearch"
-    can_solve_problems = ["lp"]
+    can_solve_problems = {
+        "Variable": VariableType.Number,
+        "Objective": ExpressionType.Linear,
+        "Constraint": ExpressionType.Linear,
+    }
 
     def __init__(self):
         super().__init__()
         self.solver = None
-
-    def available(self, prob, verbose=False):
-        """
-        Parameters
-        ----------
-        prob : Problem
-        verbose : bool
-
-        Returns
-        -------
-        bool
-            return true if objective and constraint functions are linear else false
-        """
-        for var in prob.getVariables():
-            if not var.type() in {
-                VariableType.Continuous,
-                VariableType.Integer,
-                VariableType.Binary,
-            }:
-                if verbose:
-                    logger.error(
-                        f"variable: \n{var}\n must be continouse, integer or binary, but got {var.type()}"
-                    )
-                return False
-        if not prob.obj.isLinear():
-            if verbose:
-                logger.error(f"objective function: \n{prob.obj}\n must be Linear")
-            return False
-        for const in prob.constraints:
-            if not const.expression.isLinear():
-                if verbose:
-                    logger.error(f"constraint: \n{const}\n must be Linear")
-                return False
-        return True
 
     def search(self):
         self.start_build()

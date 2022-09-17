@@ -2,17 +2,18 @@ import re
 
 import pulp
 
-import flopt
+import flopt.solvers
 import flopt.convert
-from flopt import env as flopt_env
-from .base_dataset import BaseDataset, BaseInstance
+from flopt.constants import VariableType, ExpressionType
+import flopt.env
 from flopt.env import setup_logger
 
+from .base_dataset import BaseDataset, BaseInstance
 
 logger = setup_logger(__name__)
 
 # instance problems
-mip_storage = f"{flopt_env.datasets_dir}/mipLib"
+mip_storage = f"{flopt.env.datasets_dir}/mipLib"
 
 
 class MipDataset(BaseDataset):
@@ -98,14 +99,16 @@ class MipInstance(BaseInstance):
           if solver can be solve this instance return
           (true, prob formulated according to solver)
         """
-        if solver.name == "PulpSearch":
-            return solver.available(self.prob), self.prob
-        elif solver.name == "ScipyLpSearch":
-            return solver.available(self.prob), self.prob
-        elif solver.name == "ScipyMilpSearch":
+        problem_type = dict(
+            Variable=VariableType.Number,
+            Objective=ExpressionType.Linear,
+            Constraint=ExpressionType.Linear,
+        )
+        available_solvers = flopt.solvers.allAvailableSolversProblemType(problem_type)
+        if solver.name in available_solvers:
             return solver.available(self.prob), self.prob
         else:
-            logger.info("this instance only can be MIP formulation")
+            logger.info(f"{solver.name} cannot solve this instance")
             return False, None
 
     def __str__(self):

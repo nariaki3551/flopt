@@ -8,9 +8,9 @@ from flopt.solvers.solver_utils import (
     during_solver_message,
     end_solver_message,
 )
-from flopt.env import setup_logger
-from flopt.constants import SolverTerminateState
+from flopt.constants import VariableType, ExpressionType, SolverTerminateState
 import flopt.error
+from flopt.env import setup_logger
 
 
 logger = setup_logger(__name__)
@@ -272,8 +272,52 @@ class BaseSearch:
     def search(self):
         raise NotImplementedError()
 
-    def available(self, prob):
-        raise NotImplementedError()
+    def available(self, prob, verbose=False):
+        assert hasattr(self, "can_solve_problems")
+        assert isinstance(self.can_solve_problems, dict)
+        assert {"Variable", "Objective", "Constraint"} == set(
+            self.can_solve_problems.keys()
+        )
+        assert isinstance(self.can_solve_problems["Variable"], VariableType)
+        assert isinstance(self.can_solve_problems["Objective"], ExpressionType)
+        assert isinstance(self.can_solve_problems["Constraint"], ExpressionType)
+
+        # Variables
+        available_variables = self.can_solve_problems["Variable"].expand()
+        for var in prob.getVariables():
+            if not var.type() in available_variables:
+                if verbose:
+                    logger.error(
+                        f"variable: \n{var}\n must be in {available_variables}, but got {var.type()}"
+                    )
+                return False
+
+        # Objective
+        available_objective = self.can_solve_problems["Objective"].expand()
+        if not prob.obj.type() in available_objective:
+            if verbose:
+                logger.error(
+                    f"objective function: \n{prob.obj}\n must be in {available_objective}, but got {prob.obj.type()}"
+                )
+            return False
+
+        # Constraint
+        if self.can_solve_problems["Constraint"] == ExpressionType.Non:
+            if prob.constraints:
+                if verbose:
+                    logger.error(f"constraints are not available")
+                return False
+        else:
+            available_constraint = self.can_solve_problems["Objective"].expand()
+            for const in prob.constraints:
+                if not const.expression.type() in available_constraint:
+                    if verbose:
+                        logger.error(
+                            f"constraint: \n{const}\n must be in {available_constraint}, but got {const.expression.type()}"
+                        )
+                    return False
+
+        return True
 
     def getObjValue(self, solution):
         """calculate objective value

@@ -6,9 +6,13 @@ from amplify import IsingPoly, gen_symbols, Solver, decode_solution
 from amplify.constraint import equal_to, greater_equal, less_equal
 from amplify.client import FixstarsClient
 
-
 from flopt.solvers.base import BaseSearch
-from flopt.constants import VariableType, ConstraintType, SolverTerminateState
+from flopt.constants import (
+    VariableType,
+    ExpressionType,
+    ConstraintType,
+    SolverTerminateState,
+)
 from flopt.env import setup_logger
 
 
@@ -93,42 +97,16 @@ class AmplifySearch(BaseSearch):
     """
 
     name = "AmplifySearch"
-    can_solve_problems = ["ising"]
+    can_solve_problems = {
+        "Variable": VariableType.Spin,
+        "Objective": ExpressionType.Quadratic,
+        "Constraint": ExpressionType.Linear,
+    }
 
     def __init__(self):
         super().__init__()
         self.timelimit = 1
         self.token = None
-
-    def available(self, prob, verbose=False):
-        """
-        Parameters
-        ----------
-        prob : Problem
-        verbose : bool
-
-        Returns
-        -------
-        bool
-            return true if it can solve the problem else false
-        """
-        for var in prob.getVariables():
-            if not var.type() == VariableType.Spin:
-                if verbose:
-                    logger.error(
-                        f"variable: \n{var}\n must be spin, but got {var.type()}"
-                    )
-                return False
-        if not prob.obj.isIsing():
-            if verbose:
-                logger.error(f"objective function: \n{prob.obj}\n must be ising form")
-            return False
-        for const in prob.constraints:
-            if not const.expression.isIsing():
-                if verbose:
-                    logger.error(f"constraint: \n{const}\n must be ising form")
-                return False
-        return True
 
     def search(self):
         assert (

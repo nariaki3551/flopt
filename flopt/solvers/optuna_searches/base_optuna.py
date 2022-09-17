@@ -2,8 +2,8 @@ import timeout_decorator
 
 import flopt
 from flopt.solvers.base import BaseSearch
+from flopt.constants import VariableType, ExpressionType, SolverTerminateState
 from flopt.env import setup_logger
-from flopt.constants import VariableType, SolverTerminateState
 
 
 logger = setup_logger(__name__)
@@ -24,6 +24,11 @@ class OptunaSearch(BaseSearch):
     """
 
     name = "OptunaSearch(base)"
+    can_solve_problems = {
+        "Variable": VariableType.Number,
+        "Objective": ExpressionType.Any,
+        "Constraint": ExpressionType.Non,
+    }
 
     def __init__(self):
         super().__init__()
@@ -31,29 +36,6 @@ class OptunaSearch(BaseSearch):
 
     def createStudy(self):
         raise NotImplementedError()
-
-    def available(self, prob, verbose=False):
-        """
-        Parameters
-        ----------
-        prob : Problem
-        verbose : bool
-
-        Returns
-        -------
-        bool
-            return true if it can solve the problem else false
-        """
-        for var in prob.getVariables():
-            if var.type() == VariableType.Permutation:
-                if verbose:
-                    logger.error(f"variable: \n{var}\n must not be permutation")
-                return False
-        if prob.constraints:
-            if verbose:
-                logger.error(f"this solver can not handle constraints")
-            return False
-        return True
 
     def search(self):
         self.start_build()

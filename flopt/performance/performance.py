@@ -2,13 +2,15 @@ import os
 import pickle
 from itertools import product
 
-from flopt import env as flopt_env
 from flopt import Problem, Solver, Solver_list
+import flopt.solvers
+import flopt.env
 from flopt.env import setup_logger
+
 from .custom_dataset import CustomDataset
 from .log_visualizer import LogVisualizer
 
-performance_dir = flopt_env.performance_dir
+performance_dir = flopt.env.performance_dir
 logger = setup_logger(__name__)
 
 

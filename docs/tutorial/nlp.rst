@@ -82,11 +82,11 @@ We set the object function to *Problem* using `+=` operation or `.setObjective` 
   prob += 2*(3*a+b)*c**2+3   # set the objective function
   # prob.setObjective(2*(3*a+b)*c**2+3)   # same above
 
-When we solve a maximize problem, we set `sense="maximize"` (default is sense=minimize).
+When we solve a maximize problem, we set `sense="Maximize"` (default is sense=minimize).
 
 .. code-block:: python
 
-  prob = Problem(name="Test", sense="maximize")
+  prob = Problem(name="Test", sense="Maximize")
 
 
 Solver

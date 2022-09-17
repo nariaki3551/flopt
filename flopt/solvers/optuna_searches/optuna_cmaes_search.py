@@ -21,7 +21,6 @@ class OptunaCmaEsSearch(OptunaSearch):
     """
 
     name = "OptunaCmaEsSearch"
-    can_solve_problems = ["blackbox"]
 
     def __init__(self):
         super().__init__()

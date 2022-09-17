@@ -717,10 +717,9 @@ class VarElement:
 
     def __str__(self):
         s = f"Name: {self.name}\n"
-        s += f"  Type    : {self._type}\n"
-        s += f"  Value   : {self.value()}\n"
-        s += f"  lowBound: {self.lowBound}\n"
-        s += f"  upBound : {self.upBound}"
+        s += f"  Type : {self._type}\n"
+        s += f"  Value: {self.value()}\n"
+        s += f"  Bound: {[self.lowBound, self.upBound]}"
         return s
 
     def __repr__(self):

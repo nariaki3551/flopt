@@ -17,7 +17,6 @@ We can see all available solvers by `flopt.Solver_list()`.
   >>>  'SFLA',
   >>>  'PulpSearch',
   >>>  'ScipySearch',
-  >>>  'ScipyLpSearch',
   >>>  'ScipyMilpSearch',
   >>>  'CvxoptQpSearch',
   >>>  'AmplifySearch',
@@ -37,7 +36,6 @@ All available solvers for problem are shown by as follows.
   flopt.allAvailableSolvers(prob)
   >>> ['PulpSearch',
   >>>  'ScipySearch',
-  >>>  'ScipyLpSearch',
   >>>  'ScipyMilpSearch',
   >>>  'CvxoptQpSearch',
   >>>  'auto']

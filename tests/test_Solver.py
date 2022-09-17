@@ -302,37 +302,6 @@ def test_ScipySearch_available(
     assert solver.available(prob_perm) == False
 
 
-def test_ScipyLpSearch1(prob_only_continuous, callback):
-    solver = Solver(algo="ScipyLpSearch")
-    solver.setParams(n_trial=10, callbacks=[callback])
-    prob_only_continuous.solve(solver, timelimit=0.5)
-
-
-def test_ScipyLpSearch2(prob_lp, callback):
-    solver = Solver(algo="ScipyLpSearch")
-    solver.setParams(n_trial=10, callbacks=[callback])
-    prob_lp.solve(solver, timelimit=0.5)
-
-
-def test_ScipyLpSearch_available(
-    prob,
-    prob_only_continuous,
-    prob_with_const,
-    prob_lp,
-    prob_qp,
-    prob_nonlinear,
-    prob_perm,
-):
-    solver = Solver(algo="ScipyLpSearch")
-    assert solver.available(prob) == False
-    assert solver.available(prob_only_continuous) == True
-    assert solver.available(prob_with_const) == False
-    assert solver.available(prob_lp) == True
-    assert solver.available(prob_qp) == False
-    assert solver.available(prob_nonlinear) == False
-    assert solver.available(prob_perm) == False
-
-
 def test_ScipyMilpSearch1(prob):
     solver = Solver(algo="ScipyMilpSearch")
     solver.setParams()
@@ -446,18 +415,6 @@ def test_CvxoptQpSearch3(callback):
     prob_qp = Problem(name="issue72")
     prob_qp += x * x
     prob_qp.solve(solver)
-
-
-def test_ScipyLpSearch_available(
-    prob, prob_only_continuous, prob_with_const, prob_qp, prob_nonlinear, prob_perm
-):
-    solver = Solver(algo="ScipyLpSearch")
-    assert solver.available(prob) == False
-    assert solver.available(prob_only_continuous) == True
-    assert solver.available(prob_with_const) == False
-    assert solver.available(prob_qp) == False
-    assert solver.available(prob_nonlinear) == False
-    assert solver.available(prob_perm) == False
 
 
 def test_AutoSearch1(prob, callback):

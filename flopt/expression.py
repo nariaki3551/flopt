@@ -39,7 +39,6 @@ class ExpressionElement:
     Attributes
     ----------
     name : str
-    type : str
     var_dict : None or dict
     polynomial : None or Polynomial
     parents : list of ExpressionElement
@@ -110,6 +109,10 @@ class ExpressionElement:
             return self._value()
 
     def type(self):
+        if self.isLinear():
+            return ExpressionType.Linear
+        elif self.isQuadratic():
+            return ExpressionType.Quadratic
         return self._type
 
     def constant(self):
@@ -623,9 +626,6 @@ class ExpressionElement:
         # self >= other --> other - self <= 0
         return Constraint(other - self, ConstraintType.Le)
 
-    def __str__(self):
-        raise NotImplementedError
-
     def __repr__(self):
         raise NotImplementedError
 
@@ -702,7 +702,7 @@ class Expression(ExpressionElement):
     >>> 1
     """
 
-    _type = ExpressionType.Normal
+    _type = ExpressionType.Unknown
 
     def __init__(self, elmA, elmB, operator, name=None):
         self.elmA = elmA
@@ -879,12 +879,6 @@ class Expression(ExpressionElement):
             return Expression(other, self, "*")
         else:
             return NotImplemented
-
-    def __str__(self):
-        s = f"Name: {self.name}\n"
-        s += f"  Type    : {self._type}\n"
-        s += f"  Value   : {self.value()}\n"
-        return s
 
     def __repr__(self):
         s = f"Expression({self.elmA.name}, {self.elmB.name}, {self.operator})"
@@ -1203,6 +1197,9 @@ to_const_ufunc = np.frompyfunc(to_const, 1, 1)
 #   Operation Class
 # ------------------------------------------------
 class Operation(ExpressionElement):
+
+    _type = ExpressionType.Unknown
+
     def __init__(self, var_or_exps, name=None):
         assert len(var_or_exps) > 0
         self.elms = to_const_ufunc(np.array(var_or_exps, dtype=object))
@@ -1243,8 +1240,6 @@ class Sum(Operation):
     ----------
     var_of_exps : list of VarELement or ExpressionElement
     """
-
-    _type = ExpressionType.Sum
 
     def setName(self):
         self.name = ""
@@ -1302,11 +1297,8 @@ class Sum(Operation):
     def isLinear(self):
         return all(elm.isLinear() for elm in self.elms)
 
-    def __str__(self):
-        s = f"Name: {self.name}\n"
-        s += f"  Type    : {self._type}\n"
-        s += f"  Value   : {self.value()}\n"
-        return s
+    def isQuadratic(self):
+        return all(elm.isQuadratic() for elm in self.elms)
 
     def __repr__(self):
         s = f"Sum({self.elms})"
@@ -1319,8 +1311,6 @@ class Prod(Operation):
     ----------
     var_of_exps : list of VarELement or ExpressionElement
     """
-
-    _type = ExpressionType.Prod
 
     def setName(self):
         self.name = ""
@@ -1375,13 +1365,14 @@ class Prod(Operation):
             return to_value_ufunc(self.elms).prod()
 
     def isLinear(self):
-        return sum(not isinstance(elm, number_classes) for elm in self.elms) <= 1
+        if self.polynomial is None:
+            self.setPolynomial()
+        return self.polynomial.isLinear()
 
-    def __str__(self):
-        s = f"Name: {self.name}\n"
-        s += f"  Type    : {self._type}\n"
-        s += f"  Value   : {self.value()}\n"
-        return s
+    def isQuadratic(self):
+        if self.polynomial is None:
+            self.setPolynomial()
+        return self.polynomial.isQuadratic()
 
     def __repr__(self):
         s = f"Prod({self.elms})"

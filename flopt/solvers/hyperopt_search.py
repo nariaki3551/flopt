@@ -2,12 +2,9 @@ import weakref
 
 import hyperopt
 
-from flopt.env import setup_logger
 from flopt.solvers.base import BaseSearch
-from flopt.solvers.solver_utils import (
-    during_solver_message,
-)
-from flopt.constants import VariableType, SolverTerminateState
+from flopt.constants import VariableType, ExpressionType, SolverTerminateState
+from flopt.env import setup_logger
 
 
 import logging
@@ -37,7 +34,11 @@ class HyperoptTPESearch(BaseSearch):
     """
 
     name = "HyperoptTPESearch"
-    can_solve_problems = ["blackbox"]
+    can_solve_problems = {
+        "Variable": VariableType.Number,
+        "Objective": ExpressionType.Any,
+        "Constraint": ExpressionType.Non,
+    }
 
     def __init__(self):
         super().__init__()
@@ -46,35 +47,6 @@ class HyperoptTPESearch(BaseSearch):
         self.n_trial = 1e100
         self.show_progressbar = False
         self.hyperopt_STATUS_OK = STATUS_OK
-
-    def available(self, prob, verbose=False):
-        """
-        Parameters
-        ----------
-        prob : Problem
-        verbose : bool
-
-        Returns
-        -------
-        bool
-            return true if it can solve the problem else false
-        """
-        for var in prob.getVariables():
-            if not var.type() in {
-                VariableType.Continuous,
-                VariableType.Integer,
-                VariableType.Binary,
-            }:
-                if verbose:
-                    logger.error(
-                        f"variable: \n{var}\n must be continuous, integer, or binary, but got {var.type()}"
-                    )
-                return False
-        if prob.constraints:
-            if verbose:
-                logger.error(f"this solver can not handle constraints")
-            return False
-        return True
 
     def search(self):
 

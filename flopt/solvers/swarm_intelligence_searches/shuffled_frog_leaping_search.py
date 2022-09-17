@@ -3,7 +3,7 @@ import random
 from flopt.solution import Solution
 from flopt.solvers.base import BaseSearch
 from flopt.env import setup_logger
-from flopt.constants import VariableType, SolverTerminateState
+from flopt.constants import VariableType, ExpressionType, SolverTerminateState
 
 logger = setup_logger(__name__)
 
@@ -73,8 +73,12 @@ class ShuffledFrogLeapingSearch(BaseSearch):
       Multiplier for increasing population size before each restart
     """
 
-    name = "ShuffledFrogLeapingSearch"
-    can_solve_problems = ["blackbox"]
+    name = "SFLA"
+    can_solve_problems = {
+        "Variable": VariableType.Number,
+        "Objective": ExpressionType.Any,
+        "Constraint": ExpressionType.Non,
+    }
 
     def __init__(self):
         super().__init__()
@@ -95,31 +99,6 @@ class ShuffledFrogLeapingSearch(BaseSearch):
         self.n_memeplex = 5
         self.n_frog_per_memeplex = 4
         self.inc_flogsize = 2
-
-    def available(self, prob, verbose=False):
-        """
-        Parameters
-        ----------
-        prob : Problem
-        verbose : bool
-
-        Returns
-        -------
-        bool
-            return true if it can solve the problem else false
-        """
-        for var in prob.getVariables():
-            if var.type() == VariableType.Permutation:
-                if verbose:
-                    logger.error(
-                        f"variable: \n{var}\n must be not permutation, but got {var.type()}"
-                    )
-                return False
-        if prob.constraints:
-            if verbose:
-                logger.error(f"this solver can not handle constraints")
-            return False
-        return True
 
     def search(self):
         for i in range(self.n_trial):

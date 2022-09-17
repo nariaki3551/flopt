@@ -1,9 +1,12 @@
-from flopt import Variable, Problem, CustomExpression, VarContinuous
+from flopt import Problem, CustomExpression, VarContinuous
+import flopt.solvers
+from flopt.constants import VariableType, ExpressionType
+from flopt.env import setup_logger
+
 from .base_dataset import BaseDataset, BaseInstance
 from datasets.funcLib import benchmark_func
-import logging
 
-logger = logging.getLogger(__name__)
+logger = setup_logger(__name__)
 
 
 class FuncDataset(BaseDataset):
@@ -71,10 +74,16 @@ class FuncInstance(BaseInstance):
             if solver can be solve this instance return
             (true, prob formulated according to solver)
         """
-        if "blackbox" in solver.can_solve_problems:
+        problem_type = dict(
+            Variable=VariableType.Number,
+            Objective=ExpressionType.BlackBox,
+            Constraint=None,
+        )
+        available_solvers = flopt.solvers.allAvailableSolversProblemType(problem_type)
+        if solver.name in available_solvers:
             return True, self.createProblemFunc(self.n)
         else:
-            logger.info("this instance can be only `blackbox` formulation")
+            logger.debug(f"{solver.name} cannot solve this instance")
             return False, None
 
     def createProblemFunc(self, n=10, cat=VarContinuous):
@@ -99,6 +108,7 @@ class FuncInstance(BaseInstance):
         obj = CustomExpression(lambda *x: func(x), variables)
         prob = Problem(name=f"Function:{self.name}_n{n}")
         prob.setObjective(obj)
+        self.n = n
         return prob
 
     def __str__(self):

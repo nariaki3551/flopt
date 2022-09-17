@@ -4,7 +4,12 @@ import numpy as np
 from flopt.solvers.base import BaseSearch
 from flopt.expression import Const
 from flopt.solution import Solution
-from flopt.constants import VariableType, ConstraintType, SolverTerminateState
+from flopt.constants import (
+    VariableType,
+    ExpressionType,
+    ConstraintType,
+    SolverTerminateState,
+)
 from flopt.env import setup_logger
 
 
@@ -20,31 +25,16 @@ class ScipySearch(BaseSearch):
     """
 
     name = "ScipySearch"
-    can_solve_problems = ["blackbox"]
+    can_solve_problems = {
+        "Variable": VariableType.Number,
+        "Objective": ExpressionType.Any,
+        "Constraint": ExpressionType.Any,
+    }
 
     def __init__(self):
         super().__init__()
         self.n_trial = 1e8
         self.method = None
-
-    def available(self, prob, verbose=False):
-        """
-        Parameters
-        ----------
-        prob : Problem
-        verbose : bool
-
-        Returns
-        -------
-        bool
-            return true if it can solve the problem else false
-        """
-        for var in prob.getVariables():
-            if var.type() in {VariableType.Permutation}:
-                if verbose:
-                    logger.error(f"variable: \n{var}\n must not be permutation")
-                return False
-        return True
 
     def search(self):
         self.start_build()

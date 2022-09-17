@@ -1,7 +1,7 @@
 import inspect
 
 from flopt.solvers.base import BaseSearch
-import flopt.constants
+from flopt.constants import VariableType, ExpressionType
 import flopt.error
 from flopt.env import setup_logger
 
@@ -64,7 +64,11 @@ class AutoSearch(BaseSearch):
     """
 
     name = "AutoSearch"
-    can_solve_problems = ["blackbox"]
+    can_solve_problems = {
+        "Variable": VariableType.Any,
+        "Objective": ExpressionType.Any,
+        "Constraint": ExpressionType.Any,
+    }
 
     def available(self, prob, verbose=False):
         """
@@ -98,7 +102,6 @@ class AutoSearch(BaseSearch):
         if self.timelimit < 1:
             algo_lists = [
                 "2-Opt",
-                "ScipyLpSearch",
                 "ScipyMilpSearch",
                 "PulpSearch",
                 "CvxoptQpSearch",
@@ -112,7 +115,6 @@ class AutoSearch(BaseSearch):
         if self.timelimit < 5:
             algo_lists = [
                 "2-Opt",
-                "ScipyLpSearch",
                 "ScipyMilpSearch",
                 "PulpSearch",
                 "CvxoptQpSearch",
@@ -126,7 +128,6 @@ class AutoSearch(BaseSearch):
         elif self.timelimit < 60:
             algo_lists = [
                 "2-Opt",
-                "ScipyLpSearch",
                 "ScipyMilpSearch",
                 "PulpSearch",
                 "CvxoptQpSearch",
@@ -140,7 +141,6 @@ class AutoSearch(BaseSearch):
         else:
             algo_lists = [
                 "2-Opt",
-                "ScipyLpSearch",
                 "ScipyMilpSearch",
                 "PulpSearch",
                 "CvxoptQpSearch",

@@ -3,9 +3,9 @@ import numpy as np
 
 from flopt.solvers.base import BaseSearch
 from flopt.convert import LpStructure
-from flopt.env import setup_logger
 from flopt.variable import VariableArray
-from flopt.constants import VariableType, SolverTerminateState
+from flopt.constants import VariableType, ExpressionType, SolverTerminateState
+from flopt.env import setup_logger
 
 
 logger = setup_logger(__name__)
@@ -32,41 +32,11 @@ class ScipyMilpSearch(BaseSearch):
     """
 
     name = "ScipyMilpSearch"
-    can_solve_problems = ["mip"]
-
-    def available(self, prob, verbose=False):
-        """
-        Parameters
-        ----------
-        prob : Problem
-        verbose : bool
-
-        Returns
-        -------
-        bool
-            return true if it can solve the problem else false
-        """
-        for var in prob.getVariables():
-            if not var.type() in {
-                VariableType.Continuous,
-                VariableType.Binary,
-                VariableType.Integer,
-            }:
-                if verbose:
-                    logger.error(
-                        f"variable: \n{var}\n must be continouse, binary or interger, but got {var.type()}"
-                    )
-                return False
-        if not prob.obj.isLinear():
-            if verbose:
-                logger.error(f"objective function: \n{prob.obj}\n must be Linear")
-            return False
-        for const in prob.constraints:
-            if not const.expression.isLinear():
-                if verbose:
-                    logger.error(f"constraint: \n{const}\n must be Linear")
-                return False
-        return True
+    can_solve_problems = {
+        "Variable": VariableType.Number,
+        "Objective": ExpressionType.Linear,
+        "Constraint": ExpressionType.Linear,
+    }
 
     def search(self):
         self.start_build()
