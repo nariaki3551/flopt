@@ -53,7 +53,10 @@ class ScipySearch(BaseSearch):
                     else:
                         variables[i] = Const(value, name=var.name)
                 solution = Solution("tmp", variables)
-                return expression.value(solution)
+                try:
+                    return expression.value(solution)
+                except OverflowError:
+                    return float("inf")
 
             return func
 
