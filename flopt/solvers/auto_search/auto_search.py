@@ -1,7 +1,23 @@
 import inspect
 
 from flopt.solvers.base import BaseSearch
-import flopt.constants
+from flopt.solvers.auto_search.selector import (
+    mip,
+    ising,
+    qp,
+    permutation,
+    nonlinear,
+    nonlinear_mip,
+    MipSelector,
+    IsingSelector,
+    QpSelector,
+    PermutationSelector,
+    NonlinearSelector,
+    NonlinearMipSelector,
+    BaseSelector,
+    ModelNotFound,
+)
+from flopt.constants import VariableType, ExpressionType
 import flopt.error
 from flopt.env import setup_logger
 
@@ -63,8 +79,12 @@ class AutoSearch(BaseSearch):
 
     """
 
-    name = "AutoSearch"
-    can_solve_problems = ["blackbox"]
+    name = "auto"
+    can_solve_problems = {
+        "Variable": VariableType.Any,
+        "Objective": ExpressionType.Any,
+        "Constraint": ExpressionType.Any,
+    }
 
     def available(self, prob, verbose=False):
         """
@@ -95,71 +115,11 @@ class AutoSearch(BaseSearch):
         """
         from flopt import Solver
 
-        if self.timelimit < 1:
-            algo_lists = [
-                "2-Opt",
-                "ScipyLpSearch",
-                "ScipyMilpSearch",
-                "PulpSearch",
-                "CvxoptQpSearch",
-                "RandomSearch",
-                "OptunaCmaEsSearch",
-                "ScipySearch",
-                "OptunaTPESearch",
-                "HyperoptTPESearch",
-                "SFLA",
-            ]
-        if self.timelimit < 5:
-            algo_lists = [
-                "2-Opt",
-                "ScipyLpSearch",
-                "ScipyMilpSearch",
-                "PulpSearch",
-                "CvxoptQpSearch",
-                "OptunaCmaEsSearch",
-                "OptunaTPESearch",
-                "ScipySearch",
-                "RandomSearch",
-                "HyperoptTPESearch",
-                "SFLA",
-            ]
-        elif self.timelimit < 60:
-            algo_lists = [
-                "2-Opt",
-                "ScipyLpSearch",
-                "ScipyMilpSearch",
-                "PulpSearch",
-                "CvxoptQpSearch",
-                "OptunaCmaEsSearch",
-                "ScipySearch",
-                "SFLA",
-                "OptunaTPESearch",
-                "RandomSearch",
-                "HyperoptTPESearch",
-            ]
-        else:
-            algo_lists = [
-                "2-Opt",
-                "ScipyLpSearch",
-                "ScipyMilpSearch",
-                "PulpSearch",
-                "CvxoptQpSearch",
-                "OptunaCmaEsSearch",
-                "SFLA",
-                "ScipySearch",
-                "OptunaTPESearch",
-                "HyperoptTPESearch",
-                "RandomSearch",
-            ]
-
-        for _algo in algo_lists:
-            if Solver(algo=_algo).available(prob):
-                algo = _algo
-                break
-        else:
-            raise flopt.error.SolverError
-
+        problem_type = prob.toProblemType()
+        selector = self.getSelector(problem_type)
+        algo = selector(prob, self)
         solver = Solver(algo=algo)
+
         # set params
         attrobjs = [
             (attr, obj)
@@ -173,6 +133,34 @@ class AutoSearch(BaseSearch):
             setattr(solver, attr, obj)
 
         return solver
+
+    def getSelector(self, problem_type):
+        def check(problem_type, problem_class):
+            return (
+                problem_type["Variable"].expand() <= problem_class["Variable"].expand()
+                and problem_type["Objective"].expand()
+                <= problem_class["Objective"].expand()
+                and problem_type["Constraint"].expand()
+                <= problem_class["Constraint"].expand()
+            )
+
+        try:
+            if check(problem_type, mip):
+                return MipSelector()
+            elif check(problem_type, ising):
+                return IsingSelector()
+            elif check(problem_type, qp):
+                return QpSelector()
+            elif check(problem_type, permutation):
+                return PermutationModel()
+            elif check(problem_type, nonlinear):
+                return NonlinearSelector()
+            elif check(problem_type, nonlinear_mip):
+                return NonlinearMipSelector()
+        except ModelNotFound as e:
+            logger.warning(e)
+            return BaseSelector()
+        return BaseSelector()
 
     def solve(self, solution, prob, *args, **kwargs):
         """

@@ -8,9 +8,9 @@ from flopt.solvers.solver_utils import (
     during_solver_message,
     end_solver_message,
 )
-from flopt.env import setup_logger
-from flopt.constants import SolverTerminateState
+from flopt.constants import VariableType, ExpressionType, SolverTerminateState
 import flopt.error
+from flopt.env import setup_logger
 
 
 logger = setup_logger(__name__)
@@ -38,7 +38,7 @@ class BaseSearch:
         best solution
     best_obj_value : float
         incumbent objective value
-    best_bd : float
+    best_bound : float
         best lower bound value
     solution : Solution
         solution
@@ -77,10 +77,10 @@ class BaseSearch:
         # core variables
         self.best_solution = None
         self.best_obj_value = float("inf")
-        self.best_bd = None
+        self.best_bound = None
         self.solution = None
         # parameters
-        self.timelimit = float("inf")
+        self.timelimit = 3600
         self.lowerbound = -float("inf")
         self.tol = 1e-10
         self.msg = False
@@ -172,7 +172,11 @@ class BaseSearch:
         if msg:
             obj_value = self.prob.obj.value(self.best_solution)
             end_solver_message(
-                status, obj_value, self.build_time, time.time() - self.start_time
+                status,
+                obj_value,
+                self.build_time,
+                time.time() - self.start_time,
+                self.trial_ix,
             )
 
         return status, self.log, time.time() - self.start_time
@@ -238,7 +242,7 @@ class BaseSearch:
         """
         log_dict = {
             "obj_value": self.best_obj_value,
-            "best_bd": self.best_bd,
+            "best_bound": self.best_bound,
             "time": time.time() - self.start_time,
             "iteration": self.trial_ix,
         }
@@ -260,7 +264,7 @@ class BaseSearch:
         during_solver_message(
             head,
             self.best_obj_value,
-            self.best_bd,
+            self.best_bound,
             time.time() - self.start_time,
             self.trial_ix,
         )
@@ -268,8 +272,108 @@ class BaseSearch:
     def search(self):
         raise NotImplementedError()
 
-    def available(self, prob):
-        raise NotImplementedError()
+    def available(self, prob, verbose=False):
+        assert hasattr(self, "can_solve_problems")
+        assert isinstance(self.can_solve_problems, dict)
+        assert {"Variable", "Objective", "Constraint"} == set(
+            self.can_solve_problems.keys()
+        )
+        assert isinstance(self.can_solve_problems["Variable"], VariableType)
+        assert isinstance(self.can_solve_problems["Objective"], ExpressionType)
+        assert isinstance(self.can_solve_problems["Constraint"], ExpressionType)
+
+        # Variables
+        available_variables = self.can_solve_problems["Variable"].expand()
+        for var in prob.getVariables():
+            if not var.type() in available_variables:
+                if verbose:
+                    logger.error(
+                        f"variable: \n{var}\n must be in {available_variables}, but got {var.type()}"
+                    )
+                return False
+
+        # Objective
+        available_objective = self.can_solve_problems["Objective"].expand()
+        if not prob.obj.type() in available_objective:
+            if verbose:
+                logger.error(
+                    f"objective function: \n{prob.obj}\n must be in {available_objective}, but got {prob.obj.type()}"
+                )
+            return False
+
+        # Constraint
+        if self.can_solve_problems["Constraint"] == ExpressionType.Non:
+            if prob.getConstraints():
+                if verbose:
+                    logger.error(f"constraints are not available")
+                return False
+        else:
+            available_constraint = self.can_solve_problems["Objective"].expand()
+            for const in prob.constraints:
+                if not const.expression.type() in available_constraint:
+                    if verbose:
+                        logger.error(
+                            f"constraint: \n{const}\n must be in {available_constraint}, but got {const.expression.type()}"
+                        )
+                    return False
+
+        return True
+
+    def availableProblemType(self, problem_type):
+        """
+        Parameters
+        ----------
+        problem_type : dict
+            key is "Variable", "Objective", "Constraint"
+
+        Returns
+        -------
+        list of str
+            algorithm names that can solve the problem
+
+        Examples
+        --------
+
+        .. code-block:: python
+
+            import flopt.constants
+            import flopt.solvers
+
+            problem_type = dict(
+                Variable=flopt.constants.VariableType.Number,
+                Objective=flopt.constants.ExpressionType.BlackBox,
+                Constraint=None
+            )
+
+            solver.availableProblemType(problem_type)
+
+        """
+        assert isinstance(problem_type, dict)
+        assert {"Variable", "Objective", "Constraint"} == set(problem_type.keys())
+        assert isinstance(problem_type["Variable"], VariableType)
+        assert (
+            isinstance(problem_type["Objective"], ExpressionType)
+            or problem_type["Objective"] is None
+        )
+        assert (
+            isinstance(problem_type["Constraint"], ExpressionType)
+            or problem_type["Constraint"] is None
+        )
+
+        if problem_type["Objective"] is None:
+            problem_type["Objective"] = ExpressionType.Const
+
+        if problem_type["Constraint"] is None:
+            problem_type["Constraint"] = ExpressionType.Non
+
+        return (
+            problem_type["Variable"].expand()
+            <= self.can_solve_problems["Variable"].expand()
+            and problem_type["Objective"].expand()
+            <= self.can_solve_problems["Objective"].expand()
+            and problem_type["Constraint"].expand()
+            <= self.can_solve_problems["Constraint"].expand()
+        )
 
     def getObjValue(self, solution):
         """calculate objective value

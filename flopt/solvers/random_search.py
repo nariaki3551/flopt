@@ -1,5 +1,5 @@
 from flopt.solvers.base import BaseSearch
-from flopt.constants import SolverTerminateState
+from flopt.constants import VariableType, ExpressionType, SolverTerminateState
 
 from flopt.env import setup_logger
 
@@ -19,29 +19,15 @@ class RandomSearch(BaseSearch):
     """
 
     name = "RandomSearch"
-    can_solve_problems = ["blackbox", "permutation"]
+    can_solve_problems = {
+        "Variable": VariableType.Any,
+        "Objective": ExpressionType.Any,
+        "Constraint": ExpressionType.Non,
+    }
 
     def __init__(self):
         super().__init__()
         self.n_trial = 1e100
-
-    def available(self, prob, verbose=False):
-        """
-        Parameters
-        ----------
-        prob : Problem
-        verbose : bool
-
-        Returns
-        -------
-        bool
-            return true if it can solve the problem else false
-        """
-        if prob.constraints:
-            if verbose:
-                logger.error(f"this solver can not handle constraints")
-            return False
-        return True
 
     def search(self):
         """

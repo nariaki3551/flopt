@@ -1,6 +1,7 @@
 import math
 import weakref
 
+from flopt.constants import VariableType
 from flopt.env import setup_logger
 
 
@@ -169,9 +170,10 @@ class Solution:
         float
           Inner product between the Solution and another Solution
         """
-        inner = 0
-        for var1, var2 in zip(self._variables, other._variables):
-            inner += var1.value() * var2.value()
+        inner = sum(
+            var1.value() * var2.value()
+            for var1, var2 in zip(self._variables, other._variables)
+        )
         return inner
 
     def __pos__(self):

@@ -1,19 +1,20 @@
 import math
-from itertools import combinations, product
+import itertools
 
 import numpy as np
-from tqdm import tqdm
+import tqdm
 
 from flopt import Variable, CustomExpression, Problem, Sum
-from flopt import env as flopt_env
-from .base_dataset import BaseDataset, BaseInstance
+from flopt.constants import VariableType, ExpressionType
+import flopt.env
 from flopt.env import setup_logger
 
+from .base_dataset import BaseDataset, BaseInstance
 
 logger = setup_logger(__name__)
 
 # instance problems
-tsp_storage = f"{flopt_env.datasets_dir}/tspLib/tsp"
+tsp_storage = f"{flopt.env.datasets_dir}/tspLib/tsp"
 
 
 class TSPDataset(BaseDataset):
@@ -132,7 +133,7 @@ class TSPInstance(BaseInstance):
         self.C = C  # Node Coordinate data
         logger.debug(self.__str__(detail=True))
 
-    def getBestValue(self):
+    def getBestBound(self):
         """return the optimal value of objective function"""
         return None
 
@@ -151,16 +152,29 @@ class TSPInstance(BaseInstance):
           if solver can be solve this instance return
           (true, prob formulated according to solver)
         """
-        if "permutation" in solver.can_solve_problems:
+        problem_type = dict(
+            Variable=VariableType.Permutation,
+            Objective=ExpressionType.Any,
+            Constraint=None,
+        )
+        available_solvers = flopt.solvers.allAvailableSolversProblemType(problem_type)
+        if solver.name in available_solvers:
             return True, self.createPermProblem()
-        elif "lp" in solver.can_solve_problems:
+
+        problem_type = dict(
+            Variable=flopt.constants.VariableType.Number,
+            Objective=flopt.constants.ExpressionType.Linear,
+            Constraint=flopt.constants.ExpressionType.Linear,
+        )
+        available_solvers = flopt.solvers.allAvailableSolversProblemType(problem_type)
+        if solver.name in available_solvers:
             if self.dim > 10:
                 logger.info("this instance is enough big not to crate problem")
                 return False, None
             return True, self.createLpProblem()
-        else:
-            logger.info("this instance only can be `permutation` formulation")
-            return False, None
+
+        logger.info(f"{solver.name} cannot solve this instance")
+        return False, None
 
     def createPermProblem(self):
         # Variables
@@ -205,9 +219,11 @@ class TSPInstance(BaseInstance):
             scipy.special.comb(len(cities), r, exact=True)
             for r in range(2, self.dim - 1)
         )
-        pbar = tqdm(total=total_subsets, desc="add constraints for removing subtours")
+        pbar = tqdm.tqdm(
+            total=total_subsets, desc="add constraints for removing subtours"
+        )
         for n_cities in range(2, self.dim - 1):
-            for subset in combinations(cities, n_cities):
+            for subset in itertools.combinations(cities, n_cities):
                 prob += Sum(x[subset, subset]) <= n_cities - 1
                 pbar.update(1)
         pbar.close()

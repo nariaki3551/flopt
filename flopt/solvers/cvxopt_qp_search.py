@@ -3,8 +3,8 @@ from cvxopt import matrix, solvers
 from flopt.solvers.base import BaseSearch
 from flopt.convert import QpStructure
 from flopt.error import SolverError
+from flopt.constants import VariableType, ExpressionType, SolverTerminateState
 from flopt.env import setup_logger
-from flopt.constants import VariableType, SolverTerminateState
 
 
 logger = setup_logger(__name__)
@@ -67,41 +67,15 @@ class CvxoptQpSearch(BaseSearch):
     """
 
     name = "CvxoptQpSearch"
-    can_solve_problems = ["lp", "qp"]
+    can_solve_problems = {
+        "Variable": VariableType.Continuous,
+        "Objective": ExpressionType.Quadratic,
+        "Constraint": ExpressionType.Linear,
+    }
 
     def __init__(self):
         super().__init__()
         self.n_trial = None
-
-    def available(self, prob, verbose=False):
-        """
-        Parameters
-        ----------
-        prob : Problem
-        verbose : bool
-
-        Returns
-        -------
-        bool
-            return true if it can solve the problem else false
-        """
-        for var in prob.getVariables():
-            if not var.type() == VariableType.Continuous:
-                if verbose:
-                    logger.error(
-                        f"variable: \n{var}\n must be continuous, but got {var.type()}"
-                    )
-                return False
-        if not prob.obj.isQuadratic():
-            if verbose:
-                logger.error(f"objective function: \n{prob.obj}\n must be quadratic")
-            return False
-        for const in prob.constraints:
-            if not const.expression.isLinear():
-                if verbose:
-                    logger.error(f"constraint: \n{const}\n must be linear")
-                return False
-        return True
 
     def search(self):
         self.start_build()

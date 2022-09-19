@@ -71,7 +71,7 @@ def linearize(prob):
     try:
         var_muls = dict()
         prob.obj = linearize_expression(prob.obj, var_muls)
-        for const in prob.constraints:
+        for const in prob.getConstraints():
             const.expression = linearize_expression(const.expression, var_muls)
     except NeedToBinarize:
         logger.info(

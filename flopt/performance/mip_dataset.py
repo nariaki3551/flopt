@@ -2,17 +2,18 @@ import re
 
 import pulp
 
-import flopt
+import flopt.solvers
 import flopt.convert
-from flopt import env as flopt_env
-from .base_dataset import BaseDataset, BaseInstance
+from flopt.constants import VariableType, ExpressionType
+import flopt.env
 from flopt.env import setup_logger
 
+from .base_dataset import BaseDataset, BaseInstance
 
 logger = setup_logger(__name__)
 
 # instance problems
-mip_storage = f"{flopt_env.datasets_dir}/mipLib"
+mip_storage = f"{flopt.env.datasets_dir}/mipLib"
 
 
 class MipDataset(BaseDataset):
@@ -37,7 +38,7 @@ class MipDataset(BaseDataset):
     def __init__(self):
         self.sol_data = dict()
         sol_file = "miplib2017-v23.solu"
-        pattern = re.compile("=(?P<status>.*)=\s+(?P<name>.*)\s+(?P<value>.*)")
+        pattern = re.compile("=(?P<status>.*)=\s+(?P<name>.*)\s+(?P<best_value>.*)")
         for line in open(f"{mip_storage}/{sol_file}", "r"):
             line = line.strip()
             m = pattern.match(line)
@@ -46,9 +47,9 @@ class MipDataset(BaseDataset):
                 if d["status"] in {"unkn", "inf", "unbd"}:
                     continue
                 name = d["name"].strip()
-                value = float(d["value"].strip())
+                best_value = float(d["best_value"].strip())
                 status = d["status"].strip()
-                self.sol_data[name] = {"value": value, "status": status}
+                self.sol_data[name] = {"best_value": best_value, "status": status}
 
     def createInstance(self, instance_name):
         """
@@ -58,9 +59,9 @@ class MipDataset(BaseDataset):
         """
         mps_file = f"{mip_storage}/{instance_name}.mps"
         pulp_var, pulp_prob = pulp.LpProblem.fromMPS(mps_file)
-        value = self.sol_data[instance_name]["value"]
+        best_value = self.sol_data[instance_name]["best_value"]
         prob = flopt.convert.pulp_to_flopt(pulp_prob)
-        return MipInstance(instance_name, prob, value)
+        return MipInstance(instance_name, prob, best_value)
 
 
 class MipInstance(BaseInstance):
@@ -71,17 +72,17 @@ class MipInstance(BaseInstance):
     name : str
       problem name
     prob : Problem
-    value : optimal or best value of problem
+    best_value : optimal or best value of problem
     """
 
-    def __init__(self, name, prob, value):
+    def __init__(self, name, prob, best_value):
         self.name = name
         self.prob = prob
-        self.value = value
+        self.best_value = best_value
 
-    def getBestValue(self):
-        """return the optimal value of objective function"""
-        return self.value
+    def getBestBound(self):
+        """return the optimal or best value of objective function"""
+        return self.best_value
 
     def createProblem(self, solver):
         """
@@ -98,14 +99,16 @@ class MipInstance(BaseInstance):
           if solver can be solve this instance return
           (true, prob formulated according to solver)
         """
-        if solver.name == "PulpSearch":
-            return solver.available(self.prob), self.prob
-        elif solver.name == "ScipyLpSearch":
-            return solver.available(self.prob), self.prob
-        elif solver.name == "ScipyMilpSearch":
+        problem_type = dict(
+            Variable=VariableType.Number,
+            Objective=ExpressionType.Linear,
+            Constraint=ExpressionType.Linear,
+        )
+        available_solvers = flopt.solvers.allAvailableSolversProblemType(problem_type)
+        if solver.name in available_solvers:
             return solver.available(self.prob), self.prob
         else:
-            logger.info("this instance only can be MIP formulation")
+            logger.info(f"{solver.name} cannot solve this instance")
             return False, None
 
     def __str__(self):

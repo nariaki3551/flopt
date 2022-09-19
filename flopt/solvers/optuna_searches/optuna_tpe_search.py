@@ -25,7 +25,6 @@ class OptunaTPESearch(OptunaSearch):
     """
 
     name = "OptunaTPESearch"
-    can_solve_problems = ["blackbox"]
 
     def __init__(self):
         super().__init__()

@@ -2,7 +2,12 @@ from flopt.variable import VarElement
 from flopt.expression import Expression, Const
 from flopt.constraint import Constraint
 from flopt.solution import Solution
-from flopt.constants import OptimizationType, array_classes
+from flopt.constants import (
+    VariableType,
+    ExpressionType,
+    OptimizationType,
+    array_classes,
+)
 from flopt.env import setup_logger
 
 
@@ -186,6 +191,15 @@ class Problem:
         """
         return self.__variables
 
+    def getConstraints(self):
+        """
+        Returns
+        -------
+        list of Constraint
+            list of constraints in this problem
+        """
+        return self.constraints
+
     def resetVariables(self):
         self.__variables = self.obj.getVariables()
         for const in self.constraints:
@@ -276,6 +290,57 @@ class Problem:
         var_dict = solution.toDict()
         for var in self.getVariables():
             var.setValue(var_dict[var.name].value())
+
+    def toProblemType(self):
+        """
+        Returns
+        -------
+        problem_type : dict
+            key is "Variable", "Objective", "Constraint"
+        """
+        problem_type = dict()
+
+        variable_types = [
+            VariableType.Binary,
+            VariableType.Integer,
+            VariableType.Continuous,
+            VariableType.Permutation,
+            VariableType.Number,
+            VariableType.Any,
+        ]
+
+        expression_types = [
+            ExpressionType.Linear,
+            ExpressionType.Quadratic,
+            ExpressionType.Any,
+        ]
+
+        # variables
+        prob_variables_types = set(var.type() for var in self.getVariables())
+        for variable_type in variable_types:
+            if prob_variables_types <= variable_type.expand():
+                problem_type["Variable"] = variable_type
+                break
+
+        # objective
+        for expression_type in expression_types:
+            if self.obj.type() in expression_type.expand():
+                problem_type["Objective"] = expression_type
+                break
+
+        # constraint
+        if not self.constraints:
+            problem_type["Constraint"] = ExpressionType.Non
+        else:
+            prob_expression_types = set(
+                const.expression.type() for const in self.getConstraints()
+            )
+            for expression_type in expression_types:
+                if prob_expression_types <= expression_type.expand():
+                    problem_type["Constraint"] = expression_type
+                    break
+
+        return problem_type
 
     def __iadd__(self, other):
         if not isinstance(other, tuple):

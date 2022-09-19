@@ -282,45 +282,23 @@ def test_ScipySearch1(prob_only_continuous, callback):
 
 
 def test_ScipySearch_available(
-    prob, prob_only_continuous, prob_with_const, prob_qp, prob_nonlinear, prob_perm
-):
-    solver = Solver(algo="ScipySearch")
-    assert solver.available(prob) == False
-    assert solver.available(prob_only_continuous) == True
-    assert solver.available(prob_with_const) == False
-    assert solver.available(prob_qp) == True
-    assert solver.available(prob_nonlinear) == False
-    assert solver.available(prob_perm) == False
-
-
-def test_ScipyLpSearch1(prob_only_continuous, callback):
-    solver = Solver(algo="ScipyLpSearch")
-    solver.setParams(n_trial=10, callbacks=[callback])
-    prob_only_continuous.solve(solver, timelimit=0.5)
-
-
-def test_ScipyLpSearch2(prob_lp, callback):
-    solver = Solver(algo="ScipyLpSearch")
-    solver.setParams(n_trial=10, callbacks=[callback])
-    prob_lp.solve(solver, timelimit=0.5)
-
-
-def test_ScipyLpSearch_available(
     prob,
     prob_only_continuous,
     prob_with_const,
-    prob_lp,
     prob_qp,
     prob_nonlinear,
+    prob_ising,
+    prob_ising_const,
     prob_perm,
 ):
-    solver = Solver(algo="ScipyLpSearch")
-    assert solver.available(prob) == False
+    solver = Solver(algo="ScipySearch")
+    assert solver.available(prob) == True
     assert solver.available(prob_only_continuous) == True
-    assert solver.available(prob_with_const) == False
-    assert solver.available(prob_lp) == True
-    assert solver.available(prob_qp) == False
-    assert solver.available(prob_nonlinear) == False
+    assert solver.available(prob_with_const) == True
+    assert solver.available(prob_qp) == True
+    assert solver.available(prob_nonlinear) == True
+    assert solver.available(prob_ising) == True
+    assert solver.available(prob_ising_const) == True
     assert solver.available(prob_perm) == False
 
 
@@ -439,18 +417,6 @@ def test_CvxoptQpSearch3(callback):
     prob_qp.solve(solver)
 
 
-def test_ScipyLpSearch_available(
-    prob, prob_only_continuous, prob_with_const, prob_qp, prob_nonlinear, prob_perm
-):
-    solver = Solver(algo="ScipyLpSearch")
-    assert solver.available(prob) == False
-    assert solver.available(prob_only_continuous) == True
-    assert solver.available(prob_with_const) == False
-    assert solver.available(prob_qp) == False
-    assert solver.available(prob_nonlinear) == False
-    assert solver.available(prob_perm) == False
-
-
 def test_AutoSearch1(prob, callback):
     solver = Solver(algo="auto")
     solver.setParams(n_trial=10, callbacks=[callback])
@@ -482,7 +448,7 @@ def test_AutoSearch_available(
     assert solver.available(prob) == True
     assert solver.available(prob_with_const) == True
     assert solver.available(prob_qp) == True
-    assert solver.available(prob_nonlinear) == False
+    assert solver.available(prob_nonlinear) == True
     assert solver.available(prob_perm) == True
 
 

@@ -1,7 +1,7 @@
 from .log_visualizer import LogVisualizer
 from .performance import compute, performance
 from .base_dataset import BaseDataset
-from .custom_dataset import CustomDataset
+from .custom_dataset import CustomDataset, CustomInstance
 
 dataset_list = [
     "tsp",

@@ -2,10 +2,15 @@ from scipy import optimize as scipy_optimize
 import numpy as np
 
 from flopt.solvers.base import BaseSearch
-from flopt.env import setup_logger
 from flopt.expression import Const
 from flopt.solution import Solution
-from flopt.constants import VariableType, ConstraintType, SolverTerminateState
+from flopt.constants import (
+    VariableType,
+    ExpressionType,
+    ConstraintType,
+    SolverTerminateState,
+)
+from flopt.env import setup_logger
 
 
 logger = setup_logger(__name__)
@@ -20,38 +25,19 @@ class ScipySearch(BaseSearch):
     """
 
     name = "ScipySearch"
-    can_solve_problems = ["blackbox"]
+    can_solve_problems = {
+        "Variable": VariableType.Number,
+        "Objective": ExpressionType.Any,
+        "Constraint": ExpressionType.Any,
+    }
 
     def __init__(self):
         super().__init__()
         self.n_trial = 1e8
         self.method = None
 
-    def available(self, prob, verbose=False):
-        """
-        Parameters
-        ----------
-        prob : Problem
-        verbose : bool
-
-        Returns
-        -------
-        bool
-            return true if it can solve the problem else false
-        """
-        for var in prob.getVariables():
-            if not var.type() == VariableType.Continuous:
-                if verbose:
-                    logger.error(
-                        f"variable: \n{var}\n must be continouse, but got {var.type()}"
-                    )
-                return False
-        return True
-
     def search(self):
         self.start_build()
-
-        var_names = [var.name for var in self.solution]
 
         def gen_func(expression):
             def func(values):
@@ -59,8 +45,13 @@ class ScipySearch(BaseSearch):
                 self.raiseTimeoutIfNeeded()
 
                 variables = [None] * len(values)
-                for i in range(len(values)):
-                    variables[i] = Const(values[i], name=var_names[i])
+                for i, (var, value) in enumerate(zip(self.solution, values)):
+                    if var.type() == VariableType.Spin:
+                        variables[i] = Const(
+                            2 * value - 1, name=var.name
+                        )  # binary -> spin
+                    else:
+                        variables[i] = Const(value, name=var.name)
                 solution = Solution("tmp", variables)
                 return expression.value(solution)
 
@@ -74,17 +65,19 @@ class ScipySearch(BaseSearch):
         x0 = [var.value() for var in self.solution]
 
         # bounds
-        lb = [
-            var.getLb() if var.getLb() is not None else -np.inf for var in self.solution
-        ]
-        ub = [
-            var.getUb() if var.getUb() is not None else np.inf for var in self.solution
-        ]
+        lb, ub = list(), list()
+        for var in self.solution:
+            if var.type() == VariableType.Spin:
+                lb.append(0)
+                ub.append(1)
+            else:
+                lb.append(l if (l := var.getLb()) is not None else -np.inf)
+                ub.append(u if (u := var.getUb()) is not None else np.inf)
         bounds = scipy_optimize.Bounds(lb, ub, keep_feasible=False)
 
         # constraints
         constraints = []
-        for const in self.prob.constraints:
+        for const in self.prob.getConstraints():
             const_func = gen_func(const)
             lb, ub = 0, 0
             if const.type() == ConstraintType.Le:
@@ -101,7 +94,11 @@ class ScipySearch(BaseSearch):
         ):
             self.trial_ix += 1
             for var, value in zip(self.solution, values):
-                var.setValue(value)
+                if var.type() == VariableType.Continuous:
+                    var.setValue(value)
+                else:  # var.type() == Integer, Binary
+                    var.setValue(round(value))
+                # var.setValue(value)
 
             # if solution is better thatn incumbent, then update best solution
             self.registerSolution(self.solution, msg_tol=1e-8)

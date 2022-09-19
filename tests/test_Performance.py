@@ -17,7 +17,7 @@ def b():
 
 @pytest.fixture(scope="function")
 def prob(a, b):
-    _prob = Problem()
+    _prob = Problem("test")
     _prob += a + b
     return _prob
 

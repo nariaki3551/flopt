@@ -77,7 +77,7 @@ def binarize(prob):
     """
     binarizes = dict()
     prob.obj = binarize_expression(prob.obj, binarizes)
-    for const in prob.constraints:
+    for const in prob.getConstraints():
         const.expression = binarize_expression(const.expression, binarizes)
 
     for source, binaries in binarizes.items():

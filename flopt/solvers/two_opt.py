@@ -1,7 +1,7 @@
 import random
 
 from flopt.solvers.base import BaseSearch
-from flopt.constants import VariableType, SolverTerminateState
+from flopt.constants import VariableType, ExpressionType, SolverTerminateState
 
 from flopt.env import setup_logger
 
@@ -19,36 +19,15 @@ class TwoOpt(BaseSearch):
     """
 
     name = "2-Opt"
-    can_solve_problems = ["permutation"]
+    can_solve_problems = {
+        "Variable": VariableType.Permutation,
+        "Objective": ExpressionType.Any,
+        "Constraint": ExpressionType.Non,
+    }
 
     def __init__(self):
         super().__init__()
         self.n_trial = 1e100
-
-    def available(self, prob, verbose=False):
-        """
-        Parameters
-        ----------
-        prob : Problem
-        verbose : bool
-
-        Returns
-        -------
-        bool
-            return true if it can solve the problem else false
-        """
-        for var in prob.getVariables():
-            if not var.type() == VariableType.Permutation:
-                if verbose:
-                    logger.error(
-                        f"variable: \n{var}\n must be permutation, but got {var.type()}"
-                    )
-                return False
-        if prob.constraints:
-            if verbose:
-                logger.error(f"this solver can not handle constraints")
-            return False
-        return True
 
     def search(self):
         """
