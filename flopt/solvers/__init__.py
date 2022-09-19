@@ -75,7 +75,7 @@ def Solver(algo="RandomSearch"):
 
         return AmplifySearch()
     elif algo == "auto":
-        from flopt.solvers.auto_search.auto_search import AutoSearch
+        from flopt.solvers.auto_search import AutoSearch
 
         return AutoSearch()
     else:
