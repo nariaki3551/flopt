@@ -44,6 +44,7 @@ def create_nonlinear_datasets(num_probs, cat, args):
 
     if args.debug:
         time_span = [1, 5]
+        num_variables_span = [2, 100]
 
     for i in range(num_probs + args.begin_ix):
         name = random.choice(funcs)
@@ -68,6 +69,7 @@ def create_number_partitioning_datasets(num_probs, args):
 
     if args.debug:
         time_span = [1, 5]
+        num_variables_span = [2, 100]
 
     for i in range(num_probs + args.begin_ix):
         timelimit = random.randint(time_span[0], time_span[1])

@@ -58,7 +58,7 @@ class HyperoptTPESearch(BaseSearch):
             name = var.name
             lb = var.getLb(must_number=True)
             ub = var.getUb(must_number=True)
-            if var.type() in {name, VariableType.Integer, VariableType.Binary}:
+            if var.type() in {VariableType.Integer, VariableType.Binary, VariableType.Spin}:
                 var_space = hyperopt.hp.quniform(name, lb, ub, 1)
             elif var.type() == VariableType.Continuous:
                 var_space = hyperopt.hp.uniform(name, lb, ub)
@@ -86,7 +86,12 @@ class HyperoptTPESearch(BaseSearch):
         # set value into self.solution
         self.trial_ix += 1
         for name, value in var_value_dict.items():
-            self.var_dict[name].setValue(value)
+            var = self.var_dict[name]
+            if var.type() == VariableType.Spin:
+                var.toBinary()
+                var.binary.setValue(value)
+            else:
+                var.setValue(value)
         obj_value = self.getObjValue(self.solution)
 
         # if solution is better thatn incumbent, then update best solution
