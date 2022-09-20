@@ -499,6 +499,9 @@ class VarElement:
     def getVariables(self):
         return {self}
 
+    def getConsts(self):
+        return set()
+
     def isPolynomial(self):
         return True
 
@@ -702,15 +705,22 @@ class VarElement:
 
     def __eq__(self, other):
         # self == other --> self - other == 0
-        return Constraint(
-            Expression(self, Const(0), "+", name=self.name) - other, ConstraintType.Eq
-        )
+        if isinstance(other, (number_classes)) and other == 0:
+            return Constraint(
+                Expression(self, Const(0), "+", name=self.name) - other,
+                ConstraintType.Eq,
+            )
+        else:
+            return Constraint(self - other, ConstraintType.Eq)
 
     def __le__(self, other):
         # self <= other --> self - other <= 0
-        return Constraint(
-            Expression(self, Const(0), "+", name=self.name) - other, ConstraintType.Le
-        )
+        if isinstance(other, (number_classes)) and other == 0:
+            return Constraint(
+                Expression(self, Const(0), "+", name=self.name), ConstraintType.Le
+            )
+        else:
+            return Constraint(self - other, ConstraintType.Le)
 
     def __ge__(self, other):
         # self >= other --> other - self <= 0

@@ -58,7 +58,11 @@ class HyperoptTPESearch(BaseSearch):
             name = var.name
             lb = var.getLb(must_number=True)
             ub = var.getUb(must_number=True)
-            if var.type() in {VariableType.Integer, VariableType.Binary, VariableType.Spin}:
+            if var.type() in {
+                VariableType.Integer,
+                VariableType.Binary,
+                VariableType.Spin,
+            }:
                 var_space = hyperopt.hp.quniform(name, lb, ub, 1)
             elif var.type() == VariableType.Continuous:
                 var_space = hyperopt.hp.uniform(name, lb, ub)

@@ -6,13 +6,6 @@ import argparse
 import itertools
 
 import numpy as np
-import seaborn
-import matplotlib.pyplot as plt
-import pandas
-import sklearn.model_selection
-import sklearn.tree
-import sklearn.ensemble
-import sklearn.naive_bayes
 
 import flopt
 
@@ -232,6 +225,14 @@ def main(args):
                 pickle.dump((instance, logs), file=pf)
 
     elif not args.debug:
+        import seaborn
+        import matplotlib.pyplot as plt
+        import pandas
+        import sklearn.model_selection
+        import sklearn.tree
+        import sklearn.ensemble
+        import sklearn.naive_bayes
+
         fitting_and_save_model(args)
 
 

@@ -107,7 +107,9 @@ class ShuffledFrogLeapingSearch(BaseSearch):
             self._memetic_evolution()
 
             # if solution is better thatn incumbent, then update best solution
-            self.registerSolution(self.frogs[0], msg_tol=1e-8)
+            self.registerSolution(
+                self.frogs[0], self.frogs[0].getObjValue(), msg_tol=1e-8
+            )
 
             if self.msg and i % 100 == 0:
                 self.during_solver_message(" ")
@@ -174,6 +176,10 @@ class ShuffledFrogLeapingSearch(BaseSearch):
                     self.memeplexes[j], new_frog, key=lambda frog: frog.getObjValue()
                 )
                 self.memeplexes[j].insert(lo, new_frog)
+                if lo == 0:
+                    self.registerSolution(
+                        new_frog, obj_value=new_frog.getObjValue(), msg_tol=1e-8
+                    )
 
                 # check time limit
                 self.raiseTimeoutIfNeeded()

@@ -1,3 +1,4 @@
+import sys
 import weakref
 import functools
 import operator
@@ -85,6 +86,15 @@ class ExpressionElement:
           return the variable object used in this expressiono
         """
         raise NotImplementedError
+
+    def getConsts(self):
+        """
+        Returns
+        -------
+        set
+          return the const object used in this expressiono
+        """
+        return NotImplementedError
 
     def isNeg(self):
         """
@@ -626,6 +636,10 @@ class ExpressionElement:
         # self >= other --> other - self <= 0
         return Constraint(other - self, ConstraintType.Le)
 
+    def __del__(self):
+        for const in self.getConsts():
+            del const
+
     def __repr__(self):
         raise NotImplementedError
 
@@ -795,14 +809,12 @@ class Expression(ExpressionElement):
             return elmA.value() or elmB.value()
 
     def getVariables(self):
-        """
-        Returns
-        -------
-        set
-          return the variable object used in this expressiono
-        """
         variables = self.elmA.getVariables() | self.elmB.getVariables()
         return variables
+
+    def getConsts(self):
+        consts = self.elmA.getConsts() | self.elmB.getConsts()
+        return consts
 
     def traverse(self):
         """traverse Expression tree as root is self
@@ -1016,6 +1028,9 @@ class CustomExpression(ExpressionElement):
     def getVariables(self):
         return self.variables
 
+    def getConsts(self):
+        return set()
+
     def isNeg(self):
         return False
 
@@ -1032,7 +1047,7 @@ class CustomExpression(ExpressionElement):
         return f"CustomExpression({self.func.__name__, self.arg, self.name})"
 
 
-class Const(float, ExpressionElement):
+class Const(ExpressionElement):
     """
     It is the expression of constant value.
 
@@ -1068,6 +1083,9 @@ class Const(float, ExpressionElement):
 
     def getVariables(self):
         return set()
+
+    def getConsts(self):
+        return {self}
 
     def isNeg(self):
         return self._value < 0
@@ -1216,6 +1234,12 @@ class Operation(ExpressionElement):
             variables |= elm.getVariables()
         return variables
 
+    def getConsts(self):
+        consts = set()
+        for elm in self.elms:
+            consts |= elm.getConsts()
+        return consts
+
     def traverse(self):
         """traverse Expression tree as root is self
 
@@ -1290,6 +1314,7 @@ class Sum(Operation):
                     ret += self.var_dict[elm.name].value()
                 else:
                     ret += elm.value()
+            self.unsetVarDict()
             return ret
         else:
             return to_value_ufunc(self.elms).sum()
@@ -1360,6 +1385,7 @@ class Prod(Operation):
                     ret *= self.var_dict[elm.name].value()
                 else:
                     ret *= elm.value()
+            self.unsetVarDict()
             return ret
         else:
             return to_value_ufunc(self.elms).prod()
