@@ -66,12 +66,12 @@ class VariableArray(np.ndarray):
             return i[0]
         return i
 
-    @classmethod
-    def init_ufunc(cls, shape, ufunc, set_mono=True):
-        x = np.ndarray(shape, dtype=object)
+    def to_value(self, var_dict):
+        shape = self.shape
+        v = np.ndarray(shape)
         for i in itertools.product(*map(range, shape)):
-            x[i] = ufunc(i)
-        return cls(x, set_mono=set_mono)
+            v[i] = var_dict[self[i].name].value()
+        return v
 
 
 # -------------------------------------------------------

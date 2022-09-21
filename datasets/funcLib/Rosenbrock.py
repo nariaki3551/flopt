@@ -8,7 +8,7 @@ def create_objective(n):
         def obj_i(i):
             return 100 * (x[i + 1] - x[i] ** 2) ** 2 + (x[i] - 1) ** 2
 
-        return flopt.Sum(obj_i(i) for i in range(n - 1))
+        return sum(obj_i(i) for i in range(n - 1))
 
     return obj
 

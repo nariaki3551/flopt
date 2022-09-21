@@ -5,7 +5,7 @@ import flopt
 
 def create_objective(n):
     def obj(x):
-        return 10 * len(x) + flopt.Sum(xi * xi - 10 * cos(2 * pi * xi) for xi in x)
+        return 10 * len(x) + sum(xi * xi - 10 * cos(2 * pi * xi) for xi in x)
 
     return obj
 

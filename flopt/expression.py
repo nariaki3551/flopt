@@ -921,18 +921,14 @@ def pack_variables(var_or_array, var_dict):
         import flopt.variable
 
         if isinstance(array, flopt.variable.VariableArray):
-            return flopt.variable.VariableArray.init_ufunc(
-                var_or_array.shape,
-                lambda i: var_dict[array[i].name],
-                set_mono=False,
-            )
+            return array.to_value(var_dict)
         else:
             return cls(
                 itertools.starmap(pack_variables, [(var, var_dict) for var in array])
             )
     else:
         var = var_or_array
-        return var_dict[var.name]
+        return var_dict[var.name].value()
 
 
 class CustomExpression(ExpressionElement):
@@ -1019,7 +1015,7 @@ class CustomExpression(ExpressionElement):
             arg = pack_variables(self.arg, self.var_dict)
 
         value = self.func(*arg)
-        if not isinstance(value, (int, float, np.number)):
+        if not isinstance(value, number_classes):
             value = value.value()
 
         self.unsetVarDict()

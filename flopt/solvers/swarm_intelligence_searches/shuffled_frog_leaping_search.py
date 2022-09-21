@@ -152,7 +152,8 @@ class ShuffledFrogLeapingSearch(BaseSearch):
                 worst_frog = self.memeplexes[j][last]
 
                 # move frog which has the worst objective
-                step = random.random() * (best_frog - worst_frog)
+                step = best_frog - worst_frog
+                step *= random.random()
                 if (norm := step.norm()) > self.max_step:
                     step *= self.max_step / norm
                 new_frog = Frog(worst_frog + step, self)
@@ -160,7 +161,8 @@ class ShuffledFrogLeapingSearch(BaseSearch):
 
                 # if it does not improve (1)
                 if new_frog.getObjValue() > worst_frog.getObjValue():
-                    step = random.random() * (self.best_solution - worst_frog)
+                    step = self.best_solution - worst_frog
+                    step *= random.random()
                     if (norm := step.norm()) > self.max_step:
                         step *= self.max_step / norm
                     new_frog = Frog(worst_frog + step, self)

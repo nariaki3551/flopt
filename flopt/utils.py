@@ -19,7 +19,7 @@ def Sum(x):
     all sum of x
     """
     if isinstance(x, types.GeneratorType):
-        return flopt.expression.Sum(list(x))
+        return Sum(list(x))
     elif isinstance(x, np.ndarray):
         return flopt.expression.Sum(x.ravel())
     else:
@@ -37,7 +37,7 @@ def Prod(x):
     all product of x
     """
     if isinstance(x, types.GeneratorType):
-        return flopt.expression.Prod(list(x))
+        return Prod(list(x))
     elif isinstance(x, np.ndarray):
         return flopt.expression.Prod(x.ravel())
     else:

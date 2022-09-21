@@ -5,7 +5,8 @@ import flopt
 
 def create_objective(n):
     def obj(x):
-        return -flopt.Sum(xi * sin(sqrt(abs(xi))) for xi in x)
+        # return -sum(xi * sin(sqrt(abs(xi))) for xi in x)
+        return -sum(xi * sin(sqrt(abs(xi))) for xi in x)
 
     return obj
 

@@ -9,7 +9,7 @@ def create_objective(n):
             20
             - 20 * (exp(-0.2 * sqrt(flopt.Sqnorm(x)) / len(x)))
             + e
-            - exp(flopt.Sum(cos(2 * pi * xi) for xi in x) / len(x))
+            - exp(sum(cos(2 * pi * xi) for xi in x) / len(x))
         )
 
     return obj
