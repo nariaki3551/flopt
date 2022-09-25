@@ -27,6 +27,7 @@ setup(
         "amplify",
         "pytest",
         "scipy",
+        "scikit-learn",
         "dill",
         "pooch",
         "timeout_decorator",
