@@ -1,4 +1,3 @@
-import sys
 import weakref
 import functools
 import operator

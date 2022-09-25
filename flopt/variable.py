@@ -67,9 +67,8 @@ class VariableArray(np.ndarray):
         return i
 
     def to_value(self, var_dict):
-        shape = self.shape
-        v = np.ndarray(shape)
-        for i in itertools.product(*map(range, shape)):
+        v = np.ndarray(self.shape)
+        for i in itertools.product(*map(range, self.shape)):
             v[i] = var_dict[self[i].name].value()
         return v
 
