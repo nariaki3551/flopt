@@ -46,10 +46,7 @@ class ExpressionElement:
     """
 
     def __init__(self, name=None):
-        if name is not None:
-            self.name = name
-        else:
-            self.setName()
+        self.name = name
         self.var_dict = None
         self.polynomial = None
 
@@ -59,6 +56,11 @@ class ExpressionElement:
 
     def setName(self):
         raise NotImplementedError
+
+    def getName(self):
+        if self.name is None:
+            self.setName()
+        return self.name
 
     def linkChildren(self):
         raise NotImplementedError
@@ -134,7 +136,9 @@ class ExpressionElement:
         else:
             import sympy
 
-            return float(sympy.sympify(self.name).expand().as_coefficients_dict()[1])
+            return float(
+                sympy.sympify(self.getName()).expand().as_coefficients_dict()[1]
+            )
 
     def isMonomial(self):
         if self.polynomial is not None:
@@ -200,7 +204,9 @@ class ExpressionElement:
             self.setPolynomial()
         polynomial = self.polynomial.simplify()
         if x is None:
-            x = VariableArray(sorted(self.getVariables(), key=lambda var: var.name))
+            x = VariableArray(
+                sorted(self.getVariables(), key=lambda var: var.getName())
+            )
 
         num_variables = len(x)
 
@@ -277,7 +283,9 @@ class ExpressionElement:
         from flopt.convert import LinearStructure
 
         if x is None:
-            x = VariableArray(sorted(self.getVariables(), key=lambda var: var.name))
+            x = VariableArray(
+                sorted(self.getVariables(), key=lambda var: var.getName())
+            )
 
         num_variables = len(x)
         if self.polynomial is None:
@@ -337,8 +345,8 @@ class ExpressionElement:
         import sympy
 
         expr = eval(
-            str(sympy.sympify(self.name).simplify()),
-            {var.name: var for var in self.getVariables()},
+            str(sympy.sympify(self.getName()).simplify()),
+            {var.getName(): var for var in self.getVariables()},
         )
         if isinstance(expr, number_classes):
             expr = Const(expr)
@@ -354,8 +362,8 @@ class ExpressionElement:
         import sympy
 
         expr = eval(
-            str(sympy.simplify(self.name).expand()),
-            {var.name: var for var in self.getVariables()},
+            str(sympy.simplify(self.getName()).expand()),
+            {var.getName(): var for var in self.getVariables()},
         )
         if isinstance(expr, number_classes):
             expr = Const(expr)
@@ -363,8 +371,8 @@ class ExpressionElement:
             return expr
         elif isinstance(expr, Expression):
             expr = eval(
-                str(sympy.sympify(expr.name).expand()),
-                {var.name: var for var in self.getVariables()},
+                str(sympy.sympify(expr.getName()).expand()),
+                {var.getName(): var for var in self.getVariables()},
             )
             expr.parents += self.parents
             return expr
@@ -386,7 +394,7 @@ class ExpressionElement:
         if all(var.type() == VariableType.Binary for var in self.getVariables()):
             return self
         var_dict = {
-            var.name: SelfReturn(
+            var.getName(): SelfReturn(
                 var.toBinary()
                 if var.type() in {VariableType.Spin, VariableType.Integer}
                 else var
@@ -410,7 +418,7 @@ class ExpressionElement:
         if all(var.type() == VariableType.Spin for var in self.getVariables()):
             return self
         var_dict = {
-            var.name: SelfReturn(
+            var.getName(): SelfReturn(
                 var.toSpin()
                 if var.type() in {VariableType.Binary, VariableType.Integer}
                 else var
@@ -585,7 +593,7 @@ class ExpressionElement:
 
     def __neg__(self):
         # -1 * self
-        return Expression(Const(-1), self, "*", name=f"-({self.name})")
+        return Expression(Const(-1), self, "*", name=f"-({self.getName()})")
 
     def __abs__(self):
         return abs(self.value())
@@ -725,13 +733,13 @@ class Expression(ExpressionElement):
         super().__init__(name=name)
 
     def setName(self):
-        elmA_name = self.elmA.name
-        elmB_name = self.elmB.name
+        elmA_name = self.elmA.getName()
+        elmB_name = self.elmB.getName()
         if isinstance(self.elmA, (Expression, Operation)):
             if self.operator in {"*", "/", "^", "%"}:
                 elmA_name = f"({elmA_name})"
         if isinstance(self.elmB, Expression):
-            if self.operator != "+" or self.elmB.name.startswith("-"):
+            if self.operator != "+" or self.elmB.getName().startswith("-"):
                 elmB_name = f"({elmB_name})"
         elif isinstance(self.elmB, Operation):
             elmB_name = f"({elmB_name})"
@@ -783,12 +791,12 @@ class Expression(ExpressionElement):
         if self.var_dict is not None:
             if isinstance(self.elmA, ExpressionElement):
                 self.elmA.setVarDict(self.var_dict)
-            elif self.elmA.name in self.var_dict:
-                elmA = self.var_dict[self.elmA.name]
+            elif self.elmA.getName() in self.var_dict:
+                elmA = self.var_dict[self.elmA.getName()]
             if isinstance(self.elmB, ExpressionElement):
                 self.elmB.setVarDict(self.var_dict)
-            elif self.elmB.name in self.var_dict:
-                elmB = self.var_dict[self.elmB.name]
+            elif self.elmB.getName() in self.var_dict:
+                elmB = self.var_dict[self.elmB.getName()]
             self.unsetVarDict()
 
         if self.operator == "+":
@@ -893,7 +901,7 @@ class Expression(ExpressionElement):
             return NotImplemented
 
     def __repr__(self):
-        s = f"Expression({self.elmA.name}, {self.elmB.name}, {self.operator})"
+        s = f"Expression({self.elmA.getName()}, {self.elmB.getName()}, {self.operator})"
         return s
 
 
@@ -928,7 +936,7 @@ def pack_variables(var_or_array, var_dict):
             )
     else:
         var = var_or_array
-        return var_dict[var.name].value()
+        return var_dict[var.getName()].value()
 
 
 class CustomExpression(ExpressionElement):
@@ -1040,7 +1048,7 @@ class CustomExpression(ExpressionElement):
         return f"{self.func.__name__}(*)"
 
     def __repr__(self):
-        return f"CustomExpression({self.func.__name__, self.arg, self.name})"
+        return f"CustomExpression({self.func.__name__, self.arg, self.getName()})"
 
 
 class Const(ExpressionElement):
@@ -1251,7 +1259,7 @@ class Operation(ExpressionElement):
         return False
 
     def __hash__(self):
-        return hash((self.name, self._type))
+        return hash(tuple(elm for elm in self.elms)) + hash(self._type)
 
 
 class Sum(Operation):
@@ -1268,18 +1276,18 @@ class Sum(Operation):
         elm = self.elms[0]
         if isinstance(elm, number_classes):
             const += elm
-        elif isinstance(elm, ExpressionElement) and elm.name.startswith("-"):
-            self.name += f"({elm.name})"
+        elif isinstance(elm, ExpressionElement) and elm.getName().startswith("-"):
+            self.name += f"({elm.getName()})"
         else:
-            self.name += f"{elm.name}"
+            self.name += f"{elm.getName()}"
 
         for elm in self.elms[1:]:
             if isinstance(elm, number_classes):
                 const += elm
-            elif isinstance(elm, ExpressionElement) and elm.name.startswith("-"):
-                self.name += f"+({elm.name})"
+            elif isinstance(elm, ExpressionElement) and elm.getName().startswith("-"):
+                self.name += f"+({elm.getName()})"
             else:
-                self.name += f"+{elm.name}"
+                self.name += f"+{elm.getName()}"
 
         if const > 0:
             self.name += f"+{const}"
@@ -1306,8 +1314,8 @@ class Sum(Operation):
                 if isinstance(elm, ExpressionElement):
                     elm.setVarDict(self.var_dict)
                     ret += elm.value()
-                elif elm.name in self.var_dict:
-                    ret += self.var_dict[elm.name].value()
+                elif elm.getName() in self.var_dict:
+                    ret += self.var_dict[elm.getName()].value()
                 else:
                     ret += elm.value()
             self.unsetVarDict()
@@ -1340,18 +1348,18 @@ class Prod(Operation):
         elm = self.elms[0]
         if isinstance(elm, number_classes):
             const += elm
-        elif isinstance(elm, ExpressionElement) and elm.name.startswith("-"):
-            self.name += f"({elm.name})"
+        elif isinstance(elm, ExpressionElement) and elm.getName().startswith("-"):
+            self.name += f"({elm.getName()})"
         else:
-            self.name += f"{elm.name}"
+            self.name += f"{elm.getName()}"
 
         for elm in self.elms[1:]:
             if isinstance(elm, number_classes):
                 const += elm
-            elif isinstance(elm, ExpressionElement) and elm.name.startswith("-"):
-                self.name += f"*({elm.name})"
+            elif isinstance(elm, ExpressionElement) and elm.getName().startswith("-"):
+                self.name += f"*({elm.getName()})"
             else:
-                self.name += f"*{elm.name}"
+                self.name += f"*{elm.getName()}"
 
         if const != 0:
             self.name = f"{const}*" + self.name
@@ -1377,8 +1385,8 @@ class Prod(Operation):
                 if isinstance(elm, ExpressionElement):
                     elm.setVarDict(self.var_dict)
                     ret *= elm.value()
-                elif elm.name in self.var_dict:
-                    ret *= self.var_dict[elm.name].value()
+                elif elm.getName() in self.var_dict:
+                    ret *= self.var_dict[elm.getName()].value()
                 else:
                     ret *= elm.value()
             self.unsetVarDict()

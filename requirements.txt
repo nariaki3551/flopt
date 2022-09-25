@@ -8,4 +8,6 @@ cvxopt
 amplify
 pytest
 scipy
+dill
+pooch
 timeout_decorator

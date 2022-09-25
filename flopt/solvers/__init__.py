@@ -79,7 +79,7 @@ def Solver(algo="RandomSearch"):
 
         return AutoSearch()
     else:
-        assert f"{algo} is not available, choices from {Solver_list()}"
+        assert True, f"{algo} is not available, choices from {Solver_list()}"
 
 
 def Solver_list():

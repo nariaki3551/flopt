@@ -449,6 +449,9 @@ class VarElement:
     def setValue(self, value):
         self._value = value
 
+    def getName(self):
+        return self.name
+
     def getLb(self, must_number=False):
         if must_number:
             return (

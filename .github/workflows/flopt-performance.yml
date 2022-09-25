@@ -37,14 +37,17 @@ jobs:
         python compute_performance.py OptunaCmaEsSearch OptunaCmaEsSearch --datasets func --params ./settings/short.param --log_level 10
         python compute_performance.py SFLA              SFLA              --datasets func --params ./settings/short.param --log_level 10
         python compute_performance.py ScipySearch       ScipySearch       --datasets func --params ./settings/short.param --log_level 10
+        python compute_performance.py auto              auto              --datasets func --params ./settings/short.param --log_level 10
     - name: Compute performance of tsp dataset
       run: |
         python compute_performance.py RandomSearch      RandomSearch      --datasets tsp  --params ./settings/short.param --log_level 10
         python compute_performance.py 2-Opt             2-Opt             --datasets tsp  --params ./settings/short.param --log_level 10
+        python compute_performance.py auto              auto              --datasets func --params ./settings/short.param --log_level 10
     - name: Compute performance of mip dataset
       run: |
         python compute_performance.py ScipyMilpSearch   ScipyMilpSearch   --datasets mip  --params ./settings/short.param --log_level 10
         python compute_performance.py PulpSearch        PulpSearch        --datasets mip  --params ./settings/short.param --log_level 10
+        python compute_performance.py auto              auto              --datasets func --params ./settings/short.param --log_level 10
     - name: Collect trainting data of Auto Solver
       run: |
         python -m pip install -r requirements_dev.txt

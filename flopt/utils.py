@@ -1,11 +1,13 @@
 import types
+import operator
+import functools
 
 import numpy as np
 
 from flopt.variable import VarElement, VariableArray
 from flopt.expression import Expression, CustomExpression, Const
 import flopt.expression
-from flopt.constants import array_classes
+from flopt.constants import number_classes, array_classes
 
 
 def Sum(x):
@@ -20,6 +22,8 @@ def Sum(x):
     """
     if isinstance(x, types.GeneratorType):
         return Sum(list(x))
+    if all(isinstance(_x, number_classes) for _x in x):
+        return sum(x)
     elif isinstance(x, np.ndarray):
         return flopt.expression.Sum(x.ravel())
     else:
@@ -38,6 +42,8 @@ def Prod(x):
     """
     if isinstance(x, types.GeneratorType):
         return Prod(list(x))
+    if all(isinstance(_x, number_classes) for _x in x):
+        return functools.reduce(operator.mul, x)
     elif isinstance(x, np.ndarray):
         return flopt.expression.Prod(x.ravel())
     else:
@@ -105,9 +111,11 @@ def Value(x):
         return x
 
 
-def get_dot_graph(expression, save_file):
+def get_dot_graph(expression, save_file, rankdir=None):
     with open(save_file, "w") as writer:
         print("digraph g {", file=writer)
+        if rankdir is not None:
+            print(f"rankdir = {rankdir};", file=writer)
         _get_dot_graph(expression, writer)
         print("}", file=writer)
 

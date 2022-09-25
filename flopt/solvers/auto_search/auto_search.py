@@ -6,12 +6,16 @@ from flopt.solvers.auto_search.selector import (
     ising,
     qp,
     permutation,
+    blackbox,
+    blackbox_mip,
     nonlinear,
     nonlinear_mip,
     MipSelector,
     IsingSelector,
     QpSelector,
     PermutationSelector,
+    BlackBoxSelector,
+    BlackBoxMipSelector,
     NonlinearSelector,
     NonlinearMipSelector,
     BaseSelector,
@@ -135,27 +139,42 @@ class AutoSearch(BaseSearch):
         return solver
 
     def getSelector(self, problem_type):
-        def check(problem_type, problem_class):
-            return (
+        def check(problem_type, problem_class, class_str):
+            is_problem_class = (
                 problem_type["Variable"].expand() <= problem_class["Variable"].expand()
                 and problem_type["Objective"].expand()
                 <= problem_class["Objective"].expand()
                 and problem_type["Constraint"].expand()
                 <= problem_class["Constraint"].expand()
             )
+            if is_problem_class:
+                logger.info(f"This problem is identified as {class_str}.")
+            return is_problem_class
 
         try:
-            if check(problem_type, mip):
+            if check(problem_type, mip, "MIP"):
                 return MipSelector()
-            elif check(problem_type, ising):
+            elif check(problem_type, ising, "Ising"):
                 return IsingSelector()
-            elif check(problem_type, qp):
+            elif check(problem_type, qp, "Qadratic programming"):
                 return QpSelector()
-            elif check(problem_type, permutation):
+            elif check(problem_type, permutation, "Permutation programming"):
                 return PermutationModel()
-            elif check(problem_type, nonlinear):
+            elif check(problem_type, blackbox, "Blackbox optimization"):
+                return BlackBoxSelector()
+            elif check(
+                problem_type,
+                blackbox_mip,
+                "Blackbox optimization with integer variables",
+            ):
+                return BlackBoxMipSelector()
+            elif check(problem_type, nonlinear, "Nonlinear optimization"):
                 return NonlinearSelector()
-            elif check(problem_type, nonlinear_mip):
+            elif check(
+                problem_type,
+                nonlinear_mip,
+                "Nonlinear optimization with integer variables",
+            ):
                 return NonlinearMipSelector()
         except ModelNotFound as e:
             logger.warning(e)

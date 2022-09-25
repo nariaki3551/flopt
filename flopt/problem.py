@@ -1,5 +1,5 @@
 from flopt.variable import VarElement
-from flopt.expression import Expression, Const
+from flopt.expression import Expression, CustomExpression, Const
 from flopt.constraint import Constraint
 from flopt.solution import Solution
 from flopt.constants import (
@@ -205,7 +205,7 @@ class Problem:
         for const in self.constraints:
             self.__variables |= const.getVariables()
 
-    def solve(self, solver=None, timelimit=None, lowerbound=None, msg=False):
+    def solve(self, solver=None, timelimit=None, lowerbound=None, msg=False, **kwargs):
         """solve this problem
 
         Parameters
@@ -247,6 +247,7 @@ class Problem:
             solver.setParams(timelimit=timelimit)
         if lowerbound is not None:
             solver.setParams(lowerbound=lowerbound)
+        solver.setParams(**kwargs)
 
         if self.sense == "maximize" or self.sense == "Maximize":
             self.obj = -self.obj
@@ -324,9 +325,14 @@ class Problem:
 
         # objective
         for expression_type in expression_types:
-            if self.obj.type() in expression_type.expand():
-                problem_type["Objective"] = expression_type
-                break
+            for elm in self.obj.traverse():
+                if isinstance(elm, CustomExpression):
+                    problem_type["Objective"] = ExpressionType.BlackBox
+                    break
+            else:
+                if self.obj.type() in expression_type.expand():
+                    problem_type["Objective"] = expression_type
+                    break
 
         # constraint
         if not self.constraints:
