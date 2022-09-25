@@ -142,7 +142,7 @@ def _get_dot_graph(expression, writer):
         nodeB = _get_dot_graph(expression.elmB, writer)
         print(edge_str.format(nodeA, node_operator), file=writer)
         print(edge_str.format(nodeB, node_operator), file=writer)
-    elif isinstance(expression, flopt.expression.Operation):
+    elif isinstance(expression, flopt.expression.Reduction):
         node_operator = hash((expression, 1))
         operator_str = "+" if isinstance(expression, flopt.expression.Sum) else "*"
         print(operation_str.format(node_operator, operator_str), file=writer)

@@ -89,15 +89,6 @@ class ExpressionElement:
         """
         raise NotImplementedError
 
-    def getConsts(self):
-        """
-        Returns
-        -------
-        set
-          return the const object used in this expressiono
-        """
-        return NotImplementedError
-
     def isNeg(self):
         """
         Returns
@@ -644,10 +635,6 @@ class ExpressionElement:
         # self >= other --> other - self <= 0
         return Constraint(other - self, ConstraintType.Le)
 
-    def __del__(self):
-        for const in self.getConsts():
-            del const
-
     def __repr__(self):
         raise NotImplementedError
 
@@ -735,13 +722,13 @@ class Expression(ExpressionElement):
     def setName(self):
         elmA_name = self.elmA.getName()
         elmB_name = self.elmB.getName()
-        if isinstance(self.elmA, (Expression, Operation)):
+        if isinstance(self.elmA, (Expression, Reduction)):
             if self.operator in {"*", "/", "^", "%"}:
                 elmA_name = f"({elmA_name})"
         if isinstance(self.elmB, Expression):
             if self.operator != "+" or self.elmB.getName().startswith("-"):
                 elmB_name = f"({elmB_name})"
-        elif isinstance(self.elmB, Operation):
+        elif isinstance(self.elmB, Reduction):
             elmB_name = f"({elmB_name})"
         self.name = f"{elmA_name}{self.operator}{elmB_name}"
 
@@ -819,10 +806,6 @@ class Expression(ExpressionElement):
     def getVariables(self):
         variables = self.elmA.getVariables() | self.elmB.getVariables()
         return variables
-
-    def getConsts(self):
-        consts = self.elmA.getConsts() | self.elmB.getConsts()
-        return consts
 
     def traverse(self):
         """traverse Expression tree as root is self
@@ -903,6 +886,12 @@ class Expression(ExpressionElement):
     def __repr__(self):
         s = f"Expression({self.elmA.getName()}, {self.elmB.getName()}, {self.operator})"
         return s
+
+    def __del__(self):
+        if isinstance(self.elmA, Const):
+            del self.elmA
+        if isinstance(self.elmB, Const):
+            del self.elmB
 
 
 # ------------------------------------------------
@@ -1032,9 +1021,6 @@ class CustomExpression(ExpressionElement):
     def getVariables(self):
         return self.variables
 
-    def getConsts(self):
-        return set()
-
     def isNeg(self):
         return False
 
@@ -1087,9 +1073,6 @@ class Const(ExpressionElement):
 
     def getVariables(self):
         return set()
-
-    def getConsts(self):
-        return {self}
 
     def isNeg(self):
         return self._value < 0
@@ -1216,9 +1199,9 @@ to_const_ufunc = np.frompyfunc(to_const, 1, 1)
 
 
 # ------------------------------------------------
-#   Operation Class
+#   Reduction Class
 # ------------------------------------------------
-class Operation(ExpressionElement):
+class Reduction(ExpressionElement):
 
     _type = ExpressionType.Unknown
 
@@ -1238,12 +1221,6 @@ class Operation(ExpressionElement):
             variables |= elm.getVariables()
         return variables
 
-    def getConsts(self):
-        consts = set()
-        for elm in self.elms:
-            consts |= elm.getConsts()
-        return consts
-
     def traverse(self):
         """traverse Expression tree as root is self
 
@@ -1261,8 +1238,13 @@ class Operation(ExpressionElement):
     def __hash__(self):
         return hash(tuple(elm for elm in self.elms)) + hash(self._type)
 
+    def __del__(self):
+        for elm in self.elms:
+            if isinstance(elm, Const):
+                del elm
 
-class Sum(Operation):
+
+class Sum(Reduction):
     """
     Parameters
     ----------
@@ -1334,7 +1316,7 @@ class Sum(Operation):
         return s
 
 
-class Prod(Operation):
+class Prod(Reduction):
     """
     Parameters
     ----------

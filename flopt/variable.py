@@ -502,9 +502,6 @@ class VarElement:
     def getVariables(self):
         return {self}
 
-    def getConsts(self):
-        return set()
-
     def isPolynomial(self):
         return True
 

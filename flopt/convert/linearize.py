@@ -1,5 +1,5 @@
 from flopt.variable import Variable, VarElement
-from flopt.expression import Expression, Operation, Const
+from flopt.expression import Expression, Const
 from flopt.convert.binarize import binarize
 from flopt.constants import VariableType
 from flopt.env import setup_logger, create_variable_mode

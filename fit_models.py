@@ -13,8 +13,6 @@ import flopt
 random.seed(0)
 np.random.seed(0)
 
-time_span = [1, 120]
-
 
 class Model:
     def __init__(self, model):
@@ -28,6 +26,9 @@ class Model:
 
 
 def create_nonlinear_datasets(num_probs, cat, args):
+
+    time_span = [1, 120]
+    num_variables_span = [2, 1000]
 
     funcs = [
         "Ackley",
@@ -45,8 +46,6 @@ def create_nonlinear_datasets(num_probs, cat, args):
     ]
 
     func_dataset = flopt.performance.get_dataset("func")
-
-    num_variables_span = [2, 1000]
 
     if args.debug:
         time_span = [1, 5]
@@ -70,6 +69,7 @@ def create_nonlinear_datasets(num_probs, cat, args):
 
 def create_number_partitioning_datasets(num_probs, args):
 
+    time_span = [1, 120]
     num_variables_span = [2, 1000]
 
     if args.debug:
