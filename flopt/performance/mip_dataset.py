@@ -13,7 +13,7 @@ from .base_dataset import BaseDataset, BaseInstance
 logger = setup_logger(__name__)
 
 # instance problems
-mip_storage = f"{flopt.env.datasets_dir}/mipLib"
+mip_storage = f"{flopt.env.DATASETS_DIR}/mipLib"
 
 
 class MipDataset(BaseDataset):

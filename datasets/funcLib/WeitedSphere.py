@@ -3,7 +3,7 @@ import flopt
 
 def create_objective(n):
     def obj(x):
-        return flopt.Sum(i * xi * xi for i, xi in enumerate(x, 1))
+        return sum(i * xi * xi for i, xi in enumerate(x, 1))
 
     return obj
 

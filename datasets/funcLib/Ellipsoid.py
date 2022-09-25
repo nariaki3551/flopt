@@ -6,7 +6,7 @@ import flopt
 def create_objective(n):
     def obj(x):
         coeffs = [1000 * (i - i) / (n - 1) for i in range(1, n + 1)]
-        return flopt.Dot(x, coeffs)
+        return sum(x[i] * coeffs[i] for i in range(n))
 
     return obj
 

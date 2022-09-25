@@ -10,7 +10,7 @@ from flopt.env import setup_logger
 from .custom_dataset import CustomDataset
 from .log_visualizer import LogVisualizer
 
-performance_dir = flopt.env.performance_dir
+PERFORMANCE_DIR = flopt.env.PERFORMANCE_DIR
 logger = setup_logger(__name__)
 
 
@@ -104,7 +104,7 @@ def compute(
 
     # save_prefix setting
     if save_prefix is None:
-        save_prefix = performance_dir
+        save_prefix = PERFORMANCE_DIR
 
     logs = dict()
 
@@ -185,7 +185,7 @@ def performance(
     elif not isinstance(solver_names, list):
         solver_names = [solver_names]
     if load_prefix is None:
-        load_prefix = performance_dir
+        load_prefix = PERFORMANCE_DIR
 
     log_visualizer = LogVisualizer()
     log_visualizer.load(

@@ -29,7 +29,7 @@ jobs:
         python -m pip install wheel
         python -m pip install -r requirements.txt
         echo "timelimit = 2" > settings/short.param
-    - name: Test to func performance
+    - name: Compute performance of func dataset
       run: |
         python compute_performance.py RandomSearch      RandomSearch      --datasets func --params ./settings/short.param --log_level 10
         python compute_performance.py OptunaTPESearch   OptunaTPESearch   --datasets func --params ./settings/short.param --log_level 10
@@ -37,12 +37,21 @@ jobs:
         python compute_performance.py OptunaCmaEsSearch OptunaCmaEsSearch --datasets func --params ./settings/short.param --log_level 10
         python compute_performance.py SFLA              SFLA              --datasets func --params ./settings/short.param --log_level 10
         python compute_performance.py ScipySearch       ScipySearch       --datasets func --params ./settings/short.param --log_level 10
-    - name: Test to func performance
+        python compute_performance.py auto              auto              --datasets func --params ./settings/short.param --log_level 10
+    - name: Compute performance of tsp dataset
       run: |
         python compute_performance.py RandomSearch      RandomSearch      --datasets tsp  --params ./settings/short.param --log_level 10
         python compute_performance.py 2-Opt             2-Opt             --datasets tsp  --params ./settings/short.param --log_level 10
-    - name: Test to mip performance
+        python compute_performance.py auto              auto              --datasets func --params ./settings/short.param --log_level 10
+    - name: Compute performance of mip dataset
       run: |
         python compute_performance.py ScipyMilpSearch   ScipyMilpSearch   --datasets mip  --params ./settings/short.param --log_level 10
         python compute_performance.py PulpSearch        PulpSearch        --datasets mip  --params ./settings/short.param --log_level 10
+        python compute_performance.py auto              auto              --datasets func --params ./settings/short.param --log_level 10
+    - name: Collect trainting data of Auto Solver
+      run: |
+        python -m pip install -r requirements_dev.txt
+        python fit_models.py nonlinear      --collect --samples 3 --debug
+        python fit_models.py nonlinear_mip  --collect --samples 3 --debug
+        python fit_models.py ising          --collect --samples 3 --debug
 

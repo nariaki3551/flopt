@@ -51,11 +51,12 @@ class Environment:
     CREATE_VARIABLE_MODE = False
     VARIABLE_LOWER_BOUND = None
     VARIABLE_UPPER_BOUND = None
+    TRAINED_MODELS_CONFIG = None
 
-    src_dir = os.path.dirname(__file__)
-    datasets_dir = os.path.join(src_dir, "..", "datasets")
-    performance_dir = os.path.join(src_dir, "..", "performance")
-    models_dir = os.path.join(src_dir, "tuning")
+    SOURCE_DIR = os.path.dirname(__file__)
+    DATASETS_DIR = os.path.join(SOURCE_DIR, "..", "datasets")
+    PERFORMANCE_DIR = os.path.join(SOURCE_DIR, "..", "performance")
+    MODELS_DIR = os.path.join(SOURCE_DIR, "tuning")
 
     root_logger = getLogger()
 
@@ -65,7 +66,7 @@ class Environment:
 
         # config
         config = configparser.ConfigParser()
-        config.read(os.path.join(self.src_dir, "flopt.config"))
+        config.read(os.path.join(self.SOURCE_DIR, "flopt.config"))
 
         Environment.VARIABLE_LOWER_BOUND = float(
             config["DEFAULT"]["VARIABLE_LOWER_BOUND"]
@@ -73,6 +74,9 @@ class Environment:
         Environment.VARIABLE_UPPER_BOUND = float(
             config["DEFAULT"]["VARIABLE_UPPER_BOUND"]
         )
+
+        # download trained model
+        Environment.TRAINED_MODELS_CONFIG = config["TRAINED_MODELS"]
 
     def setLogLevel(self, log_level):
         if isinstance(log_level, str):
@@ -82,13 +86,6 @@ class Environment:
 
     def getConfig(self, name, section="DEFAULT"):
         return self.config[section][name]
-
-    def __str__(self):
-        s = f"config: flopt.config\n"
-        s += f"src_dir: {self.src_dir}\n"
-        s += f"datasets_dir: {self.datasets_dir}\n"
-        s += f"performance_dir: {self.performance_dir}"
-        return s
 
 
 def setup_logger(name):

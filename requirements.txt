@@ -8,10 +8,7 @@ cvxopt
 amplify
 pytest
 scipy
+scikit-learn
+dill
+pooch
 timeout_decorator
-Sphinx
-Jinja2==3.0.3
-sphinx-autobuild
-sphinx_rtd_theme
-sphinxcontrib-mermaid
-recommonmark

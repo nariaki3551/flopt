@@ -66,12 +66,11 @@ class VariableArray(np.ndarray):
             return i[0]
         return i
 
-    @classmethod
-    def init_ufunc(cls, shape, ufunc, set_mono=True):
-        x = np.ndarray(shape, dtype=object)
-        for i in itertools.product(*map(range, shape)):
-            x[i] = ufunc(i)
-        return cls(x, set_mono=set_mono)
+    def to_value(self, var_dict):
+        v = np.ndarray(self.shape)
+        for i in itertools.product(*map(range, self.shape)):
+            v[i] = var_dict[self[i].name].value()
+        return v
 
 
 # -------------------------------------------------------
@@ -449,6 +448,9 @@ class VarElement:
     def setValue(self, value):
         self._value = value
 
+    def getName(self):
+        return self.name
+
     def getLb(self, must_number=False):
         if must_number:
             return (
@@ -702,15 +704,22 @@ class VarElement:
 
     def __eq__(self, other):
         # self == other --> self - other == 0
-        return Constraint(
-            Expression(self, Const(0), "+", name=self.name) - other, ConstraintType.Eq
-        )
+        if isinstance(other, (number_classes)) and other == 0:
+            return Constraint(
+                Expression(self, Const(0), "+", name=self.name) - other,
+                ConstraintType.Eq,
+            )
+        else:
+            return Constraint(self - other, ConstraintType.Eq)
 
     def __le__(self, other):
         # self <= other --> self - other <= 0
-        return Constraint(
-            Expression(self, Const(0), "+", name=self.name) - other, ConstraintType.Le
-        )
+        if isinstance(other, (number_classes)) and other == 0:
+            return Constraint(
+                Expression(self, Const(0), "+", name=self.name), ConstraintType.Le
+            )
+        else:
+            return Constraint(self - other, ConstraintType.Le)
 
     def __ge__(self, other):
         # self >= other --> other - self <= 0

@@ -11,7 +11,7 @@ from flopt import env as flopt_env
 from flopt.solvers.solver_utils.common import value2str
 from flopt.env import setup_logger
 
-performance_dir = flopt_env.performance_dir
+PERFORMANCE_DIR = flopt_env.PERFORMANCE_DIR
 logger = setup_logger(__name__)
 
 
@@ -42,7 +42,7 @@ class LogVisualizer:
     def __init__(self, logs=dict()):
         self.logs = logs
 
-    def load(self, solver_names, datasets, load_prefix=performance_dir):
+    def load(self, solver_names, datasets, load_prefix=PERFORMANCE_DIR):
         if isinstance(solver_names, str):
             solver_names = [solver_names]
         if isinstance(datasets, str):
@@ -50,7 +50,7 @@ class LogVisualizer:
         for solver_name, dataset in product(solver_names, datasets):
             self.load_log(solver_name, dataset, load_prefix)
 
-    def load_log(self, solver_name, dataset, load_prefix=performance_dir):
+    def load_log(self, solver_name, dataset, load_prefix=PERFORMANCE_DIR):
         """
         load log pickle file from load_prefix/solver_name/dataset/instance/log.pickle
 

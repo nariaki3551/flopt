@@ -114,6 +114,7 @@ class BaseSearch:
     def reset(self):
         """reset solving log and status"""
         self.log = Log()
+        self.best_solution = None
         self.best_obj_value = float("inf")
         self.start_time = None
         self.trial_ix = 0

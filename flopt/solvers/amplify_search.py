@@ -116,16 +116,17 @@ class AmplifySearch(BaseSearch):
         self.start_build()
 
         x = self.prob.getVariables()
-        s = np.array(gen_symbols(IsingPoly, len(x)), dtype=object)
+        s = gen_symbols(IsingPoly, len(x))
+        np_s = np.array(gen_symbols(IsingPoly, len(x)), dtype=object)
 
         # objective function
         ising = self.prob.obj.toIsing()
-        f = -s.T.dot(ising.J).dot(s) - ising.h.T.dot(s) + ising.C
+        f = -np_s.T.dot(ising.J).dot(np_s) - ising.h.T.dot(np_s) + ising.C
 
         # constraints
         for const in self.prob.getConstraints():
             ising = const.expression.toIsing()
-            g = s.T.dot(ising.J).dot(s) - ising.h.T.dot(s) + ising.C
+            g = np_s.T.dot(ising.J).dot(np_s) - ising.h.T.dot(np_s) + ising.C
             if const.type() == ConstraintType.Eq:
                 f += equal_to(g, 0)
             else:  # ConstraintType.Le
@@ -144,9 +145,10 @@ class AmplifySearch(BaseSearch):
         for amplify_solution in list(result)[::-1]:
             values = decode_solution(s, amplify_solution.values)
             for var, value in zip(x, values):
-                self.solution.setValue(var.name, value.constant())
+                self.solution.setValue(var.name, value)
 
             # if solution is better thatn incumbent, then update best solution
             self.registerSolution(self.solution)
+            print(self.solution, self.getObjValue(self.solution))
 
         return SolverTerminateState.Normal

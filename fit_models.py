@@ -1,26 +1,34 @@
 import os
 import glob
-import pickle
 import random
 import argparse
 import itertools
 
+import dill
 import numpy as np
-import seaborn
-import matplotlib.pyplot as plt
-import pandas
-import sklearn.model_selection
-import sklearn.tree
-import sklearn.ensemble
-import sklearn.naive_bayes
 
 import flopt
+
 
 random.seed(0)
 np.random.seed(0)
 
 
+class Model:
+    def __init__(self, model):
+        self.model = model
+
+    def features(self, prob, solver):
+        return [solver.timelimit, len(prob.getVariables())]
+
+    def output(self, features):
+        return self.model.predict(features)
+
+
 def create_nonlinear_datasets(num_probs, cat, args):
+
+    time_span = [1, 120]
+    num_variables_span = [2, 1000]
 
     funcs = [
         "Ackley",
@@ -39,11 +47,9 @@ def create_nonlinear_datasets(num_probs, cat, args):
 
     func_dataset = flopt.performance.get_dataset("func")
 
-    time_span = [1, 120]
-    num_variables_span = [2, 1000]
-
     if args.debug:
         time_span = [1, 5]
+        num_variables_span = [2, 100]
 
     for i in range(num_probs + args.begin_ix):
         name = random.choice(funcs)
@@ -68,6 +74,7 @@ def create_number_partitioning_datasets(num_probs, args):
 
     if args.debug:
         time_span = [1, 5]
+        num_variables_span = [2, 100]
 
     for i in range(num_probs + args.begin_ix):
         timelimit = random.randint(time_span[0], time_span[1])
@@ -87,36 +94,54 @@ def create_number_partitioning_datasets(num_probs, args):
 
 
 def fitting_and_save_model(args):
+    import seaborn
+    import matplotlib.pyplot as plt
+    import pandas
+    import sklearn.model_selection
+    import sklearn.tree
+    import sklearn.ensemble
+    import sklearn.naive_bayes
+
     folder = os.path.join(args.save_dir, args.problem_class)
 
     # collect data
     logfiles = glob.glob(os.path.join(folder, "logs_*.pickle"))
+
+    times = list(np.linspace(1, 120))
+
     data = list()
     for logfile in logfiles:
         with open(logfile, "rb") as f:
-            (instance, logs) = pickle.load(f)
+            (instance, logs) = dill.load(f)
 
-        best_algos = list()
-        best_obj_value = float("inf")
-        for key, _log in logs.items():
-            _, _, algo = key
-            if algo == "AutoSearch":
-                continue
-            obj_value = _log.logs[-1]["obj_value"]
-            if obj_value < best_obj_value - 1e-6:
-                best_obj_value = obj_value
-                best_algos = [algo]
-            elif obj_value < best_obj_value + 1e-6:
-                best_algos += [algo]
+        sampled_times = random.sample(times, 3)
+        for time in sampled_times:
+            best_algos = list()
+            best_obj_value = float("inf")
+            best_obj_time = float("inf")
+            for key, algo_log in logs.items():
+                _, _, algo = key
+                if algo == "auto":
+                    continue
+                obj_value = float("inf")
+                for log in algo_log.logs:
+                    if log["time"] < time:
+                        obj_value = log["obj_value"]
+                if obj_value < best_obj_value - 1e-5:
+                    best_obj_value = obj_value
+                    best_algos = [(algo, obj_value)]
+                elif obj_value < best_obj_value + 1e-5:
+                    best_algos += [(algo, obj_value)]
 
-        for algo in best_algos:
-            data.append(
-                {
-                    "algo": algo,
-                    "timelimit": instance["timelimit"],
-                    "#variables": instance["num_variables"],
-                }
-            )
+            for algo, obj_value in best_algos:
+                data.append(
+                    {
+                        "algo": algo,
+                        "timelimit": time,
+                        "#variables": instance["num_variables"],
+                        "obj_value": obj_value,
+                    }
+                )
 
     df = pandas.DataFrame(data)
     algos = [algo for algo in flopt.Solver_list() if any(df["algo"] == algo)]
@@ -125,7 +150,7 @@ def fitting_and_save_model(args):
 
     # visualize data
     df_plot = df.copy()
-    jitter_size = 7
+    jitter_size = 5
     df_plot["timelimit"] += jitter_size * np.random.random(len(df)) - 0.5 * jitter_size
     df_plot["#variables"] += jitter_size * np.random.random(len(df)) - 0.5 * jitter_size
     fig, ax = plt.subplots()
@@ -139,7 +164,8 @@ def fitting_and_save_model(args):
             ax=ax,
         )
     ax.grid("--")
-    ax.legend(bbox_to_anchor=(1.02, 1.0), loc="upper left")
+    ax.legend(bbox_to_anchor=(1.01, 1.0), loc="upper left")
+    fig.savefig(f"{args.problem_class}.training_data.png", bbox_inches="tight")
     plt.show()
 
     # split train and test data
@@ -162,13 +188,25 @@ def fitting_and_save_model(args):
         sklearn.naive_bayes.GaussianNB(),
     ]
     for skmodel in skmodels:
+        num_predict_best = 0
         model = skmodel
-        model.fit(X_train, Y_train)
-        score = model.score(X_test, Y_test)
-        print(model, score)
-        if score > max_score:
+        model.fit(
+            X_train,
+            Y_train.reshape(
+                -1,
+            ),
+        )
+        for x_test in X_test:
+            predict = model.predict([x_test])
+            idxs = (df["timelimit"] == x_test[0]) & (df["#variables"] == x_test[1])
+            if predict in df[idxs]["algo"].unique():
+                num_predict_best += 1
+        print(
+            f"{model.__str__():>30}: num_predict_best {num_predict_best} rate {num_predict_best/len(X_test)}"
+        )
+        if num_predict_best > max_score:
             max_model = model
-            max_score = score
+            max_score = num_predict_best
 
     model = max_model
 
@@ -181,7 +219,6 @@ def fitting_and_save_model(args):
     ]
     df = pandas.DataFrame(data)
     df["algo"] = model.predict(df[["timelimit", "#variables"]].to_numpy())
-    breakpoint()
     fig, ax = plt.subplots()
     for algo in algos:
         seaborn.scatterplot(
@@ -193,12 +230,18 @@ def fitting_and_save_model(args):
             ax=ax,
         )
     ax.grid("--")
-    ax.legend(bbox_to_anchor=(1.02, 1.0), loc="upper left")
+    ax.legend(bbox_to_anchor=(1.01, 1.0), loc="upper left")
+    fig.savefig(f"{args.problem_class}.fitting_result.png", bbox_inches="tight")
     plt.show()
 
+    # create selector
+    model = Model(model)
+
     # save model
-    with open(os.path.join(folder, f"{args.problem_class}.model.pickle"), "wb") as f:
-        pickle.dump(model, file=f)
+    save_path = os.path.join(args.save_dir, f"{args.problem_class}.model.pickle")
+    with open(save_path, "wb") as f:
+        dill.dump(model, file=f)
+    print("save model as", save_path)
 
 
 def main(args):
@@ -227,7 +270,7 @@ def main(args):
             if args.debug:
                 continue
             with open(os.path.join(folder, f"logs_{i}.pickle"), "wb") as pf:
-                pickle.dump((instance, logs), file=pf)
+                dill.dump((instance, logs), file=pf)
 
     elif not args.debug:
         fitting_and_save_model(args)

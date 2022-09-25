@@ -14,7 +14,7 @@ from .base_dataset import BaseDataset, BaseInstance
 logger = setup_logger(__name__)
 
 # instance problems
-tsp_storage = f"{flopt.env.datasets_dir}/tspLib/tsp"
+tsp_storage = f"{flopt.env.DATASETS_DIR}/tspLib/tsp"
 
 
 class TSPDataset(BaseDataset):

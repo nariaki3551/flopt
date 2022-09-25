@@ -39,7 +39,7 @@ def test_Constraint_type(a, b):
 def test_Constraint_expression(a, b):
     assert hash((a == 0).expression) == hash(Expression(a, Const(0), "+"))
     assert hash((a <= 0).expression) == hash(Expression(a, Const(0), "+"))
-    assert hash((a >= 0).expression) == hash(Expression(-a, Const(0), "-"))
+    assert hash((a >= 0).expression) == hash(Expression(Const(-1), a, "*"))
     assert hash((a + b == 0).expression) == hash(a + b - 0)
     assert hash((a + b <= 0).expression) == hash(a + b - 0)
     assert hash((a + b >= 0).expression) == hash(-(a + b - 0))
