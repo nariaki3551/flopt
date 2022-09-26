@@ -433,17 +433,14 @@ class VarElement:
         """
         return self._type
 
-    def value(self, solution=None):
+    def value(self):
         """
         Returns
         -------
         float or int
           return value of variable
         """
-        if solution is None:
-            return self._value
-        else:
-            return solution.toDict()[self.name]
+        return self._value
 
     def setValue(self, value):
         self._value = value
@@ -748,17 +745,14 @@ class VarInteger(VarElement):
         self.binarized = None
         self.binaries = set()
 
-    def value(self, solution=None):
+    def value(self):
         """
         Returns
         -------
         float or int
           return value of variable
         """
-        if solution is None:
-            return int(self._value)
-        else:
-            return solution.toDict()[self.name]
+        return int(self._value)
 
     def getLb(self, must_number=False):
         if must_number:

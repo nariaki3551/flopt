@@ -7,7 +7,6 @@ import tqdm
 import pulp
 import pandas
 import numpy as np
-import memory_profiler
 
 import flopt
 import flopt.convert

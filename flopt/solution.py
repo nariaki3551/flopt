@@ -1,5 +1,4 @@
 import math
-import weakref
 
 from flopt.constants import VariableType
 from flopt.env import setup_logger
@@ -64,9 +63,7 @@ class Solution:
             value is VarElement family or Expression or Const
         """
         if self._var_dict is None:
-            self._var_dict = weakref.WeakValueDictionary(
-                {var.name: var for var in self._variables}
-            )
+            self._var_dict = {var.name: var for var in self._variables}
         return self._var_dict
 
     def value(self):
