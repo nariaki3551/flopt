@@ -799,8 +799,7 @@ class Expression(ExpressionElement):
             return elmA.value() or elmB.value()
 
     def getVariables(self):
-        variables = self.elmA.getVariables() | self.elmB.getVariables()
-        return variables
+        return self.elmA.getVariables() | self.elmB.getVariables()
 
     def traverse(self):
         """traverse Expression tree as root is self
@@ -1211,10 +1210,7 @@ class Reduction(ExpressionElement):
                 elm.parents.append(self)
 
     def getVariables(self):
-        variables = set()
-        for elm in self.elms:
-            variables |= elm.getVariables()
-        return variables
+        return functools.reduce(operator.or_, (elm.getVariables() for elm in self.elms))
 
     def traverse(self):
         """traverse Expression tree as root is self
