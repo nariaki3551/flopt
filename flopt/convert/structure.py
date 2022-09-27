@@ -3,7 +3,7 @@ import numpy as np
 from flopt import Variable, Problem
 from flopt.variable import VariableArray
 from flopt.convert.linearize import linearize
-from flopt.constants import VariableType, ConstraintType, np_float
+from flopt.constants import VariableType, ConstraintType, array_classes, np_float
 from flopt.error import ConversionError
 from flopt.env import setup_logger, create_variable_mode
 
@@ -13,6 +13,13 @@ logger = setup_logger(__name__)
 # -------------------------------------------------------
 #   Utils
 # -------------------------------------------------------
+
+
+def to_nparray_or_None(x):
+    if x is not None:
+        if isinstance(x, array_classes) and not isinstance(x, np.ndarray):
+            x = np.array(x, dtype=np_float)
+    return x
 
 
 def merge(func, arrays):
@@ -60,10 +67,10 @@ class QuadraticStructure:
     """
 
     def __init__(self, Q, c, C, x=None):
-        self.Q = np.array(Q, dtype=np_float)
-        self.c = np.array(c, dtype=np_float)
+        self.Q = to_nparray_or_None(Q)
+        self.c = to_nparray_or_None(c)
         self.C = C
-        self.x = np.array(x, dtype=object) if x is not None else None
+        self.x = to_nparray_or_None(x)
 
     def toLinear(self):
         """
@@ -92,9 +99,9 @@ class LinearStructure:
     """
 
     def __init__(self, c, C, x=None):
-        self.c = np.array(c, dtype=np_float)
+        self.c = to_nparray_or_None(c)
         self.C = C
-        self.x = np.array(x, dtype=object) if x is not None else None
+        self.x = to_nparray_or_None(x)
 
     def __repr__(self):
         return f"LinearStructure{self.c, self.C, self.x}"
@@ -130,17 +137,17 @@ class QpStructure:
         types="Continuous",
         x=None,
     ):
-        self.Q = np.array(Q, dtype=np_float)
-        self.c = np.array(c, dtype=np_float)
+        self.Q = to_nparray_or_None(Q)
+        self.c = to_nparray_or_None(c)
         self.C = C
-        self.G = np.array(G, dtype=np_float) if G is not None else None
-        self.h = np.array(h, dtype=np_float) if h is not None else None
-        self.A = np.array(A, dtype=np_float) if A is not None else None
-        self.b = np.array(b, dtype=np_float) if b is not None else None
-        self.lb = np.array(lb, dtype=np_float) if lb is not None else None
-        self.ub = np.array(ub, dtype=np_float) if ub is not None else None
+        self.G = to_nparray_or_None(G)
+        self.h = to_nparray_or_None(h)
+        self.A = to_nparray_or_None(A)
+        self.b = to_nparray_or_None(b)
+        self.lb = to_nparray_or_None(lb)
+        self.ub = to_nparray_or_None(ub)
         self.types = types
-        self.x = np.array(x, dtype=object) if x is not None else None
+        self.x = to_nparray_or_None(x)
 
     def numVariables(self):
         if self.x is not None:
@@ -497,16 +504,16 @@ class LpStructure:
         types="Continuous",
         x=None,
     ):
-        self.c = np.array(c, dtype=np_float)
+        self.c = to_nparray_or_None(c)
         self.C = C
-        self.G = np.array(G, dtype=np_float) if G is not None else None
-        self.h = np.array(h, dtype=np_float) if h is not None else None
-        self.A = np.array(A, dtype=np_float) if A is not None else None
-        self.b = np.array(b, dtype=np_float) if b is not None else None
-        self.lb = np.array(lb, dtype=np_float) if lb is not None else None
-        self.ub = np.array(ub, dtype=np_float) if ub is not None else None
+        self.G = to_nparray_or_None(G)
+        self.h = to_nparray_or_None(h)
+        self.A = to_nparray_or_None(A)
+        self.b = to_nparray_or_None(b)
+        self.lb = to_nparray_or_None(lb)
+        self.ub = to_nparray_or_None(ub)
         self.types = types
-        self.x = np.array(x, dtype=object) if x is not None else None
+        self.x = to_nparray_or_None(x)
 
     def numVariables(self):
         if self.x is not None:
@@ -666,10 +673,10 @@ class IsingStructure:
     """
 
     def __init__(self, J, h, C, x=None):
-        self.J = np.array(J, dtype=np_float)
-        self.h = np.array(h, dtype=np_float)
+        self.J = to_nparray_or_None(J)
+        self.h = to_nparray_or_None(h)
         self.C = C
-        self.x = np.array(x, dtype=object) if x is not None else None
+        self.x = to_nparray_or_None(x)
 
     def numVariables(self):
         if self.x is not None:
@@ -772,9 +779,9 @@ class QuboStructure:
     """
 
     def __init__(self, Q, C, x=None):
-        self.Q = np.array(Q, dtype=np_float)
+        self.Q = to_nparray_or_None(Q)
         self.C = C
-        self.x = np.array(x, dtype=object) if x is not None else None
+        self.x = to_nparray_or_None(x)
 
     def numVariables(self):
         if self.x is not None:

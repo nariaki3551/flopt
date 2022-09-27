@@ -93,21 +93,17 @@ class BaseSearch:
         self.max_k = 1
         self.save_solution = False
 
-    def setParams(self, params=None, feasible_guard=None, **kwargs):
+    def setParams(self, params=None, **kwargs):
         """set some parameters
 
         Parameters
         ----------
         params : dict
             {paramname: paramvalue}
-        feasible_guard : str
-            'clip' is noly selectable
         """
         if params is not None:
             for param, value in params.items():
                 setattr(self, param, value)
-        if feasible_guard is not None:
-            self.feasible_guard = feasible_guard
         for param, value in kwargs.items():
             setattr(self, param, value)
 

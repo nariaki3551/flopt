@@ -18,13 +18,13 @@ np.random.seed(0)
 def main():
     count = 10
     data = list()
-    data += measure_import(count)
-    data += measure_build_LpStructure(count)
-    data += measure_build_QpStructure(count)
-    data += measure_create_quadratic_expression(count)
-    data += measure_set_polynomial(count)
-    data += measure_sum_operation(count)
-    data += measure_func(count)
+    data += speed_import(count)
+    data += speed_build_LpStructure(count)
+    data += speed_build_QpStructure(count)
+    data += speed_create_quadratic_expression(count)
+    data += speed_set_polynomial(count)
+    data += speed_sum_operation(count)
+    data += speed_func_value(count)
 
     df = pandas.DataFrame(data)
     print(df.drop("count", axis=1).groupby("name").describe())
@@ -34,10 +34,10 @@ def main():
     print("statistic file is saved as", save_file_name)
 
 
-def measure_import(count):
-    measure_name = "import"
+def speed_import(count):
+    name = "import"
     data = list()
-    for i in tqdm.tqdm(range(count), desc="[ " + measure_name + " ]"):
+    for i in tqdm.tqdm(range(count), desc="[ " + name + " ]"):
         output = subprocess.run(
             "python3 -X importtime -c 'import flopt'",
             shell=True,
@@ -52,7 +52,7 @@ def measure_import(count):
             if m is not None:
                 data.append(
                     {
-                        "name": measure_name,
+                        "name": name,
                         "value": float(m.groupdict()["cumulative"]),
                         "unit": "s",
                         "count": 1,
@@ -61,8 +61,8 @@ def measure_import(count):
     return data
 
 
-def measure_build_LpStructure(count, prob=None):
-    measure_name = "build_LpStructure"
+def speed_build_LpStructure(count, prob=None):
+    name = "build_LpStructure"
     data = list()
     if prob is None:
         mip_storage = "./datasets/mipLib"
@@ -75,12 +75,12 @@ def measure_build_LpStructure(count, prob=None):
         for const in prob.getConstraints():
             const.expression.setPolynomial()
 
-    for i in tqdm.tqdm(range(count), desc="[ " + measure_name + " ]"):
+    for i in tqdm.tqdm(range(count), desc="[ " + name + " ]"):
         start_time = time.time()
         lp = flopt.convert.LpStructure.fromFlopt(prob)
         data.append(
             {
-                "name": measure_name,
+                "name": name,
                 "value": time.time() - start_time,
                 "unit": "s",
                 "count": 1,
@@ -89,15 +89,15 @@ def measure_build_LpStructure(count, prob=None):
     return data
 
 
-def measure_build_QpStructure(count):
-    measure_name = "build_QpStructure"
+def speed_build_QpStructure(count):
+    name = "build_QpStructure"
     data = list()
     scales = [1, 100]
     Ns = [400]
     cats = ["Continuous", "Integer", "Binary"]
 
     for scale, N, cat in itertools.product(scales, Ns, cats):
-        _measure_name = measure_name + f"_scale{scale}_N{N}_cat{cat}"
+        _name = name + f"_scale{scale}_N{N}_cat{cat}"
 
         # sampling Q matrix
         Q = np.random.normal(scale=scale, size=(N, N)).astype(np.int8)
@@ -110,12 +110,12 @@ def measure_build_QpStructure(count):
         q.setPolynomial()
 
         # execute Expression.toQuadratic()
-        for i in tqdm.tqdm(range(count), desc="[ " + _measure_name + " ]"):
+        for i in tqdm.tqdm(range(count), desc="[ " + _name + " ]"):
             start_time = time.time()
             q.toQuadratic()
             data.append(
                 {
-                    "name": _measure_name,
+                    "name": _name,
                     "value": time.time() - start_time,
                     "unit": "s",
                     "count": 1,
@@ -124,8 +124,8 @@ def measure_build_QpStructure(count):
     return data
 
 
-def measure_create_quadratic_expression(count):
-    measure_name = "create_quadratic_expression"
+def speed_create_quadratic_expression(count):
+    name = "create_quadratic_expression"
     data = list()
 
     scales = [1, 100]
@@ -133,19 +133,19 @@ def measure_create_quadratic_expression(count):
     cats = ["Continuous", "Integer", "Binary"]
 
     for scale, N, cat in itertools.product(scales, Ns, cats):
-        _measure_name = measure_name + f"_scale{scale}_N{N}_cat{cat}"
+        _name = name + f"_scale{scale}_N{N}_cat{cat}"
 
         # sampling Q matrix
         Q = np.random.normal(scale=scale, size=(N, N)).astype(np.int8)
 
         # create quadratic expression
         x = flopt.Variable.array("x", N, cat=cat)
-        for i in tqdm.tqdm(range(count), desc="[ " + _measure_name + " ]"):
+        for i in tqdm.tqdm(range(count), desc="[ " + _name + " ]"):
             start_time = time.time()
             q = x.T.dot(Q).dot(x)
             data.append(
                 {
-                    "name": _measure_name,
+                    "name": _name,
                     "value": time.time() - start_time,
                     "unit": "s",
                     "count": 1,
@@ -154,8 +154,8 @@ def measure_create_quadratic_expression(count):
     return data
 
 
-def measure_set_polynomial(count):
-    measure_name = "set_polynomial"
+def speed_set_polynomial(count):
+    name = "set_polynomial"
     data = list()
 
     scales = [100]
@@ -163,20 +163,20 @@ def measure_set_polynomial(count):
     cats = ["Continuous"]
 
     for scale, N, cat in itertools.product(scales, Ns, cats):
-        _measure_name = measure_name + f"_scale{scale}_N{N}_cat{cat}"
+        _name = name + f"_scale{scale}_N{N}_cat{cat}"
 
         # sampling Q matrix
         Q = np.random.normal(scale=scale, size=(N, N)).astype(np.int8)
 
         # create quadratic expression
         x = flopt.Variable.array("x", N, cat=cat)
-        for i in tqdm.tqdm(range(count), desc="[ " + _measure_name + " ]"):
+        for i in tqdm.tqdm(range(count), desc="[ " + _name + " ]"):
             q = flopt.Dot(x.T.dot(Q), x)
             start_time = time.time()
             q.setPolynomial()
             data.append(
                 {
-                    "name": _measure_name,
+                    "name": _name,
                     "value": time.time() - start_time,
                     "unit": "s",
                     "count": 1,
@@ -185,8 +185,8 @@ def measure_set_polynomial(count):
     return data
 
 
-def measure_func(count):
-    measure_name = "func"
+def speed_func_value(count):
+    name = "func"
     data = list()
 
     dataset = flopt.performance.get_dataset("func")
@@ -194,13 +194,14 @@ def measure_func(count):
     for instance in dataset:
         if instance.name not in instances:
             continue
-        _measure_name = measure_name + "_" + instance.name
+        _name = name + "_" + instance.name
         random_search = flopt.Solver("RandomSearch")
         formulatable, prob = instance.createProblem(random_search)
         random_search.reset()
+        prob.solve(solver=random_search, n_trial=2)
         solution = random_search.solution
 
-        for i in tqdm.tqdm(range(count), desc="[ " + _measure_name + " ]"):
+        for i in tqdm.tqdm(range(count), desc="[ " + _name + " ]"):
             start_time = time.time()
             if instance == {"Ackley", "WeitedSphere"}:
                 _count = 10000
@@ -210,7 +211,7 @@ def measure_func(count):
                 obj_value = prob.obj.value(solution)
             data.append(
                 {
-                    "name": _measure_name,
+                    "name": _name,
                     "value": time.time() - start_time,
                     "unit": "s",
                     "count": _count,
@@ -219,8 +220,8 @@ def measure_func(count):
     return data
 
 
-def measure_sum_operation(count):
-    measure_name = "sum_operation"
+def speed_sum_operation(count):
+    name = "sum_operation"
     data = list()
 
     sizes = [100, 1000, 10000]
@@ -230,15 +231,15 @@ def measure_sum_operation(count):
         y = flopt.Sum(x)
         solution = flopt.Solution("tmp", [y])
 
-        _measure_name = measure_name + f"_size{size}"
-        for i in tqdm.tqdm(range(count), desc="[ " + _measure_name + " ]"):
+        _name = name + f"_size{size}"
+        for i in tqdm.tqdm(range(count), desc="[ " + _name + " ]"):
             _count = int(10000000 / size)
             for j in range(_count):
                 start_time = time.time()
                 y.value(solution)
                 data.append(
                     {
-                        "name": _measure_name,
+                        "name": _name,
                         "value": time.time() - start_time,
                         "unit": "s",
                         "count": _count,
