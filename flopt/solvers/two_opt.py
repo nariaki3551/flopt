@@ -9,12 +9,12 @@ logger = setup_logger(__name__)
 
 
 class TwoOpt(BaseSearch):
-    """2-Opt: a kind of local search for permutation.
+    """2-Opt: local search for permutation
 
     2-Opt applies neighborhood of swapping a edge.
-    Example, we have perm = [0, 1, 2, ..., n-1],
+    Example, we have a perm = [0, 1, 2, ..., n-1],
     [0, 1, .., i-1, j, j-1, ..., i+1, i, j+1, ..., n] is in
-    neighborhood of perm for all i, j in {0..n} and i is neq j.
+    neighborhood of the perm, where i and j are in {0..n}, and i is less than j.
 
     """
 

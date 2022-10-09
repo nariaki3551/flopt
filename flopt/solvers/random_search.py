@@ -7,16 +7,7 @@ logger = setup_logger(__name__)
 
 
 class RandomSearch(BaseSearch):
-    """
-    Random Sampling Search
-
-    It is a simple serach, as follows.
-
-    .. code-block:: python
-
-      def setNewSolution(self, *args, **kwargs):
-          self.solution.setRandom()
-    """
+    """Random Sampling Search"""
 
     name = "RandomSearch"
     can_solve_problems = {
