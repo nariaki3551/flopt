@@ -199,14 +199,14 @@ def speed_func_value(count):
         formulatable, prob = instance.createProblem(random_search)
         random_search.reset()
         prob.solve(solver=random_search, n_trial=2)
-        solution = random_search.solution
+        solution = random_search.best_solution
 
         for i in tqdm.tqdm(range(count), desc="[ " + _name + " ]"):
             start_time = time.time()
             if instance == {"Ackley", "WeitedSphere"}:
-                _count = 10000
+                _count = 100000
             else:
-                _count = 2000
+                _count = 20000
             for j in range(_count):
                 obj_value = prob.obj.value(solution)
             data.append(
