@@ -100,6 +100,8 @@ def binarize_expression(e, binarizes):
     if isinstance(e, (VarElement, Const)):
         return e
     e = e.expand()  # also, Operation obj convert to Expression
+    e.resetlinkChildren()
+
     finish = False
     while not finish:
         finish = not binarize_traverse(e, binarizes)
