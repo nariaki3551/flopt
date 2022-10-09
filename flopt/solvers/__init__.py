@@ -51,7 +51,7 @@ def Solver(algo="RandomSearch"):
 
         return HyperoptTPESearch()
     elif algo == "SFLA":
-        from flopt.solvers.swarm_intelligence_searches import ShuffledFrogLeapingSearch
+        from flopt.solvers.shuffled_frog_leaping_search import ShuffledFrogLeapingSearch
 
         return ShuffledFrogLeapingSearch()
     elif algo == "PulpSearch":

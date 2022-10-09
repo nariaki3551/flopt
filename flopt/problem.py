@@ -256,6 +256,8 @@ class Problem:
 
         status, log, self.time = self.solver.solve(
             solution,
+            self.obj,
+            self.constraints,
             self,
             msg=msg,
         )

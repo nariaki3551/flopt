@@ -48,13 +48,13 @@ class HyperoptTPESearch(BaseSearch):
         self.show_progressbar = False
         self.hyperopt_STATUS_OK = STATUS_OK
 
-    def search(self):
+    def search(self, solution, *args):
 
         self.start_build()
 
         # make the search space
         space = dict()
-        for var in self.solution:
+        for var in solution:
             name = var.name
             lb = var.getLb(must_number=True)
             ub = var.getUb(must_number=True)
@@ -68,16 +68,30 @@ class HyperoptTPESearch(BaseSearch):
                 var_space = hyperopt.hp.uniform(name, lb, ub)
             space[var.name] = var_space
 
-        # for objective
-        self.var_dict = weakref.WeakValueDictionary(
-            {var.name: var for var in self.solution}
-        )
+        def objective_func(var_value_dict):
+            # set value into solution
+            for name, value in var_value_dict.items():
+                if var.type() == VariableType.Spin:
+                    value = 2 * value - 1  # binary -> spin
+                solution.setValue(name, value)
+            obj_value = self.getObjValue(solution)
+
+            # update best solution if needed
+            self.registerSolution(solution, obj_value)
+
+            # execute callbacks
+            self.callback([solution])
+
+            # check timelimit
+            self.raiseTimeoutIfNeeded()
+
+            return {"loss": obj_value, "status": self.hyperopt_STATUS_OK}
 
         self.end_build()
 
         # search
         hyperopt.fmin(
-            self.objective,
+            objective_func,
             space=space,
             algo=hyperopt.tpe.suggest,
             max_evals=self.n_trial,
@@ -85,27 +99,3 @@ class HyperoptTPESearch(BaseSearch):
         )
 
         return SolverTerminateState.Normal
-
-    def objective(self, var_value_dict):
-        # set value into self.solution
-        self.trial_ix += 1
-        for name, value in var_value_dict.items():
-            var = self.var_dict[name]
-            if var.type() == VariableType.Spin:
-                var.toBinary()
-                var.binary.setValue(value)
-            else:
-                var.setValue(value)
-        obj_value = self.getObjValue(self.solution)
-
-        # if solution is better thatn incumbent, then update best solution
-        self.registerSolution(self.solution, obj_value)
-
-        # callbacks
-        for callback in self.callbacks:
-            callback([self.solution], self.best_solution, self.best_obj_value)
-
-        # check timelimit
-        self.raiseTimeoutIfNeeded()
-
-        return {"loss": obj_value, "status": self.hyperopt_STATUS_OK}

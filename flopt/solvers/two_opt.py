@@ -29,33 +29,28 @@ class TwoOpt(BaseSearch):
         super().__init__()
         self.n_trial = 1e100
 
-    def search(self):
-        """
-        search a better solution using `self.setNewSolution()` function
-        `self.setNewSolution()` generate new solution and set it into self.solution
-        """
+    def search(self, solution, *args):
         best_obj_value = self.best_obj_value
 
-        for self.trial_ix in range(1, int(self.n_trial) + 1):
-            # generate new solution and set it into self.solution
-            for var in self.solution:
+        for _ in range(int(self.n_trial)):
+            # generate new solution
+            for var in solution:
                 perm = var.value()
                 n_perm = len(perm)
                 i, j = sorted(random.sample(range(n_perm), 2))
                 new_perm = perm[:i] + perm[i:j][::-1] + perm[j:]  # 2-opt
                 var.setValue(new_perm)
-                obj_value = self.getObjValue(self.solution)
+                obj_value = self.getObjValue(solution)
                 if obj_value >= self.best_obj_value:
                     var.setValue(perm)
                 else:
                     best_obj_value = obj_value
 
-            # if solution is better thatn incumbent, then update best solution
-            self.registerSolution(self.solution, best_obj_value)
+            # update best solution if needed
+            self.registerSolution(solution, best_obj_value)
 
             # callbacks
-            for callback in self.callbacks:
-                callback([self.solution], self.best_solution, self.best_obj_value)
+            self.callback([solution])
 
             # check time limit
             self.raiseTimeoutIfNeeded()

@@ -100,13 +100,11 @@ class ShuffledFrogLeapingSearch(BaseSearch):
         self.n_frog_per_memeplex = 4
         self.inc_flogsize = 2
 
-    def search(self):
+    def search(self, solution, *args):
         for i in range(self.n_trial):
-            self.trial_ix += 1
+            self._memetic_evolution(solution)
 
-            self._memetic_evolution()
-
-            # if solution is better thatn incumbent, then update best solution
+            # update best solution if needed
             self.registerSolution(
                 self.frogs[0], self.frogs[0].getObjValue(), msg_tol=1e-8
             )
@@ -115,15 +113,14 @@ class ShuffledFrogLeapingSearch(BaseSearch):
                 self.during_solver_message(" ")
 
             # callbacks
-            for callback in self.callbacks:
-                callback(self.frogs, self.best_solution, self.best_obj_value)
+            self.callback(self.frogs)
 
             # check time limit
             self.raiseTimeoutIfNeeded()
 
         return SolverTerminateState.Normal
 
-    def _memetic_evolution(self):
+    def _memetic_evolution(self, solution):
         """
         memetic evolution
         This function is the key to this method.
@@ -132,7 +129,7 @@ class ShuffledFrogLeapingSearch(BaseSearch):
         N = self.n_frog_per_memeplex
         if self.frogs[-2].getObjValue() - self.frogs[0].getObjValue() < 1e-9:
             logger.debug(f"reset frogs: #frogs {N} --> {N*2}")
-            new_frogs = [Frog(self.solution.clone(), self) for _ in range(M * N)]
+            new_frogs = [Frog(solution.clone(), self) for _ in range(M * N)]
             self.frogs += new_frogs
             for frog in self.frogs[1:]:
                 frog.setRandom()
@@ -190,7 +187,7 @@ class ShuffledFrogLeapingSearch(BaseSearch):
         self.frogs = [frog for memeplex in self.memeplexes for frog in memeplex]
         self.frogs.sort(key=lambda frog: self.getObjValue(frog))
 
-    def startProcess(self):
+    def startProcess(self, solution):
         super().startProcess()
         if self.has_initialized:
             return
@@ -198,7 +195,7 @@ class ShuffledFrogLeapingSearch(BaseSearch):
 
         M = self.n_memeplex
         N = self.n_frog_per_memeplex
-        self.frogs = [Frog(self.solution.clone(), self) for _ in range(M * N)]
+        self.frogs = [Frog(solution.clone(), self) for _ in range(M * N)]
         for frog in self.frogs:
             frog.setRandom()
         self.frogs.sort(key=lambda frog: frog.getObjValue())

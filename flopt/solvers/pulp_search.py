@@ -52,10 +52,10 @@ class PulpSearch(BaseSearch):
         super().__init__()
         self.solver = None
 
-    def search(self):
+    def search(self, solution, *args):
         self.start_build()
-
-        lp_prob, lp_solution = self.createLpProblem(self.solution, self.prob)
+        lp_prob, lp_solution = self.createLpProblem(solution, self.prob)
+        self.end_build()
 
         if self.solver is not None:
             solver = self.solver
@@ -64,19 +64,18 @@ class PulpSearch(BaseSearch):
                 timeLimit=self.timelimit - self.build_time, msg=self.msg
             )
 
-        self.end_build()
-
         lp_status = lp_prob.solve(solver)
 
         # get result
-        for lp_var, var in zip(lp_solution, self.solution):
+        for lp_var in lp_solution:
+            name = lp_var.getName()
             value = lp_var.getValue()
-            if var.type() in {VariableType.Integer, VariableType.Binary}:
+            if lp_var.cat in {pulp.LpInteger, pulp.LpBinary}:
                 value = round(value)
-            var.setValue(value)
+            solution.setValue(name, value)
 
-        # if solution is better thatn incumbent, then update best solution
-        self.registerSolution(self.solution)
+        # update best solution if needed
+        self.registerSolution(solution)
 
         # lp_status =   -1: infeasible
         #               -2: unbounded

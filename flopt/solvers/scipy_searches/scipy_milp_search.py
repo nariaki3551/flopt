@@ -38,15 +38,13 @@ class ScipyMilpSearch(BaseSearch):
         "Constraint": ExpressionType.Linear,
     }
 
-    def search(self):
+    def search(self, solution, *args):
         self.start_build()
-
-        var_names = [var.name for var in self.solution]
 
         # lp structure
         lp = LpStructure.fromFlopt(
             self.prob,
-            x=VariableArray(self.solution.getVariables()),
+            x=VariableArray(solution.getVariables()),
             option="all_neq",
         )
 
@@ -60,10 +58,9 @@ class ScipyMilpSearch(BaseSearch):
 
         # constraints (lp.G x <= lp.h)
         has_constraints = lp.G is not None
+        lb = np.full_like(lp.h, -np.inf)
         if has_constraints:
-            constraints = scipy_optimize.LinearConstraint(
-                lp.G, np.full_like(lp.h, -np.inf), lp.h
-            )
+            constraints = scipy_optimize.LinearConstraint(lp.G, lb, lp.h)
         else:
             constraints = None
 
@@ -80,17 +77,15 @@ class ScipyMilpSearch(BaseSearch):
             bounds=bounds,
             options=options,
         )
+
         # res.status =  0: Optimal solution found.
         #               1: Iteration or time limit reached.
         #               2: Problem is infeasible.
         #               3: Problem is unbounded.
         #               4: Other; see message for details.
         if res.status == 0:
-            for var, value in zip(self.solution, res.x):
-                var.setValue(value)
-
-            # if solution is better thatn incumbent, then update best solution
-            self.registerSolution(self.solution)
+            solution.setValuesFromArray(res.x)
+            self.registerSolution(solution)
             return SolverTerminateState.Normal
         elif res.status == 1:
             return SolverTerminateState.Timelimit

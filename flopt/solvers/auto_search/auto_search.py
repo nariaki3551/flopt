@@ -181,7 +181,7 @@ class AutoSearch(BaseSearch):
             return BaseSelector()
         return BaseSelector()
 
-    def solve(self, solution, prob, *args, **kwargs):
+    def solve(self, solution, objective, constraints, prob, *args, **kwargs):
         """
         select solver and solve the problem of (solution, obj)
 
@@ -189,6 +189,10 @@ class AutoSearch(BaseSearch):
         ----------
         solution : Solution
             solution object
+        objective : Expression
+            objective object
+        constraints : list of Constraint
+            list of constriants objects
         prob : Problem
             problem
 
@@ -197,4 +201,4 @@ class AutoSearch(BaseSearch):
         status, Log
         """
         solver = self.select(prob)
-        return solver.solve(solution, prob, *args, **kwargs)
+        return solver.solve(solution, objective, constraints, prob, *args, **kwargs)
