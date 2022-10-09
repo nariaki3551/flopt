@@ -48,10 +48,7 @@ class ExpressionElement:
         self.name = name
         self.var_dict = None
         self.polynomial = None
-
-        # update parents
         self.parents = list()
-        self.linkChildren()
 
     def setName(self):
         raise NotImplementedError
@@ -63,6 +60,13 @@ class ExpressionElement:
 
     def linkChildren(self):
         raise NotImplementedError
+
+    def resetlinkChildren(self):
+        for elm in self.traverse():
+            if isinstance(elm, ExpressionElement):
+                elm.parents = list()
+        self.linkChildren()
+        return self
 
     def isPolynomial(self):
         raise NotImplementedError
@@ -336,7 +340,6 @@ class ExpressionElement:
         )
         if isinstance(expr, number_classes):
             expr = Const(expr)
-        expr.parents += self.parents
         return expr
 
     def expand(self):
@@ -353,14 +356,12 @@ class ExpressionElement:
         )
         if isinstance(expr, number_classes):
             expr = Const(expr)
-            expr.parents += self.parents
             return expr
         elif isinstance(expr, Expression):
             expr = eval(
                 str(sympy.sympify(expr.getName()).expand()),
                 {var.name: var for var in self.getVariables()},
             )
-            expr.parents += self.parents
             return expr
         else:
             # VarElement family
@@ -728,10 +729,12 @@ class Expression(ExpressionElement):
         self.name = f"{elmA_name}{self.operator}{elmB_name}"
 
     def linkChildren(self):
-        if isinstance(self.elmA, Expression):
+        if isinstance(self.elmA, ExpressionElement):
             self.elmA.parents.append(self)
-        if isinstance(self.elmB, Expression):
+            self.elmA.linkChildren()
+        if isinstance(self.elmB, ExpressionElement):
             self.elmB.parents.append(self)
+            self.elmB.linkChildren()
 
     def isPolynomial(self):
         return (
@@ -1208,6 +1211,7 @@ class Reduction(ExpressionElement):
         for elm in self.elms:
             if isinstance(elm, ExpressionElement):
                 elm.parents.append(self)
+                elm.linkChildren()
 
     def getVariables(self):
         return functools.reduce(operator.or_, (elm.getVariables() for elm in self.elms))

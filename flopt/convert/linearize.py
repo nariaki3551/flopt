@@ -138,11 +138,14 @@ def linearize_expression(e, var_muls):
         return e
     if e.isLinear():
         return e
+    e.resetlinkChildren()
+
     finish = False
     while not finish:
         finish, e = linearize_traverse(e, var_muls)
         if finish and not e.isLinear():
             e = e.expand()
+            e.resetlinkChildren()
             finish = False
     return e
 
