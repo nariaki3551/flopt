@@ -1,5 +1,28 @@
 # flopt
 
+
+### version 0.5.5 (Oct, 2022)
+
+**Update**
+
+1. Improve the performance of AutoSearch
+    - train the selection model, and provode in https://github.com/nariaki3551/flopt_trained_model/releases
+    - simplify the estimation of the problem type and checking which solver can handle user defined problem
+
+2. Improve the other solver
+    - refactor the SFLA search to speed up and register solutions early
+    - add hard time limit to the optuna based solvers
+
+3. Add case studies
+    - maximum-cut
+
+4. Fix some bugs
+    - fix memory leak about Const object
+    - fix error of Cvxopt, `ValueError: Rank(A) < p or Rank([P; A; G]) < n`
+    - fix bug for flopt.convert.linearize
+
+
+
 ### version 0.5.4 (Sep, 2022)
 
 **Update**

@@ -38,26 +38,28 @@ class AutoSearch(BaseSearch):
         from flopt import Variable, Problem, Solver
 
         # Variables
-        a = Variable('a', lowBound=0, upBound=1, cat='Integer')
-        b = Variable('b', lowBound=1, upBound=2, cat='Continuous')
-        c = Variable('c', lowBound=1, upBound=3, cat='Continuous')
+        a = Variable("a", lowBound=0, upBound=1, cat="Integer")
+        b = Variable("b", lowBound=1, upBound=2, cat="Continuous")
+        c = Variable("c", lowBound=1, upBound=3, cat="Continuous")
 
-        prob = Problem(name='Test')
+        prob = Problem(name="Test")
         prob += 2*(3*a+b)*c**2+3
 
-    Then, we use Solver(algo='auto') and solve.
+    Then, we use Solver(algo="auto") and solve.
 
     .. code-block:: python
 
-        solver = Solver(algo='auto')
-        solver.setParams({'timelimit': 10})
+        solver = Solver(algo="auto")
+        solver.setParams({"timelimit": 10})
         prob.solve(solver, msg=True)
 
-        >>> Welcome to the flopt Solver
-        >>> Version 0.2
-        >>> Date: May 30, 2020
+        >>> # - - - - - - - - - - - - - - #
+        >>>   Welcome to the flopt Solver
+        >>>   Version 0.5.4
+        >>>   Date: September 1, 2022
+        >>> # - - - - - - - - - - - - - - #
         >>>
-        >>> Algorithm: OptunaCmaEsSearch
+        >>> Algorithm: ScipySearch
         >>> Params: {'timelimit': 10}
 
     See the log, you can see the RandomSearch algorithm is used for this problem.
@@ -65,22 +67,11 @@ class AutoSearch(BaseSearch):
 
     .. code-block:: python
 
-        solver = Solver(algo='auto')
-        solver.setParams({'timelimit': 10})
+        solver = Solver(algo="auto")
+        solver.setParams({"timelimit": 10})
         solver = solver.select(prob)
         print(solver.name)
-        >>> OptunaCmaEsSearch
-
-    Selected solver will be changed by the problem and setting to solve.
-
-    .. code-block:: python
-
-        solver = Solver(algo='auto')
-        solver.setParams({'timelimit': 3})
-        solver = solver.select(prob)
-        print(solver.name)
-        >>> RandomSearch
-
+        >>> ScipySearch
     """
 
     name = "auto"

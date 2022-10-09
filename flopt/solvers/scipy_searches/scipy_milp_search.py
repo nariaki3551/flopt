@@ -21,14 +21,30 @@ class ScipyMilpSearch(BaseSearch):
     and can not use callback to this API for logging.
     Therefore, we can obtain the solution when only scipy.optimize.milp terminate the execution normally.
 
+    Examples
+    --------
+
+    .. code-block:: python
+
+        import flopt
+
+        # Variables
+        a = flopt.Variable("a", lowBound=0, upBound=1, cat="Integer")
+        b = flopt.Variable("b", lowBound=1, upBound=2, cat="Continuous")
+        c = flopt.Variable("c", lowBound=-1, upBound=3, cat="Continuous")
+
+        # Problem
+        prob = flopt.Problem()
+        prob += a + b + c + 2
+        prob += a + b >= 2
+        prob += b - c >= 3
+
+        solver = flopt.Solver("ScipyMilpSearch")
+        prob.solve(solver, msg=True)
+
     See Also
     --------
     scipy.optimize.milp
-
-    Returns
-    -------
-    status : int
-        status of solver
     """
 
     name = "ScipyMilpSearch"

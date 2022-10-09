@@ -113,6 +113,7 @@ def Value(x):
 
 
 def get_dot_graph(expression, save_file, rankdir=None):
+    expression.setName()
     with open(save_file, "w") as writer:
         print("digraph g {", file=writer)
         if rankdir is not None:

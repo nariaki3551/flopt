@@ -281,6 +281,12 @@ def test_ScipySearch1(prob_only_continuous, callback):
     prob_only_continuous.solve(solver, timelimit=0.5)
 
 
+def test_ScipySearch2(prob_with_const, callback):
+    solver = Solver(algo="ScipySearch")
+    solver.setParams(n_trial=10, callbacks=[callback])
+    prob_with_const.solve(solver, timelimit=0.5)
+
+
 def test_ScipySearch_available(
     prob,
     prob_only_continuous,
