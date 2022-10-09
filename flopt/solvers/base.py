@@ -78,7 +78,6 @@ class BaseSearch:
         self.best_solution = None
         self.best_obj_value = float("inf")
         self.best_bound = None
-        self.solution = None
         # parameters
         self.timelimit = 3600
         self.lowerbound = -float("inf")
@@ -117,15 +116,22 @@ class BaseSearch:
         self.max_k = 1
         self.save_solution = False
 
-    def solve(self, solution, prob, msg=False):
-        """solve the problem of (solution, obj)
+    def search(self):
+        raise NotImplementedError()
+
+    def solve(self, solution, objective, constraints, prob, msg=False):
+        """solve the problem of (solution, objective, constraints)
 
         Parameters
         ----------
         solution : Solution
             solution object
+        objective : Expression
+            objective object
+        constraints : list of Constraint
+            list of constriants objects
         prob : Problem
-            problem
+            problem to be solved
         msg : bool
             if true, then display logs
 
@@ -141,18 +147,17 @@ class BaseSearch:
             raise flopt.error.SolverError
 
         self.log = Log()
-        self.solution = solution.clone()
         self.prob = prob
         self.msg = msg
-        self.best_solution = solution
+        self.best_solution = solution.clone()
 
         if msg:
             params = {"timelimit": self.timelimit}
             start_solver_message(self.name, params, solution)
 
         try:
-            self.startProcess()
-            status = self.search()
+            self.startProcess(solution)
+            status = self.search(solution, objective, constraints)
             self.closeProcess()
         except TimeoutError:
             status = SolverTerminateState.Timelimit
@@ -167,7 +172,7 @@ class BaseSearch:
         self.recordLog()
 
         if msg:
-            obj_value = self.prob.obj.value(self.best_solution)
+            obj_value = self.getObjValue(self.best_solution)
             end_solver_message(
                 status,
                 obj_value,
@@ -198,6 +203,7 @@ class BaseSearch:
         msg_tol : None of float
             output the message when solution is updated greater than msg_tol
         """
+        self.trial_ix += 1
         if obj_value is None:
             obj_value = self.getObjValue(solution)
         if obj_value < self.best_obj_value:
@@ -233,6 +239,16 @@ class BaseSearch:
         if time.time() - self.start_time > self.timelimit:
             raise TimeoutError
 
+    def callback(self, solutions):
+        """execute user defined callback function
+
+        Parameters
+        ----------
+        solutions : list of Solution
+        """
+        for callback in self.callbacks:
+            callback(solutions, self.best_solution, self.best_solution)
+
     def recordLog(self):
         """
         write log in `self.log`
@@ -265,9 +281,6 @@ class BaseSearch:
             time.time() - self.start_time,
             self.trial_ix,
         )
-
-    def search(self):
-        raise NotImplementedError()
 
     def available(self, prob, verbose=False):
         assert hasattr(self, "can_solve_problems")
@@ -385,7 +398,7 @@ class BaseSearch:
         """
         return self.prob.obj.value(solution)
 
-    def startProcess(self):
+    def startProcess(self, *args):
         """process of beginning of search"""
         if all(const.feasible(self.best_solution) for const in self.prob.constraints):
             self.best_obj_value = self.prob.obj.value(self.best_solution)

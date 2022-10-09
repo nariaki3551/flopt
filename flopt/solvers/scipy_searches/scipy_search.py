@@ -36,40 +36,31 @@ class ScipySearch(BaseSearch):
         self.n_trial = 1e8
         self.method = None
 
-    def search(self):
+    def search(self, solution, objective, constraints):
         self.start_build()
 
-        def gen_func(expression):
-            def func(values):
-                # check timelimit
-                self.raiseTimeoutIfNeeded()
+        def objective_func(values):
+            # check timelimit
+            self.raiseTimeoutIfNeeded()
 
-                variables = [None] * len(values)
-                for i, (var, value) in enumerate(zip(self.solution, values)):
-                    if var.type() == VariableType.Spin:
-                        variables[i] = Const(
-                            2 * value - 1, name=var.name
-                        )  # binary -> spin
-                    else:
-                        variables[i] = Const(value, name=var.name)
-                solution = Solution("tmp", variables)
-                try:
-                    return expression.value(solution)
-                except OverflowError:
-                    return float("inf")
-
-            return func
-
-        # function
-        func = gen_func(self.prob.obj)
+            for var, value in zip(solution, values):
+                if var.type() == VariableType.Spin:
+                    var.toBinary()
+                    var.binary.setValue(value)
+                else:
+                    var.setValue(value)
+            try:
+                return self.getObjValue(solution)
+            except OverflowError:
+                return float("inf")
 
         # initial point
-        self.solution.setRandom()
-        x0 = [var.value() for var in self.solution]
+        solution.setRandom()
+        x0 = [var.value() for var in solution]
 
         # bounds
         lb, ub = list(), list()
-        for var in self.solution:
+        for var in solution:
             if var.type() == VariableType.Spin:
                 lb.append(0)
                 ub.append(1)
@@ -79,36 +70,31 @@ class ScipySearch(BaseSearch):
         bounds = scipy_optimize.Bounds(lb, ub, keep_feasible=False)
 
         # constraints
-        constraints = []
-        for const in self.prob.getConstraints():
+        scipy_constraints = []
+        for const in constraints:
             const_func = gen_func(const)
             lb, ub = 0, 0
             if const.type() == ConstraintType.Le:
                 lb = -np.inf
             nonlinear_const = scipy_optimize.NonlinearConstraint(const_func, lb, ub)
-            constraints.append(nonlinear_const)
+            scipy_constraints.append(nonlinear_const)
 
         # options
         options = {"maxiter": self.n_trial}
 
         # callback
-        def callback(
-            values,
-        ):
-            self.trial_ix += 1
-            for var, value in zip(self.solution, values):
+        def callback(values):
+            for var, value in zip(solution, values):
                 if var.type() == VariableType.Continuous:
                     var.setValue(value)
                 else:  # var.type() == Integer, Binary
                     var.setValue(round(value))
-                # var.setValue(value)
 
-            # if solution is better thatn incumbent, then update best solution
-            self.registerSolution(self.solution, msg_tol=1e-8)
+            # update best solution if needed
+            self.registerSolution(solution, msg_tol=1e-8)
 
             # callbacks
-            for _callback in self.callbacks:
-                _callback([self.solution], self.best_solution, self.best_obj_value)
+            self.callback([solution])
 
             # check timelimit
             self.raiseTimeoutIfNeeded()
@@ -116,10 +102,10 @@ class ScipySearch(BaseSearch):
         self.end_build()
 
         res = scipy_optimize.minimize(
-            func,
+            objective_func,
             x0,
             bounds=bounds,
-            constraints=constraints,
+            constraints=scipy_constraints,
             options=options,
             callback=callback,
             args=(),
@@ -130,8 +116,7 @@ class ScipySearch(BaseSearch):
             tol=None,
         )
         # get result of solver
-        for var, value in zip(self.solution, res.x):
-            var.setValue(value)
-        self.updateSolution(self.solution, obj_value=None)
+        solution.setValuesFromArray(res.x)
+        self.registerSolution(solution)
 
         return SolverTerminateState.Normal

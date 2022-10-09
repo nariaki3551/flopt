@@ -1,5 +1,3 @@
-import weakref
-
 import numpy as np
 
 from amplify import IsingPoly, gen_symbols, Solver, decode_solution
@@ -108,7 +106,7 @@ class AmplifySearch(BaseSearch):
         self.timelimit = 1
         self.token = None
 
-    def search(self):
+    def search(self, solution, objective, constraints):
         assert (
             self.token is not None
         ), f'token is None, set token as .solve(..., token="xxx")'
@@ -120,11 +118,11 @@ class AmplifySearch(BaseSearch):
         np_s = np.array(gen_symbols(IsingPoly, len(x)), dtype=object)
 
         # objective function
-        ising = self.prob.obj.toIsing()
+        ising = objective.toIsing()
         f = -np_s.T.dot(ising.J).dot(np_s) - ising.h.T.dot(np_s) + ising.C
 
         # constraints
-        for const in self.prob.getConstraints():
+        for const in constraints:
             ising = const.expression.toIsing()
             g = np_s.T.dot(ising.J).dot(np_s) - ising.h.T.dot(np_s) + ising.C
             if const.type() == ConstraintType.Eq:
@@ -141,14 +139,12 @@ class AmplifySearch(BaseSearch):
 
         result = Solver(client).solve(f)
 
-        var_dict = weakref.WeakValueDictionary({var.name: var for var in self.solution})
         for amplify_solution in list(result)[::-1]:
+            # fetch solution
             values = decode_solution(s, amplify_solution.values)
-            for var, value in zip(x, values):
-                self.solution.setValue(var.name, value)
+            solution.setValuesFromArray(values)
 
-            # if solution is better thatn incumbent, then update best solution
-            self.registerSolution(self.solution)
-            print(self.solution, self.getObjValue(self.solution))
+            # update best solution if needed
+            self.registerSolution(solution)
 
         return SolverTerminateState.Normal

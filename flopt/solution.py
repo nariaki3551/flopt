@@ -84,15 +84,16 @@ class Solution:
         """
         self.toDict()[name].setValue(value)
 
-    def setValueFromDict(self, name_value_dict):
+    def setValuesFromArray(self, array):
         """
         Parameters
         ----------
-        name_value_dict : Dict
-            key is name of variable, value is value of variable
+        array: iterator
+            array of variable values
         """
-        for name, value in name_value_dict.items():
-            self.setValue(name, value)
+        assert len(self._variables) == len(array)
+        for var, value in zip(self._variables, array):
+            var.setValue(value)
 
     def getVariables(self):
         """
@@ -125,6 +126,7 @@ class Solution:
         """
         for var in self._variables:
             var.setRandom()
+        return self
 
     def feasible(self):
         """

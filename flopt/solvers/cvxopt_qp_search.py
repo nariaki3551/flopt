@@ -77,7 +77,7 @@ class CvxoptQpSearch(BaseSearch):
         super().__init__()
         self.n_trial = None
 
-    def search(self):
+    def search(self, solution, *args):
         self.start_build()
         qp = QpStructure.fromFlopt(self.prob).boundsToNeq()
         if qp.isLp():
@@ -85,11 +85,12 @@ class CvxoptQpSearch(BaseSearch):
         else:
             sol = self.search_qp(qp)
 
+        # fetch solution
         for var, value in zip(qp.x, sol["x"]):
-            self.solution.setValue(var.name, value)
+            solution.setValue(var.name, value)
 
-        # if solution is better thatn incumbent, then update best solution
-        self.registerSolution(self.solution)
+        # update best solution if needed
+        self.registerSolution(solution)
 
         return SolverTerminateState.Normal
 

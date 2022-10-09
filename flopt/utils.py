@@ -7,6 +7,7 @@ import numpy as np
 from flopt.variable import VarElement, VariableArray
 from flopt.expression import Expression, CustomExpression, Const
 import flopt.expression
+from flopt.solution import Solution
 from flopt.constants import number_classes, array_classes
 
 
@@ -95,7 +96,7 @@ def Value(x):
     >>> value(x)
     >>> [0 0 0]
     """
-    if isinstance(x, (VarElement, Expression, Const)):
+    if isinstance(x, (VarElement, Expression, Const, Solution)):
         return x.value()
     elif isinstance(x, (list, tuple)):
         cast = type(x)
