@@ -372,7 +372,7 @@ def test_qubo_to_flopt():
     print(prob)
 
 
-def test_pulp_to_flopt():
+def test_pulp_to_flopt1():
     import pulp
 
     # Variables
@@ -393,3 +393,21 @@ def test_pulp_to_flopt():
 
     flopt_prob = pulp_to_flopt(prob)
     print(flopt_prob.show())
+
+
+def test_pulp_to_flopt2():
+    import pulp
+
+    # Variables
+    a = pulp.LpVariable("a", lowBound=0, upBound=1, cat="Integer")
+    b = pulp.LpVariable("b", lowBound=1, upBound=2, cat="Continuous")
+    c = pulp.LpVariable("c", upBound=3, cat="Continuous")
+
+    # Problem
+    prob = pulp.LpProblem()
+    prob += -2 * a - b - c + 4  # set the objective function
+    prob += 10 * a <= 0  # set the constraint
+
+    from flopt.convert import pulp_to_flopt
+
+    flopt_prob = pulp_to_flopt(prob)

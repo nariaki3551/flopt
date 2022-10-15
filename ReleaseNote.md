@@ -1,8 +1,69 @@
 # flopt
 
+
+### version 0.5.5 (Oct, 2022)
+
+#### Update
+
+1. Improve the performance of AutoSearch
+    - train the selection model, and provode in https://github.com/nariaki3551/flopt_trained_model/releases
+    - simplify the estimation of the problem type and checking which solver can handle user defined problem
+
+2. If-then constraints
+    - add if-then (A => B) constraint api; B must be satisfied when only A is satisfied
+    - ```python
+      import flopt
+      a = flopt.Value("a", lowBound=1, upBound=4)
+      b = flopt.Value("b", lowBound=2, upBound=5)
+      prob = flopt.Problem()
+      # (a+3*b) >= 0 must be satisfied when only (a+b) <= 4 is satisfied
+      prob += (a + b <= 4) >> (a + 3 * b >= 0)
+      ```
+2. Improve the other solver
+    - refactor the SFLA search code to speed up and register solutions early
+    - add hard time limit to the optuna based solvers
+
+3. Add case studies
+    - maximum-cut
+
+4. Add apis
+    - add .max() and .min() in ExpressionElement class
+        - ```python
+          import flopt
+          a = flopt.Value("a", lowBound=1, upBound=4)
+          b = flopt.Value("b", lowBound=2, upBound=5)
+          (a + b).max()
+          >>> 9
+          (a + b).min()
+          >>> 3
+          ```
+
+5. Fix some bugs
+    - fix (critical) memory leak about Const object
+    - fix error of Cvxopt, `ValueError: Rank(A) < p or Rank([P; A; G]) < n`
+    - fix bug for flopt.convert.linearize
+
+6. Others
+    - Variable.array name becomes 0-filled. Variable names are sorted more cleanly.
+    - Add add operation into Log
+        - ```python
+          status1, log1 = prob.solve(solver)
+          status2, log2 = prob.solve(solver)
+          log = log1 + log2
+          log.plot()
+          ```
+
+#### API Change
+
+1. Setting default solver to AutoSolver
+  - ```python
+    prob.solve(timelimit=0.1)  # AutoSolver used in this solve
+    ```
+
+
 ### version 0.5.4 (Sep, 2022)
 
-**Update**
+#### Update
 
 1. Improvement the overall performance of flopt
     - add performance measurement script
@@ -99,7 +160,7 @@
 
 ### version 0.3 (Jul, 2021)
 
-**Update**
+#### Update
 
 1. available() and allAvailableSolvers() can be useable
    1. `solver.available(prob)`
@@ -115,7 +176,7 @@
 
 ### version 0.2 (May, 2020)
 
-**Update**
+#### Update
 
 1. Constraints can be useable
    1. `prob += a + b <= c + 2`
@@ -129,7 +190,6 @@
 5. Add logging function
    1. change log level by `flopt.env.setLevel(10)`.
 
-**API Change**
 
 #### API Change
 

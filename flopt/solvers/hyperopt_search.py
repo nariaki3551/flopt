@@ -31,6 +31,26 @@ class HyperoptTPESearch(BaseSearch):
         number of trials
     show_progressbar : bool
         whether display a progress bar of search
+
+    Examples
+    --------
+
+    .. code-block:: python
+
+        import flopt
+
+        x = flopt.Variable("x", lowBound=-1, upBound=1, cat="Continuous")
+        y = flopt.Variable("y", lowBound=-1, upBound=1, cat="Continuous")
+
+        prob = flopt.Problem()
+        prob += 2*x*x + x*y + y*y + x + y
+
+        solver = flopt.Solver("HyperoptTPESearch")
+        status, log = prob.solve(solver, msg=True, timelimit=1)
+
+        print("obj =", flopt.Value(prob.obj))
+        print("x =", flopt.Value(x))
+        print("y =", flopt.Value(y))
     """
 
     name = "HyperoptTPESearch"

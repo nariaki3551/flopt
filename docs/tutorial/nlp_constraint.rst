@@ -28,11 +28,8 @@ This problem can be formulated using `flopt` as follows,
   prob += 2*(3*a+b**2)  # set the objective function
   prob += a*b >= 2      # add constraint
 
-  # solver setting
-  solver = Solver(algo="ScipySearch")  # select the scipy function
-
   # run solver
-  prob.solve(solver, timelimit=10, msg=True)
+  prob.solve(timelimit=10, msg=True)
 
   # get best solution
   print("obj value", prob.getObjectiveValue())

@@ -128,7 +128,7 @@ class CustomInstance(BaseInstance):
 
     def getBestBound(self):
         """return the optimal value of objective function"""
-        return self.best_bound
+        return self.prob.best_bound
 
     def setBestBound(self, best_bound):
-        self.best_bound = best_bound
+        self.prob.setBestBound(best_bound)

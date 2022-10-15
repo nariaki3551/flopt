@@ -73,7 +73,7 @@ class Solution:
         list
             values of the variables in the Solution
         """
-        return [variable.value() for variable in self._variables]
+        return [var.value() for var in self._variables]
 
     def setValue(self, name, value):
         """

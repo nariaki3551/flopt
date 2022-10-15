@@ -84,8 +84,7 @@ class OptunaSearch(BaseSearch):
 class OptunaTPESearch(OptunaSearch):
     """
     Tree-structured Parzen Estimator (TPE) Sampling Search of Optuna.
-    https://optuna.readthedocs.io/en/latest/reference/samplers.html#optuna.samplers.TPESampler
-
+    https://optuna.readthedocs.io/en/latest/reference/samplers/generated/optuna.samplers.TPESampler.html
 
     Parameters
     ----------
@@ -98,6 +97,26 @@ class OptunaTPESearch(OptunaSearch):
     n_ei_candidates : int
     seed : float
         seed of random generater
+
+    Examples
+    --------
+
+    .. code-block:: python
+
+        import flopt
+
+        x = flopt.Variable("x", lowBound=-1, upBound=1, cat="Continuous")
+        y = flopt.Variable("y", lowBound=-1, upBound=1, cat="Continuous")
+
+        prob = flopt.Problem()
+        prob += 2*x*x + x*y + y*y + x + y
+
+        solver = flopt.Solver("OptunaTPESearch")
+        status, log = prob.solve(solver, msg=True, timelimit=1)
+
+        print("obj =", flopt.Value(prob.obj))
+        print("x =", flopt.Value(x))
+        print("y =", flopt.Value(y))
     """
 
     name = "OptunaTPESearch"
@@ -132,8 +151,8 @@ class OptunaTPESearch(OptunaSearch):
 
 class OptunaCmaEsSearch(OptunaSearch):
     """
-    CmaEsSearch of Optuna.
-    https://optuna.readthedocs.io/en/latest/reference/samplers.html#optuna.samplers.CmaEsSampler
+    Covariance Matrix Adaptation Evolution Strategy (CMA-ES) search of Optuna.
+    https://optuna.readthedocs.io/en/latest/reference/samplers/generated/optuna.samplers.CmaEsSampler.html
 
     Parameters
     ----------
@@ -143,6 +162,29 @@ class OptunaCmaEsSearch(OptunaSearch):
     independent_sampler
     warn_independe_sampling
     seed
+
+    Examples
+    --------
+
+    .. code-block:: python
+
+        import flopt
+
+        x = flopt.Variable("x", lowBound=-1, upBound=1, cat="Continuous")
+        y = flopt.Variable("y", lowBound=-1, upBound=1, cat="Continuous")
+
+        prob = flopt.Problem()
+        prob += 2*x*x + x*y + y*y + x + y
+
+        solver = flopt.Solver("OptunaCmaEsSearch")
+        status, log = prob.solve(solver, msg=True, timelimit=1)
+
+        print("obj =", flopt.Value(prob.obj))
+        print("x =", flopt.Value(x))
+        print("y =", flopt.Value(y))
+        >>> obj = -0.2857142857142857
+        >>> x = -0.14285714185152507
+        >>> y = -0.4285714299429902
     """
 
     name = "OptunaCmaEsSearch"

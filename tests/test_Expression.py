@@ -3,6 +3,7 @@ import numpy as np
 
 from flopt import Variable
 from flopt.expression import Const
+from flopt.env import get_variable_lower_bound, get_variable_upper_bound
 
 
 @pytest.fixture(scope="function")
@@ -31,15 +32,18 @@ def test_Expression_add(c, a):
     assert (1.0 + c).value() == 6
     assert (c + a).value() == 7
     assert (a + c).value() == 7
+    assert ((a + c) + (a + c)).value() == 14
 
 
 def test_Expression_sub(c, a):
     assert (c - 1).value() == 4
+    assert (c - -1).value() == 6
     assert (1 - c).value() == -4
     assert (c - 1.0).value() == 4
     assert (1.0 - c).value() == -4
     assert (c - a).value() == 3
     assert (a - c).value() == -3
+    assert ((a + c) - (a + c)).value() == 0
 
 
 def test_Expression_mul(c, a):
@@ -49,6 +53,16 @@ def test_Expression_mul(c, a):
     assert (2.0 * c).value() == 10
     assert (c * a).value() == 10
     assert (a * c).value() == 10
+    assert (c * 0) == Const(0)
+    assert (c * 1) == c
+    assert (c * -1) == -c
+    assert (0 * c) == Const(0)
+    assert (1 * c) == c
+    assert (-1 * c) == -c
+    assert (2 * a) * (3 * c) == 6 * (a * c)
+    assert (2 * a) * c == 2 * (a * c)
+    assert (2 + a) * (2 * a) == 2 * ((2 + a) * a)
+    assert (2 + a) * (2 + a)
 
 
 def test_Expression_div(c, a):
@@ -58,6 +72,8 @@ def test_Expression_div(c, a):
     assert (2.0 / c).value() == 0.4
     assert (c / a).value() == 2.5
     assert (a / c).value() == 0.4
+    assert (c / 1) == c
+    assert (0 / c) == Const(0)
 
 
 def test_Expression_pow(c, a):
@@ -67,6 +83,25 @@ def test_Expression_pow(c, a):
     assert (2.0**c).value() == 32
     assert (c**a).value() == 25
     assert (a**c).value() == 32
+    assert (c**1) == c
+    assert (c**c).value() == 5**5
+    assert (1**c) == Const(1)
+
+
+def test_Expression_and():
+    a = Variable(name="a", ini_value=2, cat="Integer")
+    b = Variable(name="b", ini_value=1, cat="Integer")
+    c = a + b
+    assert (c & 1).value() == c.value() & 1
+    assert (1 & c).value() == 1 & c.value()
+
+
+def test_Expression_or():
+    a = Variable(name="a", ini_value=2, cat="Integer")
+    b = Variable(name="b", ini_value=1, cat="Integer")
+    c = a + b
+    assert (c | 1).value() == c.value() | 1
+    assert (1 | c).value() == 1 | c.value()
 
 
 def test_Expression_getVariable(a, b, c):
@@ -121,6 +156,40 @@ def test_Expression_toSpin():
     print((i + 1).toSpin())
 
 
+def test_Expression_max(a, b, c):
+    a = Variable(name="a", lowBound=1, upBound=5)
+    b = Variable(name="b", lowBound=1, upBound=5)
+    c = a + b
+    assert np.isclose((a + b + c).max(), 20)
+
+    assert np.isclose((a * a).max(), 25)
+
+    # not linear or quadratic
+    assert np.isclose((a * a * a).max(), get_variable_upper_bound())
+
+    # unbounded
+    z = Variable("z")
+    assert np.isclose(z.max(), get_variable_upper_bound())
+    assert np.isclose((z + 1.0).max(), get_variable_upper_bound())
+
+
+def test_Expression_min(a, b, c):
+    a = Variable(name="a", lowBound=1, upBound=5)
+    b = Variable(name="b", lowBound=1, upBound=5)
+    c = a + b
+    assert np.isclose((a + b + c).min(), 4)
+
+    assert np.isclose((a * a).min(), 1)
+
+    # not linear or quadratic
+    assert np.isclose((a * a * a).min(), get_variable_lower_bound())
+
+    # unbounded
+    z = Variable("z")
+    assert np.isclose(z.min(), get_variable_lower_bound())
+    assert np.isclose((z + 1.0).min(), get_variable_lower_bound())
+
+
 def test_Expression_neg(c):
     assert (-c).value() == -5
 
@@ -149,12 +218,66 @@ def test_Expression_isLinear(a, b, c):
     assert (a * b).isLinear() == False
 
 
-def test_Const_hash():
-    hash(Const(0))
+def test_Const_constant():
+    assert Const(1).constant() == 1
+
+
+def test_Const_setPolynominal():
+    Const(0).setPolynomial()
+
+
+def test_Const_constant():
+    assert Const(1).constant() == 1
+
+
+def test_Const_isMonomial():
+    assert Const(0).isMonomial() == True
+
+
+def test_Const_toMonomial():
+    assert Const(0).toMonomial()
 
 
 def test_Const_isLinear():
     assert Const(0).isLinear() == True
+
+
+def test_Const_toLinear():
+    assert Const(0).toLinear()
+
+
+def test_Const_toQuadratic():
+    assert Const(0).toQuadratic()
+
+
+def test_Const_simplify():
+    assert Const(1).simplify() == Const(1)
+
+
+def test_Const_add():
+    assert Const(1) + 3 == Const(4)
+    assert 3 + Const(1) == Const(4)
+
+
+def test_Const_sub(a):
+    assert Const(1) - 3 == Const(-2)
+    assert 3 - Const(1) == Const(2)
+    assert a - Const(-1) == a + 1
+
+
+def test_Const_div(a):
+    assert Const(1) / 3 == Const(1 / 3)
+    assert Const(1) / a == 1 / a
+    assert a / Const(1) == a
+
+
+def test_Const_pow(a):
+    assert Const(2) ** 2 == Const(4)
+    assert 2 ** Const(2) == Const(4)
+
+
+def test_Const_hash():
+    hash(Const(0))
 
 
 def test_Expression_isIsing(a, b):

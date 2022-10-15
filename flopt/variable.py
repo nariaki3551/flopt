@@ -520,6 +520,16 @@ class VarElement:
     def clone(self):
         raise NotImplementedError()
 
+    def max(self):
+        if self.upBound is not None:
+            return self.upBound
+        return get_variable_upper_bound()
+
+    def min(self):
+        if self.lowBound is not None:
+            return self.lowBound
+        return get_variable_lower_bound()
+
     def traverse(self):
         yield self
 
@@ -563,7 +573,7 @@ class VarElement:
         elif isinstance(other, VarElement):
             return Expression(self, other, "-")
         elif isinstance(other, ExpressionElement):
-            if other.isNeg():
+            if other.isNeg() and isinstance(other, Expression):
                 # self - (-1*other) --> self + other
                 return Expression(self, other.elmB, "+")
             return Expression(self, other, "-")
@@ -614,8 +624,6 @@ class VarElement:
             elif other == -1:
                 return -self
             return Expression(Const(other), self, "*")
-        elif isinstance(other, VarElement):
-            return Expression(other, self, "*")
         elif isinstance(other, ExpressionElement):
             if isinstance(other, Expression):
                 if other.operator == "*" and isinstance(other.elmA, Const):
@@ -723,11 +731,7 @@ class VarElement:
         return Constraint(other - self, ConstraintType.Le)
 
     def __str__(self):
-        s = f"Name: {self.name}\n"
-        s += f"  Type : {self._type}\n"
-        s += f"  Value: {self.value()}\n"
-        s += f"  Bound: {[self.lowBound, self.upBound]}"
-        return s
+        return self.name
 
     def __repr__(self):
         return f'VarElement("{self.name}", {self.lowBound}, {self.upBound}, {self.value()})'
@@ -752,7 +756,7 @@ class VarInteger(VarElement):
         float or int
           return value of variable
         """
-        return int(self._value)
+        return round(self._value)
 
     def getLb(self, must_number=False):
         if must_number:
@@ -803,6 +807,26 @@ class VarInteger(VarElement):
 
     def clone(self):
         return VarInteger(self.name, self.lowBound, self.upBound, self._value)
+
+    def __and__(self, other):
+        if isinstance(other, number_classes):
+            other = Const(other)
+        return Expression(self, other, "&")
+
+    def __rand__(self, other):
+        if isinstance(other, number_classes):
+            other = Const(other)
+        return Expression(other, self, "&")
+
+    def __or__(self, other):
+        if isinstance(other, number_classes):
+            other = Const(other)
+        return Expression(self, other, "|")
+
+    def __ror__(self, other):
+        if isinstance(other, number_classes):
+            other = Const(other)
+        return Expression(other, self, "|")
 
     def __repr__(self):
         return f'Variable("{self.name}", {self.lowBound}, {self.upBound}, "Integer", {self.value()})'
@@ -886,26 +910,6 @@ class VarBinary(VarInteger):
         # 1 -> 0
         # 0 -> 1
         return Expression(Const(1), self, "-")
-
-    def __and__(self, other):
-        if isinstance(other, number_classes):
-            other = Const(other)
-        return Expression(self, other, "&")
-
-    def __rand__(self, other):
-        if isinstance(other, number_classes):
-            other = Const(other)
-        return Expression(other, self, "&")
-
-    def __or__(self, other):
-        if isinstance(other, number_classes):
-            other = Const(other)
-        return Expression(self, other, "|")
-
-    def __ror__(self, other):
-        if isinstance(other, number_classes):
-            other = Const(other)
-        return Expression(other, self, "|")
 
     def __repr__(self):
         return f'Variable("{self.name}", cat="Binary", ini_value={self.value()})'

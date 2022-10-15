@@ -2,7 +2,6 @@ import math
 import itertools
 
 import numpy as np
-import tqdm
 
 from flopt import Variable, CustomExpression, Problem, Sum
 from flopt.constants import VariableType, ExpressionType
@@ -197,8 +196,10 @@ class TSPInstance(BaseInstance):
     def createLpProblem(self):
         # Variables
         cities = list(range(self.dim))
-        x = Variable.matrix("x", len(cities), len(cities), cat="Binary")
+        n = len(cities)
+        x = Variable.matrix("x", n, n, cat="Binary")
         np.fill_diagonal(x, 0)
+        u = Variable.array("u", n, lowBound=0, upBound=n - 1, cat="Continuous")
 
         # Problem
         prob = Problem(name=f"TSP(LP):{self.name}")
@@ -213,20 +214,12 @@ class TSPInstance(BaseInstance):
             prob += Sum(x[:, i]) == 1
 
         # Connstants (remove subtour)
-        import scipy
+        for i, j in itertools.combinations(cities, 2):
+            prob += u[j] >= u[i] + 1 - n * (1 - x[i, j])
+            if i != 0:
+                prob += u[i] >= u[j] + 1 - n * (1 - x[j, i])
+        prob += u[0] == 0
 
-        total_subsets = sum(
-            scipy.special.comb(len(cities), r, exact=True)
-            for r in range(2, self.dim - 1)
-        )
-        pbar = tqdm.tqdm(
-            total=total_subsets, desc="add constraints for removing subtours"
-        )
-        for n_cities in range(2, self.dim - 1):
-            for subset in itertools.combinations(cities, n_cities):
-                prob += Sum(x[subset, subset]) <= n_cities - 1
-                pbar.update(1)
-        pbar.close()
         return prob
 
     def __str__(self, detail=False):

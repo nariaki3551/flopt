@@ -27,7 +27,7 @@ class LpVariable(pulp.LpVariable):
 
 
 class PulpSearch(BaseSearch):
-    """PuLP API LP Solver
+    """API for PuLP, linear programming modeling tool
 
     Parameters
     ----------
@@ -35,10 +35,38 @@ class PulpSearch(BaseSearch):
         solver pulp use, see https://coin-or.github.io/pulp/technical/solvers.html.
         default is pulp.PULP_CBC_CMD
 
-    Returns
-    -------
-    status : int
-        status of solver
+    Examples
+    --------
+
+    .. code-block:: python
+
+        import flopt
+
+        # Variables
+        a = flopt.Variable("a", lowBound=0, upBound=1, cat="Integer")
+        b = flopt.Variable("b", lowBound=1, upBound=2, cat="Continuous")
+        c = flopt.Variable("c", lowBound=-1, upBound=3, cat="Continuous")
+
+        # Problem
+        prob = flopt.Problem()
+        prob += a + b + c + 2
+        prob += a + b >= 2
+        prob += b - c >= 3
+
+        solver = flopt.Solver("PulpSearch")
+        prob.solve(solver, msg=True)
+
+    When you use other solvers in pulp, for example GLPK solver, you set solver parameter in PulpSearch object.
+
+    .. code-block:: python
+
+        solver = flopt.Solver("PulpSearch")
+
+        import pulp
+        glpk_solver = pulp.GLPK_CMD()
+        solver.setParams(solver=glpk_solver)
+        prob.solve(solver, msg=True)
+
     """
 
     name = "PulpSearch"

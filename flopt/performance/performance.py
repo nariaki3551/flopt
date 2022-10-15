@@ -116,7 +116,6 @@ def compute(
                 formulatable, prob = instance.createProblem(solver)
                 if not formulatable:
                     continue
-                solver.setParams(best_bound=instance.getBestBound())
                 state, log = prob.solve(solver=solver, msg=msg)
                 save_log(log, solver, dataset, instance, save_prefix)
                 logs[dataset.name, instance.name, solver.name] = log
