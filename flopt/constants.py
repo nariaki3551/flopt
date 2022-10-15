@@ -29,7 +29,18 @@ class SolverTerminateState(enum.IntEnum):
     Error = 7
 
     def __str__(self):
-        return self.name
+        sts = self.__class__
+        status_str = {
+            sts.Normal: "Normal termination",
+            sts.Timelimit: "Timelimit termination",
+            sts.Lowerbound: "Lowerbound termination",
+            sts.Interrupt: "Ctrl-C termination",
+            sts.Unbounded: "Found unbounded",
+            sts.Infeasible: "Found infeasibility",
+            sts.Abnormal: "Abnormal termination",
+            sts.Error: "Error",
+        }
+        return status_str[self]
 
 
 # variable type

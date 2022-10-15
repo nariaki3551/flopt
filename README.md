@@ -78,9 +78,7 @@ prob += 2 * (3*a+b) * c**2 + 3 # set the objective function
 prob += a + b * c <= 3         # set the constraint
 
 # Solver
-solver = Solver(algo='ScipySearch')  # select the heuristic algorithm
-solver.setParams(n_trial=1000)  # setting of the hyper parameters
-prob.solve(solver, msg=True)    # run solver to solve the problem
+prob.solve(timelimit=0.5, msg=True) # run solver to solve the problem
 
 # display the result, incumbent solution
 print('obj value', prob.getObjectiveValue())
@@ -110,9 +108,7 @@ prob = Problem(name='CustomExpression')
 prob += custom_obj
 
 # Solver
-solver = Solver(algo='RandomSearch')  # select the heuristic algorithm
-solver.setParams(n_trial=1000)  # setting of the hyper parameters
-prob.solve(solver, msg=True)    # run solver to solve the problem
+prob.solve(timelimit=1, msg=True)  # run solver to solve the problem
 
 # display the result, incumbent solution
 print('obj value', prob.getObjectiveValue())
@@ -123,7 +119,7 @@ print('obj value', prob.getObjectiveValue())
 In the case you solve TSP, *Permutation Variable* is useful.
 
 ```python
-from flopt import Variable, Problem, Solver
+from flopt import Variable, Problem, Solver, CustomExpression
 
 N = 4  # Number of city
 D = [[0,1,2,3],  # Distance matrix
@@ -140,16 +136,14 @@ def tsp_dist(x):
     for head, tail in zip(x, x[1:]+[x[0]]):
         distance += D[head][tail]  # D is the distance matrix
     return distance
-tsp_obj = CustomExpression(func=tsp_dist, variables=[x])
+tsp_obj = CustomExpression(func=tsp_dist, arg=[x])
 
 # Problem
 prob = Problem(name='TSP')
 prob += tsp_obj
 
 # Solver
-solver = Solver(algo='2-Opt')  # select the heuristic algorithm
-solver.setParams(n_trial=1000)  # setting of the hyper parameters
-prob.solve(solver, msg=True)    # run solver to solve the problem
+prob.solve(timelimit=10, msg=True)    # run solver to solve the problem
 
 # display the result, incumbent solution
 print('obj value', prob.getObjectiveValue())

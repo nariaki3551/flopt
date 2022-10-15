@@ -113,7 +113,6 @@ def Value(x):
 
 
 def get_dot_graph(expression, save_file, rankdir=None):
-    expression.setName()
     with open(save_file, "w") as writer:
         print("digraph g {", file=writer)
         if rankdir is not None:
@@ -127,7 +126,7 @@ def _get_dot_graph(expression, writer):
     node_str = '{} [label="{}", color=orange, style=filled]'
     operation_str = '{} [label="{}", color=lightblue, style=filled]'
     edge_str = "{} -> {}"
-    print(node_str.format(node_self, expression.name), file=writer)
+    print(node_str.format(node_self, expression.getName()), file=writer)
     if isinstance(expression, flopt.expression.CustomExpression):
         node_operator = hash((expression, 1))
         operator_str = "CustomFunction"

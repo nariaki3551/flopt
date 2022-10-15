@@ -27,6 +27,7 @@ class MipDataset(BaseDataset):
 
     name = "mip"
     instance_names = [
+        "markshare2",
         "50v-10",
         "enlight_hard",
         "gen-ip054",

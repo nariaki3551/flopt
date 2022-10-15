@@ -195,3 +195,11 @@ def test_convert_binarize6():
     linearize(prob)
     print(prob.show())
     print("[ linearized ]\n", prob.show())
+
+
+def test_convert_binarize7():
+    x = Variable.array("x", 2, lowBound=1, upBound=2, cat="Integer")
+    prob = Problem()
+    prob += x[0] >= 1
+    binarize(prob)
+    linearize(prob)

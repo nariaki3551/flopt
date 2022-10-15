@@ -150,7 +150,7 @@ class AutoSearch(BaseSearch):
             elif check(problem_type, qp, "Qadratic programming"):
                 return QpSelector()
             elif check(problem_type, permutation, "Permutation programming"):
-                return PermutationModel()
+                return PermutationSelector()
             elif check(problem_type, blackbox, "Blackbox optimization"):
                 return BlackBoxSelector()
             elif check(

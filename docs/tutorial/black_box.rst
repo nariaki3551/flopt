@@ -37,12 +37,8 @@ This problem can be formulated using `flopt` as follows,
   custom_obj = CustomExpression(func=simulator, arg=[a, b])
   prob += custom_obj
 
-  # solver setting
-  solver = Solver(algo="RandomSearch")
-  solver.setParams(timelimit=3)
-
   # run solver
-  prob.solve(solver, msg=True)
+  prob.solve(timelimit=3, msg=True)
 
   # get best solution
   print("obj value", prob.getObjectiveValue())

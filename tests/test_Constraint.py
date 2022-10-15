@@ -57,6 +57,13 @@ def test_Constraint_feasible(a, b):
     assert (a + b == 3).feasible() == False
 
 
+def test_Constraint_rshift(a, b):
+    assert len((a + b <= 2) >> (b >= 0)) == 2
+    assert len((a + b <= 2) >> (b == 0)) == 3
+    assert len((a + b == 2) >> (b >= 0)) == 4
+    assert len((a + b == 2) >> (b == 0)) == 5
+
+
 def test_Constraint_hash(a, b):
     assert hash(a == 1) == hash(a - 1 == 0)
     assert hash(a >= 0) == hash(-a <= 0)
