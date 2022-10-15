@@ -3,9 +3,9 @@ import numpy as np
 
 from flopt.solvers.base import BaseSearch
 from flopt.convert import LpStructure
-from flopt.env import setup_logger
 from flopt.variable import VariableArray
-from flopt.constants import VariableType, SolverTerminateState
+from flopt.constants import VariableType, ExpressionType, SolverTerminateState
+from flopt.env import setup_logger
 
 
 logger = setup_logger(__name__)
@@ -21,60 +21,46 @@ class ScipyMilpSearch(BaseSearch):
     and can not use callback to this API for logging.
     Therefore, we can obtain the solution when only scipy.optimize.milp terminate the execution normally.
 
+    Examples
+    --------
+
+    .. code-block:: python
+
+        import flopt
+
+        # Variables
+        a = flopt.Variable("a", lowBound=0, upBound=1, cat="Integer")
+        b = flopt.Variable("b", lowBound=1, upBound=2, cat="Continuous")
+        c = flopt.Variable("c", lowBound=-1, upBound=3, cat="Continuous")
+
+        # Problem
+        prob = flopt.Problem()
+        prob += a + b + c + 2
+        prob += a + b >= 2
+        prob += b - c >= 3
+
+        solver = flopt.Solver("ScipyMilpSearch")
+        prob.solve(solver, msg=True)
+
     See Also
     --------
     scipy.optimize.milp
-
-    Returns
-    -------
-    status : int
-        status of solver
     """
 
     name = "ScipyMilpSearch"
-    can_solve_problems = ["mip"]
+    can_solve_problems = {
+        "Variable": VariableType.Number,
+        "Objective": ExpressionType.Linear,
+        "Constraint": ExpressionType.Linear,
+    }
 
-    def available(self, prob, verbose=False):
-        """
-        Parameters
-        ----------
-        prob : Problem
-        verbose : bool
-
-        Returns
-        -------
-        bool
-            return true if it can solve the problem else false
-        """
-        for var in prob.getVariables():
-            if not var.type() in {
-                VariableType.Continuous,
-                VariableType.Binary,
-                VariableType.Integer,
-            }:
-                if verbose:
-                    logger.error(
-                        f"variable: \n{var}\n must be continouse, binary or interger, but got {var.type()}"
-                    )
-                return False
-        if not prob.obj.isLinear():
-            if verbose:
-                logger.error(f"objective function: \n{prob.obj}\n must be Linear")
-            return False
-        for const in prob.constraints:
-            if not const.expression.isLinear():
-                if verbose:
-                    logger.error(f"constraint: \n{const}\n must be Linear")
-                return False
-        return True
-
-    def search(self):
-        var_names = [var.name for var in self.solution]
+    def search(self, solution, *args):
+        self.start_build()
 
         # lp structure
         lp = LpStructure.fromFlopt(
             self.prob,
-            x=VariableArray(self.solution.getVariables()),
+            x=VariableArray(solution.getVariables()),
             option="all_neq",
         )
 
@@ -88,15 +74,16 @@ class ScipyMilpSearch(BaseSearch):
 
         # constraints (lp.G x <= lp.h)
         has_constraints = lp.G is not None
+        lb = np.full_like(lp.h, -np.inf)
         if has_constraints:
-            constraints = scipy_optimize.LinearConstraint(
-                lp.G, np.full_like(lp.h, -np.inf), lp.h
-            )
+            constraints = scipy_optimize.LinearConstraint(lp.G, lb, lp.h)
         else:
             constraints = None
 
+        self.end_build()
+
         # options
-        options = {"disp": self.msg, "time_limit": self.timelimit}
+        options = {"disp": self.msg, "time_limit": self.timelimit - self.build_time}
 
         # search
         res = scipy_optimize.milp(
@@ -106,17 +93,15 @@ class ScipyMilpSearch(BaseSearch):
             bounds=bounds,
             options=options,
         )
+
         # res.status =  0: Optimal solution found.
         #               1: Iteration or time limit reached.
         #               2: Problem is infeasible.
         #               3: Problem is unbounded.
         #               4: Other; see message for details.
         if res.status == 0:
-            for var, value in zip(self.solution, res.x):
-                var.setValue(value)
-
-            # if solution is better thatn incumbent, then update best solution
-            self.registerSolution(self.solution)
+            solution.setValuesFromArray(res.x)
+            self.registerSolution(solution)
             return SolverTerminateState.Normal
         elif res.status == 1:
             return SolverTerminateState.Timelimit

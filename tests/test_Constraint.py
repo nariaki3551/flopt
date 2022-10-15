@@ -39,7 +39,7 @@ def test_Constraint_type(a, b):
 def test_Constraint_expression(a, b):
     assert hash((a == 0).expression) == hash(Expression(a, Const(0), "+"))
     assert hash((a <= 0).expression) == hash(Expression(a, Const(0), "+"))
-    assert hash((a >= 0).expression) == hash(Expression(-a, Const(0), "-"))
+    assert hash((a >= 0).expression) == hash(Expression(Const(-1), a, "*"))
     assert hash((a + b == 0).expression) == hash(a + b - 0)
     assert hash((a + b <= 0).expression) == hash(a + b - 0)
     assert hash((a + b >= 0).expression) == hash(-(a + b - 0))
@@ -55,6 +55,13 @@ def test_Constraint_feasible(a, b):
     assert (a + b >= 3).feasible() == False
     assert (a + b == 2).feasible() == True
     assert (a + b == 3).feasible() == False
+
+
+def test_Constraint_rshift(a, b):
+    assert len((a + b <= 2) >> (b >= 0)) == 2
+    assert len((a + b <= 2) >> (b == 0)) == 3
+    assert len((a + b == 2) >> (b >= 0)) == 4
+    assert len((a + b == 2) >> (b == 0)) == 5
 
 
 def test_Constraint_hash(a, b):

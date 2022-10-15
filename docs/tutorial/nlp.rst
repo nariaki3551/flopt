@@ -29,12 +29,8 @@ This problem can be formulated using `flopt` as follows,
   # set objective function
   prob += 2*(3*a+b)*c**2+3
 
-  # solver setting
-  solver = Solver(algo="RandomSearch")  # select the random search algorithm
-  solver.setParams(n_trial=1000)  # set the parameters for solver
-
   # run solver
-  prob.solve(solver, msg=True)
+  prob.solve(timelimit=0.5, msg=True)
 
   # get best solution
   print("obj value", prob.getObjectiveValue())
@@ -82,31 +78,31 @@ We set the object function to *Problem* using `+=` operation or `.setObjective` 
   prob += 2*(3*a+b)*c**2+3   # set the objective function
   # prob.setObjective(2*(3*a+b)*c**2+3)   # same above
 
-When we solve a maximize problem, we set `sense="maximize"` (default is sense=minimize).
+When we solve a maximize problem, we set `sense="Maximize"` (default is sense=minimize).
 
 .. code-block:: python
 
-  prob = Problem(name="Test", sense="maximize")
+  prob = Problem(name="Test", sense="Maximize")
 
-
-Solver
-------
-
-We select algorithm from :doc:`../solvers/index` for the problem. We can see the list of available solvers by `flopt.Solver_list()`.
-
-.. code-block:: python
-
-  solver = Solver(algo="RandomSearch")  # select the heuristic algorithm
-  solver.setParams(n_trial=1000, timelimit=3600)  # setting of the parameters
-  # solver.setParams({"n_trial"; 1000, "timelimit": 3600})  # same above
 
 Solve
 -----
 
 .. code-block:: python
 
-  prob.solve(solver, msg=True)  # run solver
+  prob.solve(timelimit=0.5, msg=True)  # run solver
 
+
+Solver
+------
+
+When you select algorithm to solve problem, you create a Solver object and specify it as solver parameter in problem.solve()
+
+.. code-block:: python
+
+  solver = Solver(algo="RandomSearch")  # select the heuristic algorithm
+  solver.setParams(timelimit=0.5)  # setting of the parameters
+  prob.solve(solver=solver, timelimit=0.5, msg=True)  # run solver
 
 
 Result

@@ -1,5 +1,5 @@
 from flopt.variable import Variable, VarElement
-from flopt.expression import Expression, Operation, Const
+from flopt.expression import Expression, Const
 from flopt.convert.binarize import binarize
 from flopt.constants import VariableType
 from flopt.env import setup_logger, create_variable_mode
@@ -70,8 +70,8 @@ def linearize(prob):
     """
     try:
         var_muls = dict()
-        prob.obj = linearize_expression(prob.obj, var_muls)
-        for const in prob.constraints:
+        prob.setObjective(linearize_expression(prob.obj, var_muls))
+        for const in prob.getConstraints():
             const.expression = linearize_expression(const.expression, var_muls)
     except NeedToBinarize:
         logger.info(
@@ -138,11 +138,14 @@ def linearize_expression(e, var_muls):
         return e
     if e.isLinear():
         return e
+    e.resetlinkChildren()
+
     finish = False
     while not finish:
         finish, e = linearize_traverse(e, var_muls)
         if finish and not e.isLinear():
             e = e.expand()
+            e.resetlinkChildren()
             finish = False
     return e
 

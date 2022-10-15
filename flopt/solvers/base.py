@@ -8,9 +8,9 @@ from flopt.solvers.solver_utils import (
     during_solver_message,
     end_solver_message,
 )
-from flopt.env import setup_logger
-from flopt.constants import SolverTerminateState
+from flopt.constants import VariableType, ExpressionType, SolverTerminateState
 import flopt.error
+from flopt.env import setup_logger
 
 
 logger = setup_logger(__name__)
@@ -38,8 +38,6 @@ class BaseSearch:
         best solution
     best_obj_value : float
         incumbent objective value
-    best_bd : float
-        best lower bound value
     solution : Solution
         solution
     obj : ObjectiveFunction
@@ -56,8 +54,10 @@ class BaseSearch:
        in this order: list of solution object, best_solution, best_obj_value
     log : Log
         Solver Log class
+    build_time : float
+        time to build the problem for solver
     start_time : float
-        start_time of solver
+        start time at calling solve()
     trial_ix : int
         number of trials
     max_k : int
@@ -75,57 +75,60 @@ class BaseSearch:
         # core variables
         self.best_solution = None
         self.best_obj_value = float("inf")
-        self.best_bd = None
-        self.solution = None
         # parameters
-        self.timelimit = float("inf")
+        self.timelimit = 3600
         self.lowerbound = -float("inf")
         self.tol = 1e-10
         self.msg = False
         self.callbacks = []
         # for log
         self.log = Log()
+        self.build_time = 0.0
         self.start_time = None
         self.trial_ix = 0
         self.max_k = 1
         self.save_solution = False
 
-    def setParams(self, params=None, feasible_guard=None, **kwargs):
+    def setParams(self, params=None, **kwargs):
         """set some parameters
 
         Parameters
         ----------
         params : dict
             {paramname: paramvalue}
-        feasible_guard : str
-            'clip' is noly selectable
         """
         if params is not None:
             for param, value in params.items():
                 setattr(self, param, value)
-        if feasible_guard is not None:
-            self.feasible_guard = feasible_guard
         for param, value in kwargs.items():
             setattr(self, param, value)
 
     def reset(self):
         """reset solving log and status"""
         self.log = Log()
+        self.best_solution = None
         self.best_obj_value = float("inf")
         self.start_time = None
         self.trial_ix = 0
         self.max_k = 1
         self.save_solution = False
 
-    def solve(self, solution, prob, msg=False):
-        """solve the problem of (solution, obj)
+    def search(self):
+        raise NotImplementedError()
+
+    def solve(self, solution, objective, constraints, prob, msg=False):
+        """solve the problem of (solution, objective, constraints)
 
         Parameters
         ----------
         solution : Solution
             solution object
+        objective : Expression
+            objective object
+        constraints : list of Constraint
+            list of constriants objects
         prob : Problem
-            problem
+            problem to be solved
         msg : bool
             if true, then display logs
 
@@ -133,24 +136,25 @@ class BaseSearch:
         -------
         status, Log
         """
+        self.start_search()
+
         if not self.available(prob, verbose=True):
             logger.error(f"Problem can not be solved by solver {self.name}.")
             status = SolverTerminateState.Abnormal
             raise flopt.error.SolverError
 
-        self.solution = solution.clone()
+        self.log = Log()
         self.prob = prob
         self.msg = msg
-        self.best_solution = solution
+        self.best_solution = solution.clone()
 
-        self.start_time = time.time()
         if msg:
             params = {"timelimit": self.timelimit}
             start_solver_message(self.name, params, solution)
 
         try:
-            self.startProcess()
-            status = self.search()
+            self.startProcess(solution)
+            status = self.search(solution, objective, constraints)
             self.closeProcess()
         except TimeoutError:
             status = SolverTerminateState.Timelimit
@@ -162,11 +166,28 @@ class BaseSearch:
             print("Get user ctrl-cuser ctrl-c")
             status = SolverTerminateState.Interrupt
 
+        self.recordLog()
+
         if msg:
-            obj_value = self.prob.obj.value(self.best_solution)
-            end_solver_message(status, obj_value, time.time() - self.start_time)
+            obj_value = self.getObjValue(self.best_solution)
+            end_solver_message(
+                status,
+                obj_value,
+                self.build_time,
+                time.time() - self.start_time,
+                self.trial_ix,
+            )
 
         return status, self.log, time.time() - self.start_time
+
+    def start_build(self):
+        self.build_time = -time.time()
+
+    def end_build(self):
+        self.build_time += time.time()
+
+    def start_search(self):
+        self.start_time = time.time()
 
     def registerSolution(self, solution, obj_value=None, msg_tol=None):
         """update solution if the solution is better than the incumbent
@@ -179,6 +200,7 @@ class BaseSearch:
         msg_tol : None of float
             output the message when solution is updated greater than msg_tol
         """
+        self.trial_ix += 1
         if obj_value is None:
             obj_value = self.getObjValue(solution)
         if obj_value < self.best_obj_value:
@@ -204,11 +226,25 @@ class BaseSearch:
             self.best_obj_value = self.prob.obj.value(solution)
         else:
             self.best_obj_value = obj_value
-            self.save_solution = True
+        self.save_solution = True
+        if self.best_obj_value < self.lowerbound + self.tol:
+            if self.msg:
+                self.during_solver_message("*")
+            raise flopt.error.RearchLowerbound()
 
     def raiseTimeoutIfNeeded(self):
         if time.time() - self.start_time > self.timelimit:
             raise TimeoutError
+
+    def callback(self, solutions):
+        """execute user defined callback function
+
+        Parameters
+        ----------
+        solutions : list of Solution
+        """
+        for callback in self.callbacks:
+            callback(solutions, self.best_solution, self.best_solution)
 
     def recordLog(self):
         """
@@ -216,18 +252,17 @@ class BaseSearch:
         """
         log_dict = {
             "obj_value": self.best_obj_value,
-            "best_bd": self.best_bd,
+            "best_bound": self.prob.best_bound,
             "time": time.time() - self.start_time,
             "iteration": self.trial_ix,
         }
+
         if self.max_k > 1 and self.save_solution:
-            log_dict["solution"] = self.best_solution.clone()
+            self.log.appendSolution(
+                self.best_solution.clone(), self.best_obj_value, self.max_k
+            )
             self.save_solution = False
         self.log.append(log_dict)
-        if self.best_obj_value < self.lowerbound + self.tol:
-            if self.msg:
-                self.during_solver_message("*")
-            raise flopt.error.RearchLowerbound()
 
     def during_solver_message(self, head):
         """
@@ -239,16 +274,113 @@ class BaseSearch:
         during_solver_message(
             head,
             self.best_obj_value,
-            self.best_bd,
+            self.prob.best_bound,
             time.time() - self.start_time,
             self.trial_ix,
         )
 
-    def search(self):
-        raise NotImplementedError()
+    def available(self, prob, verbose=False):
+        assert hasattr(self, "can_solve_problems")
+        assert isinstance(self.can_solve_problems, dict)
+        assert {"Variable", "Objective", "Constraint"} == set(
+            self.can_solve_problems.keys()
+        )
+        assert isinstance(self.can_solve_problems["Variable"], VariableType)
+        assert isinstance(self.can_solve_problems["Objective"], ExpressionType)
+        assert isinstance(self.can_solve_problems["Constraint"], ExpressionType)
 
-    def available(self, prob):
-        raise NotImplementedError()
+        # Variables
+        available_variables = self.can_solve_problems["Variable"].expand()
+        for var in prob.getVariables():
+            if not var.type() in available_variables:
+                if verbose:
+                    logger.error(
+                        f"variable: \n{var}\n must be in {available_variables}, but got {var.type()}"
+                    )
+                return False
+
+        # Objective
+        available_objective = self.can_solve_problems["Objective"].expand()
+        if not prob.obj.type() in available_objective:
+            if verbose:
+                logger.error(
+                    f"objective function: \n{prob.obj}\n must be in {available_objective}, but got {prob.obj.type()}"
+                )
+            return False
+
+        # Constraint
+        if self.can_solve_problems["Constraint"] == ExpressionType.Non:
+            if prob.getConstraints():
+                if verbose:
+                    logger.error(f"constraints are not available")
+                return False
+        else:
+            available_constraint = self.can_solve_problems["Objective"].expand()
+            for const in prob.constraints:
+                if not const.expression.type() in available_constraint:
+                    if verbose:
+                        logger.error(
+                            f"constraint: \n{const}\n must be in {available_constraint}, but got {const.expression.type()}"
+                        )
+                    return False
+
+        return True
+
+    def availableProblemType(self, problem_type):
+        """
+        Parameters
+        ----------
+        problem_type : dict
+            key is "Variable", "Objective", "Constraint"
+
+        Returns
+        -------
+        list of str
+            algorithm names that can solve the problem
+
+        Examples
+        --------
+
+        .. code-block:: python
+
+            import flopt.constants
+            import flopt.solvers
+
+            problem_type = dict(
+                Variable=flopt.constants.VariableType.Number,
+                Objective=flopt.constants.ExpressionType.BlackBox,
+                Constraint=None
+            )
+
+            solver.availableProblemType(problem_type)
+
+        """
+        assert isinstance(problem_type, dict)
+        assert {"Variable", "Objective", "Constraint"} == set(problem_type.keys())
+        assert isinstance(problem_type["Variable"], VariableType)
+        assert (
+            isinstance(problem_type["Objective"], ExpressionType)
+            or problem_type["Objective"] is None
+        )
+        assert (
+            isinstance(problem_type["Constraint"], ExpressionType)
+            or problem_type["Constraint"] is None
+        )
+
+        if problem_type["Objective"] is None:
+            problem_type["Objective"] = ExpressionType.Const
+
+        if problem_type["Constraint"] is None:
+            problem_type["Constraint"] = ExpressionType.Non
+
+        return (
+            problem_type["Variable"].expand()
+            <= self.can_solve_problems["Variable"].expand()
+            and problem_type["Objective"].expand()
+            <= self.can_solve_problems["Objective"].expand()
+            and problem_type["Constraint"].expand()
+            <= self.can_solve_problems["Constraint"].expand()
+        )
 
     def getObjValue(self, solution):
         """calculate objective value
@@ -263,7 +395,7 @@ class BaseSearch:
         """
         return self.prob.obj.value(solution)
 
-    def startProcess(self):
+    def startProcess(self, *args):
         """process of beginning of search"""
         if all(const.feasible(self.best_solution) for const in self.prob.constraints):
             self.best_obj_value = self.prob.obj.value(self.best_solution)

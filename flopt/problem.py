@@ -1,8 +1,14 @@
 from flopt.variable import VarElement
-from flopt.expression import Expression, Const
+from flopt.expression import Expression, CustomExpression, Const
 from flopt.constraint import Constraint
+from flopt.solvers import Solver
 from flopt.solution import Solution
-from flopt.constants import OptimizationType, array_classes
+from flopt.constants import (
+    VariableType,
+    ExpressionType,
+    OptimizationType,
+    array_classes,
+)
 from flopt.env import setup_logger
 
 
@@ -29,14 +35,9 @@ class Problem:
         minimize, maximize
         (future satisfiability is added)
     obj : Expression family
-    obj_name : str
-        name of objective
-    __variables : set of VarElement family
     solver : Solver or None
     time : float
         solving time
-    prob_type : list of str
-        type of problems
 
     Examples
     --------
@@ -71,7 +72,7 @@ class Problem:
         self.__variables = set()
         self.solver = None
         self.time = None
-        self.prob_type = ["blackbox"]
+        self.best_bound = None
 
     def setObjective(self, obj, name=None):
         """set objective function. __iadd__(), "+=" operations call this function.
@@ -98,13 +99,14 @@ class Problem:
         except Exception as e:
             raise e
 
-    def setSolver(self, solver):
+    def setBestBound(self, best_bound):
         """
         Parameters
         ----------
-        solver : Solver
+        best_bound : float
+            best objective value of this problem
         """
-        self.solver = solver
+        self.best_bound = best_bound
 
     def addConstraint(self, const, name=None):
         """add constraint into problem. __iadd__(), "+=" operations call this function.
@@ -119,11 +121,13 @@ class Problem:
         Examples
         --------
 
-        >>> import flopt
-        >>> prob = flopt.Problem(algo=...)
-        >>> x = flopt.Variable("x")
-        >>> y = flopt.Variable("y")
-        >>> prob.addConstraint(x + y >= 2)
+        .. code-block:: python
+
+            import flopt
+            prob = flopt.Problem(algo=...)
+            x = flopt.Variable("x")
+            y = flopt.Variable("y")
+            prob.addConstraint(x + y >= 2)
 
         """
         assert isinstance(
@@ -135,7 +139,7 @@ class Problem:
 
     def addConstraints(self, consts, name=None):
         for i, const in enumerate(consts):
-            _name = None if name is None else name + f"_{i}"
+            _name = const.name if name is None else name + f"_{i}"
             self.addConstraint(const, _name)
 
     def removeDuplicatedConstraints(self):
@@ -144,24 +148,26 @@ class Problem:
         Examples
         --------
 
-        >>> import flopt
-        >>> a = flopt.Variable("a")
-        >>> b = flopt.Variable("b")
-        >>> c = flopt.Variable("c")
-        >>>
-        >>> prob = flopt.Problem(name="Test")
-        >>> prob += a + b >= 0
-        >>> prob += a + b >= 0
-        >>> prob += a >= -b
-        >>> prob += 0 >= -a - b
-        >>> prob += Sum([a, b]) >= 0
-        >>>
-        >>> len(prob.constraints)
-        >>> 5
-        >>>
-        >>> prob.removeDuplicatedConstraints()
-        >>> len(prob.constraints)
-        >>> 1
+        .. code-block:: python
+
+            import flopt
+            a = flopt.Variable("a")
+            b = flopt.Variable("b")
+            c = flopt.Variable("c")
+
+            prob = flopt.Problem(name="Test")
+            prob += a + b >= 0
+            prob += a + b >= 0
+            prob += a >= -b
+            prob += 0 >= -a - b
+            prob += Sum([a, b]) >= 0
+
+            len(prob.constraints)
+            >>> 5
+
+            prob.removeDuplicatedConstraints()
+            len(prob.constraints)
+            >>> 1
 
         """
         for const in self.constraints:
@@ -186,20 +192,29 @@ class Problem:
         """
         return self.__variables
 
+    def getConstraints(self):
+        """
+        Returns
+        -------
+        list of Constraint
+            list of constraints in this problem
+        """
+        return self.constraints
+
     def resetVariables(self):
         self.__variables = self.obj.getVariables()
         for const in self.constraints:
             self.__variables |= const.getVariables()
 
-    def solve(self, solver=None, timelimit=None, lowerbound=None, msg=False):
+    def solve(self, solver=None, timelimit=None, lowerbound=None, msg=False, **kwargs):
         """solve this problem
 
         Parameters
         ----------
-        solver : Solver
-        timelimit : float
-        lowerbound : float
-            solver terminates when it obtains the solution whose objective value is lower than this
+        solver : Solver or None
+        timelimit : float or None
+        lowerbound : float or None
+            solver terminates when it obtains the solution whose objective value is lower than this value
         msg : bool
             if true, display the message from solver
 
@@ -213,26 +228,29 @@ class Problem:
         Examples
         --------
 
-        >>> import flopt
-        >>> a = flopt.Variable("a")
-        >>> b = flopt.Variable("b")
-        >>> c = flopt.Variable("c")
-        >>>
-        >>> prob = flopt.Problem(name="Test")
-        >>> prob += a + b
-        >>> prob += a + b >= 0
-        >>>
-        >>> solver = flopt.Solver("auto")
-        >>> status, logs = prob.solve(solver=solver)
+        .. code-block:: python
+
+            import flopt
+            a = flopt.Variable("a")
+            b = flopt.Variable("b")
+            c = flopt.Variable("c")
+
+            prob = flopt.Problem(name="Test")
+            prob += a + b
+            prob += a + b >= 0
+
+            solver = flopt.Solver("auto")
+            status, logs = prob.solve(solver=solver)
 
         """
-        assert solver is not None or self.solver is not None, f"solver is not specified"
-        if solver is not None:
-            self.solver = solver
+        if solver is None:
+            solver = Solver("auto")
         if timelimit is not None:
             solver.setParams(timelimit=timelimit)
         if lowerbound is not None:
             solver.setParams(lowerbound=lowerbound)
+        solver.setParams(**kwargs)
+        self.solver = solver
 
         if self.sense == "maximize" or self.sense == "Maximize":
             self.obj = -self.obj
@@ -241,6 +259,8 @@ class Problem:
 
         status, log, self.time = self.solver.solve(
             solution,
+            self.obj,
+            self.constraints,
             self,
             msg=msg,
         )
@@ -250,7 +270,7 @@ class Problem:
 
         return status, log
 
-    def getSolution(self, k=0):
+    def getSolution(self, k=1):
         """get the k-top solution
 
         Parameters
@@ -258,11 +278,12 @@ class Problem:
         k : int
             return k-top solution
         """
-        assert k < len(self.solver.log)
-        solution = self.solver.log.getSolution(k=k)
-        return solution
+        assert k >= 1
+        if k == 1:
+            return self.solver.best_solution
+        return self.solver.log.getSolution(k=k)
 
-    def setSolution(self, k=0):
+    def setSolution(self, k=1):
         """set the k-top solution to variables
 
         Parameters
@@ -270,11 +291,67 @@ class Problem:
         k : int
             set k-top solution data to variables
         """
-        assert k < len(self.solver.log)
+        assert k >= 1
         solution = self.getSolution(k)
         var_dict = solution.toDict()
         for var in self.getVariables():
             var.setValue(var_dict[var.name].value())
+
+    def toProblemType(self):
+        """
+        Returns
+        -------
+        problem_type : dict
+            key is "Variable", "Objective", "Constraint"
+        """
+        problem_type = dict()
+
+        variable_types = [
+            VariableType.Binary,
+            VariableType.Integer,
+            VariableType.Continuous,
+            VariableType.Permutation,
+            VariableType.Number,
+            VariableType.Any,
+        ]
+
+        expression_types = [
+            ExpressionType.Linear,
+            ExpressionType.Quadratic,
+            ExpressionType.Any,
+        ]
+
+        # variables
+        prob_variables_types = set(var.type() for var in self.getVariables())
+        for variable_type in variable_types:
+            if prob_variables_types <= variable_type.expand():
+                problem_type["Variable"] = variable_type
+                break
+
+        # objective
+        for expression_type in expression_types:
+            for elm in self.obj.traverse():
+                if isinstance(elm, CustomExpression):
+                    problem_type["Objective"] = ExpressionType.BlackBox
+                    break
+            else:
+                if self.obj.type() in expression_type.expand():
+                    problem_type["Objective"] = expression_type
+                    break
+
+        # constraint
+        if not self.constraints:
+            problem_type["Constraint"] = ExpressionType.Non
+        else:
+            prob_expression_types = set(
+                const.expression.type() for const in self.getConstraints()
+            )
+            for expression_type in expression_types:
+                if prob_expression_types <= expression_type.expand():
+                    problem_type["Constraint"] = expression_type
+                    break
+
+        return problem_type
 
     def __iadd__(self, other):
         if not isinstance(other, tuple):

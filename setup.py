@@ -1,28 +1,20 @@
+import os
+import codecs
 from setuptools import setup, find_packages
-from codecs import open
-from os import path
 
-here = path.abspath(path.dirname(__file__))
+here = os.path.abspath(os.path.dirname(__file__))
 
-with open(path.join(here, "README.md"), encoding="utf-8") as f:
+with codecs.open(os.path.join(here, "README.md"), encoding="utf-8") as f:
     long_description = f.read()
 
 setup(
     name="flopt",
-    packages=find_packages() + ["datasets"],
-    include_package_data=True,
+    packages=find_packages(),
     package_data={
-        "datasets": [
-            "tspLib/atsp/*.atsp",
-            "tspLib/hcp/*.hcp",
-            "tspLib/tsp/*.tsp",
-            "tspLib/vrp/*.vrp",
-            "tspLib/sop/*.sop",
-            "funcLib/*",
-            "mipLib/*",
-        ]
+        "flopt": ["flopt.config"],
     },
-    version="0.5.4",
+    include_package_data=True,
+    version="0.5.5",
     license="MIT",
     install_requires=[
         "numpy",
@@ -35,6 +27,10 @@ setup(
         "amplify",
         "pytest",
         "scipy",
+        "scikit-learn",
+        "dill",
+        "pooch",
+        "timeout_decorator",
     ],
     author="nariaki tateiwa",
     author_email="nariaki3551@gmail.com",

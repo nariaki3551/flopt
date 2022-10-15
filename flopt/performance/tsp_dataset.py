@@ -1,19 +1,19 @@
 import math
-from itertools import combinations, product
+import itertools
 
 import numpy as np
-from tqdm import tqdm
 
 from flopt import Variable, CustomExpression, Problem, Sum
-from flopt import env as flopt_env
-from .base_dataset import BaseDataset, BaseInstance
+from flopt.constants import VariableType, ExpressionType
+import flopt.env
 from flopt.env import setup_logger
 
+from .base_dataset import BaseDataset, BaseInstance
 
 logger = setup_logger(__name__)
 
 # instance problems
-tsp_storage = f"{flopt_env.datasets_dir}/tspLib/tsp"
+tsp_storage = f"{flopt.env.DATASETS_DIR}/tspLib/tsp"
 
 
 class TSPDataset(BaseDataset):
@@ -25,18 +25,17 @@ class TSPDataset(BaseDataset):
       instance name list
     """
 
-    def __init__(self):
-        self.name = "tsp"
-        self.instance_names = [
-            "test8",
-            "pa561",
-            "gr24",
-            "pr1002",
-            "fri26",
-            "fl3795",
-            "gr120",
-            "rl5915",
-        ]
+    name = "tsp"
+    instance_names = [
+        "test8",
+        "pa561",
+        "gr24",
+        "pr1002",
+        "fri26",
+        "fl3795",
+        "gr120",
+        "rl5915",
+    ]
 
     def createInstance(self, instance_name):
         """
@@ -133,7 +132,7 @@ class TSPInstance(BaseInstance):
         self.C = C  # Node Coordinate data
         logger.debug(self.__str__(detail=True))
 
-    def getBestValue(self):
+    def getBestBound(self):
         """return the optimal value of objective function"""
         return None
 
@@ -152,16 +151,29 @@ class TSPInstance(BaseInstance):
           if solver can be solve this instance return
           (true, prob formulated according to solver)
         """
-        if "permutation" in solver.can_solve_problems:
+        problem_type = dict(
+            Variable=VariableType.Permutation,
+            Objective=ExpressionType.Any,
+            Constraint=None,
+        )
+        available_solvers = flopt.solvers.allAvailableSolversProblemType(problem_type)
+        if solver.name in available_solvers:
             return True, self.createPermProblem()
-        elif "lp" in solver.can_solve_problems:
+
+        problem_type = dict(
+            Variable=flopt.constants.VariableType.Number,
+            Objective=flopt.constants.ExpressionType.Linear,
+            Constraint=flopt.constants.ExpressionType.Linear,
+        )
+        available_solvers = flopt.solvers.allAvailableSolversProblemType(problem_type)
+        if solver.name in available_solvers:
             if self.dim > 10:
                 logger.info("this instance is enough big not to crate problem")
                 return False, None
             return True, self.createLpProblem()
-        else:
-            logger.info("this instance only can be `permutation` formulation")
-            return False, None
+
+        logger.info(f"{solver.name} cannot solve this instance")
+        return False, None
 
     def createPermProblem(self):
         # Variables
@@ -184,8 +196,10 @@ class TSPInstance(BaseInstance):
     def createLpProblem(self):
         # Variables
         cities = list(range(self.dim))
-        x = Variable.matrix("x", len(cities), len(cities), cat="Binary")
+        n = len(cities)
+        x = Variable.matrix("x", n, n, cat="Binary")
         np.fill_diagonal(x, 0)
+        u = Variable.array("u", n, lowBound=0, upBound=n - 1, cat="Continuous")
 
         # Problem
         prob = Problem(name=f"TSP(LP):{self.name}")
@@ -200,18 +214,12 @@ class TSPInstance(BaseInstance):
             prob += Sum(x[:, i]) == 1
 
         # Connstants (remove subtour)
-        import scipy
+        for i, j in itertools.combinations(cities, 2):
+            prob += u[j] >= u[i] + 1 - n * (1 - x[i, j])
+            if i != 0:
+                prob += u[i] >= u[j] + 1 - n * (1 - x[j, i])
+        prob += u[0] == 0
 
-        total_subsets = sum(
-            scipy.special.comb(len(cities), r, exact=True)
-            for r in range(2, self.dim - 1)
-        )
-        pbar = tqdm(total=total_subsets, desc="add constraints for removing subtours")
-        for n_cities in range(2, self.dim - 1):
-            for subset in combinations(cities, n_cities):
-                prob += Sum(x[subset, subset]) <= n_cities - 1
-                pbar.update(1)
-        pbar.close()
         return prob
 
     def __str__(self, detail=False):

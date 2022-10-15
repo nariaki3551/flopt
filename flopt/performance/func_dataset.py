@@ -1,10 +1,12 @@
-from flopt import Variable, Problem, CustomExpression
+from flopt import Problem, CustomExpression, VarContinuous
+import flopt.solvers
+from flopt.constants import VariableType, ExpressionType
+from flopt.env import setup_logger
+
 from .base_dataset import BaseDataset, BaseInstance
 from datasets.funcLib import benchmark_func
 
-import logging
-
-logger = logging.getLogger(__name__)
+logger = setup_logger(__name__)
 
 
 class FuncDataset(BaseDataset):
@@ -16,9 +18,8 @@ class FuncDataset(BaseDataset):
         instance name list
     """
 
-    def __init__(self):
-        self.name = "func"
-        self.instance_names = list(benchmark_func)
+    name = "func"
+    instance_names = list(benchmark_func)
 
     def createInstance(self, instance_name):
         """create FuncInstance"""
@@ -55,7 +56,7 @@ class FuncInstance(BaseInstance):
         self.minimum_value = minimum_value
         self.n = n
 
-    def getBestValue(self):
+    def getBestBound(self):
         """return the optimal value of objective function"""
         return self.minimum_value(self.n)
 
@@ -73,27 +74,40 @@ class FuncInstance(BaseInstance):
             if solver can be solve this instance return
             (true, prob formulated according to solver)
         """
-        if "blackbox" in solver.can_solve_problems:
-            return True, self.createProblemFunc()
+        problem_type = dict(
+            Variable=VariableType.Number,
+            Objective=ExpressionType.BlackBox,
+            Constraint=None,
+        )
+        if solver.availableProblemType(problem_type):
+            return True, self.createProblemFunc(self.n)
         else:
-            logger.info("this instance can be only `blackbox` formulation")
+            logger.debug(f"{solver.name} cannot solve this instance")
             return False, None
 
-    def createProblemFunc(self):
+    def createProblemFunc(self, n=10, cat=VarContinuous):
         """create problem from instance
+
+        Parameters
+        ----------
+        n: int
+            number of variables (for instance, this parameter will be ignored)
+        cat: string or VariableType
+            type of variables
 
         Returns
         -------
         Problem
             problem
         """
-        variables = self.create_variables(self.n)
+        variables = self.create_variables(n=n, cat=cat)
         for var in variables:
             var.setRandom()
-        func = self.create_objective(self.n)
+        func = self.create_objective(n)
         obj = CustomExpression(lambda *x: func(x), variables)
-        prob = Problem(name="Function:{self.name}")
+        prob = Problem(name=f"Function:{self.name}_n{n}")
         prob.setObjective(obj)
+        self.n = n
         return prob
 
     def __str__(self):

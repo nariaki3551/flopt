@@ -1,11 +1,14 @@
 import types
+import operator
+import functools
 
 import numpy as np
 
 from flopt.variable import VarElement, VariableArray
 from flopt.expression import Expression, CustomExpression, Const
 import flopt.expression
-from flopt.constants import array_classes
+from flopt.solution import Solution
+from flopt.constants import number_classes, array_classes
 
 
 def Sum(x):
@@ -19,7 +22,9 @@ def Sum(x):
     all sum of x
     """
     if isinstance(x, types.GeneratorType):
-        return flopt.expression.Sum(list(x))
+        return Sum(list(x))
+    if all(isinstance(_x, number_classes) for _x in x):
+        return sum(x)
     elif isinstance(x, np.ndarray):
         return flopt.expression.Sum(x.ravel())
     else:
@@ -37,7 +42,9 @@ def Prod(x):
     all product of x
     """
     if isinstance(x, types.GeneratorType):
-        return flopt.expression.Prod(list(x))
+        return Prod(list(x))
+    if all(isinstance(_x, number_classes) for _x in x):
+        return functools.reduce(operator.mul, x)
     elif isinstance(x, np.ndarray):
         return flopt.expression.Prod(x.ravel())
     else:
@@ -89,7 +96,7 @@ def Value(x):
     >>> value(x)
     >>> [0 0 0]
     """
-    if isinstance(x, (VarElement, Expression, Const)):
+    if isinstance(x, (VarElement, Expression, Const, Solution)):
         return x.value()
     elif isinstance(x, (list, tuple)):
         cast = type(x)
@@ -105,9 +112,11 @@ def Value(x):
         return x
 
 
-def get_dot_graph(expression, save_file):
+def get_dot_graph(expression, save_file, rankdir=None):
     with open(save_file, "w") as writer:
         print("digraph g {", file=writer)
+        if rankdir is not None:
+            print(f"rankdir = {rankdir};", file=writer)
         _get_dot_graph(expression, writer)
         print("}", file=writer)
 
@@ -117,7 +126,7 @@ def _get_dot_graph(expression, writer):
     node_str = '{} [label="{}", color=orange, style=filled]'
     operation_str = '{} [label="{}", color=lightblue, style=filled]'
     edge_str = "{} -> {}"
-    print(node_str.format(node_self, expression.name), file=writer)
+    print(node_str.format(node_self, expression.getName()), file=writer)
     if isinstance(expression, flopt.expression.CustomExpression):
         node_operator = hash((expression, 1))
         operator_str = "CustomFunction"
@@ -134,7 +143,7 @@ def _get_dot_graph(expression, writer):
         nodeB = _get_dot_graph(expression.elmB, writer)
         print(edge_str.format(nodeA, node_operator), file=writer)
         print(edge_str.format(nodeB, node_operator), file=writer)
-    elif isinstance(expression, flopt.expression.Operation):
+    elif isinstance(expression, flopt.expression.Reduction):
         node_operator = hash((expression, 1))
         operator_str = "+" if isinstance(expression, flopt.expression.Sum) else "*"
         print(operation_str.format(node_operator, operator_str), file=writer)

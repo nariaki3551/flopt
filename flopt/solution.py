@@ -1,6 +1,6 @@
 import math
-import weakref
 
+from flopt.constants import VariableType
 from flopt.env import setup_logger
 
 
@@ -63,9 +63,7 @@ class Solution:
             value is VarElement family or Expression or Const
         """
         if self._var_dict is None:
-            self._var_dict = weakref.WeakValueDictionary(
-                {var.name: var for var in self._variables}
-            )
+            self._var_dict = {var.name: var for var in self._variables}
         return self._var_dict
 
     def value(self):
@@ -75,7 +73,7 @@ class Solution:
         list
             values of the variables in the Solution
         """
-        return [variable.value() for variable in self._variables]
+        return [var.value() for var in self._variables]
 
     def setValue(self, name, value):
         """
@@ -86,15 +84,16 @@ class Solution:
         """
         self.toDict()[name].setValue(value)
 
-    def setValueFromDict(self, name_value_dict):
+    def setValuesFromArray(self, array):
         """
         Parameters
         ----------
-        name_value_dict : Dict
-            key is name of variable, value is value of variable
+        array: iterator
+            array of variable values
         """
-        for name, value in name_value_dict.items():
-            self.setValue(name, value)
+        assert len(self._variables) == len(array)
+        for var, value in zip(self._variables, array):
+            var.setValue(value)
 
     def getVariables(self):
         """
@@ -127,6 +126,7 @@ class Solution:
         """
         for var in self._variables:
             var.setRandom()
+        return self
 
     def feasible(self):
         """
@@ -169,9 +169,10 @@ class Solution:
         float
           Inner product between the Solution and another Solution
         """
-        inner = 0
-        for var1, var2 in zip(self._variables, other._variables):
-            inner += var1.value() * var2.value()
+        inner = sum(
+            var1.value() * var2.value()
+            for var1, var2 in zip(self._variables, other._variables)
+        )
         return inner
 
     def __pos__(self):

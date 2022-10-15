@@ -1,5 +1,5 @@
 from flopt.solvers.base import BaseSearch
-from flopt.constants import SolverTerminateState
+from flopt.constants import VariableType, ExpressionType, SolverTerminateState
 
 from flopt.env import setup_logger
 
@@ -7,57 +7,50 @@ logger = setup_logger(__name__)
 
 
 class RandomSearch(BaseSearch):
-    """
-    Random Sampling Search
+    """Random Sampling Search
 
-    It is a simple serach, as follows.
+    Examples
+    --------
 
     .. code-block:: python
 
-      def setNewSolution(self, *args, **kwargs):
-          self.solution.setRandom()
+        import flopt
+
+        x = flopt.Variable("x", lowBound=-1, upBound=1, cat="Continuous")
+        y = flopt.Variable("y", lowBound=-1, upBound=1, cat="Continuous")
+
+        prob = flopt.Problem()
+        prob += 2*x*x + x*y + y*y + x + y
+
+        solver = flopt.Solver("RandomSearch")
+        status, log = prob.solve(solver, msg=True, timelimit=1)
+
+        print("obj =", flopt.Value(prob.obj))
+        print("x =", flopt.Value(x))
+        print("y =", flopt.Value(y))
     """
 
     name = "RandomSearch"
-    can_solve_problems = ["blackbox", "permutation"]
+    can_solve_problems = {
+        "Variable": VariableType.Any,
+        "Objective": ExpressionType.Any,
+        "Constraint": ExpressionType.Non,
+    }
 
     def __init__(self):
         super().__init__()
         self.n_trial = 1e100
 
-    def available(self, prob, verbose=False):
-        """
-        Parameters
-        ----------
-        prob : Problem
-        verbose : bool
+    def search(self, solution, *args):
+        for _ in range(int(self.n_trial)):
+            # generate new solution
+            solution.setRandom()
 
-        Returns
-        -------
-        bool
-            return true if it can solve the problem else false
-        """
-        if prob.constraints:
-            if verbose:
-                logger.error(f"this solver can not handle constraints")
-            return False
-        return True
+            # update best solution if needed
+            self.registerSolution(solution)
 
-    def search(self):
-        """
-        search a better solution using `self.setNewSolution()` function
-        `self.setNewSolution()` generate new solution and set it into self.solution
-        """
-        for self.trial_ix in range(1, int(self.n_trial) + 1):
-            # generate new solution and set it into self.solution
-            self.solution.setRandom()
-
-            # if solution is better thatn incumbent, then update best solution
-            self.registerSolution(self.solution)
-
-            # callbacks
-            for callback in self.callbacks:
-                callback([self.solution], self.best_solution, self.best_obj_value)
+            # execute callbacks
+            self.callback([solution])
 
             # check time limit
             self.raiseTimeoutIfNeeded()

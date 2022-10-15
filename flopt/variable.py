@@ -1,3 +1,4 @@
+import math
 import types
 import random
 import itertools
@@ -65,12 +66,11 @@ class VariableArray(np.ndarray):
             return i[0]
         return i
 
-    @classmethod
-    def init_ufunc(cls, shape, ufunc, set_mono=True):
-        x = np.ndarray(shape, dtype=object)
-        for i in itertools.product(*map(range, shape)):
-            x[i] = ufunc(i)
-        return cls(x, set_mono=set_mono)
+    def to_value(self, var_dict):
+        v = np.ndarray(self.shape)
+        for i in itertools.product(*map(range, self.shape)):
+            v[i] = var_dict[self[i].name].value()
+        return v
 
 
 # -------------------------------------------------------
@@ -165,6 +165,7 @@ class VariableFactory:
         elif cat == "Spin":
             return VarSpin(name, ini_value)
         elif cat == "Permutation":
+            assert lowBound is not None and upBound is not None
             return VarPermutation(name, lowBound, upBound, ini_value)
         else:
             raise ValueError(f"cat {cat} cannot be used")
@@ -343,8 +344,11 @@ class VariableFactory:
             ini_value = np.array(ini_value, dtype=np_float)
         iterator = itertools.product(*map(range, shape))
         variables = np.ndarray(shape, dtype=object)
+        digits = [len(str(s)) for s in shape]
         for i in iterator:
-            var_name = f"{name}_" + "_".join(map(str, i))
+            var_name = f"{name}_" + "_".join(
+                str(s).zfill(digit) for s, digit in zip(i, digits)
+            )
             _lowBound = lowBound[i] if isinstance(lowBound, array_classes) else lowBound
             _upBound = upBound[i] if isinstance(upBound, array_classes) else upBound
             _cat = cat[i] if isinstance(cat, array_classes) else cat
@@ -429,20 +433,20 @@ class VarElement:
         """
         return self._type
 
-    def value(self, solution=None):
+    def value(self):
         """
         Returns
         -------
         float or int
           return value of variable
         """
-        if solution is None:
-            return self._value
-        else:
-            return solution.toDict()[self.name]
+        return self._value
 
     def setValue(self, value):
         self._value = value
+
+    def getName(self):
+        return self.name
 
     def getLb(self, must_number=False):
         if must_number:
@@ -516,6 +520,16 @@ class VarElement:
     def clone(self):
         raise NotImplementedError()
 
+    def max(self):
+        if self.upBound is not None:
+            return self.upBound
+        return get_variable_upper_bound()
+
+    def min(self):
+        if self.lowBound is not None:
+            return self.lowBound
+        return get_variable_lower_bound()
+
     def traverse(self):
         yield self
 
@@ -559,7 +573,7 @@ class VarElement:
         elif isinstance(other, VarElement):
             return Expression(self, other, "-")
         elif isinstance(other, ExpressionElement):
-            if other.isNeg():
+            if other.isNeg() and isinstance(other, Expression):
                 # self - (-1*other) --> self + other
                 return Expression(self, other.elmB, "+")
             return Expression(self, other, "-")
@@ -610,8 +624,6 @@ class VarElement:
             elif other == -1:
                 return -self
             return Expression(Const(other), self, "*")
-        elif isinstance(other, VarElement):
-            return Expression(other, self, "*")
         elif isinstance(other, ExpressionElement):
             if isinstance(other, Expression):
                 if other.operator == "*" and isinstance(other.elmA, Const):
@@ -697,27 +709,29 @@ class VarElement:
 
     def __eq__(self, other):
         # self == other --> self - other == 0
-        return Constraint(
-            Expression(self, Const(0), "+", name=self.name) - other, ConstraintType.Eq
-        )
+        if isinstance(other, (number_classes)) and other == 0:
+            return Constraint(
+                Expression(self, Const(0), "+", name=self.name) - other,
+                ConstraintType.Eq,
+            )
+        else:
+            return Constraint(self - other, ConstraintType.Eq)
 
     def __le__(self, other):
         # self <= other --> self - other <= 0
-        return Constraint(
-            Expression(self, Const(0), "+", name=self.name) - other, ConstraintType.Le
-        )
+        if isinstance(other, (number_classes)) and other == 0:
+            return Constraint(
+                Expression(self, Const(0), "+", name=self.name), ConstraintType.Le
+            )
+        else:
+            return Constraint(self - other, ConstraintType.Le)
 
     def __ge__(self, other):
         # self >= other --> other - self <= 0
         return Constraint(other - self, ConstraintType.Le)
 
     def __str__(self):
-        s = f"Name: {self.name}\n"
-        s += f"  Type    : {self._type}\n"
-        s += f"  Value   : {self.value()}\n"
-        s += f"  lowBound: {self.lowBound}\n"
-        s += f"  upBound : {self.upBound}"
-        return s
+        return self.name
 
     def __repr__(self):
         return f'VarElement("{self.name}", {self.lowBound}, {self.upBound}, {self.value()})'
@@ -729,21 +743,20 @@ class VarInteger(VarElement):
     _type = VariableType.Integer
 
     def __init__(self, name, lowBound, upBound, ini_value):
+        lowBound = lowBound if lowBound is None else math.ceil(lowBound)
+        upBound = upBound if upBound is None else math.floor(upBound)
         super().__init__(name, lowBound, upBound, ini_value)
         self.binarized = None
         self.binaries = set()
 
-    def value(self, solution=None):
+    def value(self):
         """
         Returns
         -------
         float or int
           return value of variable
         """
-        if solution is None:
-            return int(self._value)
-        else:
-            return solution.toDict()[self.name]
+        return round(self._value)
 
     def getLb(self, must_number=False):
         if must_number:
@@ -794,6 +807,26 @@ class VarInteger(VarElement):
 
     def clone(self):
         return VarInteger(self.name, self.lowBound, self.upBound, self._value)
+
+    def __and__(self, other):
+        if isinstance(other, number_classes):
+            other = Const(other)
+        return Expression(self, other, "&")
+
+    def __rand__(self, other):
+        if isinstance(other, number_classes):
+            other = Const(other)
+        return Expression(other, self, "&")
+
+    def __or__(self, other):
+        if isinstance(other, number_classes):
+            other = Const(other)
+        return Expression(self, other, "|")
+
+    def __ror__(self, other):
+        if isinstance(other, number_classes):
+            other = Const(other)
+        return Expression(other, self, "|")
 
     def __repr__(self):
         return f'Variable("{self.name}", {self.lowBound}, {self.upBound}, "Integer", {self.value()})'
@@ -877,26 +910,6 @@ class VarBinary(VarInteger):
         # 1 -> 0
         # 0 -> 1
         return Expression(Const(1), self, "-")
-
-    def __and__(self, other):
-        if isinstance(other, number_classes):
-            other = Const(other)
-        return Expression(self, other, "&")
-
-    def __rand__(self, other):
-        if isinstance(other, number_classes):
-            other = Const(other)
-        return Expression(other, self, "&")
-
-    def __or__(self, other):
-        if isinstance(other, number_classes):
-            other = Const(other)
-        return Expression(self, other, "|")
-
-    def __ror__(self, other):
-        if isinstance(other, number_classes):
-            other = Const(other)
-        return Expression(other, self, "|")
 
     def __repr__(self):
         return f'Variable("{self.name}", cat="Binary", ini_value={self.value()})'

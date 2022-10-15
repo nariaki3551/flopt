@@ -13,10 +13,10 @@ def create_objective(*args, **kwargs):
     return obj
 
 
-def create_variables(*args, **kwargs):
+def create_variables(cat="Continuous", *args, **kwargs):
     variables = [
-        flopt.Variable(name=f"x1", lowBound=-3, upBound=3, cat="Continuous"),
-        flopt.Variable(name=f"x2", lowBound=-2, upBound=2, cat="Continuous"),
+        flopt.Variable(name=f"x1", lowBound=-3, upBound=3, cat=cat),
+        flopt.Variable(name=f"x2", lowBound=-2, upBound=2, cat=cat),
     ]
     return variables
 

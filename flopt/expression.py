@@ -15,7 +15,7 @@ from flopt.constants import (
     array_classes,
     np_float,
 )
-from flopt.env import setup_logger
+from flopt.env import setup_logger, get_variable_lower_bound, get_variable_upper_bound
 
 logger = setup_logger(__name__)
 
@@ -39,29 +39,34 @@ class ExpressionElement:
     Attributes
     ----------
     name : str
-    type : str
     var_dict : None or dict
     polynomial : None or Polynomial
     parents : list of ExpressionElement
     """
 
     def __init__(self, name=None):
-        if name is not None:
-            self.name = name
-        else:
-            self.setName()
+        self.name = name
         self.var_dict = None
         self.polynomial = None
-
-        # update parents
         self.parents = list()
-        self.linkChildren()
 
     def setName(self):
         raise NotImplementedError
 
+    def getName(self):
+        if self.name is None:
+            self.setName()
+        return self.name
+
     def linkChildren(self):
         raise NotImplementedError
+
+    def resetlinkChildren(self):
+        for elm in self.traverse():
+            if isinstance(elm, ExpressionElement):
+                elm.parents = list()
+        self.linkChildren()
+        return self
 
     def isPolynomial(self):
         raise NotImplementedError
@@ -110,6 +115,10 @@ class ExpressionElement:
             return self._value()
 
     def type(self):
+        if self.isLinear():
+            return ExpressionType.Linear
+        elif self.isQuadratic():
+            return ExpressionType.Quadratic
         return self._type
 
     def constant(self):
@@ -121,7 +130,9 @@ class ExpressionElement:
         else:
             import sympy
 
-            return float(sympy.sympify(self.name).expand().as_coefficients_dict()[1])
+            return float(
+                sympy.sympify(self.getName()).expand().as_coefficients_dict()[1]
+            )
 
     def isMonomial(self):
         if self.polynomial is not None:
@@ -324,12 +335,11 @@ class ExpressionElement:
         import sympy
 
         expr = eval(
-            str(sympy.sympify(self.name).simplify()),
+            str(sympy.sympify(self.getName()).simplify()),
             {var.name: var for var in self.getVariables()},
         )
         if isinstance(expr, number_classes):
             expr = Const(expr)
-        expr.parents += self.parents
         return expr
 
     def expand(self):
@@ -341,19 +351,17 @@ class ExpressionElement:
         import sympy
 
         expr = eval(
-            str(sympy.simplify(self.name).expand()),
+            str(sympy.simplify(self.getName()).expand()),
             {var.name: var for var in self.getVariables()},
         )
         if isinstance(expr, number_classes):
             expr = Const(expr)
-            expr.parents += self.parents
             return expr
         elif isinstance(expr, Expression):
             expr = eval(
-                str(sympy.sympify(expr.name).expand()),
+                str(sympy.sympify(expr.getName()).expand()),
                 {var.name: var for var in self.getVariables()},
             )
-            expr.parents += self.parents
             return expr
         else:
             # VarElement family
@@ -407,6 +415,66 @@ class ExpressionElement:
         self.setVarDict(var_dict)
         return self.value().expand()
 
+    def __calculate(self, sense, default_value):
+        """Calculate min/max value of expression
+
+        Parameters
+        ----------
+        sense : str
+        default_value : default value of excepsion case
+
+        Returns
+        -------
+        float
+            value of this expression can take
+        """
+        import flopt
+
+        if self.isLinear():
+            solver = flopt.Solver("ScipyMilpSearch")
+        elif self.isQuadratic():
+            solver = flopt.Solver("CvxoptQpSearch")
+        else:
+            logger.warning(
+                f"{sense} value of {self.getName()} cannot be calculated because it is not linear or quaratic"
+            )
+            return default_value
+        prob = flopt.Problem(sense=sense)
+        prob += self
+        status, logs = prob.solve(solver, msg=False)
+        if status == flopt.SolverTerminateState.Normal:
+            return prob.getObjectiveValue()
+        elif status == flopt.SolverTerminateState.Unbounded:
+            logger.warning(
+                f"{sense} value of {self.getName()} cannot be calculated because it is unbounded"
+            )
+            return default_value
+        else:
+            logger.warning(
+                f"{sense} value of {self.getName()} cannot be calculated by any reasons"
+            )
+            return default_value
+
+    def max(self):
+        """Calculate max value of expression when expression is linear or quadratic
+
+        Returns
+        -------
+        float
+            maximum value of this expression can take
+        """
+        return self.__calculate("Maximize", get_variable_upper_bound())
+
+    def min(self):
+        """Calculate min value of expression when expression is linear or quadratic
+
+        Returns
+        -------
+        float
+            minimum value of this expression can take
+        """
+        return self.__calculate("Minimize", get_variable_lower_bound())
+
     def traverse(self):
         """traverse Expression tree as root is self
 
@@ -446,8 +514,6 @@ class ExpressionElement:
             if other == 0:
                 return self
             return Expression(Const(other), self, "+")
-        elif isinstance(other, ExpressionElement):
-            return Expression(other, self, "+")
         else:
             return NotImplemented
 
@@ -460,7 +526,7 @@ class ExpressionElement:
             else:
                 return Expression(self, Const(other), "-")
         elif isinstance(other, ExpressionElement):
-            if other.isNeg():
+            if other.isNeg() and isinstance(other, Expression):
                 # self - (-1*other) -> self + other
                 return Expression(self, other.elmB, "+")
             return Expression(self, other, "-")
@@ -474,11 +540,6 @@ class ExpressionElement:
                 return -self
             else:
                 return Expression(Const(other), self, "-")
-        elif isinstance(other, ExpressionElement):
-            if self.isNeg():
-                # other - (-1*self) -> other + self
-                return Expression(other, self.elmB, "+")
-            return Expression(other, self, "-")
         else:
             return NotImplemented
 
@@ -523,8 +584,6 @@ class ExpressionElement:
             if other == 0:
                 return Const(0)
             return Expression(Const(other), self, "/")
-        elif isinstance(other, ExpressionElement):
-            return Expression(other, self, "/")
         else:
             return NotImplemented
 
@@ -543,8 +602,6 @@ class ExpressionElement:
             if other == 1:
                 return Const(1)
             return Expression(Const(other), self, "^")
-        elif isinstance(other, ExpressionElement):
-            return Expression(other, self, "^")
         else:
             return NotImplemented
 
@@ -557,7 +614,7 @@ class ExpressionElement:
             return NotImplemented
 
     def __rand__(self, other):
-        return self and other
+        return self & other
 
     def __or__(self, other):
         if isinstance(other, number_classes):
@@ -568,11 +625,11 @@ class ExpressionElement:
             return NotImplemented
 
     def __ror__(self, other):
-        return self or other
+        return self | other
 
     def __neg__(self):
         # -1 * self
-        return Expression(Const(-1), self, "*", name=f"-({self.name})")
+        return Expression(Const(-1), self, "*", name=f"-({self.getName()})")
 
     def __abs__(self):
         return abs(self.value())
@@ -623,9 +680,6 @@ class ExpressionElement:
         # self >= other --> other - self <= 0
         return Constraint(other - self, ConstraintType.Le)
 
-    def __str__(self):
-        raise NotImplementedError
-
     def __repr__(self):
         raise NotImplementedError
 
@@ -662,47 +716,53 @@ class Expression(ExpressionElement):
     Examples
     --------
 
-    >>> a = Variable(name='a', ini_value=1, cat='Integer')
-    >>> b = Variable(name='b', ini_value=2, cat='Continuous')
-    >>> c = Expression(a, b, '+')
-    >>> print(c)
-    >>> Name: a+b
-         Type    : Expression
-         Value   : 3
-    >>> c.value()
-    >>> 3
-    >>> c.getVariables()
-    >>> {VarElement("b", 1, 2, 2), VarElement("a", 0, 1, 1)}
+    .. code-block:: python
+
+        a = Variable(name="a", ini_value=1, cat="Integer")
+        b = Variable(name="b", ini_value=2, cat="Continuous")
+        c = Expression(a, b, "+")
+        >>> print(c)
+        >>> Name: a+b
+             Type    : Expression
+             Value   : 3
+        c.value()
+        >>> 3
+        c.getVariables()
+        >>> {VarElement("b", 1, 2, 2), VarElement("a", 0, 1, 1)}
 
     operator "+", "-", "*", "/", "^" and "%" are supported for Integer, Binary and
     Continuous Variables.
 
-    >>> a = Variable(name='a', ini_value=1, cat='Integer')  # a.value() is 1
-    >>> b = Variable(name='b', ini_value=2, cat='Continuous')  # b.value() is 2
-    >>> Expression(a, b, '+').value()  # a+b addition
-    >>> 3
-    >>> Expression(a, b, '-').value()  # a-b substraction
-    >>> -1
-    >>> Expression(a, b, '*').value()  # a*b multiplication
-    >>> 2
-    >>> Expression(a, b, '/').value()  # a/b division
-    >>> 0.5
-    >>> Expression(a, b, '^').value()  # a/b division
-    >>> 1
-    >>> Expression(a, b, '%').value()  # a%b modulo
-    >>> 1
+    .. code-block:: python
+
+        a = Variable(name="a", ini_value=1, cat="Integer")  # a.value() is 1
+        b = Variable(name="b", ini_value=2, cat="Continuous")  # b.value() is 2
+        Expression(a, b, "+").value()  # a+b addition
+        >>> 3
+        Expression(a, b, "-").value()  # a-b substraction
+        >>> -1
+        Expression(a, b, "*").value()  # a*b multiplication
+        >>> 2
+        Expression(a, b, "/").value()  # a/b division
+        >>> 0.5
+        Expression(a, b, "^").value()  # a/b division
+        >>> 1
+        Expression(a, b, "%").value()  # a%b modulo
+        >>> 1
 
     operator "&", "|" are supported for Binary Variable.
 
-    >>> a = Variable(name='a', ini_value=1, cat='Binary')
-    >>> b = Variable(name='b', ini_value=0, cat='Binary')
-    >>> Expression(a, b, '&').value().value()  # a&b bitwise and
-    >>> 0
-    >>> Expression(a, b, '|').value().value()  # a&b bitwise or
-    >>> 1
+    .. code-block:: python
+
+        a = Variable(name="a", ini_value=1, cat="Binary")
+        b = Variable(name="b", ini_value=0, cat="Binary")
+        Expression(a, b, "&").value().value()  # a&b bitwise and
+        >>> 0
+        Expression(a, b, "|").value().value()  # a&b bitwise or
+        >>> 1
     """
 
-    _type = ExpressionType.Normal
+    _type = ExpressionType.Unknown
 
     def __init__(self, elmA, elmB, operator, name=None):
         self.elmA = elmA
@@ -711,23 +771,25 @@ class Expression(ExpressionElement):
         super().__init__(name=name)
 
     def setName(self):
-        elmA_name = self.elmA.name
-        elmB_name = self.elmB.name
-        if isinstance(self.elmA, (Expression, Operation)):
+        elmA_name = self.elmA.getName()
+        elmB_name = self.elmB.getName()
+        if isinstance(self.elmA, (Expression, Reduction)):
             if self.operator in {"*", "/", "^", "%"}:
                 elmA_name = f"({elmA_name})"
         if isinstance(self.elmB, Expression):
-            if self.operator != "+" or self.elmB.name.startswith("-"):
+            if self.operator != "+" or self.elmB.getName().startswith("-"):
                 elmB_name = f"({elmB_name})"
-        elif isinstance(self.elmB, Operation):
+        elif isinstance(self.elmB, Reduction):
             elmB_name = f"({elmB_name})"
         self.name = f"{elmA_name}{self.operator}{elmB_name}"
 
     def linkChildren(self):
-        if isinstance(self.elmA, Expression):
+        if isinstance(self.elmA, ExpressionElement):
             self.elmA.parents.append(self)
-        if isinstance(self.elmB, Expression):
+            self.elmA.linkChildren()
+        if isinstance(self.elmB, ExpressionElement):
             self.elmB.parents.append(self)
+            self.elmB.linkChildren()
 
     def isPolynomial(self):
         return (
@@ -790,27 +852,14 @@ class Expression(ExpressionElement):
         elif self.operator == "%":
             return elmA.value() % elmB.value()
         elif self.operator == "&":
-            return elmA.value() and elmB.value()
+            return elmA.value() & elmB.value()
         elif self.operator == "|":
-            return elmA.value() or elmB.value()
+            return elmA.value() | elmB.value()
 
     def getVariables(self):
-        """
-        Returns
-        -------
-        set
-          return the variable object used in this expressiono
-        """
-        variables = self.elmA.getVariables() | self.elmB.getVariables()
-        return variables
+        return self.elmA.getVariables() | self.elmB.getVariables()
 
     def traverse(self):
-        """traverse Expression tree as root is self
-
-        Yield
-        -----
-        Expression or VarElement
-        """
         yield self
         yield from self.elmA.traverse()
         yield from self.elmB.traverse()
@@ -859,36 +908,21 @@ class Expression(ExpressionElement):
             elif other == 1:
                 return self
             return Expression(Const(other), self, "*")
-        elif isinstance(other, Expression):
-            if self.operator == "*" and isinstance(self.elmA, Const):
-                if other.operator == "*" and isinstance(other.elmA, Const):
-                    # (b*other) * (a*self) --> a * b * (other*self)
-                    return (
-                        self.elmA * other.elmA * Expression(other.elmB, self.elmB, "*")
-                    )
-                else:
-                    # other * (a*self) --> a * (other*self)
-                    return self.elmA * Expression(other, self.elmB, "*")
-            else:
-                if other.operator == "*" and isinstance(other.elmA, Const):
-                    # (b*other) * self --> b * (other*self)
-                    return other.elmA * Expression(other.elmB, self, "*")
-                else:
-                    return Expression(other, self, "*")
-        elif isinstance(other, CustomExpression):
-            return Expression(other, self, "*")
         else:
             return NotImplemented
 
     def __str__(self):
-        s = f"Name: {self.name}\n"
-        s += f"  Type    : {self._type}\n"
-        s += f"  Value   : {self.value()}\n"
-        return s
+        return self.getName()
 
     def __repr__(self):
-        s = f"Expression({self.elmA.name}, {self.elmB.name}, {self.operator})"
+        s = f"Expression({self.elmA.getName()}, {self.elmB.getName()}, {self.operator})"
         return s
+
+    def __del__(self):
+        if isinstance(self.elmA, Const):
+            del self.elmA
+        if isinstance(self.elmB, Const):
+            del self.elmB
 
 
 # ------------------------------------------------
@@ -915,18 +949,14 @@ def pack_variables(var_or_array, var_dict):
         import flopt.variable
 
         if isinstance(array, flopt.variable.VariableArray):
-            return flopt.variable.VariableArray.init_ufunc(
-                var_or_array.shape,
-                lambda i: var_dict[array[i].name],
-                set_mono=False,
-            )
+            return array.to_value(var_dict)
         else:
             return cls(
                 itertools.starmap(pack_variables, [(var, var_dict) for var in array])
             )
     else:
         var = var_or_array
-        return var_dict[var.name]
+        return var_dict[var.name].value()
 
 
 class CustomExpression(ExpressionElement):
@@ -948,12 +978,12 @@ class CustomExpression(ExpressionElement):
 
     .. code-block:: python
 
-      a = Variable('a', cat='Continuous')
-      b = Variable('b', cat='Continuous')
+      a = Variable("a", cat="Continuous")
+      b = Variable("b", cat="Continuous")
       def user_simulater(a, b):
           return simulater(a, b)
       obj = CustomExpression(func=user_simulater, arg=[a, b])
-      prob = Problem('simulater')
+      prob = Problem("simulater")
       prob += obj
 
     .. note::
@@ -1013,7 +1043,7 @@ class CustomExpression(ExpressionElement):
             arg = pack_variables(self.arg, self.var_dict)
 
         value = self.func(*arg)
-        if not isinstance(value, (int, float, np.number)):
+        if not isinstance(value, number_classes):
             value = value.value()
 
         self.unsetVarDict()
@@ -1035,10 +1065,10 @@ class CustomExpression(ExpressionElement):
         return f"{self.func.__name__}(*)"
 
     def __repr__(self):
-        return f"CustomExpression({self.func.__name__, self.arg, self.name})"
+        return f"CustomExpression({self.func.__name__, self.arg, self.getName()})"
 
 
-class Const(float, ExpressionElement):
+class Const(ExpressionElement):
     """
     It is the expression of constant value.
 
@@ -1055,6 +1085,8 @@ class Const(float, ExpressionElement):
     def __init__(self, value, name=None):
         if name is None:
             name = f"{value}"
+        if isinstance(value, Const):
+            value = value._value
         self._value = value
         super().__init__(name=name)
 
@@ -1110,10 +1142,10 @@ class Const(float, ExpressionElement):
         return True
 
     def simplify(self):
-        return Const(self._value)
+        return self
 
     def expand(self, *args, **kwargs):
-        return Const(self._value)
+        return self
 
     def __add__(self, other):
         if isinstance(other, number_classes):
@@ -1121,9 +1153,7 @@ class Const(float, ExpressionElement):
         return self._value + other
 
     def __radd__(self, other):
-        if isinstance(other, number_classes):
-            return Const(other + self._value)
-        return other + self._value
+        return self + other
 
     def __sub__(self, other):
         if isinstance(other, number_classes):
@@ -1144,9 +1174,7 @@ class Const(float, ExpressionElement):
         return self._value * other
 
     def __rmul__(self, other):
-        if isinstance(other, number_classes):
-            return Const(other * self._value)
-        return other * self._value
+        return self * other
 
     def __truediv__(self, other):
         if isinstance(other, number_classes):
@@ -1154,9 +1182,7 @@ class Const(float, ExpressionElement):
         return self._value / other
 
     def __rtruediv__(self, other):
-        if isinstance(other, number_classes):
-            return Const(other / self._value)
-        return other / self._value
+        return self / other
 
     def __pow__(self, other):
         if isinstance(other, number_classes):
@@ -1164,9 +1190,7 @@ class Const(float, ExpressionElement):
         return self._value**other
 
     def __rpow__(self, other):
-        if isinstance(other, number_classes):
-            return Const(other**self._value)
-        return other**self._value
+        return self**other
 
     def __neg__(self):
         return Const(-self._value)
@@ -1198,9 +1222,12 @@ to_const_ufunc = np.frompyfunc(to_const, 1, 1)
 
 
 # ------------------------------------------------
-#   Operation Class
+#   Reduction Class
 # ------------------------------------------------
-class Operation(ExpressionElement):
+class Reduction(ExpressionElement):
+
+    _type = ExpressionType.Unknown
+
     def __init__(self, var_or_exps, name=None):
         assert len(var_or_exps) > 0
         self.elms = to_const_ufunc(np.array(var_or_exps, dtype=object))
@@ -1210,12 +1237,10 @@ class Operation(ExpressionElement):
         for elm in self.elms:
             if isinstance(elm, ExpressionElement):
                 elm.parents.append(self)
+                elm.linkChildren()
 
     def getVariables(self):
-        variables = set()
-        for elm in self.elms:
-            variables |= elm.getVariables()
-        return variables
+        return functools.reduce(operator.or_, (elm.getVariables() for elm in self.elms))
 
     def traverse(self):
         """traverse Expression tree as root is self
@@ -1232,17 +1257,20 @@ class Operation(ExpressionElement):
         return False
 
     def __hash__(self):
-        return hash((self.name, self._type))
+        return hash(tuple(elm for elm in self.elms)) + hash(self._type)
+
+    def __del__(self):
+        for elm in self.elms:
+            if isinstance(elm, Const):
+                del elm
 
 
-class Sum(Operation):
+class Sum(Reduction):
     """
     Parameters
     ----------
     var_of_exps : list of VarELement or ExpressionElement
     """
-
-    _type = ExpressionType.Sum
 
     def setName(self):
         self.name = ""
@@ -1251,18 +1279,18 @@ class Sum(Operation):
         elm = self.elms[0]
         if isinstance(elm, number_classes):
             const += elm
-        elif isinstance(elm, ExpressionElement) and elm.name.startswith("-"):
-            self.name += f"({elm.name})"
+        elif isinstance(elm, ExpressionElement) and elm.getName().startswith("-"):
+            self.name += f"({elm.getName()})"
         else:
-            self.name += f"{elm.name}"
+            self.name += f"{elm.getName()}"
 
         for elm in self.elms[1:]:
             if isinstance(elm, number_classes):
                 const += elm
-            elif isinstance(elm, ExpressionElement) and elm.name.startswith("-"):
-                self.name += f"+({elm.name})"
+            elif isinstance(elm, ExpressionElement) and elm.getName().startswith("-"):
+                self.name += f"+({elm.getName()})"
             else:
-                self.name += f"+{elm.name}"
+                self.name += f"+{elm.getName()}"
 
         if const > 0:
             self.name += f"+{const}"
@@ -1293,6 +1321,7 @@ class Sum(Operation):
                     ret += self.var_dict[elm.name].value()
                 else:
                     ret += elm.value()
+            self.unsetVarDict()
             return ret
         else:
             return to_value_ufunc(self.elms).sum()
@@ -1300,25 +1329,20 @@ class Sum(Operation):
     def isLinear(self):
         return all(elm.isLinear() for elm in self.elms)
 
-    def __str__(self):
-        s = f"Name: {self.name}\n"
-        s += f"  Type    : {self._type}\n"
-        s += f"  Value   : {self.value()}\n"
-        return s
+    def isQuadratic(self):
+        return all(elm.isQuadratic() for elm in self.elms)
 
     def __repr__(self):
         s = f"Sum({self.elms})"
         return s
 
 
-class Prod(Operation):
+class Prod(Reduction):
     """
     Parameters
     ----------
     var_of_exps : list of VarELement or ExpressionElement
     """
-
-    _type = ExpressionType.Prod
 
     def setName(self):
         self.name = ""
@@ -1327,18 +1351,18 @@ class Prod(Operation):
         elm = self.elms[0]
         if isinstance(elm, number_classes):
             const += elm
-        elif isinstance(elm, ExpressionElement) and elm.name.startswith("-"):
-            self.name += f"({elm.name})"
+        elif isinstance(elm, ExpressionElement) and elm.getName().startswith("-"):
+            self.name += f"({elm.getName()})"
         else:
-            self.name += f"{elm.name}"
+            self.name += f"{elm.getName()}"
 
         for elm in self.elms[1:]:
             if isinstance(elm, number_classes):
                 const += elm
-            elif isinstance(elm, ExpressionElement) and elm.name.startswith("-"):
-                self.name += f"*({elm.name})"
+            elif isinstance(elm, ExpressionElement) and elm.getName().startswith("-"):
+                self.name += f"*({elm.getName()})"
             else:
-                self.name += f"*{elm.name}"
+                self.name += f"*{elm.getName()}"
 
         if const != 0:
             self.name = f"{const}*" + self.name
@@ -1368,18 +1392,20 @@ class Prod(Operation):
                     ret *= self.var_dict[elm.name].value()
                 else:
                     ret *= elm.value()
+            self.unsetVarDict()
             return ret
         else:
             return to_value_ufunc(self.elms).prod()
 
     def isLinear(self):
-        return sum(not isinstance(elm, number_classes) for elm in self.elms) <= 1
+        if self.polynomial is None:
+            self.setPolynomial()
+        return self.polynomial.isLinear()
 
-    def __str__(self):
-        s = f"Name: {self.name}\n"
-        s += f"  Type    : {self._type}\n"
-        s += f"  Value   : {self.value()}\n"
-        return s
+    def isQuadratic(self):
+        if self.polynomial is None:
+            self.setPolynomial()
+        return self.polynomial.isQuadratic()
 
     def __repr__(self):
         s = f"Prod({self.elms})"

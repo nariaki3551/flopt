@@ -6,7 +6,7 @@ Users can also solve the modeled problem using some solvers and obtain the optim
 
 [![Documentation Status](https://readthedocs.org/projects/flopt/badge/?version=latest)](https://flopt.readthedocs.io/en/latest/?badge=latest) [![PyPI version](https://badge.fury.io/py/flopt.svg)](https://badge.fury.io/py/flopt) ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/flopt) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-[docs](https://flopt.readthedocs.io/en/latest/) | [tutorial](https://flopt.readthedocs.io/en/latest/tutorial/index.html)
+[documentation](https://flopt.readthedocs.io/en/latest/) | [tutorial](https://flopt.readthedocs.io/en/latest/tutorial/index.html) | [case studies](https://flopt.readthedocs.io/en/latest/case_studies/index.html)
 
 <br>
 
@@ -22,6 +22,7 @@ pip install flopt
 
 ```
 git clone https://github.com/flab-coder/flopt.git
+cd flopt && python -m pip install .
 ```
 
 <br>
@@ -77,9 +78,7 @@ prob += 2 * (3*a+b) * c**2 + 3 # set the objective function
 prob += a + b * c <= 3         # set the constraint
 
 # Solver
-solver = Solver(algo='ScipySearch')  # select the heuristic algorithm
-solver.setParams(n_trial=1000)  # setting of the hyper parameters
-prob.solve(solver, msg=True)    # run solver to solve the problem
+prob.solve(timelimit=0.5, msg=True) # run solver to solve the problem
 
 # display the result, incumbent solution
 print('obj value', prob.getObjectiveValue())
@@ -109,9 +108,7 @@ prob = Problem(name='CustomExpression')
 prob += custom_obj
 
 # Solver
-solver = Solver(algo='RandomSearch')  # select the heuristic algorithm
-solver.setParams(n_trial=1000)  # setting of the hyper parameters
-prob.solve(solver, msg=True)    # run solver to solve the problem
+prob.solve(timelimit=1, msg=True)  # run solver to solve the problem
 
 # display the result, incumbent solution
 print('obj value', prob.getObjectiveValue())
@@ -122,7 +119,7 @@ print('obj value', prob.getObjectiveValue())
 In the case you solve TSP, *Permutation Variable* is useful.
 
 ```python
-from flopt import Variable, Problem, Solver
+from flopt import Variable, Problem, Solver, CustomExpression
 
 N = 4  # Number of city
 D = [[0,1,2,3],  # Distance matrix
@@ -139,16 +136,14 @@ def tsp_dist(x):
     for head, tail in zip(x, x[1:]+[x[0]]):
         distance += D[head][tail]  # D is the distance matrix
     return distance
-tsp_obj = CustomExpression(func=tsp_dist, variables=[x])
+tsp_obj = CustomExpression(func=tsp_dist, arg=[x])
 
 # Problem
 prob = Problem(name='TSP')
 prob += tsp_obj
 
 # Solver
-solver = Solver(algo='2-Opt')  # select the heuristic algorithm
-solver.setParams(n_trial=1000)  # setting of the hyper parameters
-prob.solve(solver, msg=True)    # run solver to solve the problem
+prob.solve(timelimit=10, msg=True)    # run solver to solve the problem
 
 # display the result, incumbent solution
 print('obj value', prob.getObjectiveValue())
@@ -159,5 +154,5 @@ print('x', x.value())
 
 - document: https://flopt.readthedocs.io/en/latest/
 - tutorials: https://flopt.readthedocs.io/en/latest/tutorial/index.html
-
+- case studies: https://flopt.readthedocs.io/en/latest/case_studies/index.html
 

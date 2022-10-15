@@ -1,3 +1,5 @@
+import heapq
+
 from flopt.env import setup_logger
 
 
@@ -7,9 +9,17 @@ logger = setup_logger(__name__)
 class Log:
     def __init__(self):
         self.logs = list()
+        self.solutions = list()
+        heapq.heapify(self.solutions)
 
     def append(self, log_dict):
         self.logs.append(log_dict)
+
+    def appendSolution(self, solution, obj_value, max_k):
+        if len(self.solutions) < max_k:
+            heapq.heappush(self.solutions, (obj_value, solution))
+        else:
+            heapq.heappushpop(self.solutions, (obj_value, solution))
 
     def getLog(self, time=None, iteration=None):
         if time is None and iteration is None:
@@ -23,17 +33,10 @@ class Log:
                     return pre_log
         return self.logs[-1]
 
-    def getSolution(self, k=0):
-        """get the k-top solution"""
-        assert k < len(self.logs)
-        j = -1
-        for i in range(len(self.logs)):
-            if "solution" in self.logs[-i - 1]:
-                j += 1
-                if j == k:
-                    solution = self.logs[-i - 1]["solution"]
-                    return solution
-        raise KeyError
+    def getSolution(self, k=1):
+        """get the k-top solutions"""
+        self.solutions.sort()
+        return self.solutions[k - 1][1]
 
     def plot(
         self,
@@ -64,7 +67,8 @@ class Log:
         Y = [log[yitem] for log in self.logs]
 
         ax.plot(X, Y, *args, **kwargs)
-        ax.legend()
+        if "label" in kwargs:
+            ax.legend()
 
         if show:
             plt.show()
@@ -76,3 +80,22 @@ class Log:
 
     def __len__(self):
         return len(self.logs)
+
+    def __iadd__(self, other):
+        assert isinstance(other, Log)
+        if self.logs:
+            last_time = self.logs[-1]["time"]
+        else:
+            last_time = 0.0
+        logs = list(other.logs)
+        for log in logs:
+            log["time"] += last_time
+        self.logs += logs
+        return self
+
+    def __add__(self, other):
+        assert isinstance(other, Log)
+        solver_log = Log()
+        solver_log += self
+        solver_log += other
+        return solver_log

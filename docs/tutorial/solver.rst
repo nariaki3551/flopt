@@ -17,10 +17,8 @@ We can see all available solvers by `flopt.Solver_list()`.
   >>>  'SFLA',
   >>>  'PulpSearch',
   >>>  'ScipySearch',
-  >>>  'ScipyLpSearch',
   >>>  'ScipyMilpSearch',
   >>>  'CvxoptQpSearch',
-  >>>  'AmplifySearch',
   >>>  'auto']
 
 All available solvers for problem are shown by as follows.
@@ -37,7 +35,6 @@ All available solvers for problem are shown by as follows.
   flopt.allAvailableSolvers(prob)
   >>> ['PulpSearch',
   >>>  'ScipySearch',
-  >>>  'ScipyLpSearch',
   >>>  'ScipyMilpSearch',
   >>>  'CvxoptQpSearch',
   >>>  'auto']
@@ -63,4 +60,4 @@ When we check which solver is selected, we execute `solver.select(prob).name`.
   solver = flopt.Solver(algo="auto")
   solver.setParams(timelimit=1)
   solver.select(prob).name
-  >>> 'RandomSearch'
+  >>> 'ScipyMilpSearch'

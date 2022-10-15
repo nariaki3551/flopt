@@ -34,16 +34,15 @@ This problem can be formulated using `flopt` as follows,
   weights = [1, 2, 3, 4]
   obj = sum(w*c for c, w in zip(clauses, weights))
 
-  prob = Problem("MaxSat", sense="maximize")
+  prob = Problem("MaxSat", sense="Maximize")
   prob += obj
 
-  solver = Solver(algo="RandomSearch")
-  prob.solve(solver, timelimit=2, msg=True)
+  prob.solve(timelimit=2, msg=True)
 
   print("value x0", x0.value())
   print("value x1", x1.value())
   for clause in clauses:
-      print(clause)
+    print(f"{clause} = {clause.value()}")
 
 
 Literals
@@ -91,7 +90,7 @@ We set object function in Problem.
 
 .. code-block:: python
 
-  prob = Problem("MaxSat", sense="maximize")
+  prob = Problem("MaxSat", sense="Maximize")
   prob += obj
 
 Solve

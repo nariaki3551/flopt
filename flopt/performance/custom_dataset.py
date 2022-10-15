@@ -75,19 +75,24 @@ class CustomDataset(BaseDataset):
     def __init__(self, name="CustomDataset", probs=[]):
         if not isinstance(probs, list):
             probs = [probs]
+        assert all(prob.name is not None for prob in probs), "problem must be named"
         self.name = name
         self.instance_names = [prob.name for prob in probs]
         self.instance_dict = {prob.name: prob for prob in probs}
 
     def createInstance(self, instance_name):
         prob = self.instance_dict[instance_name]
-        return CustomInstance(prob)
+        if isinstance(prob, CustomInstance):
+            return prob
+        else:
+            return CustomInstance(prob)
 
     def addProblem(self, prob):
         self.instance_names.append(prob.name)
         self.instance_dict[prob.name] = prob
 
     def __iadd__(self, prob):
+        assert prob.name is not None, "problem must be named"
         self.addProblem(prob)
         return self
 
@@ -107,19 +112,23 @@ class CustomInstance(BaseInstance):
     """
 
     def __init__(self, prob):
+        assert prob.sense in {"Minimize", "minimize"}
         self.name = prob.name
         self.prob = prob
-        self.prob_type = prob.prob_type
         self.var_values = {var.name: var.value() for var in prob.getVariables()}
+        self.best_bound = None
 
     def createProblem(self, solver):
-        if set(self.prob_type) & set(solver.can_solve_problems):
+        if solver.available(self.prob):
             for variable in self.prob.getVariables():
                 variable.setValue(self.var_values[variable.name])
             return True, self.prob
         else:
             return False, None
 
-    def getBestValue(self):
+    def getBestBound(self):
         """return the optimal value of objective function"""
-        return None
+        return self.prob.best_bound
+
+    def setBestBound(self, best_bound):
+        self.prob.setBestBound(best_bound)

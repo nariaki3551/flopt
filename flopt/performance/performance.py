@@ -2,17 +2,21 @@ import os
 import pickle
 from itertools import product
 
-from flopt import env as flopt_env
 from flopt import Problem, Solver, Solver_list
+import flopt.solvers
+import flopt.env
 from flopt.env import setup_logger
+
 from .custom_dataset import CustomDataset
 from .log_visualizer import LogVisualizer
 
-performance_dir = flopt_env.performance_dir
+PERFORMANCE_DIR = flopt.env.PERFORMANCE_DIR
 logger = setup_logger(__name__)
 
 
-def compute(datasets, solvers="all", timelimit=None, msg=True, save_prefix=None):
+def compute(
+    datasets, solvers="all", timelimit=None, msg=True, save_prefix=None, **kwargs
+):
     """
     Measure the performance of (dataset, solver)
 
@@ -41,7 +45,6 @@ def compute(datasets, solvers="all", timelimit=None, msg=True, save_prefix=None)
 
     .. code-block:: python
 
-        from flopt import Solver
         import flopt
 
         # datasets
@@ -60,7 +63,7 @@ def compute(datasets, solvers="all", timelimit=None, msg=True, save_prefix=None)
 
     .. code-block:: python
 
-        rs_solver = Solver('RandomSearch')
+        rs_solver = flopt.Solver("RandomSearch")
 
         # compute the performance
         logs = flopt.performance.compute(
@@ -83,6 +86,7 @@ def compute(datasets, solvers="all", timelimit=None, msg=True, save_prefix=None)
       flopt.performance.compute(prob, timelimit=2, msg=True)
 
     """
+    assert timelimit is not None, "timelimit is required"
     # datasets settings
     if isinstance(datasets, Problem):
         cd = CustomDataset(name="user", probs=[datasets])
@@ -96,25 +100,22 @@ def compute(datasets, solvers="all", timelimit=None, msg=True, save_prefix=None)
     elif not isinstance(solvers, list):
         solvers = [solvers]
     for solver in solvers:
-        if timelimit is not None:
-            solver.setParams(timelimit=timelimit)
+        solver.setParams(timelimit=timelimit, **kwargs)
 
     # save_prefix setting
     if save_prefix is None:
-        save_prefix = performance_dir
+        save_prefix = PERFORMANCE_DIR
 
     logs = dict()
 
     for dataset in datasets:
         for instance in dataset:
-            print(instance)
+            logger.info(instance)
             for solver in solvers:
                 solver.reset()
                 formulatable, prob = instance.createProblem(solver)
                 if not formulatable:
                     continue
-                best_bd = instance.getBestValue()
-                solver.setParams(best_bd=best_bd)
                 state, log = prob.solve(solver=solver, msg=msg)
                 save_log(log, solver, dataset, instance, save_prefix)
                 logs[dataset.name, instance.name, solver.name] = log
@@ -183,7 +184,7 @@ def performance(
     elif not isinstance(solver_names, list):
         solver_names = [solver_names]
     if load_prefix is None:
-        load_prefix = performance_dir
+        load_prefix = PERFORMANCE_DIR
 
     log_visualizer = LogVisualizer()
     log_visualizer.load(

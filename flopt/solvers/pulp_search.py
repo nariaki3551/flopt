@@ -3,8 +3,12 @@ import pulp
 from flopt.solvers.base import BaseSearch
 from flopt.expression import Const
 from flopt.solution import Solution
-from flopt.constants import VariableType, ConstraintType, SolverTerminateState
-
+from flopt.constants import (
+    VariableType,
+    ExpressionType,
+    ConstraintType,
+    SolverTerminateState,
+)
 from flopt.env import setup_logger
 
 logger = setup_logger(__name__)
@@ -23,7 +27,7 @@ class LpVariable(pulp.LpVariable):
 
 
 class PulpSearch(BaseSearch):
-    """PuLP API LP Solver
+    """API for PuLP, linear programming modeling tool
 
     Parameters
     ----------
@@ -31,72 +35,75 @@ class PulpSearch(BaseSearch):
         solver pulp use, see https://coin-or.github.io/pulp/technical/solvers.html.
         default is pulp.PULP_CBC_CMD
 
-    Returns
-    -------
-    status : int
-        status of solver
+    Examples
+    --------
+
+    .. code-block:: python
+
+        import flopt
+
+        # Variables
+        a = flopt.Variable("a", lowBound=0, upBound=1, cat="Integer")
+        b = flopt.Variable("b", lowBound=1, upBound=2, cat="Continuous")
+        c = flopt.Variable("c", lowBound=-1, upBound=3, cat="Continuous")
+
+        # Problem
+        prob = flopt.Problem()
+        prob += a + b + c + 2
+        prob += a + b >= 2
+        prob += b - c >= 3
+
+        solver = flopt.Solver("PulpSearch")
+        prob.solve(solver, msg=True)
+
+    When you use other solvers in pulp, for example GLPK solver, you set solver parameter in PulpSearch object.
+
+    .. code-block:: python
+
+        solver = flopt.Solver("PulpSearch")
+
+        import pulp
+        glpk_solver = pulp.GLPK_CMD()
+        solver.setParams(solver=glpk_solver)
+        prob.solve(solver, msg=True)
+
     """
 
     name = "PulpSearch"
-    can_solve_problems = ["lp"]
+    can_solve_problems = {
+        "Variable": VariableType.Number,
+        "Objective": ExpressionType.Linear,
+        "Constraint": ExpressionType.Linear,
+    }
 
     def __init__(self):
         super().__init__()
         self.solver = None
 
-    def available(self, prob, verbose=False):
-        """
-        Parameters
-        ----------
-        prob : Problem
-        verbose : bool
-
-        Returns
-        -------
-        bool
-            return true if objective and constraint functions are linear else false
-        """
-        for var in prob.getVariables():
-            if not var.type() in {
-                VariableType.Continuous,
-                VariableType.Integer,
-                VariableType.Binary,
-            }:
-                if verbose:
-                    logger.error(
-                        f"variable: \n{var}\n must be continouse, integer or binary, but got {var.type()}"
-                    )
-                return False
-        if not prob.obj.isLinear():
-            if verbose:
-                logger.error(f"objective function: \n{prob.obj}\n must be Linear")
-            return False
-        for const in prob.constraints:
-            if not const.expression.isLinear():
-                if verbose:
-                    logger.error(f"constraint: \n{const}\n must be Linear")
-                return False
-        return True
-
-    def search(self):
-
-        lp_prob, lp_solution = self.createLpProblem(self.solution, self.prob)
+    def search(self, solution, *args):
+        self.start_build()
+        lp_prob, lp_solution = self.createLpProblem(solution, self.prob)
+        self.end_build()
 
         if self.solver is not None:
             solver = self.solver
         else:
-            solver = pulp.PULP_CBC_CMD(timeLimit=self.timelimit, msg=self.msg)
+            solver = pulp.PULP_CBC_CMD(
+                timeLimit=self.timelimit - self.build_time, msg=self.msg
+            )
+
         lp_status = lp_prob.solve(solver)
 
         # get result
-        for lp_var, var in zip(lp_solution, self.solution):
+        for lp_var in lp_solution:
+            name = lp_var.getName()
             value = lp_var.getValue()
-            if var.type() in {VariableType.Integer, VariableType.Binary}:
+            if lp_var.cat in {pulp.LpInteger, pulp.LpBinary}:
                 value = round(value)
-            var.setValue(value)
+            solution.setValue(name, value)
 
-        # if solution is better thatn incumbent, then update best solution
-        self.registerSolution(self.solution)
+        # update best solution if needed
+        self.registerSolution(solution)
 
         # lp_status =   -1: infeasible
         #               -2: unbounded
@@ -135,7 +142,7 @@ class PulpSearch(BaseSearch):
             else:
                 raise ValueError(var.type())
             lp_var = LpVariable(
-                var.name, lowBound=var.lowBound, upBound=var.upBound, cat=cat
+                var.name, lowBound=var.getLb(), upBound=var.getUb(), cat=cat
             )
             lp_variables.append(lp_var)
         lp_solution = Solution("lp_solution", lp_variables)
@@ -151,7 +158,7 @@ class PulpSearch(BaseSearch):
         if not isinstance(prob.obj, Const):
             lp_prob.setObjective(prob.obj.value(lp_solution))
 
-        for const in prob.constraints:
+        for const in prob.getConstraints():
             const_exp = const.expression
             if const.type() == ConstraintType.Eq:
                 lp_prob.addConstraint(const_exp.value(lp_solution) == 0, const.name)

@@ -51,11 +51,11 @@ def test_Problem_getSolution():
     from itertools import count
 
     # get k-top solutions
-    for k in count(0):
+    for k in count(1):
         try:
             solution = prob.getSolution(k=k)
             prob.setSolution(k=k)
-        except KeyError:
+        except IndexError:
             break
         var_dict = solution.toDict()
         print(
