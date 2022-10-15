@@ -98,20 +98,9 @@ def during_solver_message(head, obj_value, best_bound, time, iteration):
 
 
 def end_solver_message(status, obj_value, build_time, elapsed_time, num_trials):
-    status_str = {
-        SolverTerminateState.Normal: "normal termination",
-        SolverTerminateState.Timelimit: "timelimit termination",
-        SolverTerminateState.Lowerbound: "lowerbound termination",
-        SolverTerminateState.Interrupt: "Ctrl-C termination",
-        SolverTerminateState.Unbounded: "found unbounded",
-        SolverTerminateState.Infeasible: "found infeasibility",
-        SolverTerminateState.Abnormal: "abnormal termination",
-        SolverTerminateState.Error: "error",
-    }
-
     message = (
         "",
-        f"Status: {status_str[status]}",
+        f"Status: {status.__str__()}",
         f"Objective Value: {obj_value}",
         f"Time: {elapsed_time}",
         f"    Build Time: {build_time}",

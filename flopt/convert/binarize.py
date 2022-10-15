@@ -1,6 +1,6 @@
 import flopt
 from flopt.variable import VarElement
-from flopt.expression import Expression, Const
+from flopt.expression import Expression, Reduction, Const
 from flopt.constants import VariableType
 
 
@@ -93,13 +93,14 @@ def binarize_expression(e, binarizes):
 
     Parameters
     ----------
-    e : Expresson or VarElement
+    e : Expression or Reduction or Const
     binarizes : dict
         binarizes[var] = binaries, where var = sum(i*var_bin)
     """
-    if isinstance(e, (VarElement, Const)):
+    assert isinstance(e, (Expression, Reduction, Const))
+    if isinstance(e, Const):
         return e
-    e = e.expand()  # also, Operation obj convert to Expression
+    e = e.expand()  # convert reduction obj to Expression
     e.resetlinkChildren()
 
     finish = False
@@ -113,7 +114,7 @@ def binarize_traverse(e, binarizes):
 
     Parameters
     ----------
-    e : Expresson or VarElement
+    e : Expression
     binarizes : dict
         binarizes[var] = binaries, where var = sum(i*var_bin)
 

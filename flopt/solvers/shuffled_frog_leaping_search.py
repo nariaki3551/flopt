@@ -71,6 +71,26 @@ class ShuffledFrogLeapingSearch(BaseSearch):
       number of frog per memeplex
     inc_flogsize : float
       Multiplier for increasing population size before each restart
+
+    Examples
+    --------
+
+    .. code-block:: python
+
+        import flopt
+
+        x = flopt.Variable("x", lowBound=-1, upBound=1, cat="Continuous")
+        y = flopt.Variable("y", lowBound=-1, upBound=1, cat="Continuous")
+
+        prob = flopt.Problem()
+        prob += 2*x*x + x*y + y*y + x + y
+
+        solver = flopt.Solver("SFLA")
+        status, log = prob.solve(solver, msg=True, timelimit=1)
+
+        print("obj =", flopt.Value(prob.obj))
+        print("x =", flopt.Value(x))
+        print("y =", flopt.Value(y))
     """
 
     name = "SFLA"

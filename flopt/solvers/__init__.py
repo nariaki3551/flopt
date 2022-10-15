@@ -16,7 +16,7 @@ algo_list = [
 ]
 
 
-def Solver(algo="RandomSearch"):
+def Solver(algo="auto"):
     """
     Obtain Solver object.
 

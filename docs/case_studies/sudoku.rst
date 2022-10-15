@@ -15,18 +15,20 @@ We solve a following Sudoku puzzle using flopt.
    4  |     8 |       | 3     |
    5  |     1 |   9   |       |
       +-------+-------+-------+
-   6  | 3     | 4     | 2     | 7  |   5   | 1     |       | 8  |       | 8   6 |       |
+   6  | 3     | 4     | 2     |
+   7  |   5   | 1     |       |
+   8  |       | 8   6 |       |
       +-------+-------+-------+
 
 
-We represent this problem's hints as following list.
+We represent this problem's hints as following list. For example, (1, 0, 7) hint represents 1 is in the cell where row is 0 and column is 7.
 
 
 .. code-block:: python
 
     # problem format
     hints = [
-        # (value, row, col)
+        # (value, row, column)
         (1, 0, 7), (4, 1, 0), (2, 2, 1), (5, 3, 4), (4, 3, 6),
         (7, 3, 8), (8, 4, 2), (3, 4, 6), (1, 5, 2), (9, 5, 4),
         (3, 6, 0), (4, 6, 3), (2, 6, 6), (5, 7, 1), (1, 7, 3),

@@ -12,6 +12,7 @@ logger = setup_logger(__name__)
 
 class CvxoptQpSearch(BaseSearch):
     """API of CVXOPT.qp Solver
+    https://cvxopt.org/userguide/coneprog.html#quadratic-programming
 
     Parameters
     ----------
@@ -23,47 +24,27 @@ class CvxoptQpSearch(BaseSearch):
 
     .. code-block:: python
 
-        from flopt import Variable, Problem
+        import flopt
 
-        x = Variable('x', lowBound=-1, upBound=1, cat='Continuous')
-        y = Variable('y', lowBound=-1, upBound=1, cat='Continuous')
+        x = flopt.Variable("x", lowBound=-1, upBound=1, cat="Continuous")
+        y = flopt.Variable("y", lowBound=-1, upBound=1, cat="Continuous")
 
-        prob = Problem()
+        prob = flopt.Problem()
         prob += 2*x*x + x*y + y*y + x + y
         prob += x >= 0
         prob += y >= 0
         prob += x + y == 1
 
-        print(prob.show())
-        >>> Name: None
-        >>>   Type         : Problem
-        >>>   sense        : minimize
-        >>>   objective    : 2*(x*x)+(x*y)+(y*y)+x+y
-        >>>   #constraints : 3
-        >>>   #variables   : 2 (Continuous 2)
-        >>>
-        >>>   C 0, name None, x >= 0
-        >>>   C 1, name None, y >= 0
-        >>>   C 2, name None, x+y-1 == 0
-
-
-    .. code-block:: python
-
-        from flopt import Solver, Value
-
-        solver = Solver('CvxoptQpSearch')
+        solver = flopt.Solver("CvxoptQpSearch")
         status, log = prob.solve(solver, msg=True)
-        print()
-        print('obj =', Value(prob.obj))
-        print('x =', Value(x))
-        print('y =', Value(y))
+
+        print("obj =", flopt.Value(prob.obj))
+        print("x =", flopt.Value(x))
+        print("y =", flopt.Value(y))
         >>> obj = 1.8750000000000002
         >>> x = 0.2500000152449024
         >>> y = 0.7499999847550975
 
-    See Also
-    --------
-    `https://cvxopt.org/userguide/coneprog.html#quadratic-programming`
     """
 
     name = "CvxoptQpSearch"

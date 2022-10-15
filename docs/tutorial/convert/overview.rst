@@ -57,8 +57,6 @@ Some solvers input a structure, and the Conversion Graph includes solvers and mo
   style flopt fill:#fff,stroke:#000,stroke-width:1px
   CVXOPT(CVXOPT)
   style CVXOPT fill:#fff,stroke:#000,stroke-width:1px
-  Scipy.optimize.linprog(Scipy.optimize.linprog)
-  style Scipy.optimize.linprog fill:#fff,stroke:#000,stroke-width:1px
   Scipy.optimize.milp(Scipy.optimize.milp)
   style Scipy.optimize.milp fill:#fff,stroke:#000,stroke-width:1px
   Scipy.optimize.minimize(Scipy.optimize.minize)
@@ -93,11 +91,9 @@ Some solvers input a structure, and the Conversion Graph includes solvers and mo
   QuboStructure --> flopt
 
   QpStructure --> CVXOPT
-  LpStructure --> Scipy.optimize.linprog
   LpStructure --> Scipy.optimize.milp
+  LpStructure --> PuLP
 
-
-  flopt --> PuLP
   PuLP --> flopt
   flopt --> Hyperopt
   flopt --> Optuna

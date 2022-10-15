@@ -26,3 +26,5 @@ VerPermutation = flopt.constants.VariableType.Permutation
 
 Minimize = flopt.constants.OptimizationType.Minimize
 Maximize = flopt.constants.OptimizationType.Maximize
+
+SolverTerminateState = flopt.constants.SolverTerminateState
