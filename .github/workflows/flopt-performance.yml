@@ -50,7 +50,6 @@ jobs:
         python compute_performance.py auto              auto              --datasets func --params ./settings/short.param --log_level 10
     - name: Collect trainting data of Auto Solver
       run: |
-        python -m pip install -r requirements_dev.txt
         python fit_models.py nonlinear      --collect --samples 3 --debug
         python fit_models.py nonlinear_mip  --collect --samples 3 --debug
         python fit_models.py ising          --collect --samples 3 --debug
