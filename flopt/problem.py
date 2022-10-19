@@ -364,7 +364,7 @@ class Problem:
             self.setObjective(*other)
         return self
 
-    def __str__(self):
+    def __str__(self, prefix=""):
         from collections import defaultdict
 
         variables_dict = defaultdict(int)
@@ -376,13 +376,13 @@ class Problem:
                 for key, value in sorted(variables_dict.items())
             ]
         )
-        obj_name = "" if self.obj_name is None else f"{self.obj_name}, "
-        s = f"Name: {self.name}\n"
-        s += f"  Type         : {self.type}\n"
-        s += f"  sense        : {self.sense}\n"
-        s += f"  objective    : {obj_name}{self.obj.name}\n"
-        s += f"  #constraints : {len(self.constraints)}\n"
-        s += f"  #variables   : {len(self.getVariables())} ({variables_str})"
+        obj_name = self.obj.getName() if self.obj_name is None else f"{self.obj_name}, "
+        s = f"{prefix}Name: {self.name}\n"
+        s += f"{prefix}  Type         : {self.type}\n"
+        s += f"{prefix}  sense        : {self.sense}\n"
+        s += f"{prefix}  objective    : {obj_name}\n"
+        s += f"{prefix}  #constraints : {len(self.constraints)}\n"
+        s += f"{prefix}  #variables   : {len(self.getVariables())} ({variables_str})"
         return s
 
     def show(self):

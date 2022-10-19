@@ -193,3 +193,62 @@ def allAvailableSolversProblemType(problem_type):
         if Solver(algo=algo).availableProblemType(problem_type)
     ]
     return available_solvers
+
+
+def estimate_problem_type_info(prob):
+    """Estimate problem types
+
+    Parameters
+    ----------
+    prob : Problem
+    """
+    from flopt.solvers.selector import (
+        lp,
+        mip,
+        ising,
+        qp,
+        permutation,
+        blackbox,
+        blackbox_mip,
+        nonlinear,
+        nonlinear_mip,
+    )
+
+    problem_classes = [
+        (lp, "lp"),
+        (mip, "mip"),
+        (ising, "ising"),
+        (qp, "quadratic"),
+        (permutation, "permutation"),
+        (blackbox, "blackbox"),
+        (blackbox_mip, "blackbox with interger variables"),
+        (nonlinear, "nonlinear"),
+        (nonlinear_mip, "nonlinear with integer variables"),
+    ]
+
+    def check(problem_type, problem_class):
+        is_problem_class = (
+            problem_type["Variable"].expand() <= problem_class["Variable"].expand()
+            and problem_type["Objective"].expand()
+            <= problem_class["Objective"].expand()
+            and problem_type["Constraint"].expand()
+            <= problem_class["Constraint"].expand()
+        )
+        return is_problem_class
+
+    problem_type = prob.toProblemType()
+
+    print("Problem")
+    print(prob.__str__(prefix="\t"))
+    print()
+    print("Problem components")
+    print(f"\tVariable: {problem_type['Variable']}")
+    print(f"\tObjective: {problem_type['Objective']}")
+    print(f"\tConstraint: {problem_type['Constraint']}")
+    print()
+    print("Included problem classes")
+    for problem_class, name in problem_classes:
+        if is_problem_class := check(problem_type, problem_class):
+            print("\t-->", name)
+        else:
+            print("\t   ", name)
