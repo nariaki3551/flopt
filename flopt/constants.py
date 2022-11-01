@@ -66,8 +66,7 @@ class VariableType(enum.IntEnum):
             return {vt.Continuous, vt.Integer, vt.Binary, vt.Spin}
         elif self == vt.Any:
             return vt.Number.expand() | {vt.Permutation}
-        else:
-            return {self}
+        return {self}
 
 
 # expression type
@@ -100,8 +99,7 @@ class ExpressionType(enum.IntEnum):
             return {et.Const, et.Linear, et.Quadratic, et.Non}
         elif self == et.Linear:
             return {et.Const, et.Linear, et.Non}
-        else:
-            return {self, et.Non}
+        return {self, et.Non}
 
 
 # expression type

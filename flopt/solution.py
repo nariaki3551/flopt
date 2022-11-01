@@ -204,8 +204,7 @@ class Solution:
             for var in variables:
                 var.setValue(var.value() + other)
             return Solution("+scalar", variables)
-        else:
-            return NotImplemented
+        return NotImplemented
 
     def __radd__(self, other):
         return self + other
@@ -229,8 +228,7 @@ class Solution:
             for var in variables:
                 var.setValue(var.value() - other)
             return Solution("+scalar", variables)
-        else:
-            return NotImplemented
+        return NotImplemented
 
     def __rsub__(self, other):
         return -self + other
@@ -254,8 +252,7 @@ class Solution:
             for var in variables:
                 var.setValue(var.value() * other)
             return Solution("*scalar", variables)
-        else:
-            return NotImplemented
+        return NotImplemented
 
     def __rmul__(self, other):
         return self * other
@@ -270,8 +267,7 @@ class Solution:
             return self * reverse_list
         elif isinstance(other, (int, float)):
             return self * (1 / other)
-        else:
-            return NotImplemented
+        return NotImplemented
 
     def __abs__(self):
         variables = [var.clone() for var in self._variables]

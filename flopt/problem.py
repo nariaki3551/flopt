@@ -59,7 +59,7 @@ class Problem:
     """
 
     def __init__(self, name=None, sense=OptimizationType.Minimize):
-        if sense == "minimize" or sense == "maximize":
+        if sense in ("minimize", "maximize"):
             logger.warning(
                 f"'minimize' and 'maximize' is deprecated. You have to use 'Minimize', 'Maximize', flopt.Minimize or flopt.Maximize"
             )
@@ -252,7 +252,7 @@ class Problem:
         solver.setParams(**kwargs)
         self.solver = solver
 
-        if self.sense == "maximize" or self.sense == "Maximize":
+        if self.sense in ("maximize", "Maximize"):
             self.obj = -self.obj
 
         solution = Solution("s", self.getVariables())
@@ -265,7 +265,7 @@ class Problem:
             msg=msg,
         )
 
-        if self.sense == "maximize" or self.sense == "Maximize":
+        if self.sense in ("maximize", "Maximize"):
             self.obj = -self.obj
 
         return status, log
@@ -304,7 +304,7 @@ class Problem:
         problem_type : dict
             key is "Variable", "Objective", "Constraint"
         """
-        problem_type = dict()
+        problem_type = {}
 
         variable_types = [
             VariableType.Binary,
@@ -388,5 +388,5 @@ class Problem:
     def show(self):
         s = str(self) + "\n\n"
         for ix, const in enumerate(self.constraints):
-            s += f"  C {ix}, name {const.name}, {str(const)}\n"
+            s += f"  C {ix}, name {const.name}, {const}\n"
         return s

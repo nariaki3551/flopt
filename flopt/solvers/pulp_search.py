@@ -115,8 +115,7 @@ class PulpSearch(BaseSearch):
             return SolverTerminateState.Unbounded
         elif lp_status == -3:
             return SolverTerminateState.Abnormal
-        else:
-            return SolverTerminateState.Normal
+        return SolverTerminateState.Normal
 
     def createLpProblem(self, solution, prob):
         """Convert Problem into pulp.LpProblem
