@@ -43,15 +43,13 @@ def merge(func, arrays):
 def zero_percentage(array):
     if array is None:
         return None
-    else:
-        return f"{(1 - np.count_nonzero(array)/array.size)*100:.3f}"
+    return f"{(1 - np.count_nonzero(array)/array.size)*100:.3f}"
 
 
 def shape(array):
     if array is None:
         return None
-    else:
-        return array.shape
+    return array.shape
 
 
 # -------------------------------------------------------
@@ -259,8 +257,7 @@ class QpStructure:
             return qp.toAllNeq()
         elif option == "all_eq":
             return qp.toAllEq()
-        else:
-            return qp
+        return qp
 
     def toAllNeq(self):
         """convert all non eqaual constraint type
@@ -566,8 +563,7 @@ class LpStructure:
             return qp.toAllNeq().toLp()
         elif option == "all_eq":
             return qp.toAllEq().toLp()
-        else:
-            return qp.toLp()
+        return qp.toLp()
 
     def toFlopt(self):
         """

@@ -52,8 +52,8 @@ class Constraint:
         exp_value = self.value(solution)
         if self._type == ConstraintType.Eq:
             return exp_value == 0
-        else:  # self._type == ConstraintType.Le
-            return exp_value <= 0
+        # self._type == ConstraintType.Le
+        return exp_value <= 0
 
     def getVariables(self):
         return self.expression.getVariables()
@@ -96,7 +96,7 @@ class Constraint:
                 return v
             return vv if (vv := v - slide_epsilon) != 0 else vv - slide_epsilon
 
-        constraints = list()
+        constraints = []
         x = self.expression
         y = other.expression
 
@@ -136,4 +136,4 @@ class Constraint:
         return f"{self.expression.getName()} {type_str} 0"
 
     def __repr__(self):
-        return f"Constraint({repr(self.expression)}, {self._type}, {self.name})"
+        return f"Constraint({self.expression!r}, {self._type}, {self.name})"

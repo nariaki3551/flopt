@@ -109,5 +109,4 @@ class ScipyMilpSearch(BaseSearch):
             return SolverTerminateState.Infeasible
         elif res.status == 3:
             return SolverTerminateState.Unbounded
-        else:
-            return SolverTerminateState.Abnormal
+        return SolverTerminateState.Abnormal

@@ -73,7 +73,7 @@ class HyperoptTPESearch(BaseSearch):
         self.start_build()
 
         # make the search space
-        space = dict()
+        space = {}
         for var in solution:
             name = var.name
             lb = var.getLb(must_number=True)

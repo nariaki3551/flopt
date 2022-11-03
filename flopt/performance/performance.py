@@ -106,7 +106,7 @@ def compute(
     if save_prefix is None:
         save_prefix = PERFORMANCE_DIR
 
-    logs = dict()
+    logs = {}
 
     for dataset in datasets:
         for instance in dataset:

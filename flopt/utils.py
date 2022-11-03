@@ -27,8 +27,7 @@ def Sum(x):
         return sum(x)
     elif isinstance(x, np.ndarray):
         return flopt.expression.Sum(x.ravel())
-    else:
-        return flopt.expression.Sum(x)
+    return flopt.expression.Sum(x)
 
 
 def Prod(x):
@@ -47,8 +46,7 @@ def Prod(x):
         return functools.reduce(operator.mul, x)
     elif isinstance(x, np.ndarray):
         return flopt.expression.Prod(x.ravel())
-    else:
-        return flopt.expression.Prod(x)
+    return flopt.expression.Prod(x)
 
 
 def Dot(x, y):
@@ -108,8 +106,7 @@ def Value(x):
 
         cast = np.frompyfunc(to_value, 1, 1)
         return cast(x)
-    else:
-        return x
+    return x
 
 
 def get_dot_graph(expression, save_file, rankdir=None):

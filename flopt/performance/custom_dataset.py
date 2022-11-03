@@ -84,8 +84,7 @@ class CustomDataset(BaseDataset):
         prob = self.instance_dict[instance_name]
         if isinstance(prob, CustomInstance):
             return prob
-        else:
-            return CustomInstance(prob)
+        return CustomInstance(prob)
 
     def addProblem(self, prob):
         self.instance_names.append(prob.name)
@@ -123,8 +122,7 @@ class CustomInstance(BaseInstance):
             for variable in self.prob.getVariables():
                 variable.setValue(self.var_values[variable.name])
             return True, self.prob
-        else:
-            return False, None
+        return False, None
 
     def getBestBound(self):
         """return the optimal value of objective function"""

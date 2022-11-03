@@ -48,7 +48,7 @@ class ExpressionElement:
         self.name = name
         self.var_dict = None
         self.polynomial = None
-        self.parents = list()
+        self.parents = []
 
     def setName(self):
         raise NotImplementedError
@@ -64,7 +64,7 @@ class ExpressionElement:
     def resetlinkChildren(self):
         for elm in self.traverse():
             if isinstance(elm, ExpressionElement):
-                elm.parents = list()
+                elm.parents = []
         self.linkChildren()
         return self
 
@@ -119,6 +119,8 @@ class ExpressionElement:
             return ExpressionType.Linear
         elif self.isQuadratic():
             return ExpressionType.Quadratic
+        elif self.isPolynomial():
+            return ExpressionType.Polynomial
         return self._type
 
     def constant(self):
@@ -140,8 +142,7 @@ class ExpressionElement:
         elif self.isPolynomial():
             self.setPolynomial()
             return self.polynomial.isMonomial()
-        else:
-            return False
+        return False
 
     def toMonomial(self):
         if self.polynomial is None:
@@ -171,8 +172,7 @@ class ExpressionElement:
                 self.polynomial.isQuadratic()
                 or self.polynomial.simplify().isQuadratic()
             )
-        else:
-            return False
+        return False
 
     def toQuadratic(self, x=None):
         """
@@ -251,8 +251,7 @@ class ExpressionElement:
         elif self.isPolynomial():
             self.setPolynomial()
             return self.polynomial.isLinear() or self.polynomial.simplify().isLinear()
-        else:
-            return False
+        return False
 
     def toLinear(self, x=None):
         """
@@ -363,9 +362,8 @@ class ExpressionElement:
                 {var.name: var for var in self.getVariables()},
             )
             return expr
-        else:
-            # VarElement family
-            return Expression(expr, Const(0), "+")
+        # VarElement family
+        return Expression(expr, Const(0), "+")
 
     def toBinary(self):
         """create expression replased binary to spin
@@ -506,16 +504,14 @@ class ExpressionElement:
                 return Expression(self, other.elmB, "-")
             else:
                 return Expression(self, other, "+")
-        else:
-            return NotImplemented
+        return NotImplemented
 
     def __radd__(self, other):
         if isinstance(other, number_classes):
             if other == 0:
                 return self
             return Expression(Const(other), self, "+")
-        else:
-            return NotImplemented
+        return NotImplemented
 
     def __sub__(self, other):
         if isinstance(other, number_classes):
@@ -530,8 +526,7 @@ class ExpressionElement:
                 # self - (-1*other) -> self + other
                 return Expression(self, other.elmB, "+")
             return Expression(self, other, "-")
-        else:
-            return NotImplemented
+        return NotImplemented
 
     def __rsub__(self, other):
         if isinstance(other, number_classes):
@@ -540,8 +535,7 @@ class ExpressionElement:
                 return -self
             else:
                 return Expression(Const(other), self, "-")
-        else:
-            return NotImplemented
+        return NotImplemented
 
     def __mul__(self, other):
         if isinstance(other, number_classes):
@@ -554,8 +548,7 @@ class ExpressionElement:
             return Expression(Const(other), self, "*")
         elif isinstance(other, ExpressionElement):
             return Expression(self, other, "*")
-        else:
-            return NotImplemented
+        return NotImplemented
 
     def __rmul__(self, other):
         if isinstance(other, number_classes):
@@ -566,8 +559,7 @@ class ExpressionElement:
             return Expression(Const(other), self, "*")
         elif isinstance(other, ExpressionElement):
             return Expression(other, self, "*")
-        else:
-            return NotImplemented
+        return NotImplemented
 
     def __truediv__(self, other):
         if isinstance(other, number_classes):
@@ -576,16 +568,14 @@ class ExpressionElement:
             return Expression(self, Const(other), "/")
         elif isinstance(other, ExpressionElement):
             return Expression(self, other, "/")
-        else:
-            return NotImplemented
+        return NotImplemented
 
     def __rtruediv__(self, other):
         if isinstance(other, number_classes):
             if other == 0:
                 return Const(0)
             return Expression(Const(other), self, "/")
-        else:
-            return NotImplemented
+        return NotImplemented
 
     def __pow__(self, other):
         if isinstance(other, number_classes):
@@ -594,24 +584,21 @@ class ExpressionElement:
             return Expression(self, Const(other), "^")
         elif isinstance(other, ExpressionElement):
             return Expression(self, other, "^")
-        else:
-            return NotImplemented
+        return NotImplemented
 
     def __rpow__(self, other):
         if isinstance(other, number_classes):
             if other == 1:
                 return Const(1)
             return Expression(Const(other), self, "^")
-        else:
-            return NotImplemented
+        return NotImplemented
 
     def __and__(self, other):
         if isinstance(other, number_classes):
             return Expression(self, Const(other), "&")
         elif isinstance(other, ExpressionElement):
             return Expression(self, other, "&")
-        else:
-            return NotImplemented
+        return NotImplemented
 
     def __rand__(self, other):
         return self & other
@@ -621,8 +608,7 @@ class ExpressionElement:
             return Expression(self, Const(other), "|")
         elif isinstance(other, ExpressionElement):
             return Expression(self, other, "|")
-        else:
-            return NotImplemented
+        return NotImplemented
 
     def __ror__(self, other):
         return self | other
@@ -665,8 +651,7 @@ class ExpressionElement:
         ):
             # 1 * b
             return hash(self.elmB)
-        else:
-            return hash((hash(self.elmA), hash(self.elmB), hash(self.operator)))
+        return hash((hash(self.elmA), hash(self.elmB), hash(self.operator)))
 
     def __eq__(self, other):
         # self == other --> self - other == 0
@@ -908,8 +893,7 @@ class Expression(ExpressionElement):
             elif other == 1:
                 return self
             return Expression(Const(other), self, "*")
-        else:
-            return NotImplemented
+        return NotImplemented
 
     def __str__(self):
         return self.getName()
@@ -1165,8 +1149,7 @@ class Const(ExpressionElement):
             return Const(other - self._value)
         if self._value < 0:
             return other + (-self)
-        else:
-            return other - self._value
+        return other - self._value
 
     def __mul__(self, other):
         if isinstance(other, number_classes):
@@ -1323,8 +1306,7 @@ class Sum(Reduction):
                     ret += elm.value()
             self.unsetVarDict()
             return ret
-        else:
-            return to_value_ufunc(self.elms).sum()
+        return to_value_ufunc(self.elms).sum()
 
     def isLinear(self):
         return all(elm.isLinear() for elm in self.elms)
@@ -1394,8 +1376,7 @@ class Prod(Reduction):
                     ret *= elm.value()
             self.unsetVarDict()
             return ret
-        else:
-            return to_value_ufunc(self.elms).prod()
+        return to_value_ufunc(self.elms).prod()
 
     def isLinear(self):
         if self.polynomial is None:

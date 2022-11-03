@@ -17,7 +17,7 @@ class Monomial:
     If terms is empty dictionary, then this monomial is constant whose value is self.coeff
     """
 
-    def __init__(self, terms=dict(), coeff=1):
+    def __init__(self, terms={}, coeff=1):
         self.terms = terms
         self.coeff = coeff
         self.max_degree = None
@@ -101,8 +101,7 @@ class Monomial:
         """
         if self.terms:
             return Polynomial({Monomial(self.terms): self.coeff})
-        else:
-            return Polynomial(constant=self.coeff)
+        return Polynomial(constant=self.coeff)
 
     def simplify(self):
         """Simplify this monomial
@@ -111,7 +110,7 @@ class Monomial:
         -------
         Monomial
         """
-        terms = dict()
+        terms = {}
         for x in self.terms:
             if x.type() == VariableType.Binary:
                 terms[x] = 1  # x * x = x
@@ -135,8 +134,7 @@ class Monomial:
                 else:
                     terms[x] = other[x]
             return Monomial(terms, self.coeff * other.coeff)
-        else:
-            return NotImplemented
+        return NotImplemented
 
     def __rmul__(self, other):
         return self * other
@@ -209,7 +207,7 @@ class Polynomial:
         constant of polynomial
     """
 
-    def __init__(self, terms=dict(), constant=0):
+    def __init__(self, terms={}, constant=0):
         self.terms = terms
         self._constant = constant
 
@@ -275,8 +273,7 @@ class Polynomial:
                 mono *= elm.toMonomial()
         if mono in self.terms:
             return self.terms[mono]
-        else:
-            return 0
+        return 0
 
     def constant(self):
         """
@@ -362,7 +359,7 @@ class Polynomial:
         Polynomial
             return simplified self polynomial
         """
-        terms = dict()
+        terms = {}
         constant = 0
         for mono in self.terms.keys():
             _mono = mono.simplify()
@@ -389,8 +386,7 @@ class Polynomial:
                     del terms[mono]
             constant = self._constant + other._constant
             return Polynomial(terms, constant)
-        else:
-            return NotImplemented
+        return NotImplemented
 
     def __radd__(self, other):
         return self + other
@@ -408,7 +404,7 @@ class Polynomial:
         elif isinstance(other, Monomial):
             return self * other.toPolynomial()
         elif isinstance(other, Polynomial):
-            terms = dict()
+            terms = {}
             for mono, coeff in other:
                 for mono_, coeff_ in self:
                     mono__ = mono * mono_
@@ -437,8 +433,7 @@ class Polynomial:
                     del terms[mono]
             constant = self._constant * other._constant
             return Polynomial(terms, constant)
-        else:
-            return NotImplemented
+        return NotImplemented
 
     def __rmul__(self, other):
         return self * other
@@ -473,11 +468,11 @@ class Polynomial:
         s = ""
         for mono, coeff in self.terms.items():
             if coeff == 1:
-                s += f"{str(mono)}+"
+                s += f"{mono}+"
             elif coeff > 0:
-                s += f"{coeff}*{str(mono)}+"
+                s += f"{coeff}*{mono}+"
             else:
-                s += f"({coeff}*{str(mono)})+"
+                s += f"({coeff}*{mono})+"
         return s + f"{self._constant}"
 
     def __repr__(self):

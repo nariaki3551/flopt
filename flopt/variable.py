@@ -41,7 +41,7 @@ class VariableArray(np.ndarray):
         else:
             shape = array.shape
         obj = super().__new__(cls, shape, dtype=VarElement)
-        obj.mono_to_index = dict()
+        obj.mono_to_index = {}
         obj.set_mono = False
         return obj
 
@@ -215,7 +215,7 @@ class VariableFactory:
 
         index = indices[0]
         indices = indices[1:]
-        variables = dict()
+        variables = {}
         if len(indices) == 0:
             for i in index:
                 if isinstance(i, array_classes):
@@ -285,7 +285,7 @@ class VariableFactory:
             iterator = keys
         else:
             iterator = itertools.product(*keys)
-        variables = dict()
+        variables = {}
         for key in iterator:
             if isinstance(key, (range, types.GeneratorType)):
                 raise ValueError(f"key must not be generator")
@@ -455,8 +455,7 @@ class VarElement:
                 if self.lowBound is not None
                 else get_variable_lower_bound(to_int=True)
             )
-        else:
-            return self.lowBound
+        return self.lowBound
 
     def getUb(self, must_number=False):
         if must_number:
@@ -465,8 +464,7 @@ class VarElement:
                 if self.upBound is not None
                 else get_variable_upper_bound(to_int=True)
             )
-        else:
-            return self.upBound
+        return self.upBound
 
     def feasible(self):
         """
@@ -549,8 +547,7 @@ class VarElement:
                 return Expression(self, other.elmB, "-")
             else:
                 return Expression(self, other, "+")
-        else:
-            return NotImplemented
+        return NotImplemented
 
     def __radd__(self, other):
         if isinstance(other, number_classes):
@@ -559,8 +556,7 @@ class VarElement:
             return Expression(Const(other), self, "+")
         elif isinstance(other, (VarElement, ExpressionElement)):
             return Expression(other, self, "+")
-        else:
-            return NotImplemented
+        return NotImplemented
 
     def __sub__(self, other):
         if isinstance(other, number_classes):
@@ -577,8 +573,7 @@ class VarElement:
                 # self - (-1*other) --> self + other
                 return Expression(self, other.elmB, "+")
             return Expression(self, other, "-")
-        else:
-            return NotImplemented
+        return NotImplemented
 
     def __rsub__(self, other):
         if isinstance(other, number_classes):
@@ -589,8 +584,7 @@ class VarElement:
                 return Expression(Const(other), self, "-")
         elif isinstance(other, (VarElement, ExpressionElement)):
             return Expression(other, self, "-")
-        else:
-            return NotImplemented
+        return NotImplemented
 
     def __mul__(self, other):
         if isinstance(other, number_classes):
@@ -610,10 +604,8 @@ class VarElement:
                     return other.elmA * Expression(self, other.elmB, "*")
                 else:
                     return Expression(other, self, "*")
-            else:
-                return Expression(other, self, "*")
-        else:
-            return NotImplemented
+            return Expression(other, self, "*")
+        return NotImplemented
 
     def __rmul__(self, other):
         if isinstance(other, number_classes):
@@ -631,10 +623,8 @@ class VarElement:
                     return other.elmA * Expression(other.elmB, self, "*")
                 else:
                     return Expression(other, self, "*")
-            else:
-                return Expression(other, self, "*")
-        else:
-            return NotImplemented
+            return Expression(other, self, "*")
+        return NotImplemented
 
     def __truediv__(self, other):
         if isinstance(other, number_classes):
@@ -645,8 +635,7 @@ class VarElement:
             return Expression(self, Const(other), "/")
         elif isinstance(other, (VarElement, ExpressionElement)):
             return Expression(self, other, "/")
-        else:
-            return NotImplemented
+        return NotImplemented
 
     def __rtruediv__(self, other):
         if isinstance(other, number_classes):
@@ -655,16 +644,14 @@ class VarElement:
             return Expression(Const(other), self, "/")
         elif isinstance(other, (VarElement, ExpressionElement)):
             return Expression(other, self, "/")
-        else:
-            return NotImplemented
+        return NotImplemented
 
     def __mod__(self, other):
         if isinstance(other, int):
             return Expression(self, Const(other), "%")
         elif isinstance(other, (VarInteger, ExpressionElement)):
             return Expression(self, other, "%")
-        else:
-            raise NotImplementedError()
+        raise NotImplementedError()
 
     def __pow__(self, other):
         if isinstance(other, number_classes):
@@ -675,8 +662,7 @@ class VarElement:
             return Expression(self, Const(other), "^")
         elif isinstance(other, (VarElement, ExpressionElement)):
             return Expression(self, other, "^")
-        else:
-            return NotImplemented
+        return NotImplemented
 
     def __rpow__(self, other):
         if isinstance(other, number_classes):
@@ -685,8 +671,7 @@ class VarElement:
             return Expression(Const(other), self, "^")
         elif isinstance(other, (VarElement, ExpressionElement)):
             return Expression(other, self, "^")
-        else:
-            return NotImplemented
+        return NotImplemented
 
     def __abs__(self):
         return abs(self._value)
@@ -714,8 +699,7 @@ class VarElement:
                 Expression(self, Const(0), "+", name=self.name) - other,
                 ConstraintType.Eq,
             )
-        else:
-            return Constraint(self - other, ConstraintType.Eq)
+        return Constraint(self - other, ConstraintType.Eq)
 
     def __le__(self, other):
         # self <= other --> self - other <= 0
@@ -723,8 +707,7 @@ class VarElement:
             return Constraint(
                 Expression(self, Const(0), "+", name=self.name), ConstraintType.Le
             )
-        else:
-            return Constraint(self - other, ConstraintType.Le)
+        return Constraint(self - other, ConstraintType.Le)
 
     def __ge__(self, other):
         # self >= other --> other - self <= 0
@@ -765,8 +748,7 @@ class VarInteger(VarElement):
                 if self.lowBound is not None
                 else get_variable_lower_bound(to_int=True)
             )
-        else:
-            return self.lowBound
+        return self.lowBound
 
     def getUb(self, must_number=False):
         if must_number:
@@ -775,8 +757,7 @@ class VarInteger(VarElement):
                 if self.upBound is not None
                 else get_variable_upper_bound(to_int=True)
             )
-        else:
-            return self.upBound
+        return self.upBound
 
     def setRandom(self):
         lb = self.getLb(must_number=True)

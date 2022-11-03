@@ -34,15 +34,13 @@ def get_variable_id():
 def get_variable_lower_bound(to_int=False):
     if to_int:
         return int(Environment.VARIABLE_LOWER_BOUND)
-    else:
-        return Environment.VARIABLE_LOWER_BOUND
+    return Environment.VARIABLE_LOWER_BOUND
 
 
 def get_variable_upper_bound(to_int=False):
     if to_int:
         return int(Environment.VARIABLE_UPPER_BOUND)
-    else:
-        return Environment.VARIABLE_UPPER_BOUND
+    return Environment.VARIABLE_UPPER_BOUND
 
 
 class Environment:
