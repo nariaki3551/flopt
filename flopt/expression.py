@@ -74,6 +74,11 @@ class ExpressionElement:
     def setPolynomial(self):
         raise NotImplementedError
 
+    def getPolynomial(self):
+        if self.polynomial is None:
+            self.setPolynomial()
+        return self.polynomial
+
     def _value(self):
         """
         Returns
@@ -124,11 +129,8 @@ class ExpressionElement:
         return self._type
 
     def constant(self):
-        if self.polynomial is not None:
-            return self.polynomial.constant()
-        elif self.isPolynomial():
-            self.setPolynomial()
-            return self.polynomial.constant()
+        if self.isPolynomial():
+            return self.getPolynomial().constant()
         else:
             import sympy
 
@@ -137,22 +139,15 @@ class ExpressionElement:
             )
 
     def isMonomial(self):
-        if self.polynomial is not None:
-            return self.polynomial.isMonomial()
-        elif self.isPolynomial():
-            self.setPolynomial()
-            return self.polynomial.isMonomial()
+        if self.isPolynomial():
+            return self.getPolynomial().isMonomial()
         return False
 
     def toMonomial(self):
-        if self.polynomial is None:
-            self.setPolynomial()
-        return self.polynomial.toMonomial()
+        return self.getPolynomial().toMonomial()
 
     def toPolynomial(self):
-        if self.polynomial is None:
-            self.setPolynomial()
-        return self.polynomial
+        return self.getPolynomial()
 
     def isQuadratic(self):
         """
@@ -161,16 +156,10 @@ class ExpressionElement:
         bool
             return true if this expression is quadratic else false
         """
-        if self.polynomial is not None:
+        if self.isPolynomial():
             return (
-                self.polynomial.isQuadratic()
-                or self.polynomial.simplify().isQuadratic()
-            )
-        elif self.isPolynomial():
-            self.setPolynomial()
-            return (
-                self.polynomial.isQuadratic()
-                or self.polynomial.simplify().isQuadratic()
+                self.getPolynomial().isQuadratic()
+                or self.getPolynomial().simplify().isQuadratic()
             )
         return False
 
@@ -194,9 +183,7 @@ class ExpressionElement:
         ), f"x must be None or VariableArray"
         from flopt.convert import QuadraticStructure
 
-        if self.polynomial is None:
-            self.setPolynomial()
-        polynomial = self.polynomial.simplify()
+        polynomial = self.getPolynomial().simplify()
         if x is None:
             x = VariableArray(sorted(self.getVariables(), key=lambda var: var.name))
 
@@ -246,11 +233,11 @@ class ExpressionElement:
         >>> (a*b).isLinear()
         >>> False
         """
-        if self.polynomial is not None:
-            return self.polynomial.isLinear() or self.polynomial.simplify().isLinear()
-        elif self.isPolynomial():
-            self.setPolynomial()
-            return self.polynomial.isLinear() or self.polynomial.simplify().isLinear()
+        if self.isPolynomial():
+            return (
+                self.getPolynomial().isLinear()
+                or self.getPolynomial().simplify().isLinear()
+            )
         return False
 
     def toLinear(self, x=None):
@@ -277,14 +264,13 @@ class ExpressionElement:
             x = VariableArray(sorted(self.getVariables(), key=lambda var: var.name))
 
         num_variables = len(x)
-        if self.polynomial is None:
-            self.setPolynomial()
+        polynomial = self.getPolynomial()
 
         c = np.zeros((num_variables,), dtype=np_float)
-        for mono, coeff in self.polynomial:
+        for mono, coeff in polynomial:
             c[x.index(mono)] = coeff
 
-        C = self.polynomial.constant()
+        C = polynomial.constant()
         return LinearStructure(c, C, x=x)
 
     def isIsing(self):
@@ -777,7 +763,7 @@ class Expression(ExpressionElement):
             self.elmB.linkChildren()
 
     def isPolynomial(self):
-        return (
+        return self.polynomial is not None or (
             self.elmA.isPolynomial()
             and self.elmB.isPolynomial()
             and (
@@ -1379,14 +1365,10 @@ class Prod(Reduction):
         return to_value_ufunc(self.elms).prod()
 
     def isLinear(self):
-        if self.polynomial is None:
-            self.setPolynomial()
-        return self.polynomial.isLinear()
+        return self.getPolynomial().isLinear()
 
     def isQuadratic(self):
-        if self.polynomial is None:
-            self.setPolynomial()
-        return self.polynomial.isQuadratic()
+        return self.getPolynomial().isQuadratic()
 
     def __repr__(self):
         s = f"Prod({self.elms})"
