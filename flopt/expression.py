@@ -119,6 +119,8 @@ class ExpressionElement:
             return ExpressionType.Linear
         elif self.isQuadratic():
             return ExpressionType.Quadratic
+        elif self.isPolynomial():
+            return ExpressionType.Polynomial
         return self._type
 
     def constant(self):

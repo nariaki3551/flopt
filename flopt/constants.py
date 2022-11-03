@@ -77,8 +77,9 @@ class ExpressionType(enum.IntEnum):
     Any = 203
     Linear = 204
     Quadratic = 205
-    BlackBox = 206
-    Non = 207
+    Polynomial = 206
+    BlackBox = 207
+    Non = 208
 
     def __str__(self):
         return self.name
@@ -92,9 +93,12 @@ class ExpressionType(enum.IntEnum):
                 et.Const,
                 et.Linear,
                 et.Quadratic,
+                et.Polynomial,
                 et.BlackBox,
                 et.Non,
             }
+        elif self == et.Polynomial:
+            return {et.Const, et.Linear, et.Quadratic, et.Polynomial, et.Non}
         elif self == et.Quadratic:
             return {et.Const, et.Linear, et.Quadratic, et.Non}
         elif self == et.Linear:

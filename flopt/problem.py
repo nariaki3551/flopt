@@ -318,6 +318,7 @@ class Problem:
         expression_types = [
             ExpressionType.Linear,
             ExpressionType.Quadratic,
+            ExpressionType.Polynomial,
             ExpressionType.Any,
         ]
 

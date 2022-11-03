@@ -246,7 +246,7 @@ def estimate_problem_type_info(prob):
     print(f"\tObjective: {problem_type['Objective']}")
     print(f"\tConstraint: {problem_type['Constraint']}")
     print()
-    print("Included problem classes")
+    print("Problem classes")
     for problem_class, name in problem_classes:
         if is_problem_class := check(problem_type, problem_class):
             print("\t-->", name)
