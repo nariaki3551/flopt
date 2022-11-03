@@ -1,7 +1,7 @@
 Solvers
 =======
 
-In flopt, users can use some third-party libraries and several solvers implemented in flopt.
+Users can use some third-party solvers and solvers implemented in flopt.
 We can see all available solvers by `flopt.Solver_list()`.
 
 .. code-block:: python
@@ -21,7 +21,7 @@ We can see all available solvers by `flopt.Solver_list()`.
   >>>  'CvxoptQpSearch',
   >>>  'auto']
 
-All available solvers for problem are shown by as follows.
+All available solvers for user defined problem can be shown by as follows.
 
 .. code-block:: python
 
@@ -38,6 +38,15 @@ All available solvers for problem are shown by as follows.
   >>>  'ScipyMilpSearch',
   >>>  'CvxoptQpSearch',
   >>>  'auto']
+
+
+You can specify the available solver by declaring solver object.
+
+.. code-block:: python
+
+  solver = flopt.Solver(algo="ScipySearch")
+  prob.solve(solver=solver)
+
 
 
 AutoSolver
