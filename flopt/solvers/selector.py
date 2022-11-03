@@ -52,6 +52,13 @@ else:
 #   Optimization Class Definitions
 # ---------------------------------------------
 
+# LP
+lp = {
+    "Variable": VariableType.Continuous,
+    "Objective": ExpressionType.Linear,
+    "Constraint": ExpressionType.Linear,
+}
+
 # MIP
 mip = {
     "Variable": VariableType.Number,

@@ -75,7 +75,7 @@ def binarize(prob):
           C 9, name for_mul_2_2, mul_2-x_0 <= 0
           C 10, name for_mul_2_3, mul_2-(bin_y_0_2+x_0-1) >= 0
     """
-    binarizes = dict()
+    binarizes = {}
     prob.obj = binarize_expression(prob.obj, binarizes)
     for const in prob.getConstraints():
         const.expression = binarize_expression(const.expression, binarizes)

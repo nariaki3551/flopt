@@ -16,6 +16,7 @@ We recommend reading them in order from the top.
    max_satisfiability
    expression_examples
    solver
+   problem_type
 
 
 Conversion to different formulations

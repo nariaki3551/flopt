@@ -205,7 +205,7 @@ class ShuffledFrogLeapingSearch(BaseSearch):
 
         # sort entire memeplexes
         self.frogs = [frog for memeplex in self.memeplexes for frog in memeplex]
-        self.frogs.sort(key=lambda frog: self.getObjValue(frog))
+        self.frogs.sort(key=self.getObjValue)
 
     def startProcess(self, solution):
         super().startProcess()

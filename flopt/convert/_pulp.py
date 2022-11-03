@@ -80,7 +80,7 @@ def pulp_to_flopt(prob):
 
     """
     # conver LpVariable -> VarElement
-    flopt_variables = dict()
+    flopt_variables = {}
     for var in prob.variables():
         flopt_var = flopt.Variable(
             var.getName(), lowBound=var.getLb(), upBound=var.getUb(), cat=var.cat
@@ -92,7 +92,7 @@ def pulp_to_flopt(prob):
     flopt_prob = flopt.Problem(name=name)
 
     def flopt_exp(const, var_dicts):
-        elms = list()
+        elms = []
         for var_dict in var_dicts:
             name, value = var_dict["name"], var_dict["value"]
             elms.append(value * flopt_variables[name])

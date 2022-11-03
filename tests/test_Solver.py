@@ -2,7 +2,14 @@ import pytest
 
 import flopt
 import flopt.error
-from flopt import Variable, Problem, Solver, Solver_list, CustomExpression
+from flopt import (
+    Variable,
+    Problem,
+    Solver,
+    Solver_list,
+    CustomExpression,
+    estimate_problem_type_info,
+)
 
 
 @pytest.fixture(scope="function")
@@ -503,3 +510,23 @@ def test_solver_log_add(prob, callback):
 
     log1 += log2
     assert len(log1) == add_len
+
+
+def test_estimate_problem_type_info(
+    prob,
+    prob_only_continuous,
+    prob_with_const,
+    prob_qp,
+    prob_nonlinear,
+    prob_ising,
+    prob_ising_const,
+    prob_perm,
+):
+    estimate_problem_type_info(prob)
+    estimate_problem_type_info(prob_only_continuous)
+    estimate_problem_type_info(prob_with_const)
+    estimate_problem_type_info(prob_qp)
+    estimate_problem_type_info(prob_nonlinear)
+    estimate_problem_type_info(prob_ising)
+    estimate_problem_type_info(prob_ising_const)
+    estimate_problem_type_info(prob_perm)

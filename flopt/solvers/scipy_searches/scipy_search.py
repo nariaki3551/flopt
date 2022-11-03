@@ -86,7 +86,7 @@ class ScipySearch(BaseSearch):
         x0 = [var.value() for var in solution]
 
         # bounds
-        lb, ub = list(), list()
+        lb, ub = [], []
         for var in solution:
             if var.type() == VariableType.Spin:
                 lb.append(0)

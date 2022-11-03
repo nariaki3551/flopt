@@ -1,7 +1,7 @@
 import inspect
 
 from flopt.solvers.base import BaseSearch
-from flopt.solvers.auto_search.selector import (
+from flopt.solvers.selector import (
     mip,
     ising,
     qp,
