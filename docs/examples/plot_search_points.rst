@@ -111,16 +111,6 @@ RandomSearch
        prob = Problem()
        prob += CustomExpression(test_func, [x, y])
 
-       # 1. specific algorithm
-       # algo = 'SFLA'
-       # plot_2d_func = Plot2DFunc(
-       #     test_func, xlim, ylim, opt=opt, save_prefix=f'./{algo}/'
-       # )
-       # solver = Solver(algo=algo)
-       # solver.setParams(n_trial=10, callbacks=[plot_2d_func])
-       # prob.solve(solver, msg=True)
-
-       # 2. all algorithm
        algos = [
            'RandomSearch',
            'OptunaTPESearch',
