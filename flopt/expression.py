@@ -526,7 +526,7 @@ class ExpressionElement:
     def __mul__(self, other):
         if isinstance(other, number_classes):
             if other == 0:
-                return Const(0)
+                return 0
             elif other == 1:
                 return self
             elif other == -1:
@@ -539,7 +539,7 @@ class ExpressionElement:
     def __rmul__(self, other):
         if isinstance(other, number_classes):
             if other == 0:
-                return Const(0)
+                return 0
             elif other == 1:
                 return self
             return Expression(Const(other), self, "*")
@@ -559,7 +559,7 @@ class ExpressionElement:
     def __rtruediv__(self, other):
         if isinstance(other, number_classes):
             if other == 0:
-                return Const(0)
+                return 0 
             return Expression(Const(other), self, "/")
         return NotImplemented
 
@@ -575,7 +575,7 @@ class ExpressionElement:
     def __rpow__(self, other):
         if isinstance(other, number_classes):
             if other == 1:
-                return Const(1)
+                return 1
             return Expression(Const(other), self, "^")
         return NotImplemented
 
@@ -845,7 +845,7 @@ class Expression(ExpressionElement):
     def __mul__(self, other):
         if isinstance(other, number_classes):
             if other == 0:
-                return Const(0)
+                return 0
             elif other == 1:
                 return self
             elif other == -1:
@@ -875,7 +875,7 @@ class Expression(ExpressionElement):
     def __rmul__(self, other):
         if isinstance(other, number_classes):
             if other == 0:
-                return Const(0)
+                return 0
             elif other == 1:
                 return self
             return Expression(Const(other), self, "*")
