@@ -1,8 +1,9 @@
 import math
+import itertools
 
 import numpy as np
 
-from flopt.variable import VariableNdarray
+from flopt.variable import VarElement, VariableNdarray
 from flopt.constants import VariableType
 from flopt.env import setup_logger
 
@@ -10,14 +11,12 @@ from flopt.env import setup_logger
 logger = setup_logger(__name__)
 
 
-class Solution:
+class Solution(np.ndarray):
     """
     Solution Class
 
     Parameters
     ----------
-    name : str
-      name of solution
     variables : list of VarElement family
       variables which has no duplicate
 
@@ -38,24 +37,43 @@ class Solution:
     >>> a = Variable(name="a", lowBound=0, upBound=1, cat="Integer")
     >>> b = Variable(name="b", lowBound=1, upBound=2, cat="Continuous")
     >>> c = Variable(name="c", cat="Binary")
-    >>> sol = Solution("abc", [a, b, c])
+    >>> sol = Solution([a, b, c])
 
     Four arithmetic operations are supported
     between Solutions or between a Solution and a constant.
 
-    >>> sol1 = Solution("sol1", [a, b])
-    >>> sol2 = Solution("sol2", [a, c])
+    >>> sol1 = Solution([a, b])
+    >>> sol2 = Solution([a, c])
     >>> sol_plus = sol1 + sol2  # (Solution + Solution or Solution + list)
     >>> sol_minus = sol1 - sol2  # (Solution - Solution or Solution - list)
     >>> sol_product = sol1 * 2  # (Solution * constant)
     >>> sol_divide = sol1 / 2  # (Solution / constant)
     """
 
-    def __init__(self, name=None, variables=[]):
-        self.name = name
-        self.type = "Solution"
-        self._variables = sorted(variables, key=lambda var: var.name)
-        self._var_dict = None
+    def __new__(cls, variables, *args, **kwargs):
+        if isinstance(variables, (list, tuple, set)):
+            shape = (len(variables),)
+        else:
+            shape = variables.shape
+        obj = super().__new__(cls, shape, dtype=object)
+        obj._variables = None
+        obj._var_dict = None
+        return obj
+
+    def __init__(self, variables, sort=True):
+        if isinstance(variables, (tuple, set)):
+            variables = list(variables)
+        for i in itertools.product(*map(range, self.shape)):
+            j = i[0] if isinstance(variables, (list, tuple, set)) else i
+            self[i] = variables[j]
+        if sort:
+            self._variables = sorted(variables, key=lambda var: var.name)
+        else:
+            self._variables = variables
+
+    def __array_finalize__(self, obj):
+        self._variables = getattr(obj, "_variables", None)
+        self._var_dict = getattr(obj, "_var_dict", None)
 
     def toDict(self):
         """
@@ -186,13 +204,13 @@ class Solution:
 
     def __pos__(self):
         variables = [var.clone() for var in self._variables]
-        return Solution(f"+({self.name})", variables)
+        return Solution(variables)
 
     def __neg__(self):
         variables = [var.clone() for var in self._variables]
         for var in variables:
             var.setValue(-var.value())
-        return Solution(f"-({self.name})", variables)
+        return Solution(variables)
 
     def __add__(self, other):
         """
@@ -350,10 +368,10 @@ class Solution:
         variables = [var.clone() for var in self._variables]
         for var in variables:
             var.setValue(abs(var.value()))
-        return Solution("abs", variables)
+        return Solution(variables)
 
     def __hash__(self):
-        return hash((self.name, tuple(self._variables)))
+        return hash((id(self), tuple(self._variables)))
 
     def __len__(self):
         return len(self._variables)
@@ -368,4 +386,4 @@ class Solution:
         return self.__repr__()
 
     def __repr__(self):
-        return f"Solution({self.name}, [{', '.join([var.name for var in self._variables])}])"
+        return f"Solution([{', '.join([var.name for var in self._variables])}])"

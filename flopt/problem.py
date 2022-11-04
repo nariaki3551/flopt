@@ -255,7 +255,7 @@ class Problem:
         if self.sense in ("maximize", "Maximize"):
             self.obj = -self.obj
 
-        solution = Solution("s", self.getVariables())
+        solution = Solution(self.getVariables())
 
         status, log, self.time = self.solver.solve(
             solution,

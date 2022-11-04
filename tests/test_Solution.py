@@ -12,7 +12,7 @@ def b():
         Variable(f"b{i}", lowBound=0, upBound=10, ini_value=i + 1, cat="Continuous")
         for i in range(5)
     ]
-    return Solution("b", _b)
+    return Solution(_b)
 
 
 @pytest.fixture(scope="function")
@@ -21,7 +21,7 @@ def c():
         Variable(f"c{i}", lowBound=0, upBound=10, ini_value=2 * i, cat="Continuous")
         for i in range(5)
     ]
-    return Solution("c", _c)
+    return Solution(_c)
 
 
 @pytest.fixture(scope="function")
@@ -35,7 +35,7 @@ def f():
         Variable(f"f{i}", lowBound=0, upBound=10, ini_value=2 * i, cat="Integer")
         for i in range(5)
     ]
-    return Solution("f", _f)
+    return Solution(_f)
 
 
 @pytest.fixture(scope="function")
@@ -120,7 +120,7 @@ def test_Solution_len(b):
 
 def test_Solution_abs():
     a = [Variable(f"b{i}", ini_value=i - 2) for i in range(5)]
-    sol_a = Solution("a", a)
+    sol_a = Solution(a)
     assert abs(sol_a).value() == [2, 1, 0, 1, 2]
 
 

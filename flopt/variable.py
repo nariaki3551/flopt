@@ -30,7 +30,7 @@ logger = setup_logger(__name__)
 
 
 # -------------------------------------------------------
-#   Variable Container Factory
+#   Variable Container
 # -------------------------------------------------------
 
 
@@ -46,11 +46,12 @@ class VariableNdarray(np.ndarray):
         return obj
 
     def __init__(self, array, set_mono=True, *args, **kwargs):
-        array = np.array(array, dtype=object)
         for i in itertools.product(*map(range, self.shape)):
-            self[i] = array[i]
-            if set_mono:
-                self.mono_to_index[array[i].toMonomial()] = i
+            j = i[0] if isinstance(array, (list, tuple)) else i
+            self[i] = array[j]
+        if set_mono:
+            for i in itertools.product(*map(range, self.shape)):
+                self.mono_to_index[self[i].toMonomial()] = i
         self.set_mono = set_mono
         self.name = f"VariableNdarray({array})"
 
@@ -66,7 +67,7 @@ class VariableNdarray(np.ndarray):
             return i[0]
         return i
 
-    def to_value(self, var_dict):
+    def value(self, var_dict):
         v = np.ndarray(self.shape)
         for i in itertools.product(*map(range, self.shape)):
             v[i] = var_dict[self[i].name].value()

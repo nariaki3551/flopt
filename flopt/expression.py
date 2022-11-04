@@ -20,17 +20,46 @@ from flopt.env import setup_logger, get_variable_lower_bound, get_variable_upper
 logger = setup_logger(__name__)
 
 
+# -------------------------------------------------------
+#   Expression Container
+# -------------------------------------------------------
+
+
+class ExpressionNdarray(np.ndarray):
+    def __new__(cls, array, *args, **kwargs):
+        if isinstance(array, (list, tuple, set)):
+            shape = (len(array),)
+        else:
+            shape = array.shape
+        obj = super().__new__(cls, shape, dtype=ExpressionElement)
+        return obj
+
+    def __init__(self, array, set_mono=True, *args, **kwargs):
+        if isinstance(array, set):
+            array = list(array)
+        for i in itertools.product(*map(range, self.shape)):
+            j = i[0] if isinstance(array, (list, tuple)) else i
+            self[i] = array[j]
+        self.name = f"ExpressionNdarray({array})"
+
+    def value(self, solution=None):
+        v = np.ndarray(self.shape)
+        for i in itertools.product(*map(range, self.shape)):
+            v[i] = self[i].value(solution)
+        return v
+
+
+# ------------------------------------------------
+#   Expression Base Class
+# ------------------------------------------------
+
+
 class SelfReturn:
     def __init__(self, var):
         self.var = var
 
     def value(self):
         return self.var
-
-
-# ------------------------------------------------
-#   Expression Base Class
-# ------------------------------------------------
 
 
 class ExpressionElement:
@@ -881,7 +910,7 @@ class Expression(ExpressionElement):
         jac = np.empty((num_variables,), dtype=object)
         for i in range(num_variables):
             jac[i] = Expression.fromPolynomial(self.polynomial.diff(x[i]))
-        return jac, x
+        return ExpressionNdarray(jac), x
 
     def hess(self, x=None):
         """hessian
@@ -903,7 +932,7 @@ class Expression(ExpressionElement):
                 hess[i, j] = Expression.fromPolynomial(
                     jac[i].getPolynomial().diff(x[j])
                 )
-        return hess, x
+        return ExpressionNdarray(hess), x
 
     def traverse(self):
         yield self
@@ -994,7 +1023,7 @@ def pack_variables(var_or_array, var_dict):
         import flopt.variable
 
         if isinstance(array, flopt.variable.VariableNdarray):
-            return array.to_value(var_dict)
+            return array.value(var_dict)
         else:
             return cls(
                 itertools.starmap(pack_variables, [(var, var_dict) for var in array])

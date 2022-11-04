@@ -229,7 +229,7 @@ def speed_sum_operation(count):
     for size in sizes:
         x = flopt.Variable.array("x", size)
         y = flopt.Sum(x)
-        solution = flopt.Solution("tmp", [y])
+        solution = flopt.Solution([y])
 
         _name = name + f"_size{size}"
         for i in tqdm.tqdm(range(count), desc="[ " + _name + " ]"):
