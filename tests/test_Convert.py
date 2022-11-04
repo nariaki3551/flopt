@@ -3,6 +3,7 @@ import pytest
 import numpy as np
 
 import flopt
+import flopt.convert
 from flopt import Variable, Problem, Solver
 
 

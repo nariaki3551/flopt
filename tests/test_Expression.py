@@ -2,6 +2,7 @@ import pytest
 import numpy as np
 
 from flopt import Variable
+from flopt.polynomial import Monomial, Polynomial
 from flopt.expression import Const
 from flopt.env import get_variable_lower_bound, get_variable_upper_bound
 
@@ -102,6 +103,22 @@ def test_Expression_or():
     c = a + b
     assert (c | 1).value() == c.value() | 1
     assert (1 | c).value() == 1 | c.value()
+
+
+def test_Expression_setPolynomial(a, b, c):
+    assert (a + b).setPolynomial() == Polynomial(
+        {Monomial({a: 1}): 1, Monomial({b: 1}): 1}
+    )
+    assert (a + b + c).setPolynomial() == Polynomial(
+        {Monomial({a: 1}): 2, Monomial({b: 1}): 2}
+    )
+    assert (3 * a).setPolynomial() == Polynomial({Monomial({a: 1}): 3})
+    assert (a * 3).setPolynomial() == Polynomial({Monomial({a: 1}): 3})
+    assert (a / 3).setPolynomial() == Polynomial({Monomial({a: 1}): 1.0 / 3})
+    assert (2 * a**3).setPolynomial() == Polynomial({Monomial({a: 3}): 2})
+    assert (a - b).setPolynomial() == Polynomial(
+        {Monomial({a: 1}): 1, Monomial({b: 1}): -1}
+    )
 
 
 def test_Expression_getVariable(a, b, c):

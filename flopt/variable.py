@@ -502,6 +502,10 @@ class VarElement:
     def toMonomial(self):
         return self.monomial
 
+    @property
+    def polynomial(self):
+        return self.toPolynomial()
+
     def toPolynomial(self):
         return Polynomial({self.monomial: 1})
 
