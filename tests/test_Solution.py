@@ -1,5 +1,7 @@
 import pytest
+
 from math import sqrt
+import numpy as np
 
 from flopt import Variable, Solution
 
@@ -61,10 +63,14 @@ def test_Solution_neg(b):
 def test_Solution_add(b, c, d, f, g):
     assert (b + c).value() == [1, 4, 7, 10, 13]
     assert (b + d).value() == [2, 3, 4, 5, 6]
+    assert (b + np.array(d)).value() == [2, 3, 4, 5, 6]
     assert (f + g).value() == list(map(int, [0.1, 2.2, 4.3, 6.4, 8.5]))
     assert (d + b).value() == [2, 3, 4, 5, 6]
     assert (b + 1).value() == [2, 3, 4, 5, 6]
     assert (1 + b).value() == [2, 3, 4, 5, 6]
+    assert (b + 1.0).value() == [2, 3, 4, 5, 6]
+    assert (1.0 + b).value() == [2, 3, 4, 5, 6]
+    assert (b + np.float64(1.0)).value() == [2, 3, 4, 5, 6]
 
 
 def test_Solution_sub(b, c, d):
@@ -74,6 +80,7 @@ def test_Solution_sub(b, c, d):
     assert (d - b).value() == [0, -1, -2, -3, -4]
     assert (b - 1).value() == [0, 1, 2, 3, 4]
     assert (b - 2.0).value() == [-1, 0, 1, 2, 3]
+    assert (b - np.float64(2.0)).value() == [-1, 0, 1, 2, 3]
 
 
 def test_Solution_mul_s(b, c):
@@ -87,11 +94,16 @@ def test_Solution_doc(b, c):
 def test_Solution_mul(b):
     assert (b * 2).value() == [2, 4, 6, 8, 10]
     assert (2 * b).value() == [2, 4, 6, 8, 10]
+    assert (b * 2.0).value() == [2, 4, 6, 8, 10]
+    assert (2.0 * b).value() == [2, 4, 6, 8, 10]
+    assert (b * np.float64(2.0)).value() == [2, 4, 6, 8, 10]
 
 
 def test_Solution_div(b, d):
     assert (b / d).value() == [1, 2, 3, 4, 5]
     assert (b / 2).value() == [0.5, 1, 1.5, 2, 2.5]
+    assert (b / 2.0).value() == [0.5, 1, 1.5, 2, 2.5]
+    assert (b / np.float64(2.0)).value() == [0.5, 1, 1.5, 2, 2.5]
 
 
 def test_Solution_squaredNorm(b):

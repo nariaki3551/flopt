@@ -8,3 +8,4 @@ Case Studies
   sudoku
   number_partitioning
   max_cut
+  newton

@@ -1,5 +1,8 @@
 import math
 
+import numpy as np
+
+from flopt.variable import VariableArray
 from flopt.constants import VariableType
 from flopt.env import setup_logger
 
@@ -66,13 +69,19 @@ class Solution:
             self._var_dict = {var.name: var for var in self._variables}
         return self._var_dict
 
-    def value(self):
+    def value(self, solution=None):
         """
+        Parameters
+        ----------
+        solution: None or Solution
+
         Returns
         -------
         list
             values of the variables in the Solution
         """
+        if solution is not None:
+            return [solution.toDict()[var.name] for var in solution]
         return [var.value() for var in self._variables]
 
     def setValue(self, name, value):
@@ -187,87 +196,155 @@ class Solution:
 
     def __add__(self, other):
         """
-        Solution + Solution
-        Solution + list
-        Solutino + scalar
+        Parameters
+        ----------
+        other: Solution or np.ndarray or list or float
+
+        Returns
+        -------
+        solution: new instance of self + other
         """
-        variables = [var.clone() for var in self._variables]
+        solution = self.clone()
+        solution += other
+        return solution
+
+    def __iadd__(self, other):
+        """
+        Parameters
+        ----------
+        other: Solution or np.ndarray or list or float
+
+        Returns
+        -------
+        solution: self added by other
+        """
         if isinstance(other, Solution):
-            for var1, var2 in zip(variables, other._variables):
+            for var1, var2 in zip(self._variables, other._variables):
                 var1.setValue(var1.value() + var2.value())
-            return Solution("+Solution", variables)
-        elif isinstance(other, list):
-            for var, v in zip(variables, other):
+        elif isinstance(other, (list, np.ndarray)):
+            for var, v in zip(self._variables, other):
                 var.setValue(var.value() + v)
-            return Solution("+list", variables)
         elif isinstance(other, (int, float)):
-            for var in variables:
+            for var in self._variables:
                 var.setValue(var.value() + other)
-            return Solution("+scalar", variables)
-        return NotImplemented
+        else:
+            raise NotImplementedError
+        return self
 
     def __radd__(self, other):
         return self + other
 
     def __sub__(self, other):
         """
-        Solution - Solution = (Solution + (-Solution))
-        Solution - list     = (Solution + (-list))
-        Solutino - scalar   = (Solution + (-scalar))
+        Parameters
+        ----------
+        other: Solution or np.ndarray or list or float
+
+        Returns
+        -------
+        solution: new instance of self - other
         """
-        variables = [var.clone() for var in self._variables]
+        solution = self.clone()
+        solution -= other
+        return solution
+
+    def __isub__(self, other):
+        """
+        Parameters
+        ----------
+        other: Solution or np.ndarray or list or float
+
+        Returns
+        -------
+        solution: self substracted by other
+        """
         if isinstance(other, Solution):
-            for var1, var2 in zip(variables, other._variables):
+            for var1, var2 in zip(self._variables, other._variables):
                 var1.setValue(var1.value() - var2.value())
-            return Solution("+Solution", variables)
-        elif isinstance(other, list):
-            for var, v in zip(variables, other):
+        elif isinstance(other, (list, np.ndarray)):
+            for var, v in zip(self._variables, other):
                 var.setValue(var.value() - v)
-            return Solution("+list", variables)
         elif isinstance(other, (int, float)):
-            for var in variables:
+            for var in self._variables:
                 var.setValue(var.value() - other)
-            return Solution("+scalar", variables)
-        return NotImplemented
+        else:
+            raise NotImplementedError
+        return self
 
     def __rsub__(self, other):
         return -self + other
 
     def __mul__(self, other):
         """
-        Solution * Solution (hadamard product)
-        Solution * list
-        Solution * scalar
+        Parameters
+        ----------
+        other: Solution or np.ndarray or list or float
+
+        Returns
+        -------
+        solution: new instance of self * other
         """
-        variables = [var.clone() for var in self._variables]
+        solution = self.clone()
+        solution *= other
+        return solution
+
+    def __imul__(self, other):
+        """
+        Parameters
+        ----------
+        other: Solution or np.ndarray or list or float
+
+        Returns
+        -------
+        solution: self multiplied by other
+        """
         if isinstance(other, Solution):
-            for var1, var2 in zip(variables, other._variables):
+            for var1, var2 in zip(self._variables, other._variables):
                 var1.setValue(var1.value() * var2.value())
-            return Solution("*Solution", variables)
-        elif isinstance(other, list):
-            for var, v in zip(variables, other):
+        elif isinstance(other, (list, np.ndarray)):
+            for var, v in zip(self._variables, other):
                 var.setValue(var.value() * v)
-            return Solution("*list", variables)
         elif isinstance(other, (int, float)):
-            for var in variables:
+            for var in self._variables:
                 var.setValue(var.value() * other)
-            return Solution("*scalar", variables)
-        return NotImplemented
+        else:
+            raise NotImplementedError
+        return self
 
     def __rmul__(self, other):
         return self * other
 
     def __truediv__(self, other):
         """
-        Solution / list     = Solution * (1/list)
-        Solution / scalar   = Solution * (1/scalar)
+        Parameters
+        ----------
+        other: Solution or np.ndarray or list or float
+
+        Returns
+        -------
+        solution: new instance of self / other
+        """
+        solution = self.clone()
+        solution /= other
+        return solution
+
+    def __itruediv__(self, other):
+        """
+        Parameters
+        ----------
+        other: Solution or np.ndarray or list or float
+
+        Returns
+        -------
+        solution: self divided by other
         """
         if isinstance(other, list):
-            reverse_list = [1 / v for v in other]
-            return self * reverse_list
-        elif isinstance(other, (int, float)):
-            return self * (1 / other)
-        return NotImplemented
+            other = [1.0 / v for v in other]
+        if isinstance(other, (int, float, np.ndarray)):
+            other = 1.0 / other
+        else:
+            NotImplementedError
+        return self.__imul__(other)
 
     def __abs__(self):
         variables = [var.clone() for var in self._variables]

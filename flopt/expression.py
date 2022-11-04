@@ -71,6 +71,9 @@ class ExpressionElement:
     def isPolynomial(self):
         raise NotImplementedError
 
+    def getPolynomial(self):
+        raise NotImplementedError
+
     def setPolynomial(self):
         raise NotImplementedError
 
@@ -639,6 +642,14 @@ class ExpressionElement:
             return hash(self.elmB)
         return hash((hash(self.elmA), hash(self.elmB), hash(self.operator)))
 
+    def __call__(self, solution):
+        """
+        Parameters
+        ----------
+        solution: Solution
+        """
+        return self.value(solution)
+
     def __eq__(self, other):
         # self == other --> self - other == 0
         return Constraint(self - other, ConstraintType.Eq)
@@ -741,6 +752,18 @@ class Expression(ExpressionElement):
         self.operator = operator
         super().__init__(name=name)
 
+    @classmethod
+    def fromPolynomial(cls, polynomial):
+        from flopt import Sum, Prod
+
+        return Sum(
+            [
+                coeff * mono.coeff * Prod([var**exp for var, exp in mono])
+                for mono, coeff in polynomial
+            ]
+            + [Const(polynomial.constant())]
+        )
+
     def setName(self):
         elmA_name = self.elmA.getName()
         elmB_name = self.elmB.getName()
@@ -829,6 +852,58 @@ class Expression(ExpressionElement):
 
     def getVariables(self):
         return self.elmA.getVariables() | self.elmB.getVariables()
+
+    def jac(self, x=None):
+        """jacobian
+        Parameters
+        ----------
+        x: list or numpy.array of VarElement family
+
+        Returns
+        -------
+        jac: numpy array of Expression
+            jac[i] = jacobian of self for x[i]
+        x: list or numpy.array of VarElement family
+        """
+        from flopt.variable import VariableArray
+
+        assert x is None or isinstance(
+            x, VariableArray
+        ), f"x must be None or VariableArray"
+
+        if x is None:
+            x = VariableArray(sorted(self.getVariables(), key=lambda var: var.name))
+
+        num_variables = len(x)
+        if self.polynomial is None:
+            self.setPolynomial()
+
+        jac = np.empty((num_variables,), dtype=object)
+        for i in range(num_variables):
+            jac[i] = Expression.fromPolynomial(self.polynomial.diff(x[i]))
+        return jac, x
+
+    def hess(self, x=None):
+        """hessian
+        Parameters
+        ----------
+        x: list or numpy.array of VarElement family
+
+        Returns
+        -------
+        hess: numpy array of Expression
+            hess[i, j] = hessian of self for x[i] and x[j]
+        x: list or numpy.array of VarElement family
+        """
+        jac, x = self.jac(x)
+        num_variables = len(x)
+        hess = np.empty((num_variables, num_variables), dtype=object)
+        for i in range(num_variables):
+            for j in range(num_variables):
+                hess[i, j] = Expression.fromPolynomial(
+                    jac[i].getPolynomial().diff(x[j])
+                )
+        return hess, x
 
     def traverse(self):
         yield self
@@ -1210,6 +1285,24 @@ class Reduction(ExpressionElement):
 
     def getVariables(self):
         return functools.reduce(operator.or_, (elm.getVariables() for elm in self.elms))
+
+    def jac(self, x):
+        """jacobian
+        See Also
+        --------
+        Expression.jac
+        """
+        exp = self.expand()  # convert reduction obj to Expression
+        return exp.jac(x)
+
+    def hess(self, x=None):
+        """hessian
+        See Also
+        --------
+        Expression.hess
+        """
+        exp = self.expand()  # convert reduction obj to Expression
+        return exp.hess(x)
 
     def traverse(self):
         """traverse Expression tree as root is self

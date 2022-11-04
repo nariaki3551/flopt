@@ -1,8 +1,9 @@
 import pytest
 import numpy as np
 
-from flopt import Variable
-from flopt.expression import Const
+from flopt import Variable, Sum
+from flopt.polynomial import Monomial, Polynomial
+from flopt.expression import Expression, Const
 from flopt.env import get_variable_lower_bound, get_variable_upper_bound
 
 
@@ -216,6 +217,28 @@ def test_Expression_isLinear(a, b, c):
     assert a.isLinear() == True
     assert c.isLinear() == True
     assert (a * b).isLinear() == False
+
+
+def test_Expression_fromPolynominal():
+    x = Variable("x", cat="Integer")
+    y = Variable("y", cat="Integer")
+    polynomial = Polynomial({Monomial({x: 3}): 1, Monomial({y: 2}): 2})  # x^3 + 2*y^2
+    print(Expression.fromPolynomial(polynomial))
+
+
+def test_Expression_jac1():
+    x = Variable.array("x", 2, cat="Integer")
+    exp = x[0] ** 3 + 2 * x[1] ** 2 + x[0] * x[1]
+    jac, _ = exp.jac(x)
+    assert jac[0] == 3 * x[0] ** 2 + x[1]
+    assert jac[1] == 4 * x[1] + x[0]
+
+
+def test_Expression_jac2():
+    x = Variable.array("x", 2, cat="Integer")
+    exp1 = Sum(x * x)
+    exp2 = x[0] * x[0] + x[1] * x[1]
+    assert np.all(exp1.jac(x)[0] == exp2.jac(x)[0])
 
 
 def test_Const_constant():

@@ -57,7 +57,7 @@ def test_mip_dataset():
     scipy_search = Solver("ScipyMilpSearch")
     solvable, prob = instance.createProblem(scipy_search)
     assert solvable
-    prob.solve(scipy_search, msg=True)
+    prob.solve(scipy_search, timelimit=0.5, msg=True)
 
 
 def test_Dataset_list():

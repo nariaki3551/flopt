@@ -443,6 +443,8 @@ class VarElement:
         return self._value
 
     def setValue(self, value):
+        if isinstance(value, np.ndarray):
+            value = value.item()
         self._value = value
 
     def getName(self):

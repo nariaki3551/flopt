@@ -407,7 +407,7 @@ def test_AmplifySearch_available(
 def test_AmplifySearch1(prob_ising, callback, request):
     token = request.config.getoption("amplify_token")
     if token is None:
-        return True
+        return
     solver = Solver(algo="AmplifySearch")
     solver.setParams(token=token)
     prob_ising.solve(solver, timelimit=1, msg=True)
@@ -416,7 +416,7 @@ def test_AmplifySearch1(prob_ising, callback, request):
 def test_AmplifySearch2(prob_ising_const, callback, request):
     token = request.config.getoption("amplify_token")
     if token is None:
-        return True
+        return
     solver = Solver(algo="AmplifySearch")
     solver.setParams(token=token)
     prob_ising_const.solve(solver, timelimit=1, msg=True)
