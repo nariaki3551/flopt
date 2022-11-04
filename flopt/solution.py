@@ -2,7 +2,7 @@ import math
 
 import numpy as np
 
-from flopt.variable import VariableArray
+from flopt.variable import VariableNdarray
 from flopt.constants import VariableType
 from flopt.env import setup_logger
 
@@ -111,7 +111,7 @@ class Solution:
         list
           Variable instances which belong to the Solution
         """
-        return self._variables
+        return VariableNdarray(self._variables)
 
     def clone(self):
         """

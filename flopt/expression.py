@@ -179,16 +179,16 @@ class ExpressionElement:
             such that 1/2 x^T Q x + c^T x + C, Q^T = Q
         """
         assert self.isQuadratic()
-        from flopt.variable import VariableArray
+        from flopt.variable import VariableNdarray
 
         assert x is None or isinstance(
-            x, VariableArray
-        ), f"x must be None or VariableArray"
+            x, VariableNdarray
+        ), f"x must be None or VariableNdarray"
         from flopt.convert import QuadraticStructure
 
         polynomial = self.getPolynomial().simplify()
         if x is None:
-            x = VariableArray(sorted(self.getVariables(), key=lambda var: var.name))
+            x = VariableNdarray(sorted(self.getVariables(), key=lambda var: var.name))
 
         num_variables = len(x)
 
@@ -256,15 +256,15 @@ class ExpressionElement:
             where c.T.dot(x) + C
         """
         assert self.isLinear()
-        from flopt.variable import VariableArray
+        from flopt.variable import VariableNdarray
 
         assert x is None or isinstance(
-            x, VariableArray
-        ), f"x must be None or VariableArray"
+            x, VariableNdarray
+        ), f"x must be None or VariableNdarray"
         from flopt.convert import LinearStructure
 
         if x is None:
-            x = VariableArray(sorted(self.getVariables(), key=lambda var: var.name))
+            x = VariableNdarray(sorted(self.getVariables(), key=lambda var: var.name))
 
         num_variables = len(x)
         polynomial = self.getPolynomial()
@@ -865,14 +865,14 @@ class Expression(ExpressionElement):
             jac[i] = jacobian of self for x[i]
         x: list or numpy.array of VarElement family
         """
-        from flopt.variable import VariableArray
+        from flopt.variable import VariableNdarray
 
         assert x is None or isinstance(
-            x, VariableArray
-        ), f"x must be None or VariableArray"
+            x, VariableNdarray
+        ), f"x must be None or VariableNdarray"
 
         if x is None:
-            x = VariableArray(sorted(self.getVariables(), key=lambda var: var.name))
+            x = VariableNdarray(sorted(self.getVariables(), key=lambda var: var.name))
 
         num_variables = len(x)
         if self.polynomial is None:
@@ -993,7 +993,7 @@ def pack_variables(var_or_array, var_dict):
         array = var_or_array
         import flopt.variable
 
-        if isinstance(array, flopt.variable.VariableArray):
+        if isinstance(array, flopt.variable.VariableNdarray):
             return array.to_value(var_dict)
         else:
             return cls(

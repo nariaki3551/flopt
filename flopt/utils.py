@@ -4,7 +4,7 @@ import functools
 
 import numpy as np
 
-from flopt.variable import VarElement, VariableArray
+from flopt.variable import VarElement
 from flopt.expression import Expression, CustomExpression, Const
 import flopt.expression
 from flopt.solution import Solution

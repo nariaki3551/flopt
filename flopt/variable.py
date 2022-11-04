@@ -34,7 +34,7 @@ logger = setup_logger(__name__)
 # -------------------------------------------------------
 
 
-class VariableArray(np.ndarray):
+class VariableNdarray(np.ndarray):
     def __new__(cls, array, *args, **kwargs):
         if isinstance(array, (list, tuple)):
             shape = (len(array),)
@@ -52,7 +52,7 @@ class VariableArray(np.ndarray):
             if set_mono:
                 self.mono_to_index[array[i].toMonomial()] = i
         self.set_mono = set_mono
-        self.name = f"VariableArray({array})"
+        self.name = f"VariableNdarray({array})"
 
     def __array_finalize__(self, obj):
         self.mono_to_index = getattr(obj, "mono_to_index", None)
@@ -356,7 +356,7 @@ class VariableFactory:
                 ini_value[i] if isinstance(ini_value, array_classes) else ini_value
             )
             variables[i] = Variable(var_name, _lowBound, _upBound, _cat, _ini_value)
-        return VariableArray(variables)
+        return VariableNdarray(variables)
 
     @classmethod
     def matrix(
