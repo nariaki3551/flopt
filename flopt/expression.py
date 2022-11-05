@@ -739,17 +739,35 @@ class Expression(ExpressionElement):
         super().__init__(name=name)
 
     def setName(self):
-        elmA_name = self.elmA.getName()
-        elmB_name = self.elmB.getName()
-        if isinstance(self.elmA, (Expression, Reduction)):
-            if self.operator in {"*", "/", "^", "%"}:
-                elmA_name = f"({elmA_name})"
-        if isinstance(self.elmB, Expression):
-            if self.operator != "+" or self.elmB.getName().startswith("-"):
-                elmB_name = f"({elmB_name})"
-        elif isinstance(self.elmB, Reduction):
-            elmB_name = f"({elmB_name})"
-        self.name = f"{elmA_name}{self.operator}{elmB_name}"
+        stack = [self]
+        while stack:
+            elm = stack.pop()
+            if elm.name is not None:
+                continue
+            if isinstance(elm, (Reduction, Const)):
+                elm.setName()
+                continue
+            elmA = elm.elmA
+            elmB = elm.elmB
+            if elmA.name is not None and elmB.name is not None:
+                elmA_name = elm.elmA.getName()
+                elmB_name = elm.elmB.getName()
+                if isinstance(elm.elmA, (Expression, Reduction)):
+                    if elm.operator in {"*", "/", "^", "%"}:
+                        elmA_name = f"({elmA_name})"
+                if isinstance(elm.elmB, Expression):
+                    if elm.operator != "+" or elm.elmB.getName().startswith("-"):
+                        elmB_name = f"({elmB_name})"
+                elif isinstance(elm.elmB, Reduction):
+                    elmB_name = f"({elmB_name})"
+                elm.name = f"{elmA_name}{elm.operator}{elmB_name}"
+            else:
+                stack.append(elm)
+                if elmA.name is None:
+                    stack.append(elmA)
+                if elmB.name is None:
+                    stack.append(elmB)
+        return self.name
 
     def linkChildren(self):
         if isinstance(self.elmA, ExpressionElement):
@@ -778,14 +796,11 @@ class Expression(ExpressionElement):
             elm = stack.pop()
             if elm.polynomial is not None:
                 continue
-            if isinstance(elm, Reduction):
+            if isinstance(elm, (Reduction, Const)):
                 elm.setPolynomial()
                 continue
-            children = [elm.elmA, elm.elmB]
-            for child in children:
-                if isinstance(child, Const):
-                    child.setPolynomial()
-            elmA, elmB = elm.elmA, elm.elmB
+            elmA = elm.elmA
+            elmB = elm.elmB
             if elmA.polynomial is not None and elmB.polynomial is not None:
                 if elm.operator == "+":
                     elm.polynomial = elmA.toPolynomial() + elmB.toPolynomial()
@@ -805,9 +820,10 @@ class Expression(ExpressionElement):
                     assert "check whethere this expresson is polynomial or not by .isPolynomial() before execution of setPolynomial()"
             else:
                 stack.append(elm)
-                for child in children:
-                    if child.polynomial is None:
-                        stack.append(child)
+                if elmA.polynomial is None:
+                    stack.append(elmA)
+                if elmB.polynomial is None:
+                    stack.append(elmB)
         return self.polynomial
 
     def _value(self):

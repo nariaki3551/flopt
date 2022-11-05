@@ -148,10 +148,10 @@ def binarize_traverse(e, binarizes):
                 node.elmB.parents.append(node)
                 update = True
             if update:
-                node.setName()
+                node.name = None
                 node.polynomial = None
                 for parent in node.traverseAncestors():
-                    parent.setName()
+                    parent.name = None
                     parent.polynomial = None
                 return True
     return False

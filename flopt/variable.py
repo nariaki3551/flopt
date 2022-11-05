@@ -414,7 +414,7 @@ class VarElement:
     """Base Variable class"""
 
     def __init__(self, name, lowBound=None, upBound=None, ini_value=None):
-        self.name = name
+        self._name = name
         self.lowBound = lowBound
         self.upBound = upBound
         self._value = None
@@ -445,8 +445,12 @@ class VarElement:
     def setValue(self, value):
         self._value = value
 
+    @property
+    def name(self):
+        return self._name
+
     def getName(self):
-        return self.name
+        return self._name
 
     def getLb(self, must_number=False):
         if must_number:
