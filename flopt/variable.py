@@ -415,7 +415,7 @@ class VarElement:
     """Base Variable class"""
 
     def __init__(self, name, lowBound=None, upBound=None, ini_value=None):
-        self.name = name
+        self._name = name
         self.lowBound = lowBound
         self.upBound = upBound
         self._value = None
@@ -448,8 +448,12 @@ class VarElement:
             value = value.item()
         self._value = value
 
+    @property
+    def name(self):
+        return self._name
+
     def getName(self):
-        return self.name
+        return self._name
 
     def getLb(self, must_number=False):
         if must_number:
@@ -504,6 +508,10 @@ class VarElement:
 
     def toMonomial(self):
         return self.monomial
+
+    @property
+    def polynomial(self):
+        return self.toPolynomial()
 
     def toPolynomial(self):
         return Polynomial({self.monomial: 1})
@@ -592,7 +600,7 @@ class VarElement:
     def __mul__(self, other):
         if isinstance(other, number_classes):
             if other == 0:
-                return Const(0)
+                return 0
             elif other == 1:
                 return self
             elif other == -1:
@@ -613,7 +621,7 @@ class VarElement:
     def __rmul__(self, other):
         if isinstance(other, number_classes):
             if other == 0:
-                return Const(0)
+                return 0
             elif other == 1:
                 return self
             elif other == -1:
@@ -643,7 +651,7 @@ class VarElement:
     def __rtruediv__(self, other):
         if isinstance(other, number_classes):
             if other == 0:
-                return Const(0)
+                return 0
             return Expression(Const(other), self, "/")
         elif isinstance(other, (VarElement, ExpressionElement)):
             return Expression(other, self, "/")
@@ -659,7 +667,7 @@ class VarElement:
     def __pow__(self, other):
         if isinstance(other, number_classes):
             if other == 0:
-                return Const(1)
+                return 1
             elif other == 1:
                 return self
             return Expression(self, Const(other), "^")
@@ -670,7 +678,7 @@ class VarElement:
     def __rpow__(self, other):
         if isinstance(other, number_classes):
             if other == 1:
-                return Const(1)
+                return 1
             return Expression(Const(other), self, "^")
         elif isinstance(other, (VarElement, ExpressionElement)):
             return Expression(other, self, "^")
@@ -954,36 +962,36 @@ class VarSpin(VarElement):
 
     def __mul__(self, other):
         if id(other) == id(self):
-            return Const(1)
+            return 1
         elif isinstance(other, ExpressionElement) and other.operator == "*":
             if id(other.elmA) == id(self):
                 # a * (a * b) = b
                 if isinstance(other.elmB, number_classes):
-                    return Const(other.elmB)
+                    return other.elmB
                 else:
                     return other.elmB
             elif id(other.elmB) == id(self):
                 # a * (b * a) = b
                 if isinstance(other.elmA, number_classes):
-                    return Const(other.elmA)
+                    return other.elmA
                 else:
                     return other.elmA
         return super().__mul__(other)
 
     def __rmul__(self, other):
         if id(other) == id(self):
-            return Const(1)
+            return 1
         elif isinstance(other, ExpressionElement) and other.operator == "*":
             if id(other.elmA) == id(self):
                 # (a * b) * a = b
                 if isinstance(other.elmB, number_classes):
-                    return Const(other.elmB)
+                    return other.elmB
                 else:
                     return other.elmB
             elif id(other.elmB) == id(self):
                 # (b * a) * a = b
                 if isinstance(other.elmA, number_classes):
-                    return Const(other.elmA)
+                    return other.elmA
                 else:
                     return other.elmA
         return super().__rmul__(other)
@@ -991,7 +999,7 @@ class VarSpin(VarElement):
     def __pow__(self, other):
         if isinstance(other, int):
             if other % 2 == 0:
-                return Const(1)
+                return 1
             else:
                 return self
         return super().__pow__(other)

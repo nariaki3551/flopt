@@ -15,7 +15,6 @@ The following code obtains the root of :math:`f(x) = x^2 - 2`, so it is success 
 .. code-block:: python
 
    import flopt
-   from flopt import Value
 
    # define f
    def f(x):
@@ -25,12 +24,12 @@ The following code obtains the root of :math:`f(x) = x^2 - 2`, so it is success 
    x = flopt.Variable("x", ini_value=5)
    
    # obtain jacobian function
-   jac_fn, _ = f(x).jac()
+   jac = f(x).jac(x)
    
    for roop in range(10):
        # update x
-       x.setValue( Value(x) - Value(f(x)) / Value(jac_fn) )
-       print(f'roop {roop:<4d} x = {Value(x)}')
+       x.setValue((x - f(x) / jac).value()))
+       print(f'roop {roop:<4d} x = {x.value()}')
 
 Output of above code is here.
 
@@ -54,7 +53,6 @@ Another code equivalent to above code is shown here.
 .. code-block:: python
 
    import flopt
-   from flopt import Value
    
    # define variable with initial value
    x = flopt.Variable("x", init_value=5)
@@ -63,9 +61,9 @@ Another code equivalent to above code is shown here.
    f = x * x - 2
    
    # obtain jacobian function
-   jac, _ = f.jac()
+   jac = f.jac(x)
    
    for roop in range(10):
        # update x
-       x.setValue( Value(x) - Value(f) / Value(jac) )
-       print(f'roop {roop:<4d} x = {Value(x)}')
+       x.setValue(x.value() - f.value() / jac.value())
+       print(f'roop {roop:<4d} x = {x.value()}')
