@@ -135,12 +135,6 @@ class ExpressionElement:
         """
         raise NotImplementedError
 
-    def setVarDict(self, var_dict):
-        self.var_dict = var_dict
-
-    def unsetVarDict(self):
-        self.var_dict = None
-
     def type(self):
         if self.isLinear():
             return ExpressionType.Linear
@@ -391,8 +385,7 @@ class ExpressionElement:
             )
             for var in self.getVariables()
         }
-        self.setVarDict(var_dict)
-        return self.value().expand()
+        return self.value(var_dict=var_dict).expand()
 
     def toSpin(self):
         """create expression replased binary to spin
@@ -415,8 +408,7 @@ class ExpressionElement:
             )
             for var in self.getVariables()
         }
-        self.setVarDict(var_dict)
-        return self.value().expand()
+        return self.value(var_dict=var_dict).expand()
 
     def __calculate(self, sense, default_value):
         """Calculate min/max value of expression
@@ -877,44 +869,44 @@ class Expression(ExpressionElement):
                     stack.append(elmB)
         return self.polynomial
 
-    def value(self, solution=None):
+    def value(self, solution=None, var_dict=None):
         """
         Returns
         -------
         float or int
             return value of expression
         """
+        assert not (solution is not None and var_dict is not None)
         if solution is not None:
-            self.setVarDict(solution.toDict())
-        elmA = self.elmA
-        elmB = self.elmB
-        if self.var_dict is not None:
-            if isinstance(self.elmA, ExpressionElement):
-                self.elmA.setVarDict(self.var_dict)
-            elif self.elmA.name in self.var_dict:
-                elmA = self.var_dict[self.elmA.name]
-            if isinstance(self.elmB, ExpressionElement):
-                self.elmB.setVarDict(self.var_dict)
-            elif self.elmB.name in self.var_dict:
-                elmB = self.var_dict[self.elmB.name]
-            self.unsetVarDict()
+            var_dict = solution.toDict()
+            solution = None
+
+        if var_dict is not None and self.elmA.name in var_dict:
+            elmA_value = var_dict[self.elmA.name].value()
+        else:
+            elmA_value = self.elmA.value(var_dict=var_dict)
+
+        if var_dict is not None and self.elmB.name in var_dict:
+            elmB_value = var_dict[self.elmB.name].value()
+        else:
+            elmB_value = self.elmB.value(var_dict=var_dict)
 
         if self.operator == "+":
-            return elmA.value() + elmB.value()
+            return elmA_value + elmB_value
         elif self.operator == "-":
-            return elmA.value() - elmB.value()
+            return elmA_value - elmB_value
         elif self.operator == "*":
-            return elmA.value() * elmB.value()
+            return elmA_value * elmB_value
         elif self.operator == "/":
-            return elmA.value() / elmB.value()
+            return elmA_value / elmB_value
         elif self.operator == "^":
-            return elmA.value() ** elmB.value()
+            return elmA_value ** elmB_value
         elif self.operator == "%":
-            return elmA.value() % elmB.value()
+            return elmA_value % elmB_value
         elif self.operator == "&":
-            return elmA.value() & elmB.value()
+            return elmA_value & elmB_value
         elif self.operator == "|":
-            return elmA.value() | elmB.value()
+            return elmA_value | elmB_value
 
     def getVariables(self):
         return self.elmA.getVariables() | self.elmB.getVariables()
@@ -1183,11 +1175,13 @@ class CustomExpression(ExpressionElement):
     def setPolynomial(self):
         self.polynomial = None
 
-    def value(self, solution=None):
+    def value(self, solution=None, var_dict=None):
+        assert not (solution is not None and var_dict is not None)
         if solution is not None:
-            self.setVarDict(solution.toDict())
-        if self.var_dict is not None:
-            arg = pack_variables(self.arg, self.var_dict)
+            var_dict = solution.toDict()
+            solution = None
+        if var_dict is not None:
+            arg = pack_variables(self.arg, var_dict)
         else:
             arg = self.arg
 
@@ -1195,7 +1189,6 @@ class CustomExpression(ExpressionElement):
         if not isinstance(value, number_classes):
             value = value.value()
 
-        self.unsetVarDict()
         return value
 
     def getVariables(self):
@@ -1466,26 +1459,24 @@ class Sum(Reduction):
     def setPolynomial(self):
         self.polynomial = sum(elm.toPolynomial() for elm in self.elms)
 
-    def value(self, solution=None):
+    def value(self, solution=None, var_dict=None):
         """
         Returns
         -------
         float or int
             return value of expression
         """
+        assert not (solution is not None and var_dict is not None)
         if solution is not None:
-            self.setVarDict(solution.toDict())
-        if self.var_dict is not None:
+            var_dict = solution.toDict()
+            solution = None
+        if var_dict is not None:
             ret = 0
             for elm in self.elms:
-                if isinstance(elm, ExpressionElement):
-                    elm.setVarDict(self.var_dict)
-                    ret += elm.value()
-                elif elm.name in self.var_dict:
-                    ret += self.var_dict[elm.name].value()
+                if elm.name in var_dict:
+                    ret += var_dict[elm.name].value()
                 else:
-                    ret += elm.value()
-            self.unsetVarDict()
+                    ret += elm.value(var_dict=var_dict)
             return ret
         return to_value_ufunc(self.elms).sum()
 
@@ -1538,26 +1529,24 @@ class Prod(Reduction):
             operator.mul, (elm.toPolynomial() for elm in self.elms)
         )
 
-    def value(self, solution=None):
+    def value(self, solution=None, var_dict=None):
         """
         Returns
         -------
         float or int
             return value of expression
         """
+        assert not (solution is not None and var_dict is not None)
         if solution is not None:
-            self.setVarDict(solution.toDict())
-        if self.var_dict is not None:
+            var_dict = solution.toDict()
+            solution = None
+        if var_dict is not None:
             ret = 1
             for elm in self.elms:
-                if isinstance(elm, ExpressionElement):
-                    elm.setVarDict(self.var_dict)
-                    ret *= elm.value()
-                elif elm.name in self.var_dict:
-                    ret *= self.var_dict[elm.name].value()
+                if elm.name in var_dict:
+                    ret *= var_dict[elm.name].value()
                 else:
-                    ret *= elm.value()
-            self.unsetVarDict()
+                    ret *= elm.value(var_dict=var_dict)
             return ret
         return to_value_ufunc(self.elms).prod()
 

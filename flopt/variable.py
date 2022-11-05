@@ -434,7 +434,7 @@ class VarElement:
         """
         return self._type
 
-    def value(self):
+    def value(self, *args, **kwargs):
         """
         Returns
         -------
@@ -743,7 +743,7 @@ class VarInteger(VarElement):
         self.binarized = None
         self.binaries = set()
 
-    def value(self):
+    def value(self, *args, **kwargs):
         """
         Returns
         -------
@@ -1062,7 +1062,7 @@ class VarPermutation(VarElement):
             random.shuffle(ini_value)
         super().__init__(name, lowBound, upBound, ini_value)
 
-    def value(self):
+    def value(self, *args, **kwargs):
         """
         Returns
         -------
