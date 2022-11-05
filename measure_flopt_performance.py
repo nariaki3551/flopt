@@ -221,8 +221,7 @@ def speed_quadratic_expression_value(count):
 
 
 def speed_func_ce_value(count):
-    """custome expression value
-    """
+    """custome expression value"""
     name = "func"
     data = list()
 

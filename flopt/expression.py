@@ -900,7 +900,7 @@ class Expression(ExpressionElement):
         elif self.operator == "/":
             return elmA_value / elmB_value
         elif self.operator == "^":
-            return elmA_value ** elmB_value
+            return elmA_value**elmB_value
         elif self.operator == "%":
             return elmA_value % elmB_value
         elif self.operator == "&":
