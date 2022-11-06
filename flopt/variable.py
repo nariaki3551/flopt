@@ -30,11 +30,11 @@ logger = setup_logger(__name__)
 
 
 # -------------------------------------------------------
-#   Variable Container Factory
+#   Variable Container
 # -------------------------------------------------------
 
 
-class VariableArray(np.ndarray):
+class VariableNdarray(np.ndarray):
     def __new__(cls, array, *args, **kwargs):
         if isinstance(array, (list, tuple)):
             shape = (len(array),)
@@ -46,13 +46,14 @@ class VariableArray(np.ndarray):
         return obj
 
     def __init__(self, array, set_mono=True, *args, **kwargs):
-        array = np.array(array, dtype=object)
         for i in itertools.product(*map(range, self.shape)):
-            self[i] = array[i]
-            if set_mono:
-                self.mono_to_index[array[i].toMonomial()] = i
+            j = i[0] if isinstance(array, (list, tuple)) else i
+            self[i] = array[j]
+        if set_mono:
+            for i in itertools.product(*map(range, self.shape)):
+                self.mono_to_index[self[i].toMonomial()] = i
         self.set_mono = set_mono
-        self.name = f"VariableArray({array})"
+        self.name = f"VariableNdarray({array})"
 
     def __array_finalize__(self, obj):
         self.mono_to_index = getattr(obj, "mono_to_index", None)
@@ -66,7 +67,7 @@ class VariableArray(np.ndarray):
             return i[0]
         return i
 
-    def to_value(self, var_dict):
+    def value(self, var_dict):
         v = np.ndarray(self.shape)
         for i in itertools.product(*map(range, self.shape)):
             v[i] = var_dict[self[i].name].value()
@@ -356,7 +357,7 @@ class VariableFactory:
                 ini_value[i] if isinstance(ini_value, array_classes) else ini_value
             )
             variables[i] = Variable(var_name, _lowBound, _upBound, _cat, _ini_value)
-        return VariableArray(variables)
+        return VariableNdarray(variables)
 
     @classmethod
     def matrix(
@@ -414,7 +415,7 @@ class VarElement:
     """Base Variable class"""
 
     def __init__(self, name, lowBound=None, upBound=None, ini_value=None):
-        self.name = name
+        self._name = name
         self.lowBound = lowBound
         self.upBound = upBound
         self._value = None
@@ -433,7 +434,7 @@ class VarElement:
         """
         return self._type
 
-    def value(self):
+    def value(self, *args, **kwargs):
         """
         Returns
         -------
@@ -443,10 +444,16 @@ class VarElement:
         return self._value
 
     def setValue(self, value):
+        if isinstance(value, np.ndarray):
+            value = value.item()
         self._value = value
 
+    @property
+    def name(self):
+        return self._name
+
     def getName(self):
-        return self.name
+        return self._name
 
     def getLb(self, must_number=False):
         if must_number:
@@ -501,6 +508,10 @@ class VarElement:
 
     def toMonomial(self):
         return self.monomial
+
+    @property
+    def polynomial(self):
+        return self.toPolynomial()
 
     def toPolynomial(self):
         return Polynomial({self.monomial: 1})
@@ -732,7 +743,7 @@ class VarInteger(VarElement):
         self.binarized = None
         self.binaries = set()
 
-    def value(self):
+    def value(self, *args, **kwargs):
         """
         Returns
         -------
@@ -1051,7 +1062,7 @@ class VarPermutation(VarElement):
             random.shuffle(ini_value)
         super().__init__(name, lowBound, upBound, ini_value)
 
-    def value(self):
+    def value(self, *args, **kwargs):
         """
         Returns
         -------

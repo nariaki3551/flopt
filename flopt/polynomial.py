@@ -161,6 +161,9 @@ class Monomial:
         terms = {x: exp * other for x, exp in self.terms.items()}
         return Monomial(terms, self.coeff**other)
 
+    def __iter__(self):
+        return iter(self.terms.items())
+
     def __getitem__(self, item):
         return self.terms[item]
 

@@ -23,8 +23,7 @@ def bisect_left(a, x, key):
 
 class Frog(Solution):
     def __init__(self, solution, prob):
-        super().__init__()
-        self._variables = solution._variables
+        super().__init__(solution._variables, sort=False)
         self.prob = prob
         self.obj_value = None
 
@@ -43,6 +42,9 @@ class Frog(Solution):
     def clip(self):
         super().clip()
         self.obj_value = None
+
+    def clone(self):
+        return Frog(super().clone(), self.prob)
 
 
 class ShuffledFrogLeapingSearch(BaseSearch):
@@ -147,9 +149,10 @@ class ShuffledFrogLeapingSearch(BaseSearch):
         """
         M = self.n_memeplex
         N = self.n_frog_per_memeplex
+        frog = Frog(solution, self)
         if self.frogs[-2].getObjValue() - self.frogs[0].getObjValue() < 1e-9:
             logger.debug(f"reset frogs: #frogs {N} --> {N*2}")
-            new_frogs = [Frog(solution.clone(), self) for _ in range(M * N)]
+            new_frogs = [frog.clone() for _ in range(M * N)]
             self.frogs += new_frogs
             for frog in self.frogs[1:]:
                 frog.setRandom()
@@ -173,7 +176,7 @@ class ShuffledFrogLeapingSearch(BaseSearch):
                 step *= random.random()
                 if (norm := step.norm()) > self.max_step:
                     step *= self.max_step / norm
-                new_frog = Frog(worst_frog + step, self)
+                new_frog = worst_frog + step
                 new_frog.clip()
 
                 # if it does not improve (1)
@@ -182,7 +185,7 @@ class ShuffledFrogLeapingSearch(BaseSearch):
                     step *= random.random()
                     if (norm := step.norm()) > self.max_step:
                         step *= self.max_step / norm
-                    new_frog = Frog(worst_frog + step, self)
+                    new_frog = worst_frog + step
                     new_frog.clip()
 
                     # if it does not improve (2)
@@ -215,7 +218,8 @@ class ShuffledFrogLeapingSearch(BaseSearch):
 
         M = self.n_memeplex
         N = self.n_frog_per_memeplex
-        self.frogs = [Frog(solution.clone(), self) for _ in range(M * N)]
+        frog = Frog(solution.clone(), self)
+        self.frogs = [frog.clone() for _ in range(M * N)]
         for frog in self.frogs:
             frog.setRandom()
         self.frogs.sort(key=lambda frog: frog.getObjValue())

@@ -147,7 +147,7 @@ class AutoSearch(BaseSearch):
                 return MipSelector()
             elif check(problem_type, ising, "Ising"):
                 return IsingSelector()
-            elif check(problem_type, qp, "Qadratic programming"):
+            elif check(problem_type, qp, "Quadratic programming"):
                 return QpSelector()
             elif check(problem_type, permutation, "Permutation programming"):
                 return PermutationSelector()

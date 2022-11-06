@@ -144,7 +144,7 @@ class PulpSearch(BaseSearch):
                 var.name, lowBound=var.getLb(), upBound=var.getUb(), cat=cat
             )
             lp_variables.append(lp_var)
-        lp_solution = Solution("lp_solution", lp_variables)
+        lp_solution = Solution(lp_variables)
 
         # conver Problem -> pulp.LpProblem
         name = "" if self.name is None else self.name

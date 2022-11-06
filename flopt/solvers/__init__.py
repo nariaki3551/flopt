@@ -3,6 +3,7 @@ from flopt.constants import VariableType, ExpressionType
 algo_list = [
     "RandomSearch",
     "2-Opt",
+    "SteepestDescentSearch",
     "OptunaTPESearch",
     "OptunaCmaEsSearch",
     "HyperoptTPESearch",
@@ -38,6 +39,10 @@ def Solver(algo="auto"):
         from flopt.solvers.two_opt import TwoOpt
 
         return TwoOpt()
+    elif algo == "SteepestDescentSearch":
+        from flopt.solvers.steepest_descent import SteepestDescentSearch
+
+        return SteepestDescentSearch()
     elif algo == "OptunaTPESearch":
         from flopt.solvers.optuna_searches import OptunaTPESearch
 

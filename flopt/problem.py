@@ -255,7 +255,7 @@ class Problem:
         if self.sense in ("maximize", "Maximize"):
             self.obj = -self.obj
 
-        solution = Solution("s", self.getVariables())
+        solution = Solution(self.getVariables())
 
         status, log, self.time = self.solver.solve(
             solution,
@@ -319,6 +319,9 @@ class Problem:
             ExpressionType.Linear,
             ExpressionType.Quadratic,
             ExpressionType.Polynomial,
+            ExpressionType.Nonlinear,
+            ExpressionType.Permutation,
+            ExpressionType.BlackBox,
             ExpressionType.Any,
         ]
 
@@ -331,14 +334,9 @@ class Problem:
 
         # objective
         for expression_type in expression_types:
-            for elm in self.obj.traverse():
-                if isinstance(elm, CustomExpression):
-                    problem_type["Objective"] = ExpressionType.BlackBox
-                    break
-            else:
-                if self.obj.type() in expression_type.expand():
-                    problem_type["Objective"] = expression_type
-                    break
+            if self.obj.type() in expression_type.expand():
+                problem_type["Objective"] = expression_type
+                break
 
         # constraint
         if not self.constraints:

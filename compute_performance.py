@@ -1,5 +1,6 @@
 import random
 from argparse import ArgumentParser
+
 import flopt
 from flopt import Solver, Solver_list
 from flopt.performance import Dataset_list
@@ -68,7 +69,6 @@ def argparser():
         "--datasets", nargs="*", choices=Dataset_list(), help="instance dataset"
     )
     parser.add_argument("--params", default=None, help="param file")
-    parser.add_argument("--seed", default=0, help="seed of random")
     parser.add_argument(
         "--log_level",
         type=int,
@@ -87,9 +87,6 @@ if __name__ == "__main__":
     datasets = args.datasets
     paramfile = args.params
     log_level = args.log_level
-    random.seed(args.seed)
-
-    flopt.env.setLogLevel(log_level)
 
     params = read_paramfile(paramfile)
     params["name"] = savename

@@ -50,6 +50,7 @@ class Environment:
     VARIABLE_LOWER_BOUND = None
     VARIABLE_UPPER_BOUND = None
     TRAINED_MODELS_CONFIG = None
+    FLOPT_SEED = None
 
     SOURCE_DIR = os.path.dirname(__file__)
     DATASETS_DIR = os.path.join(SOURCE_DIR, "..", "datasets")
@@ -76,6 +77,11 @@ class Environment:
         # download trained model
         Environment.TRAINED_MODELS_CONFIG = config["TRAINED_MODELS"]
 
+        # set seed
+        if "FLOPT_SEED" in os.environ:
+            self.FLOPT_SEED = int(os.environ["FLOPT_SEED"])
+            self.seed(self.FLOPT_SEED)
+
     def setLogLevel(self, log_level):
         if isinstance(log_level, str):
             assert log_level in log_name, f"log level {log_level} is invalid."
@@ -84,6 +90,13 @@ class Environment:
 
     def getConfig(self, name, section="DEFAULT"):
         return self.config[section][name]
+
+    def seed(self, seed):
+        import random
+        import numpy
+
+        random.seed(seed)
+        numpy.random.seed(seed)
 
 
 def setup_logger(name):

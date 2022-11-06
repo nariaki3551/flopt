@@ -72,12 +72,12 @@ class VariableType(enum.IntEnum):
 # expression type
 class ExpressionType(enum.IntEnum):
     Unknown = 200
-    Custom = 201
-    Const = 202
-    Any = 203
-    Linear = 204
-    Quadratic = 205
-    Polynomial = 206
+    Any = 201
+    Linear = 202
+    Quadratic = 203
+    Polynomial = 204
+    Nonlinear = 205
+    Permutation = 206
     BlackBox = 207
     Non = 208
 
@@ -89,20 +89,32 @@ class ExpressionType(enum.IntEnum):
         if self == et.Any:
             return {
                 et.Unknown,
-                et.Custom,
-                et.Const,
                 et.Linear,
                 et.Quadratic,
                 et.Polynomial,
+                et.Nonlinear,
+                et.Permutation,
                 et.BlackBox,
                 et.Non,
             }
-        elif self == et.Polynomial:
-            return {et.Const, et.Linear, et.Quadratic, et.Polynomial, et.Non}
-        elif self == et.Quadratic:
-            return {et.Const, et.Linear, et.Quadratic, et.Non}
         elif self == et.Linear:
-            return {et.Const, et.Linear, et.Non}
+            return {et.Linear, et.Non}
+        elif self == et.Quadratic:
+            return {et.Linear, et.Quadratic, et.Non}
+        elif self == et.Polynomial:
+            return {et.Linear, et.Quadratic, et.Polynomial, et.Non}
+        elif self == et.Permutation:
+            return {et.Permutation, et.Non}
+        elif self == et.BlackBox:
+            return {et.Permutation, et.BlackBox, et.Non}
+        elif self == et.Nonlinear:
+            return {
+                et.Linear,
+                et.Quadratic,
+                et.Polynomial,
+                et.Nonlinear,
+                et.Non,
+            }
         return {self, et.Non}
 
 

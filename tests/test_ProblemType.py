@@ -74,7 +74,7 @@ def test_toProblemType6():
     problem_type = prob.toProblemType()
     assert problem_type == {
         "Variable": VariableType.Permutation,
-        "Objective": ExpressionType.Any,
+        "Objective": ExpressionType.Permutation,
         "Constraint": ExpressionType.Non,
     }
 

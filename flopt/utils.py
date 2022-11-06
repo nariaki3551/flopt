@@ -4,7 +4,7 @@ import functools
 
 import numpy as np
 
-from flopt.variable import VarElement, VariableArray
+from flopt.variable import VarElement
 from flopt.expression import Expression, CustomExpression, Const
 import flopt.expression
 from flopt.solution import Solution
@@ -96,16 +96,12 @@ def Value(x):
     """
     if isinstance(x, (VarElement, Expression, Const, Solution)):
         return x.value()
-    elif isinstance(x, (list, tuple)):
-        cast = type(x)
-        return cast([var.value() for var in x])
+    elif isinstance(x, list):
+        return [var.value() for var in x]
+    elif isinstance(x, tuple):
+        return tuple(var.value() for var in x)
     elif isinstance(x, np.ndarray):
-
-        def to_value(x):
-            return x.value()
-
-        cast = np.frompyfunc(to_value, 1, 1)
-        return cast(x)
+        return np.frompyfunc(lambda x: x.value(), 1, 1)(x)
     return x
 
 
