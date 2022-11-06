@@ -142,7 +142,11 @@ class ExpressionElement:
             return ExpressionType.Quadratic
         elif self.isPolynomial():
             return ExpressionType.Polynomial
-        return self._type
+        elif any(isinstance(exp, CustomExpression) for exp in self.traverse()):
+            return ExpressionType.BlackBox
+        elif any(var.type() == VariableType.Permutation for var in self.getVariables()):
+            return ExpressionType.Permutation
+        return ExpressionType.Nonlinear
 
     def constant(self):
         if self.isPolynomial():
@@ -752,8 +756,6 @@ class Expression(ExpressionElement):
         >>> 1
     """
 
-    _type = ExpressionType.Unknown
-
     def __init__(self, elmA, elmB, operator, name=None):
         self.elmA = elmA
         self.elmB = elmB
@@ -1155,8 +1157,6 @@ class CustomExpression(ExpressionElement):
     flopt.expression.Expression
     """
 
-    _type = ExpressionType.Custom
-
     def __init__(self, func, arg, name=None):
         self.func = func
         self.arg = arg
@@ -1221,8 +1221,6 @@ class Const(ExpressionElement):
     name : str or None
         name of constant
     """
-
-    _type = ExpressionType.Const
 
     def __init__(self, value, name=None):
         if name is None:
@@ -1334,7 +1332,7 @@ class Const(ExpressionElement):
         return Const(-self._value)
 
     def __hash__(self):
-        return hash((self._value, self._type))
+        return hash((self._value, self.__class__))
 
     def __str__(self):
         return str(self._value)
@@ -1363,13 +1361,32 @@ to_const_ufunc = np.frompyfunc(to_const, 1, 1)
 #   Reduction Class
 # ------------------------------------------------
 class Reduction(ExpressionElement):
-
-    _type = ExpressionType.Unknown
-
     def __init__(self, var_or_exps, name=None):
         assert len(var_or_exps) > 0
         self.elms = to_const_ufunc(np.array(var_or_exps, dtype=object))
         super().__init__(name=name)
+
+    def setName(self):
+        self.name = ""
+        const = 0
+
+        elm = self.elms[0]
+        if isinstance(elm, number_classes):
+            const += elm
+        elif isinstance(elm, ExpressionElement) and elm.getName().startswith("-"):
+            self.name += f"({elm.getName()})"
+        else:
+            self.name += f"{elm.getName()}"
+
+        for elm in self.elms[1:]:
+            if isinstance(elm, number_classes):
+                const += elm
+            elif isinstance(elm, ExpressionElement) and elm.getName().startswith("-"):
+                self.name += f"{self.operator}({elm.getName()})"
+            else:
+                self.name += f"{self.operator}{elm.getName()}"
+
+        return const
 
     def linkChildren(self):
         for elm in self.elms:
@@ -1413,7 +1430,7 @@ class Reduction(ExpressionElement):
         return False
 
     def __hash__(self):
-        return hash(tuple(elm for elm in self.elms)) + hash(self._type)
+        return hash(tuple(elm for elm in self.elms)) + hash(self.__class__)
 
     def __del__(self):
         for elm in self.elms:
@@ -1428,25 +1445,10 @@ class Sum(Reduction):
     var_of_exps : list of VarELement or ExpressionElement
     """
 
+    operator = "+"
+
     def setName(self):
-        self.name = ""
-        const = 0
-
-        elm = self.elms[0]
-        if isinstance(elm, number_classes):
-            const += elm
-        elif isinstance(elm, ExpressionElement) and elm.getName().startswith("-"):
-            self.name += f"({elm.getName()})"
-        else:
-            self.name += f"{elm.getName()}"
-
-        for elm in self.elms[1:]:
-            if isinstance(elm, number_classes):
-                const += elm
-            elif isinstance(elm, ExpressionElement) and elm.getName().startswith("-"):
-                self.name += f"+({elm.getName()})"
-            else:
-                self.name += f"+{elm.getName()}"
+        const = super().setName()
 
         if const > 0:
             self.name += f"+{const}"
@@ -1498,25 +1500,10 @@ class Prod(Reduction):
     var_of_exps : list of VarELement or ExpressionElement
     """
 
+    operator = "*"
+
     def setName(self):
-        self.name = ""
-        const = 0
-
-        elm = self.elms[0]
-        if isinstance(elm, number_classes):
-            const += elm
-        elif isinstance(elm, ExpressionElement) and elm.getName().startswith("-"):
-            self.name += f"({elm.getName()})"
-        else:
-            self.name += f"{elm.getName()}"
-
-        for elm in self.elms[1:]:
-            if isinstance(elm, number_classes):
-                const += elm
-            elif isinstance(elm, ExpressionElement) and elm.getName().startswith("-"):
-                self.name += f"*({elm.getName()})"
-            else:
-                self.name += f"*{elm.getName()}"
+        const = super().setName()
 
         if const != 0:
             self.name = f"{const}*" + self.name

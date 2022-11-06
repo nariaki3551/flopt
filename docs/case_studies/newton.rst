@@ -21,7 +21,7 @@ The following code obtains the root of :math:`f(x) = x^2 - 2`, so it is success 
        return x * x - 2
    
    # define variable with initial value
-   x = flopt.Variable("x", ini_value=5)
+   x = flopt.Variable("x", ini_value=100)
    
    # obtain jacobian function
    jac = f(x).jac(x)
@@ -29,22 +29,22 @@ The following code obtains the root of :math:`f(x) = x^2 - 2`, so it is success 
    for roop in range(10):
        # update x
        x.setValue((x - f(x) / jac).value()))
-       print(f'roop {roop:<4d} x = {x.value()}')
+       print(f'roop {roop},  x = {x.value()}')
 
 Output of above code is here.
 
 ::
 
-   roop 0    x = 2.7
-   roop 1    x = 1.7203703703703703
-   roop 2    x = 1.44145536817765
-   roop 3    x = 1.414470981367771
-   roop 4    x = 1.4142135857968836
-   roop 5    x = 1.4142135623730951
-   roop 6    x = 1.414213562373095
-   roop 7    x = 1.4142135623730951
-   roop 8    x = 1.414213562373095
-   roop 9    x = 1.4142135623730951
+  roop 0,  x 50.01
+  roop 1,  x 25.024996000799838
+  roop 2,  x 12.552458046745901
+  roop 3,  x 6.3558946949311395
+  roop 4,  x 3.335281609280434
+  roop 5,  x 1.967465562231149
+  roop 6,  x 1.4920008896897232
+  roop 7,  x 1.4162413320389438
+  roop 8,  x 1.4142150140500531
+  roop 9,  x 1.414213562373845
 
 We obtained the neary value of :math:`\sqrt{2}`.
 
@@ -55,7 +55,7 @@ Another code equivalent to above code is shown here.
    import flopt
    
    # define variable with initial value
-   x = flopt.Variable("x", init_value=5)
+   x = flopt.Variable("x", init_value=100)
    
    # define f
    f = x * x - 2
@@ -66,4 +66,4 @@ Another code equivalent to above code is shown here.
    for roop in range(10):
        # update x
        x.setValue(x.value() - f.value() / jac.value())
-       print(f'roop {roop:<4d} x = {x.value()}')
+       print(f'roop {roop},  x = {x.value()}')
