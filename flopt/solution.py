@@ -5,11 +5,9 @@ import numpy as np
 
 from flopt.variable import VarElement, VariableNdarray
 from flopt.constants import VariableType
-from flopt.env import setup_logger
 
 
-logger = setup_logger(__name__)
-
+to_value_ufunc = np.frompyfunc(lambda x: x.value(), 1, 1)
 
 class Solution(np.ndarray):
     """
@@ -99,8 +97,8 @@ class Solution(np.ndarray):
             values of the variables in the Solution
         """
         if solution is not None:
-            return [solution.toDict()[var.name] for var in solution]
-        return [var.value() for var in self._variables]
+            return np.array([solution.toDict()[var.name] for var in solution])
+        return to_value_ufunc(self._variables)
 
     def setValue(self, name, value):
         """
@@ -178,7 +176,8 @@ class Solution(np.ndarray):
         float
           Squared 2-norm of the solution as a vector in Euclid space
         """
-        return sum(var.value() * var.value() for var in self._variables)
+        value = self.value()
+        return (value * value).sum()
 
     def norm(self):
         """
@@ -365,10 +364,10 @@ class Solution(np.ndarray):
         return self.__imul__(other)
 
     def __abs__(self):
-        variables = [var.clone() for var in self._variables]
-        for var in variables:
+        solution = self.clone()
+        for var in solution._variables:
             var.setValue(abs(var.value()))
-        return Solution(variables)
+        return solution
 
     def __hash__(self):
         return hash((id(self), tuple(self._variables)))
