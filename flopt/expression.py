@@ -762,8 +762,8 @@ class Expression(ExpressionElement):
         self.operator = operator
         super().__init__(name=name)
 
-    @classmethod
-    def fromPolynomial(cls, polynomial):
+    @staticmethod
+    def fromPolynomial(polynomial):
         from flopt import Sum, Prod
 
         elms = []
