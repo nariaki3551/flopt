@@ -31,7 +31,7 @@ class SteepestDescentSearch(BaseSearch):
 
     name = "SteepestDescentSearch"
     can_solve_problems = {
-        "Variable": VariableType.Number,
+        "Variable": VariableType.Continuous,
         "Objective": ExpressionType.Polynomial,
         "Constraint": ExpressionType.Non,
     }
