@@ -39,9 +39,9 @@ First, let's we solve the maximum-cut of following simple graph.
 .. image:: https://cdn-ak.f.st-hatena.com/images/fotolife/i/inarizuuuushi/20220911/20220911123719.png
 
 We divide these five vertexes into two groups, :math:`S` and :math:`T`.
-We create spin variables :math:`s_i` which takes +1 or -1 value corresponding to the vertex :math:`i` of the graph.
-:math:`s_i = +1` represents vertex :math:`i` is in :math:`S`, and :math:`s_i = -1` represents vertex :math:`i` is in :math:`T`.
-Then, :math:`(1 - s_i s_j)` takes 0 when vertex :math:`i` and :math:`j` are belong to same group, and takes 1 when these vertexes are belongs to different groups.
+We create and assign a spin variable :math:`s_i` to the vertex :math:`i` of the graph, where spin variable only takes +1 or -1.
+:math:`s_i = +1` represents vertex :math:`i` is in group :math:`S`, and :math:`s_i = -1` represents vertex :math:`i` is in group :math:`T`.
+This gives us that :math:`(1 - s_i s_j)` takes 0 only if vertex :math:`i` and :math:`j` are belong to same group, and takes 1 only if these vertexes are belongs to different groups.
 Hence, the maximum cut problem is formulated as :math:`\max \sum_{i < j} w_{i, j} (1 - s_i s_j)`, where :math:`w_{i, j}` is the weight of edge :math:`(i, j)`.
 
 

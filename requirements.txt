@@ -8,10 +8,10 @@ cvxopt
 amplify
 pytest
 scipy
-scikit-learn
 dill
 pooch
 timeout_decorator
+colorlog
 
 # docs
 Sphinx==5.2.0

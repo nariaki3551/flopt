@@ -48,7 +48,7 @@ In addition, we create lists for modeling.
 
 
 We create Binary variables :math:`x_{ijk}` such that
-:math:`x_{ijk} = 1` if :math:`j`-row and :math:`k`-column piece's value is :math:`i` else :math:`x_{ijk} = 0`.
+:math:`x_{ijk} = 1` if :math:`j`-row and :math:`k`-column cell's value is :math:`i` else :math:`x_{ijk} = 0`.
 
 .. code-block:: python
 

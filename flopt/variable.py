@@ -7,6 +7,7 @@ import numpy as np
 
 import flopt
 from flopt.polynomial import Monomial, Polynomial
+from flopt.container import FloptNdarray
 from flopt.expression import ExpressionElement, Expression, Const
 from flopt.constraint import Constraint
 from flopt.constants import (
@@ -27,51 +28,6 @@ from flopt.env import (
 
 
 logger = setup_logger(__name__)
-
-
-# -------------------------------------------------------
-#   Variable Container
-# -------------------------------------------------------
-
-
-class VariableNdarray(np.ndarray):
-    def __new__(cls, array, *args, **kwargs):
-        if isinstance(array, (list, tuple)):
-            shape = (len(array),)
-        else:
-            shape = array.shape
-        obj = super().__new__(cls, shape, dtype=VarElement)
-        obj.mono_to_index = {}
-        obj.set_mono = False
-        return obj
-
-    def __init__(self, array, set_mono=True, *args, **kwargs):
-        for i in itertools.product(*map(range, self.shape)):
-            j = i[0] if isinstance(array, (list, tuple)) else i
-            self[i] = array[j]
-        if set_mono:
-            for i in itertools.product(*map(range, self.shape)):
-                self.mono_to_index[self[i].toMonomial()] = i
-        self.set_mono = set_mono
-        self.name = f"VariableNdarray({array})"
-
-    def __array_finalize__(self, obj):
-        self.mono_to_index = getattr(obj, "mono_to_index", None)
-
-    def index(self, mono):
-        assert self.set_mono
-        if not isinstance(mono, Monomial):
-            mono = mono.toMonomial()
-        i = self.mono_to_index[mono]
-        if len(i) == 1:
-            return i[0]
-        return i
-
-    def value(self, var_dict):
-        v = np.ndarray(self.shape)
-        for i in itertools.product(*map(range, self.shape)):
-            v[i] = var_dict[self[i].name].value()
-        return v
 
 
 # -------------------------------------------------------
@@ -357,7 +313,7 @@ class VariableFactory:
                 ini_value[i] if isinstance(ini_value, array_classes) else ini_value
             )
             variables[i] = Variable(var_name, _lowBound, _upBound, _cat, _ini_value)
-        return VariableNdarray(variables)
+        return FloptNdarray(variables)
 
     @classmethod
     def matrix(
@@ -496,9 +452,6 @@ class VarElement:
         if self.getUb() is not None:
             ub = self.getUb(must_number=True)
             self._value = min(self._value, ub)
-
-    def toDict(self):
-        return {self.name: self}
 
     def getVariables(self):
         return {self}
@@ -851,7 +804,7 @@ class VarBinary(VarInteger):
     def setValue(self, value):
         self._value = value
         if self.spin is not None:
-            self.spin._value = int(2 * value - 1)
+            self.spin._value = 2 * value - 1
 
     def setRandom(self):
         self._value = random.randint(0, 1)

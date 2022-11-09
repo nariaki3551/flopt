@@ -1,10 +1,10 @@
 import flopt
 
 
-class Ellipsoid:
+class WeightedSphere:
     @staticmethod
     def create_objective(n):
-        obj = lambda x: flopt.sum((1000 ** (i / n - 1) * x[i]) ** 2 for i in range(n))
+        obj = lambda x: flopt.sum(i * xi * xi for i, xi in enumerate(x, 1))
         return obj
 
     @staticmethod

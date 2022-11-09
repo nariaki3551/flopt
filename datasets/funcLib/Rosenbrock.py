@@ -1,22 +1,19 @@
 import flopt
 
 
-def create_objective(n):
-    def obj(x):
-        n = len(x)
+class Rosenbrock:
+    @staticmethod
+    def create_objective(n):
+        obj = lambda x: flopt.sum(
+            100 * (x[i + 1] - x[i] ** 2) ** 2 + (x[i] - 1) ** 2 for i in range(n - 1)
+        )
+        return obj
 
-        def obj_i(i):
-            return 100 * (x[i + 1] - x[i] ** 2) ** 2 + (x[i] - 1) ** 2
+    @staticmethod
+    def create_variables(n, cat="Continuous"):
+        x = flopt.Variable.array("x", n, lowBound=-5, upBound=5, cat=cat)
+        return x
 
-        return sum(obj_i(i) for i in range(n - 1))
-
-    return obj
-
-
-def create_variables(n, cat="Continuous"):
-    variables = flopt.Variable.array("x", n, lowBound=-5, upBound=5, cat=cat)
-    return variables
-
-
-def minimum_obj(n):
-    return 0
+    @staticmethod
+    def minimum_obj(n):
+        return 0

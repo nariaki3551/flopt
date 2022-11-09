@@ -31,6 +31,7 @@ setup(
         "dill",
         "pooch",
         "timeout_decorator",
+        "colorlog",
     ],
     author="nariaki tateiwa",
     author_email="nariaki3551@gmail.com",

@@ -3,11 +3,13 @@ import itertools
 
 import numpy as np
 
-from flopt.variable import VarElement, VariableNdarray
+from flopt.variable import VarElement
+from flopt.container import FloptNdarray
 from flopt.constants import VariableType
 
 
 to_value_ufunc = np.frompyfunc(lambda x: x.value(), 1, 1)
+
 
 class Solution(np.ndarray):
     """
@@ -127,7 +129,7 @@ class Solution(np.ndarray):
         list
           Variable instances which belong to the Solution
         """
-        return VariableNdarray(self._variables)
+        return FloptNdarray(self._variables)
 
     def clone(self):
         """

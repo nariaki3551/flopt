@@ -151,14 +151,6 @@ class AutoSearch(BaseSearch):
                 return QpSelector()
             elif check(problem_type, permutation, "Permutation programming"):
                 return PermutationSelector()
-            elif check(problem_type, blackbox, "Blackbox optimization"):
-                return BlackBoxSelector()
-            elif check(
-                problem_type,
-                blackbox_mip,
-                "Blackbox optimization with integer variables",
-            ):
-                return BlackBoxMipSelector()
             elif check(problem_type, nonlinear, "Nonlinear optimization"):
                 return NonlinearSelector()
             elif check(
@@ -167,6 +159,14 @@ class AutoSearch(BaseSearch):
                 "Nonlinear optimization with integer variables",
             ):
                 return NonlinearMipSelector()
+            elif check(problem_type, blackbox, "Blackbox optimization"):
+                return BlackBoxSelector()
+            elif check(
+                problem_type,
+                blackbox_mip,
+                "Blackbox optimization with integer variables",
+            ):
+                return BlackBoxMipSelector()
         except ModelNotFound as e:
             logger.warning(e)
             return BaseSelector()

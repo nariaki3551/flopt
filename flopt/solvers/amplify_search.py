@@ -34,12 +34,12 @@ class AmplifySearch(BaseSearch):
 
     .. code-block:: python
 
-        from flopt import Variable, Problem
+        import flopt
 
-        x = Variable('x', cat='Spin')
-        y = Variable('y', cat='Spin')
+        x = flopt.Variable('x', cat='Spin')
+        y = flopt.Variable('y', cat='Spin')
 
-        prob = Problem()
+        prob = flopt.Problem()
         prob += 1 - x * y - x
         prob += x + y >= 0
 
@@ -55,16 +55,14 @@ class AmplifySearch(BaseSearch):
 
     .. code-block:: python
 
-        from flopt import Solver
-
-        solver = Solver('AmplifySearch')
+        solver = flopt.Solver('AmplifySearch')
         solver.setParams(token="xxx")  # your token
         prob.solve(solver, msg=True)
 
         print()
-        print('obj =', Value(prob.obj))
-        print('x =', Value(x))
-        print('y =', Value(y))
+        print('obj =', flopt.Value(prob.obj))
+        print('x =', flopt.Value(x))
+        print('y =', flopt.Value(y))
         >>> obj = -1
         >>> x = 1
         >>> y = 1
@@ -74,12 +72,12 @@ class AmplifySearch(BaseSearch):
 
     .. code-block:: python
 
-        from flopt import Variable, Problem
+        import flopt
 
-        x = Variable('x', cat='Binary')
-        y = Variable('y', cat='Binary')
+        x = flopt.Variable('x', cat='Binary')
+        y = flopt.Variable('y', cat='Binary')
 
-        prob = Problem()
+        prob = flopt.Problem()
         prob += (1 - x * y - x).toSpin()
         prob += (x + y >= 0).toSpin()
 

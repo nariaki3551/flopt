@@ -1,19 +1,19 @@
-from math import cos, pi
+import math
 
 import flopt
 
 
-def create_objective(n):
-    def obj(x):
-        return 10 * len(x) + sum(xi * xi - 10 * cos(2 * pi * xi) for xi in x)
+class Rastrigin:
+    @staticmethod
+    def create_objective(n):
+        obj = lambda x: 10 * n + flopt.sum(x * x - 10 * flopt.cos(2 * math.pi * x))
+        return obj
 
-    return obj
+    @staticmethod
+    def create_variables(n, cat="Continuous"):
+        x = flopt.Variable.array("x", n, lowBound=-5.12, upBound=5.12, cat=cat)
+        return x
 
-
-def create_variables(n, cat="Continuous"):
-    variables = flopt.Variable.array("x", n, lowBound=-5.12, upBound=5.12, cat=cat)
-    return variables
-
-
-def minimum_obj(n):
-    return 0
+    @staticmethod
+    def minimum_obj(n):
+        return 0

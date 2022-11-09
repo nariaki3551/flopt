@@ -1,4 +1,4 @@
-import weakref
+import types
 import functools
 import operator
 import itertools
@@ -6,6 +6,7 @@ import itertools
 import numpy as np
 
 from flopt.polynomial import Monomial, Polynomial
+from flopt.container import FloptNdarray
 from flopt.constraint import Constraint
 from flopt.constants import (
     VariableType,
@@ -18,35 +19,6 @@ from flopt.constants import (
 from flopt.env import setup_logger, get_variable_lower_bound, get_variable_upper_bound
 
 logger = setup_logger(__name__)
-
-
-# -------------------------------------------------------
-#   Expression Container
-# -------------------------------------------------------
-
-
-class ExpressionNdarray(np.ndarray):
-    def __new__(cls, array, *args, **kwargs):
-        if isinstance(array, (list, tuple, set)):
-            shape = (len(array),)
-        else:
-            shape = array.shape
-        obj = super().__new__(cls, shape, dtype=ExpressionElement)
-        return obj
-
-    def __init__(self, array, set_mono=True, *args, **kwargs):
-        if isinstance(array, set):
-            array = list(array)
-        for i in itertools.product(*map(range, self.shape)):
-            j = i[0] if isinstance(array, (list, tuple)) else i
-            self[i] = array[j]
-        self.name = f"ExpressionNdarray({array})"
-
-    def value(self, solution=None):
-        v = np.ndarray(self.shape)
-        for i in itertools.product(*map(range, self.shape)):
-            v[i] = self[i].value(solution)
-        return v
 
 
 # ------------------------------------------------
@@ -67,28 +39,39 @@ class ExpressionElement:
 
     Attributes
     ----------
-    name : str
-    var_dict : None or dict
+    _name : None or str
     polynomial : None or Polynomial
     parents : list of ExpressionElement
     """
 
     def __init__(self, name=None):
-        self.name = name
-        self.var_dict = None
+        self._name = name
         self.polynomial = None
         self.parents = []
+
+    @property
+    def name(self):
+        return self.getName()
+
+    def resetName(self):
+        self._name = None
 
     def setName(self):
         raise NotImplementedError
 
     def getName(self):
-        if self.name is None:
+        if self._name is None:
             self.setName()
-        return self.name
+        return self._name
+
+    def getChildren(self):
+        raise NotImplementedError
 
     def linkChildren(self):
-        raise NotImplementedError
+        for child in self.getChildren():
+            if isinstance(child, ExpressionElement):
+                child.parents.append(self)
+                child.linkChildren()
 
     def resetlinkChildren(self):
         for elm in self.traverse():
@@ -108,7 +91,7 @@ class ExpressionElement:
             self.setPolynomial()
         return self.polynomial
 
-    def value(self):
+    def value(self, solution=None, var_dict=None):
         """
         Returns
         -------
@@ -193,18 +176,24 @@ class ExpressionElement:
             such that 1/2 x^T Q x + c^T x + C, Q^T = Q
         """
         assert self.isQuadratic()
-        from flopt.variable import VariableNdarray
 
-        assert x is None or isinstance(
-            x, VariableNdarray
-        ), f"x must be None or VariableNdarray"
+        from flopt.variable import VarElement
         from flopt.convert import QuadraticStructure
 
-        polynomial = self.toPolynomial().simplify()
         if x is None:
-            x = VariableNdarray(sorted(self.getVariables(), key=lambda var: var.name))
+            x = FloptNdarray(sorted(self.getVariables(), key=lambda var: var.name))
+        elif not isinstance(x, FloptNdarray):
+            x = FloptNdarray(x)
+        assert x.ndim == 1, f"x must be a 1-dimension array"
+        assert all(
+            isinstance(var, VarElement) for var in x
+        ), f"All elements of x must be VarElement family"
 
         num_variables = len(x)
+        polynomial = self.toPolynomial().simplify()
+        mono_to_index = {
+            x[i].toMonomial(): i for i in itertools.product(*map(range, x.shape))
+        }
 
         Q = np.zeros((num_variables, num_variables), dtype=np_float)
         c = np.zeros((num_variables,), dtype=np_float)
@@ -218,16 +207,16 @@ class ExpressionElement:
         # |               Q[i, j] = Q[j, i] = polynomial.coeff(x[i], x[j])
         for mono, coeff in polynomial:
             if mono.isLinear():
-                c[x.index(mono)] = coeff
+                c[mono_to_index[mono]] = coeff
             elif mono.isQuadratic():
                 if len(mono.terms) == 1:
                     var_a = list(mono.terms)[0]
-                    a_ix = x.index(var_a.toMonomial())
+                    a_ix = mono_to_index[var_a.toMonomial()]
                     Q[a_ix, a_ix] = 2 * coeff
                 else:
                     var_a, var_b = list(mono.terms.keys())
-                    a_ix = x.index(var_a.toMonomial())
-                    b_ix = x.index(var_b.toMonomial())
+                    a_ix = mono_to_index[var_a.toMonomial()]
+                    b_ix = mono_to_index[var_b.toMonomial()]
                     Q[a_ix, b_ix] = Q[b_ix, a_ix] = coeff
 
         C = polynomial.constant()
@@ -270,22 +259,28 @@ class ExpressionElement:
             where c.T.dot(x) + C
         """
         assert self.isLinear()
-        from flopt.variable import VariableNdarray
 
-        assert x is None or isinstance(
-            x, VariableNdarray
-        ), f"x must be None or VariableNdarray"
+        from flopt.variable import VarElement
         from flopt.convert import LinearStructure
 
         if x is None:
-            x = VariableNdarray(sorted(self.getVariables(), key=lambda var: var.name))
+            x = FloptNdarray(sorted(self.getVariables(), key=lambda var: var.name))
+        elif not isinstance(x, FloptNdarray):
+            x = FloptNdarray(x)
+        assert x.ndim == 1, f"x must be a 1-dimension array"
+        assert all(
+            isinstance(var, VarElement) for var in x
+        ), f"All elements of x must be VarElement family"
 
         num_variables = len(x)
         polynomial = self.toPolynomial()
+        mono_to_index = {
+            x[i].toMonomial(): i for i in itertools.product(*map(range, x.shape))
+        }
 
         c = np.zeros((num_variables,), dtype=np_float)
         for mono, coeff in polynomial:
-            c[x.index(mono)] = coeff
+            c[mono_to_index[mono]] = coeff
 
         C = polynomial.constant()
         return LinearStructure(c, C, x=x)
@@ -336,9 +331,14 @@ class ExpressionElement:
         """
         import sympy
 
+        _locals = dict(
+            Exp=Exp, Cos=Cos, Sin=Sin, Tan=Tan, Log=Log, Abs=Abs, Floor=Floor, Ceil=Ceil
+        )
+        _locals.update({var.name: var for var in self.getVariables()})
+
         expr = eval(
             str(sympy.sympify(self.getName()).simplify()),
-            {var.name: var for var in self.getVariables()},
+            _locals,
         )
         if isinstance(expr, number_classes):
             expr = Const(expr)
@@ -352,9 +352,14 @@ class ExpressionElement:
         """
         import sympy
 
+        _locals = dict(
+            Exp=Exp, Cos=Cos, Sin=Sin, Tan=Tan, Log=Log, Abs=Abs, Floor=Floor, Ceil=Ceil
+        )
+        _locals.update({var.name: var for var in self.getVariables()})
+
         expr = eval(
             str(sympy.simplify(self.getName()).expand()),
-            {var.name: var for var in self.getVariables()},
+            _locals,
         )
         if isinstance(expr, number_classes):
             expr = Const(expr)
@@ -362,7 +367,7 @@ class ExpressionElement:
         elif isinstance(expr, Expression):
             expr = eval(
                 str(sympy.sympify(expr.getName()).expand()),
-                {var.name: var for var in self.getVariables()},
+                _locals,
             )
             return expr
         # VarElement family
@@ -631,28 +636,7 @@ class ExpressionElement:
         return self
 
     def __hash__(self):
-        if (
-            self.operator == "+"
-            and isinstance(self.elmB, number_classes)
-            and self.elmB == 0
-        ):
-            # a + 0
-            return hash(self.elmA)
-        elif (
-            self.operator == "-"
-            and isinstance(self.elmB, number_classes)
-            and self.elmB == 0
-        ):
-            # a - 0
-            return hash(self.elmA)
-        elif (
-            self.operator == "*"
-            and isinstance(self.elmA, number_classes)
-            and self.elmA == 1
-        ):
-            # 1 * b
-            return hash(self.elmB)
-        return hash((hash(self.elmA), hash(self.elmB), hash(self.operator)))
+        raise NotImplementedError
 
     def __call__(self, solution):
         """
@@ -712,13 +696,14 @@ class Expression(ExpressionElement):
 
     .. code-block:: python
 
-        a = Variable(name="a", ini_value=1, cat="Integer")
-        b = Variable(name="b", ini_value=2, cat="Continuous")
-        c = Expression(a, b, "+")
-        >>> print(c)
-        >>> Name: a+b
-             Type    : Expression
-             Value   : 3
+        import flopt
+        from flopt.expression import Expression
+
+        a = flopt.Variable(name="a", ini_value=1, cat="Integer")
+        b = flopt.Variable(name="b", ini_value=2, cat="Continuous")
+        c = Expression(a, b, "+")  # same as a + b
+        c
+        >>> a+b
         c.value()
         >>> 3
         c.getVariables()
@@ -729,8 +714,11 @@ class Expression(ExpressionElement):
 
     .. code-block:: python
 
-        a = Variable(name="a", ini_value=1, cat="Integer")  # a.value() is 1
-        b = Variable(name="b", ini_value=2, cat="Continuous")  # b.value() is 2
+        import flopt
+        from flopt.expression import Expression
+
+        a = flopt.Variable(name="a", ini_value=1, cat="Integer")  # a.value() is 1
+        b = flopt.Variable(name="b", ini_value=2, cat="Continuous")  # b.value() is 2
         Expression(a, b, "+").value()  # a+b addition
         >>> 3
         Expression(a, b, "-").value()  # a-b substraction
@@ -748,8 +736,11 @@ class Expression(ExpressionElement):
 
     .. code-block:: python
 
-        a = Variable(name="a", ini_value=1, cat="Binary")
-        b = Variable(name="b", ini_value=0, cat="Binary")
+        import flopt
+        from flopt.expression import Expression
+
+        a = flopt.Variable(name="a", ini_value=1, cat="Binary")
+        b = flopt.Variable(name="b", ini_value=0, cat="Binary")
         Expression(a, b, "&").value().value()  # a&b bitwise and
         >>> 0
         Expression(a, b, "|").value().value()  # a&b bitwise or
@@ -787,9 +778,9 @@ class Expression(ExpressionElement):
         stack = [self]
         while stack:
             elm = stack.pop()
-            if elm.name is not None:
+            if elm._name is not None:
                 continue
-            if isinstance(elm, (Reduction, Const)):
+            if isinstance(elm, (CustomExpression, Reduction, Const, MathOperation)):
                 elm.setName()
                 continue
             elmA = elm.elmA
@@ -805,22 +796,18 @@ class Expression(ExpressionElement):
                         elmB_name = f"({elmB_name})"
                 elif isinstance(elm.elmB, Reduction):
                     elmB_name = f"({elmB_name})"
-                elm.name = f"{elmA_name}{elm.operator}{elmB_name}"
+                elm._name = f"{elmA_name}{elm.operator}{elmB_name}"
             else:
                 stack.append(elm)
                 if elmA.name is None:
                     stack.append(elmA)
                 if elmB.name is None:
                     stack.append(elmB)
-        return self.name
+        return self._name
 
-    def linkChildren(self):
-        if isinstance(self.elmA, ExpressionElement):
-            self.elmA.parents.append(self)
-            self.elmA.linkChildren()
-        if isinstance(self.elmB, ExpressionElement):
-            self.elmB.parents.append(self)
-            self.elmB.linkChildren()
+    def getChildren(self):
+        yield self.elmA
+        yield self.elmB
 
     def isPolynomial(self):
         return self.polynomial is not None or (
@@ -830,7 +817,11 @@ class Expression(ExpressionElement):
                 self.operator == "+"
                 or self.operator == "-"
                 or self.operator == "*"
-                or self.operator == "^"
+                or (
+                    self.operator == "^"
+                    and isinstance(self.elmB, Const)
+                    and isinstance(self.elmB.value(), int)
+                )
                 or (self.operator == "/" and isinstance(self.elmB, Const))
             )
         )
@@ -853,13 +844,13 @@ class Expression(ExpressionElement):
                     elm.polynomial = elmA.toPolynomial() - elmB.toPolynomial()
                 elif elm.operator == "*":
                     elm.polynomial = elmA.toPolynomial() * elmB.toPolynomial()
-                elif elm.operator == "/" and isinstance(elmB, Const):
-                    elm.polynomial = elmA.toPolynomial() * (1.0 / elmB.value())
                 elif (
-                    elm.operator == "^"
+                    elm.operator == "/"
                     and isinstance(elmB, Const)
                     and isinstance(elmB.value(), int)
                 ):
+                    elm.polynomial = elmA.toPolynomial() * (1.0 / elmB.value())
+                elif elm.operator == "^" and isinstance(elmB, Const):
                     elm.polynomial = elmA.toPolynomial() ** elmB.value()
                 else:
                     assert "check whethere this expresson is polynomial or not by .isPolynomial() before execution of setPolynomial()"
@@ -881,7 +872,6 @@ class Expression(ExpressionElement):
         assert not (solution is not None and var_dict is not None)
         if solution is not None:
             var_dict = solution.toDict()
-            solution = None
 
         if var_dict is not None and self.elmA.name in var_dict:
             elmA_value = var_dict[self.elmA.name].value()
@@ -944,12 +934,9 @@ class Expression(ExpressionElement):
             f.jac([y, x])
             >>> [Expression(x, 0, +) Expression(y, 0, +)]
         """
-        from flopt.variable import VariableNdarray
-
         assert isinstance(x, array_classes), f"x must be array like object"
-
-        if not isinstance(x, VariableNdarray):
-            x = VariableNdarray(x)
+        if not isinstance(x, FloptNdarray):
+            x = FloptNdarray(x)
 
         num_variables = len(x)
         if self.polynomial is None:
@@ -958,7 +945,7 @@ class Expression(ExpressionElement):
         jac = np.empty((num_variables,), dtype=object)
         for i in range(num_variables):
             jac[i] = Expression.fromPolynomial(self.polynomial.diff(x[i]))
-        return ExpressionNdarray(jac)
+        return FloptNdarray(jac)
 
     def hess(self, x):
         """hessian
@@ -999,7 +986,7 @@ class Expression(ExpressionElement):
         for i in range(num_variables):
             for j in range(num_variables):
                 hess[i, j] = Expression.fromPolynomial(jac[i].toPolynomial().diff(x[j]))
-        return ExpressionNdarray(hess)
+        return FloptNdarray(hess)
 
     def traverse(self):
         yield self
@@ -1052,12 +1039,35 @@ class Expression(ExpressionElement):
             return Expression(Const(other), self, "*")
         return NotImplemented
 
+    def __hash__(self):
+        if (
+            self.operator == "+"
+            and isinstance(self.elmB, number_classes)
+            and self.elmB == 0
+        ):
+            # a + 0
+            return hash(self.elmA)
+        elif (
+            self.operator == "-"
+            and isinstance(self.elmB, number_classes)
+            and self.elmB == 0
+        ):
+            # a - 0
+            return hash(self.elmA)
+        elif (
+            self.operator == "*"
+            and isinstance(self.elmA, number_classes)
+            and self.elmA == 1
+        ):
+            # 1 * b
+            return hash(self.elmB)
+        return hash((hash(self.elmA), hash(self.elmB), hash(self.operator)))
+
     def __str__(self):
         return self.getName()
 
     def __repr__(self):
-        s = f"Expression({self.elmA.getName()}, {self.elmB.getName()}, {self.operator})"
-        return s
+        return self.getName()
 
     def __del__(self):
         if isinstance(self.elmA, Const):
@@ -1087,9 +1097,8 @@ def pack_variables(var_or_array, var_dict):
     if isinstance(var_or_array, array_classes):
         cls = var_or_array.__class__
         array = var_or_array
-        import flopt.variable
 
-        if isinstance(array, flopt.variable.VariableNdarray):
+        if isinstance(array, FloptNdarray):
             return array.value(var_dict)
         else:
             return cls(
@@ -1157,6 +1166,8 @@ class CustomExpression(ExpressionElement):
     flopt.expression.Expression
     """
 
+    operator = "CustomExpression"
+
     def __init__(self, func, arg, name=None):
         self.func = func
         self.arg = arg
@@ -1164,10 +1175,10 @@ class CustomExpression(ExpressionElement):
         super().__init__(name=name)
 
     def setName(self):
-        self.name = f"{self.func.__name__}(*)"
+        self._name = f"{self.func.__name__}(*)"
 
-    def linkChildren(self):
-        return
+    def getChildren(self):
+        return []
 
     def isPolynomial(self):
         return False
@@ -1179,7 +1190,6 @@ class CustomExpression(ExpressionElement):
         assert not (solution is not None and var_dict is not None)
         if solution is not None:
             var_dict = solution.toDict()
-            solution = None
         if var_dict is not None:
             arg = pack_variables(self.arg, var_dict)
         else:
@@ -1233,8 +1243,8 @@ class Const(ExpressionElement):
     def setName(self):
         return NotImplemented
 
-    def linkChildren(self):
-        return
+    def getChildren(self):
+        return []
 
     def setPolynomial(self):
         self.polynomial = Polynomial(constant=self._value)
@@ -1338,8 +1348,7 @@ class Const(ExpressionElement):
         return str(self._value)
 
     def __repr__(self):
-        s = f"Const({self._value})"
-        return s
+        return f"Const({self._value})"
 
 
 # ------------------------------------------------
@@ -1361,38 +1370,35 @@ to_const_ufunc = np.frompyfunc(to_const, 1, 1)
 #   Reduction Class
 # ------------------------------------------------
 class Reduction(ExpressionElement):
-    def __init__(self, var_or_exps, name=None):
-        assert len(var_or_exps) > 0
-        self.elms = to_const_ufunc(np.array(var_or_exps, dtype=object))
+    def __init__(self, elms, name=None):
+        assert len(elms) > 0
+        self.elms = to_const_ufunc(np.array(elms, dtype=object))
         super().__init__(name=name)
 
     def setName(self):
-        self.name = ""
+        self._name = ""
         const = 0
 
         elm = self.elms[0]
         if isinstance(elm, number_classes):
             const += elm
         elif isinstance(elm, ExpressionElement) and elm.getName().startswith("-"):
-            self.name += f"({elm.getName()})"
+            self._name += f"({elm.getName()})"
         else:
-            self.name += f"{elm.getName()}"
+            self._name += f"{elm.getName()}"
 
         for elm in self.elms[1:]:
             if isinstance(elm, number_classes):
                 const += elm
             elif isinstance(elm, ExpressionElement) and elm.getName().startswith("-"):
-                self.name += f"{self.operator}({elm.getName()})"
+                self._name += f"{self.operator}({elm.getName()})"
             else:
-                self.name += f"{self.operator}{elm.getName()}"
+                self._name += f"{self.operator}{elm.getName()}"
 
         return const
 
-    def linkChildren(self):
-        for elm in self.elms:
-            if isinstance(elm, ExpressionElement):
-                elm.parents.append(self)
-                elm.linkChildren()
+    def getChildren(self):
+        yield from self.elms
 
     def getVariables(self):
         return functools.reduce(operator.or_, (elm.getVariables() for elm in self.elms))
@@ -1451,9 +1457,9 @@ class Sum(Reduction):
         const = super().setName()
 
         if const > 0:
-            self.name += f"+{const}"
+            self._name += f"+{const}"
         elif const < 0:
-            self.name += f"-{-const}"
+            self._name += f"-{-const}"
 
     def isPolynomial(self):
         return all(elm.isPolynomial() for elm in self.elms)
@@ -1471,7 +1477,6 @@ class Sum(Reduction):
         assert not (solution is not None and var_dict is not None)
         if solution is not None:
             var_dict = solution.toDict()
-            solution = None
         if var_dict is not None:
             ret = 0
             for elm in self.elms:
@@ -1489,8 +1494,7 @@ class Sum(Reduction):
         return all(elm.isQuadratic() for elm in self.elms)
 
     def __repr__(self):
-        s = f"Sum({self.elms})"
-        return s
+        return f"Sum({self.elms})"
 
 
 class Prod(Reduction):
@@ -1506,7 +1510,7 @@ class Prod(Reduction):
         const = super().setName()
 
         if const != 0:
-            self.name = f"{const}*" + self.name
+            self._name = f"{const}*" + self._name
 
     def isPolynomial(self):
         return all(elm.isPolynomial() for elm in self.elms)
@@ -1526,7 +1530,6 @@ class Prod(Reduction):
         assert not (solution is not None and var_dict is not None)
         if solution is not None:
             var_dict = solution.toDict()
-            solution = None
         if var_dict is not None:
             ret = 1
             for elm in self.elms:
@@ -1544,5 +1547,90 @@ class Prod(Reduction):
         return self.toPolynomial().isQuadratic()
 
     def __repr__(self):
-        s = f"Prod({self.elms})"
-        return s
+        return f"Prod({self.elms})"
+
+
+# ------------------------------------------------
+#   Math Operation Class
+# ------------------------------------------------
+
+
+class MathOperation(ExpressionElement):
+    def __init__(self, elm, name=None):
+        self.elm = elm
+        super().__init__(name=name)
+
+    def setName(self):
+        self._name = f"{self.operator}({self.elm.getName()})"
+
+    def getChildren(self):
+        yield self.elm
+
+    def isPolynomial(self):
+        return False
+
+    def value(self, solution=None, var_dict=None):
+        assert not (solution is not None and var_dict is not None)
+        if solution is not None:
+            var_dict = solution.toDict()
+        return self.func(self.elm.value(var_dict=var_dict))
+
+    def getVariables(self):
+        return self.elm.getVariables()
+
+    def isNeg(self):
+        return False
+
+    def __hash__(self):
+        return hash((self.operator, self.elm))
+
+    def __repr__(self):
+        return f"{self.operator}({self.elm})"
+
+
+class Exp(MathOperation):
+
+    operator = "Exp"
+    func = np.exp
+
+
+class Cos(MathOperation):
+
+    operator = "Cos"
+    func = np.cos
+
+
+class Sin(MathOperation):
+
+    operator = "Sin"
+    func = np.sin
+
+
+class Tan(MathOperation):
+
+    operator = "Tan"
+    func = np.tan
+
+
+class Log(MathOperation):
+
+    operator = "Log"
+    func = np.log
+
+
+class Abs(MathOperation):
+
+    operator = "Abs"
+    func = np.abs
+
+
+class Floor(MathOperation):
+
+    operator = "Floor"
+    func = np.floor
+
+
+class Ceil(MathOperation):
+
+    operator = "Ceil"
+    func = np.ceil

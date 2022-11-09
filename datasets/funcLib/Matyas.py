@@ -1,18 +1,17 @@
 import flopt
 
 
-def create_objective(*args, **kwargs):
-    def obj(x):
-        x1, x2 = x
-        return 0.26 * (x1 * x1 + x2 * x2) - 0.48 * x1 * x2
+class Matyas:
+    @staticmethod
+    def create_objective(*args, **kwargs):
+        obj = lambda x: 0.26 * (flopt.sqnorm(x) - 0.48 * flopt.prod(x))
+        return obj
 
-    return obj
+    @staticmethod
+    def create_variables(cat="Continuous", *args, **kwargs):
+        x = flopt.Variable.array("x", 2, lowBound=-10, upBound=10, cat=cat)
+        return x
 
-
-def create_variables(cat="Continuous", *args, **kwargs):
-    variables = flopt.Variable.array("x", 2, lowBound=-10, upBound=10, cat=cat)
-    return variables
-
-
-def minimum_obj(*args, **kwargs):
-    return 0
+    @staticmethod
+    def minimum_obj(*args, **kwargs):
+        return 0

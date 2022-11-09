@@ -128,6 +128,7 @@ def test_Solution_getitem(b):
     b[0].value() == 1
     b[1].value() == 2
 
+
 def test_Solution_hash(b):
     hash(b)
 

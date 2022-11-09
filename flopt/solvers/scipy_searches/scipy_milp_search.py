@@ -3,7 +3,7 @@ import numpy as np
 
 from flopt.solvers.base import BaseSearch
 from flopt.convert import LpStructure
-from flopt.variable import VariableNdarray
+from flopt.container import FloptNdarray
 from flopt.constants import VariableType, ExpressionType, SolverTerminateState
 from flopt.env import setup_logger
 
@@ -60,7 +60,7 @@ class ScipyMilpSearch(BaseSearch):
         # lp structure
         lp = LpStructure.fromFlopt(
             self.prob,
-            x=VariableNdarray(solution.getVariables()),
+            x=FloptNdarray(solution.getVariables()),
             option="all_neq",
         )
 

@@ -156,7 +156,6 @@ class OptunaCmaEsSearch(OptunaSearch):
 
     Parameters
     ----------
-    x0
     sigma0
     n_startup_trials
     independent_sampler
@@ -191,7 +190,6 @@ class OptunaCmaEsSearch(OptunaSearch):
 
     def __init__(self):
         super().__init__()
-        self.x0 = None
         self.sigma0 = None
         self.n_startup_trials = 1
         self.independent_sampler = None
@@ -200,8 +198,12 @@ class OptunaCmaEsSearch(OptunaSearch):
 
     def createStudy(self, solution):
         disable_default_handler()
-        if self.x0 is None:
-            x0 = {var.name: var.value() for var in solution}
+        x0 = dict()
+        for var in solution:
+            if var.type() == VariableType.Spin:
+                x0[var.name] = (var.value() + 1) / 2
+            else:
+                x0[var.name] = var.value()
         sampler = CmaEsSampler(
             x0=x0,
             sigma0=self.sigma0,

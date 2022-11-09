@@ -5,7 +5,14 @@ import functools
 import numpy as np
 
 from flopt.variable import VarElement
-from flopt.expression import Expression, CustomExpression, Const
+from flopt.expression import (
+    ExpressionElement,
+    Expression,
+    CustomExpression,
+    Reduction,
+    MathOperation,
+    Const,
+)
 import flopt.expression
 from flopt.solution import Solution
 from flopt.constants import number_classes, array_classes
@@ -63,46 +70,43 @@ def Dot(x, y):
     return Sum(_x * _y for _x, _y in zip(x, y))
 
 
-def Sqrt(x):
-    return x**0.5
-
-
 def Norm(x):
-    return Sqrt(Dot(x, x))
+    return Dot(x, x) ** 0.5
 
 
 def Sqnorm(x):
     return Dot(x, x)
 
 
-def Value(x):
+def operation(operator, x):
     """
     Parameters
     ----------
+    operator : function of x
     x : VarElement or array of VarElement
-
-    Examples
-    --------
-
-    >>> from flopt import Variable, value
-    >>>
-    >>> y = Variable('y', ini_value=1)
-    >>> value(y)
-    >>> 1
-    >>>
-    >>> x = Variable.array('x', 3, cat='Binary', ini_value=0)
-    >>> value(x)
-    >>> [0 0 0]
     """
-    if isinstance(x, (VarElement, Expression, Const, Solution)):
-        return x.value()
-    elif isinstance(x, list):
-        return [var.value() for var in x]
-    elif isinstance(x, tuple):
-        return tuple(var.value() for var in x)
+    if isinstance(x, types.GeneratorType):
+        return operation(operator, list(x))
+    if isinstance(x, (VarElement, ExpressionElement)):
+        return operator(x)
+    elif isinstance(x, (list, tuple)):
+        cls = x.__class__
+        return cls(operator(var) for var in x)
     elif isinstance(x, np.ndarray):
-        return np.frompyfunc(lambda x: x.value(), 1, 1)(x)
+        return np.frompyfunc(lambda var: operator(var), 1, 1)(x)
     return x
+
+
+Value = lambda x: operation(lambda v: v.value(), x)
+sqrt = lambda x: operation(lambda v: v**0.5, x)
+exp = lambda x: operation(flopt.expression.Exp, x)
+cos = lambda x: operation(flopt.expression.Cos, x)
+sin = lambda x: operation(flopt.expression.Sin, x)
+tan = lambda x: operation(flopt.expression.Tan, x)
+log = lambda x: operation(flopt.expression.Log, x)
+abs = lambda x: operation(flopt.expression.Abs, x)
+floor = lambda x: operation(flopt.expression.Floor, x)
+ceil = lambda x: operation(flopt.expression.Ceil, x)
 
 
 def get_dot_graph(expression, save_file, rankdir=None):
@@ -120,28 +124,22 @@ def _get_dot_graph(expression, writer):
     operation_str = '{} [label="{}", color=lightblue, style=filled]'
     edge_str = "{} -> {}"
     print(node_str.format(node_self, expression.getName()), file=writer)
-    if isinstance(expression, flopt.expression.CustomExpression):
-        node_operator = hash((expression, 1))
-        operator_str = "CustomFunction"
+    if isinstance(expression, ExpressionElement):
+        if isinstance(expression, Const):
+            return node_self
+        node_operator = hash(expression)
+        operator_str = expression.operator
+        if isinstance(expression, CustomExpression):
+            elms = expression.arg
+        elif isinstance(expression, Expression):
+            elms = [expression.elmA, expression.elmB]
+        elif isinstance(expression, Reduction):
+            elms = expression.elms
+        elif isinstance(expression, MathOperation):
+            elms = [expression.elm]
         print(operation_str.format(node_operator, operator_str), file=writer)
         print(edge_str.format(node_operator, node_self), file=writer)
-        for var in expression.arg:
-            node = _get_dot_graph(var, writer)
-            print(edge_str.format(node, node_operator), file=writer)
-    elif isinstance(expression, flopt.expression.Expression):
-        node_operator = hash((expression, expression.operator))
-        print(operation_str.format(node_operator, expression.operator), file=writer)
-        print(edge_str.format(node_operator, node_self), file=writer)
-        nodeA = _get_dot_graph(expression.elmA, writer)
-        nodeB = _get_dot_graph(expression.elmB, writer)
-        print(edge_str.format(nodeA, node_operator), file=writer)
-        print(edge_str.format(nodeB, node_operator), file=writer)
-    elif isinstance(expression, flopt.expression.Reduction):
-        node_operator = hash((expression, 1))
-        operator_str = "+" if isinstance(expression, flopt.expression.Sum) else "*"
-        print(operation_str.format(node_operator, operator_str), file=writer)
-        print(edge_str.format(node_operator, node_self), file=writer)
-        for elm in expression.elms:
+        for elm in elms:
             node = _get_dot_graph(elm, writer)
             print(edge_str.format(node, node_operator), file=writer)
     else:
