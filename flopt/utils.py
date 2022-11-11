@@ -97,16 +97,107 @@ def operation(operator, x):
     return x
 
 
-Value = lambda x: operation(lambda v: v.value(), x)
-sqrt = lambda x: operation(lambda v: v**0.5, x)
-exp = lambda x: operation(flopt.expression.Exp, x)
-cos = lambda x: operation(flopt.expression.Cos, x)
-sin = lambda x: operation(flopt.expression.Sin, x)
-tan = lambda x: operation(flopt.expression.Tan, x)
-log = lambda x: operation(flopt.expression.Log, x)
-abs = lambda x: operation(flopt.expression.Abs, x)
-floor = lambda x: operation(flopt.expression.Floor, x)
-ceil = lambda x: operation(flopt.expression.Ceil, x)
+def Value(x):
+    """Convert operation to number from variable and expression
+
+    Parameters
+    ----------
+    x : array or generator of expressions or variables
+    """
+    return operation(lambda v: v.value(), x)
+
+
+def sqrt(x):
+    """squared root operation
+
+    Parameters
+    ----------
+    x : array or generator of expressions or variables
+    """
+    return operation(lambda v: v**0.5, x)
+
+
+def exp(x):
+    """exponential operation
+
+    Parameters
+    ----------
+    x : array or generator of expressions or variables
+    """
+
+    return operation(flopt.expression.Exp, x)
+
+
+def cos(x):
+    """cosine operation
+
+    Parameters
+    ----------
+    x : array or generator of expressions or variables
+    """
+
+    return operation(flopt.expression.Cos, x)
+
+
+def sin(x):
+    """sine operation
+
+    Parameters
+    ----------
+    x : array or generator of expressions or variables
+    """
+
+    return operation(flopt.expression.Sin, x)
+
+
+def tan(x):
+    """tangent operation
+
+    Parameters
+    ----------
+    x : array or generator of expressions or variables
+    """
+    return operation(flopt.expression.Tan, x)
+
+
+def log(x):
+    """logarithmic operation
+
+    Parameters
+    ----------
+    x : array or generator of expressions or variables
+    """
+    return operation(flopt.expression.Log, x)
+
+
+def abs(x):
+    """absolute operation
+
+    Parameters
+    ----------
+    x : array or generator of expressions or variables
+    """
+    return operation(flopt.expression.Abs, x)
+
+
+def floor(x):
+    """floor operation
+
+    Parameters
+    ----------
+    x : array or generator of expressions or variables
+    """
+    return operation(flopt.expression.Floor, x)
+
+
+def ceil(x):
+    """ceil operation
+
+    Parameters
+    ----------
+    x : array or generator of expressions or variables
+    """
+    return operation(flopt.expression.Ceil, x)
 
 
 def get_dot_graph(expression, save_file, rankdir=None):

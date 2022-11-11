@@ -6,6 +6,7 @@ API Reference
 
     Variable
     CustomExpression
+    Operators
     Problem
     Solver
     convert/index.rst

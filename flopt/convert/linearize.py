@@ -27,19 +27,22 @@ def linearize(prob):
 
     .. code-block:: python
 
-        from flopt import Variable, Problem
+        import flopt
 
-        x = Variable.array('x', 3, cat='Binary')
+        x = flopt.Variable.array('x', 3, cat='Binary')
 
-        prob = Problem()
+        prob = flopt.Problem()
         prob += x[0] - 2*x[1] - x[0]*x[1]*x[2]
+
         print('[ original ]')
-        print(prob.show())
+        prob.show()
 
         from flopt.convert import linearize
+
         linearize(prob)
+
         print('[ linearized ])
-        print(prob.show())
+        prob.show()
 
     ::
 

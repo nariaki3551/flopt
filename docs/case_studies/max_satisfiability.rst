@@ -18,11 +18,11 @@ This problem can be formulated using `flopt` as follows,
 
 .. code-block:: python
 
-  from flopt import Variable, Problem, Solver
+  import flopt 
 
   # literals
-  x0 = Variable("x0", cat="Binary")
-  x1 = Variable("x1", cat="Binary")
+  x0 = flopt.Variable("x0", cat="Binary")
+  x1 = flopt.Variable("x1", cat="Binary")
 
   # clauses
   c1 = x0 | x1
@@ -32,9 +32,9 @@ This problem can be formulated using `flopt` as follows,
 
   clauses = [c1, c2, c3, c4]
   weights = [1, 2, 3, 4]
-  obj = sum(w*c for c, w in zip(clauses, weights))
+  obj = flopt.dot(clauses, weights)
 
-  prob = Problem("MaxSat", sense="Maximize")
+  prob = flopt.Problem("MaxSat", sense="Maximize")
   prob += obj
 
   prob.solve(timelimit=2, msg=True)
@@ -53,8 +53,8 @@ We declear potitive literals using *Variable*.
 .. code-block:: python
 
   # literals
-  x0 = Variable("x0", cat="Binary")
-  x1 = Variable("x1", cat="Binary")
+  x0 = flopt.Variable("x0", cat="Binary")
+  x1 = flopt.Variable("x1", cat="Binary")
 
 `~x0` represents a non positive literal of `x0`, e.g. if `x0=0` then `~x0=1`.
 
@@ -80,29 +80,7 @@ For example, :math:`(c_1+2c_2+3c_3+4c_4)` can be formulated as follows.
 
   clauses = [c1, c2, c3, c4]
   weights = [1, 2, 3, 4]
-  obj = sum(w*c for c, w in zip(clauses, weights))
-
-
-Problem
--------
-
-We set object function in Problem.
-
-.. code-block:: python
-
-  prob = Problem("MaxSat", sense="Maximize")
-  prob += obj
-
-Solve
------
-
-We select algorithm of solver for the problem we create, and solve.
-
-.. code-block:: python
-
-  solver = Solver(algo="RandomSearch")
-  solver.setParams(timelimit=2)
-  prob.solve(solver, msg=True)
+  obj = flopt.dot(clauses, weights)
 
 
 Result

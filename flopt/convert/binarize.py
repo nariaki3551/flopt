@@ -15,24 +15,28 @@ def binarize(prob):
     --------
     .. code-block:: python
 
-        from flopt import Variable, Problem
-        x = Variable.array('x', 2, cat='Binary')
-        y = Variable.array('y', 1, lowBound=1, upBound=3, cat='Integer')
-        x = np.hstack([x, y])
+        import flopt
 
-        prob = Problem()
-        prob += x[2] * x[0] + x[1]
+        x = flopt.Variable.array('x', 2, cat='Binary')
+        y = flopt.Variable('y', lowBound=1, upBound=3, cat='Integer')
+
+        prob = flopt.Problem()
+        prob += y * x[0] + x[1]
+
         print('[ original ]')
-        print(prob.show())
+        prob.show()
 
         from flopt.convert import linearize, binarize
+
         binarize(prob)
+
         print('[ binarized ]')
-        print(prob.show())
+        prob.show()
 
         linearize(prob)
+
         print('[ linearized ]')
-        print(prob.show())
+        prob.show()
 
     ::
 

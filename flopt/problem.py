@@ -388,4 +388,4 @@ class Problem:
         s = str(self) + "\n\n"
         for ix, const in enumerate(self.constraints):
             s += f"  C {ix}, name {const.name}, {const}\n"
-        return s
+        print(s)

@@ -1,8 +1,10 @@
 # flopt
 
 A Python Flexible Modeler for Optimization Problems.<br><br>
-flopt allows modeling of various problems such as LP, QP, Ising, QUBO, etc.<br>
-Users can also solve the modeled problem using some solvers and obtain the optimal or good solutions.
+
+flopt is a modeling tool for optimization problems such as LP, QP, Ising, QUBO, etc.
+flopt provides various functions for flexible and easy modeling.
+Users can also solve modeled problems with several solvers to obtain optimal or good solutions.
 
 [![Documentation Status](https://readthedocs.org/projects/flopt/badge/?version=latest)](https://flopt.readthedocs.io/en/latest/?badge=latest) [![PyPI version](https://badge.fury.io/py/flopt.svg)](https://badge.fury.io/py/flopt) ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/flopt) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
@@ -65,7 +67,7 @@ cd flopt && python -m pip install .
 You  can write codes like PuLP application.
 
 ```python
-from flopt import Variable, Problem, Solver
+from flopt import Variable, Problem
 
 # Variables
 a = Variable('a', lowBound=0, upBound=1, cat='Continuous')
@@ -77,7 +79,7 @@ prob = Problem()
 prob += 2 * (3*a+b) * c**2 + 3 # set the objective function
 prob += a + b * c <= 3         # set the constraint
 
-# Solver
+# Solve
 prob.solve(timelimit=0.5, msg=True) # run solver to solve the problem
 
 # display the result, incumbent solution
@@ -107,7 +109,7 @@ custom_obj = CustomExpression(func=user_func, arg=[a, b])
 prob = Problem(name='CustomExpression')
 prob += custom_obj
 
-# Solver
+# Solve
 prob.solve(timelimit=1, msg=True)  # run solver to solve the problem
 
 # display the result, incumbent solution
@@ -119,7 +121,7 @@ print('obj value', prob.getObjectiveValue())
 In the case you solve TSP, *Permutation Variable* is useful.
 
 ```python
-from flopt import Variable, Problem, Solver, CustomExpression
+from flopt import Variable, Problem, CustomExpression
 
 N = 4  # Number of city
 D = [[0,1,2,3],  # Distance matrix
@@ -142,7 +144,7 @@ tsp_obj = CustomExpression(func=tsp_dist, arg=[x])
 prob = Problem(name='TSP')
 prob += tsp_obj
 
-# Solver
+# Solve
 prob.solve(timelimit=10, msg=True)    # run solver to solve the problem
 
 # display the result, incumbent solution

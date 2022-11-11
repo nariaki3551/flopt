@@ -780,12 +780,12 @@ class Expression(ExpressionElement):
             elm = stack.pop()
             if elm._name is not None:
                 continue
-            if isinstance(elm, (CustomExpression, Reduction, Const, MathOperation)):
+            if not isinstance(elm, Expression):
                 elm.setName()
                 continue
             elmA = elm.elmA
             elmB = elm.elmB
-            if elmA.name is not None and elmB.name is not None:
+            if elmA._name is not None and elmB._name is not None:
                 elmA_name = elm.elmA.getName()
                 elmB_name = elm.elmB.getName()
                 if isinstance(elm.elmA, (Expression, Reduction)):
@@ -799,9 +799,9 @@ class Expression(ExpressionElement):
                 elm._name = f"{elmA_name}{elm.operator}{elmB_name}"
             else:
                 stack.append(elm)
-                if elmA.name is None:
+                if elmA._name is None:
                     stack.append(elmA)
-                if elmB.name is None:
+                if elmB._name is None:
                     stack.append(elmB)
         return self._name
 
@@ -1232,13 +1232,11 @@ class Const(ExpressionElement):
         name of constant
     """
 
-    def __init__(self, value, name=None):
-        if name is None:
-            name = f"{value}"
+    def __init__(self, value):
         if isinstance(value, Const):
             value = value._value
         self._value = value
-        super().__init__(name=name)
+        super().__init__(name=f"{value}")
 
     def setName(self):
         return NotImplemented
@@ -1370,10 +1368,10 @@ to_const_ufunc = np.frompyfunc(to_const, 1, 1)
 #   Reduction Class
 # ------------------------------------------------
 class Reduction(ExpressionElement):
-    def __init__(self, elms, name=None):
+    def __init__(self, elms):
         assert len(elms) > 0
         self.elms = to_const_ufunc(np.array(elms, dtype=object))
-        super().__init__(name=name)
+        super().__init__()
 
     def setName(self):
         self._name = ""
@@ -1445,7 +1443,8 @@ class Reduction(ExpressionElement):
 
 
 class Sum(Reduction):
-    """
+    """Summation Operator
+
     Parameters
     ----------
     var_of_exps : list of VarELement or ExpressionElement
@@ -1498,7 +1497,8 @@ class Sum(Reduction):
 
 
 class Prod(Reduction):
-    """
+    """Production Operator
+
     Parameters
     ----------
     var_of_exps : list of VarELement or ExpressionElement
@@ -1556,9 +1556,9 @@ class Prod(Reduction):
 
 
 class MathOperation(ExpressionElement):
-    def __init__(self, elm, name=None):
+    def __init__(self, elm):
         self.elm = elm
-        super().__init__(name=name)
+        super().__init__()
 
     def setName(self):
         self._name = f"{self.operator}({self.elm.getName()})"
@@ -1589,48 +1589,108 @@ class MathOperation(ExpressionElement):
 
 
 class Exp(MathOperation):
+    """Exponential operation
+
+    .. code-block:: python
+
+        import flopt
+
+        # single variable
+        x = flopt.Variable("x", ini_value=2)
+        flopt.exp(x)
+        >>> Exp(x)  # return single object
+        flopt.exp(x).value()
+        >>> 7.38905609893065
+
+        # variables as array
+        x = flopt.Variable.array("y", 4, ini_value=2)
+        flopt.exp(y)
+        >>> FloptNdarray([Exp(y_0), Exp(y_1), Exp(y_2), Exp(y_3)], dtype=object)
+    """
 
     operator = "Exp"
     func = np.exp
 
 
 class Cos(MathOperation):
+    """Cosine operation
+
+    See Also
+    --------
+    flopt.expression.Exp
+    """
 
     operator = "Cos"
     func = np.cos
 
 
 class Sin(MathOperation):
+    """Sine operation
+
+    See Also
+    --------
+    flopt.expression.Exp
+    """
 
     operator = "Sin"
     func = np.sin
 
 
 class Tan(MathOperation):
+    """Tangent operation
+
+    See Also
+    --------
+    flopt.expression.Exp
+    """
 
     operator = "Tan"
     func = np.tan
 
 
 class Log(MathOperation):
+    """Logarithmc operation
+
+    See Also
+    --------
+    flopt.expression.Exp
+    """
 
     operator = "Log"
     func = np.log
 
 
 class Abs(MathOperation):
+    """Absolute operation
+
+    See Also
+    --------
+    flopt.expression.Exp
+    """
 
     operator = "Abs"
     func = np.abs
 
 
 class Floor(MathOperation):
+    """Floor operation
+
+    See Also
+    --------
+    flopt.expression.Exp
+    """
 
     operator = "Floor"
     func = np.floor
 
 
 class Ceil(MathOperation):
+    """Ceil operation
+
+    See Also
+    --------
+    flopt.expression.Exp
+    """
 
     operator = "Ceil"
     func = np.ceil

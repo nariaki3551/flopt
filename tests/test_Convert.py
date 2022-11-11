@@ -347,7 +347,7 @@ def test_lp_to_flopt():
     from flopt.convert import LpStructure
 
     prob = LpStructure(c, C, A=A, b=b, lb=lb, ub=ub, types=var_types).toFlopt()
-    print(prob.show())
+    prob.show()
 
 
 def test_ising_to_flopt():
@@ -359,7 +359,7 @@ def test_ising_to_flopt():
     from flopt.convert import IsingStructure
 
     prob = IsingStructure(J, h, C).toFlopt()
-    print(prob.show())
+    prob.show()
 
 
 def test_qubo_to_flopt():
@@ -393,7 +393,7 @@ def test_pulp_to_flopt1():
     from flopt.convert import pulp_to_flopt
 
     flopt_prob = pulp_to_flopt(prob)
-    print(flopt_prob.show())
+    flopt_prob.show()
 
 
 def test_pulp_to_flopt2():

@@ -43,7 +43,7 @@ class AmplifySearch(BaseSearch):
         prob += 1 - x * y - x
         prob += x + y >= 0
 
-        print(prob.show())
+        prob.show()
         >>> Name: None
         >>>   Type         : Problem
         >>>   sense        : minimize
@@ -81,7 +81,7 @@ class AmplifySearch(BaseSearch):
         prob += (1 - x * y - x).toSpin()
         prob += (x + y >= 0).toSpin()
 
-        print(prob.show())
+        prob.show()
         >>> Name: None
         >>>   Type         : Problem
         >>>   sense        : minimize

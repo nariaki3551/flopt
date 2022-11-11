@@ -82,7 +82,7 @@ To linearize the product of spin variables, flopt replace spin variables to bina
 
     linearize(prob)
 
-    print(prob.show())
+    prob.show()
     >>> Name: Number Partitioning
     >>>   Type         : Problem
     >>>   sense        : minimize
