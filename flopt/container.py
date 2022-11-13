@@ -14,7 +14,7 @@ class FloptNdarray(np.ndarray):
         obj = super().__new__(cls, shape, dtype=object)
         return obj
 
-    def __init__(self, array, set_mono=True, *args, **kwargs):
+    def __init__(self, array, *args, **kwargs):
         for i in itertools.product(*map(range, self.shape)):
             j = i[0] if isinstance(array, (list, tuple)) else i
             self[i] = array[j]
@@ -30,6 +30,11 @@ class FloptNdarray(np.ndarray):
             else:
                 v[i] = self[i].value()
         return v
+
+    def setValue(self, values):
+        assert self.shape == values.shape
+        for i in itertools.product(*map(range, self.shape)):
+            self[i].setValue(values[i])
 
     def getVariables(self):
         elm_generator = (self[i] for i in itertools.product(*map(range, self.shape)))

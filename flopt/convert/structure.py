@@ -173,7 +173,10 @@ class QpStructure:
         assert all(const.isLinear() for const in prob.getConstraints())
 
         if x is None:
-            x = FloptNdarray(list(prob.getVariables()), dtype=object)
+            variables = list(prob.getVariables())
+            x = FloptNdarray(sorted(variables, key=lambda v: ("__" in v.name, v.name)))
+        elif not isinstance(x, np.ndarray):
+            x = FloptNdarray(x)
 
         quadratic = prob.obj.toQuadratic(x)
         Q, c, C = quadratic.Q, quadratic.c, quadratic.C
@@ -299,11 +302,18 @@ class QpStructure:
         Q = np.zeros((num_var + num_stack, num_var + num_stack), dtype=np_float)
         Q[: self.Q.shape[0], : self.Q.shape[1]] = self.Q
         c = np.hstack([self.c, np.zeros((num_stack,), dtype=np_float)])
-        A = np.zeros((self.A.shape[0] + num_stack, num_var + num_stack), dtype=np_float)
-        A[: self.A.shape[0], : self.A.shape[1]] = self.A
-        A[self.A.shape[0] :, : self.G.shape[1]] = self.G
-        A[self.A.shape[0] :, self.G.shape[1] :] = np.identity(num_stack, dtype=np_float)
-        b = np.hstack([self.b, self.h])
+        if self.A is None:
+            A_row, A_col = 0, 0
+        else:
+            A_row, A_col = self.A.shape
+        A = np.zeros((A_row + num_stack, num_var + num_stack), dtype=np_float)
+        A[:A_row, :A_col] = self.A
+        A[A_row:, : self.G.shape[1]] = self.G
+        A[A_row:, self.G.shape[1] :] = np.identity(num_stack, dtype=np_float)
+        if self.b is None:
+            b = self.h
+        else:
+            b = np.hstack([self.b, self.h])
         if self.lb is not None:
             lb = np.hstack([self.lb, np.zeros((num_stack,), dtype=np_float)])
         else:
@@ -318,7 +328,9 @@ class QpStructure:
             types = self.types
         if self.x is not None:
             with create_variable_mode():
-                s = Variable.array("slack", num_stack, lowBound=0, cat="Continuous")
+                s = Variable.array(
+                    "slack", num_stack, lowBound=0, cat="Continuous", ini_value=0
+                )
             x = np.hstack([self.x, s])
         else:
             x = self.x
@@ -352,12 +364,12 @@ class QpStructure:
             self.Q, self.c, self.C, G, h, self.A, self.b, lb, ub, self.types, self.x
         )
 
-    def toFlopt(self, name=None):
+    def toFlopt(self, var_name="x"):
         """
         Parameters
         ----------
-        name : str
-            name of problem
+        var_name : str
+            variable prefix
 
         Returns
         -------
@@ -366,8 +378,8 @@ class QpStructure:
         if self.x is not None:
             x = self.x
         else:
-            x = Variable.array("x", len(self.Q), self.lb, self.ub, self.types)
-        prob = Problem(name)
+            x = Variable.array(var_name, len(self.Q), self.lb, self.ub, self.types)
+        prob = Problem()
         prob += (0.5 * (x.T.dot(self.Q).dot(x)) + self.c.T.dot(x) + self.C).expand()
         if self.G is not None:
             for g, h_ in zip(self.G, self.h):
@@ -565,17 +577,22 @@ class LpStructure:
             return qp.toAllEq().toLp()
         return qp.toLp()
 
-    def toFlopt(self):
+    def toFlopt(self, var_name="x"):
         """
         ::
 
             LpStructure --> QpStructure --> Problem (flopt)
 
+        Parameters
+        ----------
+        var_name : str
+            variable prefix
+
         Returns
         -------
         Problem
         """
-        return self.toQp().toFlopt()
+        return self.toQp().toFlopt(var_name)
 
     def toQp(self):
         """
@@ -684,11 +701,21 @@ class IsingStructure:
     def fromFlopt(cls, prob, x=None):
         return prob.obj.toIsing()
 
-    def toFlopt(self):
+    def toFlopt(self, var_name="x"):
+        """
+        Parameters
+        ----------
+        var_name : str
+            variable prefix
+
+        Returns
+        -------
+        Problem
+        """
         if self.x is not None:
             x = self.x
         else:
-            x = Variable.array("x", len(self.J), cat="Spin")
+            x = Variable.array(var_name, len(self.J), cat="Spin")
         prob = Problem()
         prob += -x.T.dot(self.J).dot(x) - self.h.T.dot(x) + self.C
         return prob
@@ -794,8 +821,13 @@ class QuboStructure:
         """
         return IsingStructure.fromFlopt(prob, x).toQubo()
 
-    def toFlopt(self):
+    def toFlopt(self, var_name="x"):
         """
+        Parameters
+        ----------
+        var_name : str
+            variable prefix
+
         Returns
         -------
         Problem
@@ -803,7 +835,7 @@ class QuboStructure:
         if self.x is not None:
             x = self.x
         else:
-            x = Variable.array("x", len(self.Q), cat="Binary")
+            x = Variable.array(var_name, len(self.Q), cat="Binary")
         prob = Problem()
         prob += (x.T.dot(self.Q).dot(x) + self.C).expand()
         return prob

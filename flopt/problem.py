@@ -1,3 +1,4 @@
+import flopt
 from flopt.variable import VarElement
 from flopt.expression import Expression, CustomExpression, Const
 from flopt.constraint import Constraint
@@ -6,10 +7,11 @@ from flopt.solution import Solution
 from flopt.constants import (
     VariableType,
     ExpressionType,
+    ConstraintType,
     OptimizationType,
     array_classes,
 )
-from flopt.env import setup_logger
+from flopt.env import setup_logger, create_variable_mode
 
 
 logger = setup_logger(__name__)
@@ -59,10 +61,6 @@ class Problem:
     """
 
     def __init__(self, name=None, sense=OptimizationType.Minimize):
-        if sense in ("minimize", "maximize"):
-            logger.warning(
-                f"'minimize' and 'maximize' is deprecated. You have to use 'Minimize', 'Maximize', flopt.Minimize or flopt.Maximize"
-            )
         self.type = "Problem"
         self.name = name
         self.sense = str(sense)
@@ -73,6 +71,22 @@ class Problem:
         self.solver = None
         self.time = None
         self.best_bound = None
+
+    def clone(self):
+        """create clone object
+
+        Returns
+        -------
+        prob : Problem
+        """
+        prob = Problem(
+            name=f"{self.name}" if self.name is not None else None,
+            sense=self.sense,
+        )
+        prob.setObjective(self.obj.clone(), self.obj_name)
+        for const in self.constraints:
+            prob.addConstraint(const.clone(), const.name)
+        return prob
 
     def setObjective(self, obj, name=None):
         """set objective function. __iadd__(), "+=" operations call this function.
@@ -88,16 +102,6 @@ class Problem:
             obj = Expression(obj, Const(0), "+")
         self.obj = obj
         self.obj_name = name
-        try:
-            self.__variables |= obj.getVariables()
-        except RecursionError:
-            import sys
-
-            logger.warning(f"recursion reaches {sys.getrecursionlimit}")
-            sys.setrecursionlimit(sys.getrecursionlimit() * 100)
-            self.__variables |= obj.getVariables()
-        except Exception as e:
-            raise e
 
     def setBestBound(self, best_bound):
         """
@@ -135,7 +139,6 @@ class Problem:
         ), f"assume Constraint class, but got {type(const)}"
         const.name = name
         self.constraints.append(const)
-        self.__variables |= const.getVariables()
 
     def addConstraints(self, consts, name=None):
         for i, const in enumerate(consts):
@@ -190,6 +193,9 @@ class Problem:
         set
             set of VarElement used in this problem
         """
+        self.__variables = self.obj.getVariables()
+        for const in self.constraints:
+            self.__variables |= const.getVariables()
         return self.__variables
 
     def getConstraints(self):
@@ -200,11 +206,6 @@ class Problem:
             list of constraints in this problem
         """
         return self.constraints
-
-    def resetVariables(self):
-        self.__variables = self.obj.getVariables()
-        for const in self.constraints:
-            self.__variables |= const.getVariables()
 
     def solve(self, solver=None, timelimit=None, lowerbound=None, msg=False, **kwargs):
         """solve this problem
@@ -252,7 +253,7 @@ class Problem:
         solver.setParams(**kwargs)
         self.solver = solver
 
-        if self.sense in ("maximize", "Maximize"):
+        if self.sense.lower() == "maximize":
             self.obj = -self.obj
 
         solution = Solution(self.getVariables())
@@ -265,7 +266,7 @@ class Problem:
             msg=msg,
         )
 
-        if self.sense in ("maximize", "Maximize"):
+        if self.sense.lower() == "maximize":
             self.obj = -self.obj
 
         return status, log
@@ -351,6 +352,45 @@ class Problem:
                     break
 
         return problem_type
+
+    def toEq(self):
+        """Create problem instance with only equal constraints
+
+        Returns
+        -------
+        prob : Problem
+        """
+        prob = Problem(name=self.name, sense=self.sense)
+        constraints = []
+        for const in self.constraints:
+            if const.type() == ConstraintType.Eq:
+                constraints.append(const)
+            else:  # ConstraintType.Le
+                with create_variable_mode():
+                    s = flopt.Variable(
+                        "slack", lowBound=0, cat="Continuous", ini_value=0
+                    )
+                constraints.append(const.expression + s == 0)
+        prob.constraints = constraints
+        return prob
+
+    def toNeq(self):
+        """Create problem instance with only inequal constraints
+
+        Returns
+        -------
+        prob : Problem
+        """
+        prob = Problem(name=self.name, sense=self.sense)
+        constraints = []
+        for const in self.constraints:
+            if const.type() == ConstraintType.Le:
+                constraints.append(const)
+            else:  # ConstraintType.Eq
+                constraints.append(const.expression <= 0)
+                constraints.append(const.expression >= 0)
+        prob.constraints = constraints
+        return prob
 
     def __iadd__(self, other):
         if not isinstance(other, tuple):

@@ -42,6 +42,9 @@ class Constraint:
         self.name = name
         self.hash = None
 
+    def clone(self):
+        return Constraint(self.expression.clone(), self._type, self.name)
+
     def type(self):
         return self._type
 

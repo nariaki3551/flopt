@@ -326,7 +326,7 @@ class Polynomial:
         """
         poly = Polynomial(constant=0)
         for mono, coeff in self:
-            poly += mono.diff(x)
+            poly += coeff * mono.diff(x)
         return poly
 
     def maxDegree(self):

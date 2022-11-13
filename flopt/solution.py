@@ -11,7 +11,7 @@ from flopt.constants import VariableType
 to_value_ufunc = np.frompyfunc(lambda x: x.value(), 1, 1)
 
 
-class Solution(np.ndarray):
+class Solution(FloptNdarray):
     """
     Solution Class
 

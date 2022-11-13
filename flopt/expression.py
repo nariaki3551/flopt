@@ -181,7 +181,9 @@ class ExpressionElement:
         from flopt.convert import QuadraticStructure
 
         if x is None:
-            x = FloptNdarray(sorted(self.getVariables(), key=lambda var: var.name))
+            x = FloptNdarray(
+                sorted(self.getVariables(), key=lambda var: ("__" in v.name, var.name))
+            )
         elif not isinstance(x, FloptNdarray):
             x = FloptNdarray(x)
         assert x.ndim == 1, f"x must be a 1-dimension array"
@@ -445,7 +447,8 @@ class ExpressionElement:
             return default_value
         prob = flopt.Problem(sense=sense)
         prob += self
-        status, logs = prob.solve(solver, msg=False)
+        # status, logs = prob.solve(solver, msg=False)
+        status, logs = prob.solve(solver, msg=True)
         if status == flopt.SolverTerminateState.Normal:
             return prob.getObjectiveValue()
         elif status == flopt.SolverTerminateState.Unbounded:
@@ -774,6 +777,9 @@ class Expression(ExpressionElement):
             return elms[0]
         return Sum(elms)
 
+    def clone(self):
+        return Expression(self.elmA, self.elmB, self.operator, self.name)
+
     def setName(self):
         stack = [self]
         while stack:
@@ -1099,7 +1105,7 @@ def pack_variables(var_or_array, var_dict):
         array = var_or_array
 
         if isinstance(array, FloptNdarray):
-            return array.value(var_dict)
+            return array.value(var_dict=var_dict)
         else:
             return cls(
                 itertools.starmap(pack_variables, [(var, var_dict) for var in array])
@@ -1174,6 +1180,9 @@ class CustomExpression(ExpressionElement):
         self.variables = unpack_variables(arg)
         super().__init__(name=name)
 
+    def clone(self):
+        return CustomExpression(self.func, self.arg, self.name)
+
     def setName(self):
         self._name = f"{self.func.__name__}(*)"
 
@@ -1237,6 +1246,9 @@ class Const(ExpressionElement):
             value = value._value
         self._value = value
         super().__init__(name=f"{value}")
+
+    def clone(self):
+        return Const(self._value)
 
     def setName(self):
         return NotImplemented
@@ -1372,6 +1384,10 @@ class Reduction(ExpressionElement):
         assert len(elms) > 0
         self.elms = to_const_ufunc(np.array(elms, dtype=object))
         super().__init__()
+
+    def clone(self):
+        cls = self.__class__
+        return cls(self.elms)
 
     def setName(self):
         self._name = ""
@@ -1559,6 +1575,10 @@ class MathOperation(ExpressionElement):
     def __init__(self, elm):
         self.elm = elm
         super().__init__()
+
+    def clone(self):
+        cls = self.__class__
+        return cls(self.elm)
 
     def setName(self):
         self._name = f"{self.operator}({self.elm.getName()})"

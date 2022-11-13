@@ -124,7 +124,6 @@ def linearize(prob):
             prob += var_mul >= var_con - l * (1 - var_bin), f"for_{var_mul.name}_3"
             prob += var_mul <= var_con - u * (1 - var_bin), f"for_{var_mul.name}_4"
 
-    prob.resetVariables()
     return prob
 
 

@@ -91,7 +91,9 @@ def operation(operator, x):
         return operator(x)
     elif isinstance(x, (list, tuple)):
         cls = x.__class__
-        return cls(operator(var) for var in x)
+        return cls(operation(operator, var) for var in x)
+    elif isinstance(x, dict):
+        return {k: operation(operator, v) for k, v in x.items()}
     elif isinstance(x, np.ndarray):
         return np.frompyfunc(lambda var: operator(var), 1, 1)(x)
     return x

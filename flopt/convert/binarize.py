@@ -88,7 +88,6 @@ def binarize(prob):
         prob += flopt.Sum(binaries) == 1, f"for_bin_{source.name}_sum"
         prob += source == source.toBinary(), f"for_bin_{source.name}_eq"
 
-    prob.resetVariables()
     return prob
 
 
