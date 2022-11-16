@@ -59,10 +59,10 @@ class AutoSearch(BaseSearch):
         >>>   Date: September 1, 2022
         >>> # - - - - - - - - - - - - - - #
         >>>
-        >>> Algorithm: ScipySearch
+        >>> Algorithm: Scipy
         >>> Params: {'timelimit': 10}
 
-    See the log, you can see the RandomSearch algorithm is used for this problem.
+    See the log, you can see the Random algorithm is used for this problem.
     Executing .select(), we can check which solver will be select.
 
     .. code-block:: python
@@ -71,7 +71,7 @@ class AutoSearch(BaseSearch):
         solver.setParams({"timelimit": 10})
         solver = solver.select(prob)
         print(solver.name)
-        >>> ScipySearch
+        >>> Scipy
     """
 
     name = "auto"

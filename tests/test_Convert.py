@@ -350,7 +350,7 @@ def test_flopt_to_pulp():
     print(prob)
 
     # check wheter prob can be converted into pulp modeling
-    assert Solver(algo="PulpSearch").available(prob)
+    assert Solver(algo="Pulp").available(prob)
 
     # convert flopt to pulp
     from flopt.convert import flopt_to_pulp

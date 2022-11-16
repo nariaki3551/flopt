@@ -50,10 +50,9 @@ class Problem:
 
     >>> prob = Problem(name='test', sense='maximize')
 
-    Input solver, when we solve
+    We solve
 
-    >>> solve = Solver(algo=...)
-    >>> prob.solve(solver=solver, timelimit=10)
+    >>> prob.solve(solver=solver_name or solver object, timelimit=10)
 
     After solving, we can obtain the objective value.
 
@@ -250,6 +249,8 @@ class Problem:
         """
         if solver is None:
             solver = Solver("auto")
+        elif isinstance(solver, str):
+            solver = Solver(solver)
         if timelimit is not None:
             solver.setParams(timelimit=timelimit)
         if lowerbound is not None:

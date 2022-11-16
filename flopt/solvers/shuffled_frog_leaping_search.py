@@ -87,8 +87,7 @@ class ShuffledFrogLeapingSearch(BaseSearch):
         prob = flopt.Problem()
         prob += 2*x*x + x*y + y*y + x + y
 
-        solver = flopt.Solver("SFLA")
-        status, log = prob.solve(solver, msg=True, timelimit=1)
+        status, log = prob.solve(solver="SFLA", msg=True, timelimit=1)
 
         print("obj =", flopt.Value(prob.obj))
         print("x =", flopt.Value(x))

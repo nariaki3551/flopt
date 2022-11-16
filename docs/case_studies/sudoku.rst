@@ -97,10 +97,7 @@ We solve this problem using `AutoSolver`.
 
 .. code-block:: python
 
-    from flopt import Solver
-
-    solver = Solver("auto")
-    prob.solve(solver, msg=True)
+    prob.solve(solver="auto", msg=True)
     >>> Welcome to the flopt Solver
     >>> Version 0.5.4
     >>> Date: September 1, 2022

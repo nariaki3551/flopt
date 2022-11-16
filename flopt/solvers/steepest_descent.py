@@ -21,15 +21,14 @@ class SteepestDescentSearch(BaseSearch):
         prob = flopt.Problem()
         prob += 2*x*x + x*y + y*y + x + y
 
-        solver = flopt.Solver("SteepestDescentSearch")
-        status, log = prob.solve(solver, msg=True, timelimit=1)
+        status, log = prob.solve(solver="SteepestDescent", msg=True, timelimit=1)
 
         print("obj =", flopt.Value(prob.obj))
         print("x =", flopt.Value(x))
         print("y =", flopt.Value(y))
     """
 
-    name = "SteepestDescentSearch"
+    name = "SteepestDescent"
     can_solve_problems = {
         "Variable": VariableType.Continuous,
         "Objective": ExpressionType.Polynomial,

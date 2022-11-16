@@ -281,7 +281,7 @@ When you select algorithm to solve problem, you create a Solver object and speci
 
   import flopt
 
-  solver = flopt.Solver(algo="RandomSearch")  # select the heuristic algorithm
+  solver = flopt.Solver(algo="Random")  # select the heuristic algorithm
   solver.setParams(timelimit=0.5)  # setting of the parameters
   prob.solve(solver=solver, msg=True)  # run solver
 
@@ -303,18 +303,21 @@ Users can use some third-party solvers and solvers implemented in flopt.
   prob += a + b >= 1
 
   flopt.allAvailableSolvers(prob)
-  >>> ['PulpSearch',
-  >>>  'ScipySearch',
-  >>>  'ScipyMilpSearch',
-  >>>  'CvxoptQpSearch',
+  >>> ['Pulp',
+  >>>  'Scipy',
+  >>>  'ScipyMilp',
+  >>>  'CvxoptQp',
   >>>  'auto']
 
-You can specify the available solver by declaring solver object.
+You can specify the available solver by declaring solver object or specifing the solver name.
 
 .. code-block:: python
 
-  solver = flopt.Solver(algo="ScipySearch")
+  solver = flopt.Solver(algo="Scipy")
   prob.solve(solver=solver)
+
+  # or
+  prob.solve(solver="Scipy")
 
 
 AutoSolver
@@ -334,7 +337,7 @@ When we check which solver is selected, we execute `solver.select(prob).name`.
   solver = flopt.Solver(algo="auto")
   solver.setParams(timelimit=1)
   solver.select(prob).name
-  >>> 'ScipyMilpSearch'
+  >>> 'ScipyMilp'
 
 
 Result

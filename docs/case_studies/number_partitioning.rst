@@ -27,16 +27,16 @@ In flopt, we model the problem as follows.
 
 .. code-block:: python
 
-    from flopt import Variable, Problem, Dot
+    import flopt
 
     # create variables
-    s = Variable.array("s", len(A), cat="Spin")
+    s = flopt.Variable.array("s", len(A), cat="Spin")
 
     # create problem
-    prob = Problem("Number Partitioning")
+    prob = flopt.Problem("Number Partitioning")
 
     # set objective function
-    prob += Dot(s, A) ** 2
+    prob += flopt.dot(s, A) ** 2
 
     print(prob)
     >>> Name: Number Partitioning
@@ -55,14 +55,11 @@ This is a simple sampling algorithm, which repeats to assigne random values to a
 
 .. code-block:: python
 
-    from flopt import Solver, Value
-
     # solve until obtain the solution
     # whose objective value is lower than or equal to 0
-    solver = Solver("RandomSearch")
-    prob.solve(solver, msg=True, lowerbound=0)
+    prob.solve(solver="Random", msg=True, lowerbound=0)
 
-    print("s", Value(s))
+    print("s", flopt.Value(s))
     >>> s [1 -1 1 -1]
 
 
@@ -113,10 +110,7 @@ Then, we solve it.
 
 .. code-block:: python
 
-    from flopt import Solver
-
-    solver = Solver("auto")
-    prob.solve(solver)
+    prob.solve(solver="auto")
 
     print("s", Value(s))
     >>> s [1 -1 1 -1]

@@ -165,12 +165,12 @@ class NonlinearMipSelector(SklearnSelector):
 
 class MipSelector(Selector):
     def __call__(self, prob, solver):
-        return "ScipyMilpSearch"
+        return "ScipyMilp"
 
 
 class QpSelector(Selector):
     def __call__(self, prob, solver):
-        return "CvxoptQpSearch"
+        return "CvxoptQp"
 
 
 class PermutationSelector(Selector):
@@ -181,15 +181,15 @@ class PermutationSelector(Selector):
 class BaseSelector(Selector):
     algos = [
         "2-Opt",
-        "ScipyMilpSearch",
-        "PulpSearch",
-        "CvxoptQpSearch",
-        "ScipySearch",
+        "ScipyMilp",
+        "Pulp",
+        "CvxoptQp",
+        "Scipy",
         "SFLA",
-        "RandomSearch",
-        "HyperoptTPESearch",
-        "OptunaTPESearch",
-        "OptunaCmaEsSearch",
+        "Random",
+        "Hyperopt",
+        "OptunaTPE",
+        "OptunaCmaEs",
     ]
 
     def __call__(self, prob, solver):

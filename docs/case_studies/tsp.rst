@@ -50,12 +50,8 @@ The first method is shown in the following.
   tsp_obj = flopt.CustomExpression(func=tsp_dist, args=[perm])
   prob += tsp_obj
 
-  # solver setting
-  solver = flopt.Solver(algo="2-Opt")
-  solver.setParams(timelimit=3)
-
   # run solver
-  prob.solve(solver, msg=True)
+  prob.solve(solver="2-Opt", timelimit=3, msg=True)
 
   # Result
   print("result", perm.value())
@@ -104,10 +100,8 @@ In most cases, `2-Opt` is better.
 
 .. code-block:: python
 
-  # Solver
-  solver = flopt.Solver(algo="2-Opt")
-  solver.setParams(timelimit=3)
-  prob.solve(solver, msg=True)  # run solver
+  # run solver
+  prob.solve(solver="2-Opt", timelimit=3, msg=True)
 
 
 Result

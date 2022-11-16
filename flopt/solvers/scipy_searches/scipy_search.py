@@ -37,8 +37,7 @@ class ScipySearch(BaseSearch):
         prob += a + b >= 2
         prob += b - c == 3
 
-        solver = flopt.Solver("ScipySearch")
-        prob.solve(solver, msg=True)
+        prob.solve(solver="Scipy", msg=True)
 
         print(flopt.Value([a, b, c]))
         >>> [0, 2.9999999999999996, 0.0]
@@ -49,7 +48,7 @@ class ScipySearch(BaseSearch):
     scipy.optimize.minimize
     """
 
-    name = "ScipySearch"
+    name = "Scipy"
     can_solve_problems = {
         "Variable": VariableType.Number,
         "Objective": ExpressionType.Any,

@@ -30,7 +30,7 @@ we set `max_k` parameter to solver.
 
 .. code-block:: python
 
-    solver = Solver("RandomSearch")
+    solver = Solver("Random")
     solver.setParams(max_k=8, timelimit=3)
 
 Then, we solve.
@@ -46,7 +46,7 @@ Then, we solve.
     >>>   Date: September 1, 2022
     >>> # - - - - - - - - - - - - - - #
     >>> 
-    >>> Algorithm: RandomSearch
+    >>> Algorithm: Random
     >>> Params: {'timelimit': 3}
     >>> Number of variables 3 (continuous 2 , int 1, binary 0, spin 0, permutation 0 (0))
     >>> 

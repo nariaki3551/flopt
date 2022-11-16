@@ -29,7 +29,7 @@ prob += custom_obj
 
 # Solver
 # in this case optimal solution (a, b, c) = (0, 1, 1), and objective value = 0.4
-solver = Solver(algo="RandomSearch")
+solver = Solver(algo="Random")
 solver.setParams(n_trial=1000)  # setting of the hyper parameters
 status, log = prob.solve(solver, msg=True)  # run solver to solve the problem
 
@@ -51,7 +51,7 @@ prob += custom_obj * c
 
 # Solver
 # in this case optimal solution (a, b, c) = (0, 1, 1), and objective value = 0.4
-solver = Solver(algo="RandomSearch")
+solver = Solver(algo="Random")
 solver.setParams({"n_trial": 1000})  # setting of the hyper parameters
 status, log = prob.solve(solver, msg=True)  # run solver to solve the problem
 
@@ -72,7 +72,7 @@ prob += custom_obj
 
 # Solver
 # in this case optimal solution (a, b, c) = (1, 2, 3), and objective value = 2.2
-solver = Solver(algo="RandomSearch")
+solver = Solver(algo="Random")
 solver.setParams(n_trial=1000)  # setting of the hyper parameters
 status, log = prob.solve(solver, msg=True)  # run solver to solve the problem
 

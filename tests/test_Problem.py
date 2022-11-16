@@ -88,7 +88,7 @@ def test_Problem_getSolution():
     prob += -(x.T).dot(J).dot(x) - (h.T).dot(x)
 
     # Solver
-    solver = Solver("RandomSearch")
+    solver = Solver("Random")
     solver.setParams(max_k=2, timelimit=1)  # set max_k > 1
 
     # solve

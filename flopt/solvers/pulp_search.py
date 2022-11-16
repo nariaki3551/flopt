@@ -53,14 +53,13 @@ class PulpSearch(BaseSearch):
         prob += a + b >= 2
         prob += b - c >= 3
 
-        solver = flopt.Solver("PulpSearch")
-        prob.solve(solver, msg=True)
+        prob.solve(solver="Pulp", msg=True)
 
     When you use other solvers in pulp, for example GLPK solver, you set solver parameter in PulpSearch object.
 
     .. code-block:: python
 
-        solver = flopt.Solver("PulpSearch")
+        solver = flopt.Solver("Pulp")
 
         import pulp
         glpk_solver = pulp.GLPK_CMD()
@@ -69,7 +68,7 @@ class PulpSearch(BaseSearch):
 
     """
 
-    name = "PulpSearch"
+    name = "Pulp"
     can_solve_problems = {
         "Variable": VariableType.Number,
         "Objective": ExpressionType.Linear,
@@ -89,7 +88,7 @@ class PulpSearch(BaseSearch):
             solver = self.solver
         else:
             solver = pulp.PULP_CBC_CMD(
-                timeLimit=self.timelimit - self.build_time, msg=self.msg
+                timeLimit=max(0, self.timelimit - self.build_time), msg=self.msg
             )
 
         lp_status = lp_prob.solve(solver)

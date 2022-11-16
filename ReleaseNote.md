@@ -199,5 +199,5 @@
 
 ### version0.1 (Apr, 2020)
 
-1. Available Solvers are RandomSearch, 2-Opt, OptunaTPESearch, OptunaCmaEsSearch, HyperoptTPESearch
+1. Available Solvers are RandomSearch, 2-Opt, OptunaTPESearch, OptunaCmaEsSearch, HyperoptSearch
 

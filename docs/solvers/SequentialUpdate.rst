@@ -67,7 +67,7 @@ Finally, we visualize the search path.
     def callback(solutions):
         path.append(solutions[0].value())
 
-    solver = flopt.Solver("SteepestDescentSearch")
+    solver = flopt.Solver("SteepestDescent")
     solver.setParams(xi=0.9, tau=0.9)
     status, log = prob.solve(solver, msg=True, timelimit=1, callback=callback)
 

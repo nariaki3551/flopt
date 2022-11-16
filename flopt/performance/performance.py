@@ -63,7 +63,7 @@ def compute(
 
     .. code-block:: python
 
-        rs_solver = flopt.Solver("RandomSearch")
+        rs_solver = flopt.Solver("Random")
 
         # compute the performance
         logs = flopt.performance.compute(

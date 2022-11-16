@@ -1,18 +1,21 @@
 from flopt.constants import VariableType, ExpressionType
+from flopt.env import setup_logger
+
+logger = setup_logger(__name__)
 
 algo_list = [
-    "RandomSearch",
+    "Random",
     "2-Opt",
-    "SteepestDescentSearch",
-    "OptunaTPESearch",
-    "OptunaCmaEsSearch",
-    "HyperoptTPESearch",
+    "SteepestDescent",
+    "OptunaTPE",
+    "OptunaCmaEs",
+    "Hyperopt",
     "SFLA",
-    "PulpSearch",
-    "ScipySearch",
-    "ScipyMilpSearch",
-    "CvxoptQpSearch",
-    # "AmplifySearch",
+    "Pulp",
+    "Scipy",
+    "ScipyMilp",
+    "CvxoptQp",
+    # "Amplify",
     "auto",
 ]
 
@@ -31,7 +34,12 @@ def Solver(algo="auto"):
     Solver object
        return Solver
     """
-    if algo == "RandomSearch":
+    if algo.endswith("Search"):
+        algo = algo.replace("Search", "")
+        logger.warning(
+            f"It is recommended to use algorithm name {algo}, {algo}Search will not be available in the future version"
+        )
+    if algo == "Random":
         from flopt.solvers.random_search import RandomSearch
 
         return RandomSearch()
@@ -39,43 +47,43 @@ def Solver(algo="auto"):
         from flopt.solvers.two_opt import TwoOpt
 
         return TwoOpt()
-    elif algo == "SteepestDescentSearch":
+    elif algo == "SteepestDescent":
         from flopt.solvers.steepest_descent import SteepestDescentSearch
 
         return SteepestDescentSearch()
-    elif algo == "OptunaTPESearch":
+    elif algo == "OptunaTPE":
         from flopt.solvers.optuna_searches import OptunaTPESearch
 
         return OptunaTPESearch()
-    elif algo == "OptunaCmaEsSearch":
+    elif algo == "OptunaCmaEs":
         from flopt.solvers.optuna_searches import OptunaCmaEsSearch
 
         return OptunaCmaEsSearch()
-    elif algo == "HyperoptTPESearch":
-        from flopt.solvers.hyperopt_search import HyperoptTPESearch
+    elif algo == "Hyperopt":
+        from flopt.solvers.hyperopt_search import HyperoptSearch
 
-        return HyperoptTPESearch()
+        return HyperoptSearch()
     elif algo == "SFLA":
         from flopt.solvers.shuffled_frog_leaping_search import ShuffledFrogLeapingSearch
 
         return ShuffledFrogLeapingSearch()
-    elif algo == "PulpSearch":
+    elif algo == "Pulp":
         from flopt.solvers.pulp_search import PulpSearch
 
         return PulpSearch()
-    elif algo == "ScipySearch":
+    elif algo == "Scipy":
         from flopt.solvers.scipy_searches import ScipySearch
 
         return ScipySearch()
-    elif algo == "ScipyMilpSearch":
+    elif algo == "ScipyMilp":
         from flopt.solvers.scipy_searches import ScipyMilpSearch
 
         return ScipyMilpSearch()
-    elif algo == "CvxoptQpSearch":
+    elif algo == "CvxoptQp":
         from flopt.solvers.cvxopt_qp_search import CvxoptQpSearch
 
         return CvxoptQpSearch()
-    elif algo == "AmplifySearch":
+    elif algo == "Amplify":
         from flopt.solvers.amplify_search import AmplifySearch
 
         return AmplifySearch()

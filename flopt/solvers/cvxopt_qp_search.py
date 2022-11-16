@@ -35,8 +35,7 @@ class CvxoptQpSearch(BaseSearch):
         prob += y >= 0
         prob += x + y == 1
 
-        solver = flopt.Solver("CvxoptQpSearch")
-        status, log = prob.solve(solver, msg=True)
+        status, log = prob.solve(solver="CvxoptQp", msg=True)
 
         print("obj =", flopt.Value(prob.obj))
         print("x =", flopt.Value(x))
@@ -47,7 +46,7 @@ class CvxoptQpSearch(BaseSearch):
 
     """
 
-    name = "CvxoptQpSearch"
+    name = "CvxoptQp"
     can_solve_problems = {
         "Variable": VariableType.Continuous,
         "Objective": ExpressionType.Quadratic,

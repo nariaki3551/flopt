@@ -34,11 +34,11 @@ prob += tsp_obj
 
 
 # 1. Random Search
-solver = Solver(algo="RandomSearch")
+solver = Solver(algo="Random")
 solver.setParams(timelimit=2)  # setting of the hyper parameters
 status, log = prob.solve(solver, msg=True)  # run solver to solve the problem
 if DISPLAY:
-    fig, ax = log.plot(show=False, label="RandomSearch")
+    fig, ax = log.plot(show=False, label="Random")
 
 print("random-search obj value", prob.getObjectiveValue())
 print("perm", perm.value())

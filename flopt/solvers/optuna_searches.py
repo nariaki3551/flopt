@@ -70,7 +70,7 @@ class OptunaSearch(BaseSearch):
             return obj_value
 
         self.end_build()
-        search_timelimit = self.timelimit - self.build_time
+        search_timelimit = max(0, self.timelimit - self.build_time)
 
         @timeout_decorator.timeout(search_timelimit, timeout_exception=TimeoutError)
         def optimize():
@@ -111,15 +111,14 @@ class OptunaTPESearch(OptunaSearch):
         prob = flopt.Problem()
         prob += 2*x*x + x*y + y*y + x + y
 
-        solver = flopt.Solver("OptunaTPESearch")
-        status, log = prob.solve(solver, msg=True, timelimit=1)
+        status, log = prob.solve(solver="OptunaTPE", msg=True, timelimit=1)
 
         print("obj =", flopt.Value(prob.obj))
         print("x =", flopt.Value(x))
         print("y =", flopt.Value(y))
     """
 
-    name = "OptunaTPESearch"
+    name = "OptunaTPE"
 
     def __init__(self):
         super().__init__()
@@ -175,8 +174,7 @@ class OptunaCmaEsSearch(OptunaSearch):
         prob = flopt.Problem()
         prob += 2*x*x + x*y + y*y + x + y
 
-        solver = flopt.Solver("OptunaCmaEsSearch")
-        status, log = prob.solve(solver, msg=True, timelimit=1)
+        status, log = prob.solve(solver="OptunaCmaEs", msg=True, timelimit=1)
 
         print("obj =", flopt.Value(prob.obj))
         print("x =", flopt.Value(x))
@@ -186,7 +184,7 @@ class OptunaCmaEsSearch(OptunaSearch):
         >>> y = -0.4285714299429902
     """
 
-    name = "OptunaCmaEsSearch"
+    name = "OptunaCmaEs"
 
     def __init__(self):
         super().__init__()

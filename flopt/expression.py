@@ -439,9 +439,9 @@ class ExpressionElement:
         import flopt
 
         if self.isLinear():
-            solver = flopt.Solver("ScipyMilpSearch")
+            solver = flopt.Solver("ScipyMilp")
         elif self.isQuadratic():
-            solver = flopt.Solver("CvxoptQpSearch")
+            solver = flopt.Solver("CvxoptQp")
         else:
             logger.warning(
                 f"{sense} value of {self.getName()} cannot be calculated because it is not linear or quaratic"
