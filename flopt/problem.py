@@ -72,8 +72,12 @@ class Problem:
         self.time = None
         self.best_bound = None
 
-    def clone(self):
+    def clone(self, variable_clone=False):
         """create clone object
+        Parameters
+        ----------
+        variable_clone : bool
+            if it is true, variables are cloned in expression
 
         Returns
         -------
@@ -83,9 +87,9 @@ class Problem:
             name=f"{self.name}" if self.name is not None else None,
             sense=self.sense,
         )
-        prob.setObjective(self.obj.clone(), self.obj_name)
+        prob.setObjective(self.obj.clone(variable_clone), self.obj_name)
         for const in self.constraints:
-            prob.addConstraint(const.clone(), const.name)
+            prob.addConstraint(const.clone(variable_clone), const.name)
         return prob
 
     def setObjective(self, obj, name=None):
@@ -354,15 +358,15 @@ class Problem:
         return problem_type
 
     def toEq(self):
-        """Create problem instance with only equal constraints
+        """Create a problem object with only equal constraints
 
         Returns
         -------
         prob : Problem
         """
-        prob = Problem(name=self.name, sense=self.sense)
+        prob = self.clone()
         constraints = []
-        for const in self.constraints:
+        for const in prob.constraints:
             if const.type() == ConstraintType.Eq:
                 constraints.append(const)
             else:  # ConstraintType.Le
@@ -374,22 +378,34 @@ class Problem:
         prob.constraints = constraints
         return prob
 
-    def toNeq(self):
-        """Create problem instance with only inequal constraints
+    def toIneq(self):
+        """Create a problem object with only inequal constraints
 
         Returns
         -------
         prob : Problem
         """
-        prob = Problem(name=self.name, sense=self.sense)
+        prob = self.clone()
         constraints = []
-        for const in self.constraints:
+        for const in prob.constraints:
             if const.type() == ConstraintType.Le:
                 constraints.append(const)
             else:  # ConstraintType.Eq
                 constraints.append(const.expression <= 0)
                 constraints.append(const.expression >= 0)
         prob.constraints = constraints
+        return prob
+
+    def boundsToIneq(self):
+        """Create a problem object has bounds constraints of variables as inequal constraints"""
+        prob = self.clone(variable_clone=True)
+        for var in prob.getVariables():
+            if var.getLb() is not None:
+                prob += var >= var.getLb()
+            if var.getUb() is not None:
+                prob += var <= var.getUb()
+            var.lowBound = None
+            var.upBound = None
         return prob
 
     def __iadd__(self, other):

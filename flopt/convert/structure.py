@@ -163,15 +163,18 @@ class QpStructure:
         prob : Problem
         x : None or list of VarElement family
         progress: bool
-        option : {"all_neq", "all_eq"}
+        option : {"ineq", "eq"}
 
         Returns
         -------
         QpStructure
         """
+        assert option is None or option in {
+            "ineq",
+            "eq",
+        }, f"option must be None, ineq or eq, but got {option}"
         assert prob.obj.isQuadratic()
         assert all(const.isLinear() for const in prob.getConstraints())
-
         if x is None:
             variables = list(prob.getVariables())
             x = FloptNdarray(sorted(variables, key=lambda v: ("__" in v.name, v.name)))
@@ -199,18 +202,18 @@ class QpStructure:
                 return x
 
         # create G, h
-        num_neq_consts = sum(
+        num_ineq_consts = sum(
             const.type() == ConstraintType.Le for const in prob.getConstraints()
         )
-        if num_neq_consts == 0:
+        if num_ineq_consts == 0:
             G = None
             h = None
         else:
-            G = np.zeros((num_neq_consts, num_x), dtype=np_float)
-            h = np.zeros((num_neq_consts,), dtype=np_float)
+            G = np.zeros((num_ineq_consts, num_x), dtype=np_float)
+            h = np.zeros((num_ineq_consts,), dtype=np_float)
             i = 0
             for const in iter_wrapper(
-                prob.getConstraints(), desc="convert neq constraints"
+                prob.getConstraints(), desc="convert ineq constraints"
             ):
                 if const.type() == ConstraintType.Le:
                     # c.T.dot(x) + C <= 0
@@ -218,7 +221,7 @@ class QpStructure:
                     G[i, :] = linear.c.T
                     h[i] = -linear.C
                     i += 1
-            assert i == num_neq_consts
+            assert i == num_ineq_consts
 
         # create A, b
         num_eq_consts = sum(
@@ -256,13 +259,13 @@ class QpStructure:
 
         qp = cls(Q, c, C, G, h, A, b, lb, ub, types, x)
 
-        if option == "all_neq":
-            return qp.toAllNeq()
-        elif option == "all_eq":
-            return qp.toAllEq()
+        if option == "ineq":
+            return qp.toIneq()
+        elif option == "eq":
+            return qp.toEq()
         return qp
 
-    def toAllNeq(self):
+    def toIneq(self):
         """convert all non eqaual constraint type
 
         ::
@@ -283,7 +286,7 @@ class QpStructure:
             self.Q, self.c, self.C, G, h, A, b, self.lb, self.ub, self.types, self.x
         )
 
-    def toAllEq(self):
+    def toEq(self):
         """convert all eqaual constraint type
 
         ::
@@ -336,7 +339,7 @@ class QpStructure:
             x = self.x
         return QpStructure(Q, c, self.C, None, None, A, b, lb, ub, types, x)
 
-    def boundsToNeq(self):
+    def boundsToIneq(self):
         """convert bounds constraints into neq constraints
 
         ::
@@ -469,7 +472,7 @@ class QpStructure:
         s += f"lb\n{self.lb}\n\n"
         s += f"ub\n{self.ub}\n\n"
         s += f"x\n{self.x}"
-        return s
+        print(s)
 
     def __repr__(self):
         return f"QpStructure{self.Q, self.c, self.C, self.G, self.h, self.A, self.b, self.lb, self.ub, self.types, self.x}"
@@ -532,21 +535,21 @@ class LpStructure:
         elif self.A is not None:
             return self.A.shape[1]
 
-    def toAllNeq(self):
+    def toIneq(self):
         """
         Returns
         -------
         LpStructure
         """
-        return self.toQp().toAllNeq().toLp()
+        return self.toQp().toIneq().toLp()
 
-    def toAllEq(self):
+    def toEq(self):
         """
         Returns
         -------
         LpStructure
         """
-        return self.toQp().toAllEq().toLp()
+        return self.toQp().toEq().toLp()
 
     @classmethod
     def fromFlopt(cls, prob, x=None, option=None, progress=False):
@@ -559,7 +562,7 @@ class LpStructure:
         ----------
         prob : Problem
         x : None or list of Variable family
-        option : {"all_neq", "all_eq"}
+        option : {"ineq", "eq"}
         progress : bool
 
         Returns
@@ -567,14 +570,14 @@ class LpStructure:
         LpStructure
         """
         assert option is None or option in {
-            "all_neq",
-            "all_eq",
-        }, f"option must be None, all_neq or all_eq, but got {option}"
+            "ineq",
+            "eq",
+        }, f"option must be None, ineq or eq, but got {option}"
         qp = QpStructure.fromFlopt(prob, x, progress=progress)
-        if option == "all_neq":
-            return qp.toAllNeq().toLp()
-        elif option == "all_eq":
-            return qp.toAllEq().toLp()
+        if option == "ineq":
+            return qp.toIneq().toLp()
+        elif option == "eq":
+            return qp.toEq().toLp()
         return qp.toLp()
 
     def toFlopt(self, var_name="x"):
@@ -657,7 +660,7 @@ class LpStructure:
         s += f"lb\n{self.lb}\n\n"
         s += f"ub\n{self.ub}\n\n"
         s += f"x\n{self.x}"
-        return s
+        print(s)
 
     def __repr__(self):
         return f"LpStructure{self.c, self.C, self.G, self.h, self.A, self.b, self.lb, self.ub, self.types, self.x}"
@@ -780,7 +783,7 @@ class IsingStructure:
         s += f"h\n{self.h}\n\n"
         s += f"C\n{self.C}\n\n"
         s += f"x\n{self.x}"
-        return s
+        print(s)
 
     def __repr__(self):
         return f"IsingStructure{self.J, self.h, self.C, self.x}"
@@ -883,7 +886,7 @@ class QuboStructure:
         s += f"Q\n{self.Q}\n\n"
         s += f"C\n{self.C}\n\n"
         s += f"x\n{self.x}"
-        return s
+        print(s)
 
     def __repr__(self):
         return f"QuboStructure{self.Q, self.C, self.x}"

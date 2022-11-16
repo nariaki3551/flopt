@@ -24,7 +24,7 @@ class Monomial:
         self.is_linear = None
         self._hash = None
 
-    def copy(self):
+    def clone(self):
         """
         Returns
         -------
@@ -124,17 +124,9 @@ class Monomial:
         return Monomial(terms, self.coeff)
 
     def __mul__(self, other):
-        if isinstance(other, (int, float)):
-            return Monomial(self.terms, self.coeff * other)
-        elif isinstance(other, Monomial):
-            terms = dict(self.terms)
-            for x in other.terms:
-                if x in self.terms:
-                    terms[x] += other[x]
-                else:
-                    terms[x] = other[x]
-            return Monomial(terms, self.coeff * other.coeff)
-        return NotImplemented
+        mono = self.clone()
+        mono *= other
+        return mono
 
     def __rmul__(self, other):
         return self * other
@@ -214,14 +206,6 @@ class Polynomial:
         self.terms = terms
         self._constant = constant
 
-    def monos(self):
-        """
-        Returns
-        -------
-        set of Monomial
-        """
-        return set(self.terms.keys())
-
     def coeff(self, *args):
         """
         Returns
@@ -262,17 +246,10 @@ class Polynomial:
             e.polynomial.coeff(y**3)
             >>> 3
         """
-        if isinstance(args[0], Monomial):
-            mono = args[0]
-        else:
-            mono = args[0].toMonomial()
+        mono = args[0].toMonomial()
         if len(args) > 1:
-            mono = mono.copy()
-        for elm in args[1:]:
-            if isinstance(elm, Monomial):
-                assert elm.coeff == 1
-                mono *= elm
-            else:
+            mono = mono.clone()
+            for elm in args[1:]:
                 mono *= elm.toMonomial()
         if mono in self.terms:
             return self.terms[mono]

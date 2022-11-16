@@ -60,7 +60,7 @@ class CvxoptQpSearch(BaseSearch):
 
     def search(self, solution, *args):
         self.start_build()
-        qp = QpStructure.fromFlopt(self.prob).boundsToNeq()
+        qp = QpStructure.fromFlopt(self.prob).boundsToIneq()
         if qp.isLp():
             sol = self.search_lp(qp.toLp())
         else:
@@ -77,7 +77,7 @@ class CvxoptQpSearch(BaseSearch):
 
     def search_qp(self, qp):
 
-        qp = qp.boundsToNeq()
+        qp = qp.boundsToIneq()
         Q = matrix(qp.Q)
         c = matrix(qp.c)
         G = matrix(qp.G) if qp.G is not None else None

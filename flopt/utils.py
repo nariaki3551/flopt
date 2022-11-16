@@ -4,6 +4,7 @@ import functools
 
 import numpy as np
 
+from flopt.container import FloptNdarray
 from flopt.variable import VarElement
 from flopt.expression import (
     ExpressionElement,
@@ -94,7 +95,11 @@ def operation(operator, x):
         return cls(operation(operator, var) for var in x)
     elif isinstance(x, dict):
         return {k: operation(operator, v) for k, v in x.items()}
-    elif isinstance(x, np.ndarray):
+    elif isinstance(x, FloptNdarray):
+        return np.frompyfunc(lambda var: operator(var), 1, 1)(x)
+    elif all(isinstance(_x, number_classes) for _x in x):
+        return sum(x)
+    elif isinstance(x, nd.array):
         return np.frompyfunc(lambda var: operator(var), 1, 1)(x)
     return x
 

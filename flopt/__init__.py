@@ -13,6 +13,7 @@ from flopt.solvers import (
     estimate_problem_type_info,
 )
 from flopt.solution import Solution
+from flopt.error import ConversionError
 
 # performance
 import flopt.performance

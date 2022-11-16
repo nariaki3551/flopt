@@ -182,7 +182,9 @@ class ExpressionElement:
 
         if x is None:
             x = FloptNdarray(
-                sorted(self.getVariables(), key=lambda var: ("__" in v.name, var.name))
+                sorted(
+                    self.getVariables(), key=lambda var: ("__" in var.name, var.name)
+                )
             )
         elif not isinstance(x, FloptNdarray):
             x = FloptNdarray(x)
@@ -777,8 +779,23 @@ class Expression(ExpressionElement):
             return elms[0]
         return Sum(elms)
 
-    def clone(self):
-        return Expression(self.elmA, self.elmB, self.operator, self.name)
+    def clone(self, variable_clone=False):
+        """
+        Parameters
+        ----------
+        variable_clone : bool
+            if it is true, variables are cloned in expression
+
+        Returns
+        -------
+        Expression
+        """
+        if variable_clone:
+            elmA = self.elmA.clone(variable_clone)
+            elmB = self.elmB.clone(variable_clone)
+        else:
+            elmA, elmB = self.elmA, self.elmB
+        return Expression(elmA, elmB, self.operator, self.name)
 
     def setName(self):
         stack = [self]
@@ -1180,7 +1197,7 @@ class CustomExpression(ExpressionElement):
         self.variables = unpack_variables(arg)
         super().__init__(name=name)
 
-    def clone(self):
+    def clone(self, *args, **kwargs):
         return CustomExpression(self.func, self.arg, self.name)
 
     def setName(self):
@@ -1247,7 +1264,7 @@ class Const(ExpressionElement):
         self._value = value
         super().__init__(name=f"{value}")
 
-    def clone(self):
+    def clone(self, *args, **kwargs):
         return Const(self._value)
 
     def setName(self):
@@ -1385,9 +1402,23 @@ class Reduction(ExpressionElement):
         self.elms = to_const_ufunc(np.array(elms, dtype=object))
         super().__init__()
 
-    def clone(self):
+    def clone(self, variable_clone=False):
+        """
+        Parameters
+        ----------
+        variable_clone : bool
+            if it is true, variables are cloned in expression
+
+        Returns
+        -------
+        Reduction
+        """
         cls = self.__class__
-        return cls(self.elms)
+        if variable_clone:
+            elms = [elms.clone(variable_clone=True) for elm in self.elms]
+        else:
+            elms = self.elms
+        return cls(elms)
 
     def setName(self):
         self._name = ""
@@ -1576,9 +1607,23 @@ class MathOperation(ExpressionElement):
         self.elm = elm
         super().__init__()
 
-    def clone(self):
+    def clone(self, variable_clone=False):
+        """
+        Parameters
+        ----------
+        variable_clone : bool
+            if it is true, variables are cloned in expression
+
+        Returns
+        -------
+        MathOperation
+        """
         cls = self.__class__
-        return cls(self.elm)
+        if variable_clone:
+            elm = self.elm.clone(variable_clone=True)
+        else:
+            elm = self.elm
+        return cls(elm)
 
     def setName(self):
         self._name = f"{self.operator}({self.elm.getName()})"

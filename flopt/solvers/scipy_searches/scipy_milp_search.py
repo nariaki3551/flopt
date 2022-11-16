@@ -61,7 +61,7 @@ class ScipyMilpSearch(BaseSearch):
         lp = LpStructure.fromFlopt(
             self.prob,
             x=FloptNdarray(solution.getVariables()),
-            option="all_neq",
+            option="ineq",
         )
 
         # bounds
