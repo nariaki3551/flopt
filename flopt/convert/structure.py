@@ -340,7 +340,7 @@ class QpStructure:
         return QpStructure(Q, c, self.C, None, None, A, b, lb, ub, types, x)
 
     def boundsToIneq(self):
-        """convert bounds constraints into neq constraints
+        """convert bounds constraints into inequality constraints
 
         ::
 
@@ -356,12 +356,14 @@ class QpStructure:
         h = np.array(self.h) if self.h is not None else None
         if self.lb is not None:
             I = np.identity(self.numVariables(), dtype=np_float)
-            G = merge(np.vstack, [(G, 1), (I, -1)])
-            h = merge(np.hstack, [(h, 1), (self.lb, -1)])
+            non_none_ix = np.logical_not(np.isnan(self.lb))
+            G = merge(np.vstack, [(G, 1), (I[non_none_ix], -1)])
+            h = merge(np.hstack, [(h, 1), (self.lb[non_none_ix], -1)])
         if self.ub is not None:
             I = np.identity(self.numVariables(), dtype=np_float)
-            G = merge(np.vstack, [(G, 1), (I, 1)])
-            h = merge(np.hstack, [(h, 1), (self.ub, 1)])
+            non_none_ix = np.logical_not(np.isnan(self.ub))
+            G = merge(np.vstack, [(G, 1), (I[non_none_ix], 1)])
+            h = merge(np.hstack, [(h, 1), (self.ub[non_none_ix], 1)])
         lb, ub = None, None
         return QpStructure(
             self.Q, self.c, self.C, G, h, self.A, self.b, lb, ub, self.types, self.x
@@ -455,7 +457,7 @@ class QpStructure:
         assert self.G is None and self.A is None
         return self.toIsing().toQubo()
 
-    def show(self):
+    def show(self, to_str=False):
         s = f"QpStructure\n"
         s += f"obj  1/2 x.T.dot(Q).dot(x) + c.T.dot(x) + C\n"
         s += f"s.t. Gx <= h\n"
@@ -472,6 +474,8 @@ class QpStructure:
         s += f"lb\n{self.lb}\n\n"
         s += f"ub\n{self.ub}\n\n"
         s += f"x\n{self.x}"
+        if to_str:
+            return s
         print(s)
 
     def __repr__(self):
@@ -644,7 +648,7 @@ class LpStructure:
         assert self.G is None and self.A is None
         return self.toIsing().toQubo()
 
-    def show(self):
+    def show(self, to_str=False):
         s = f"LpStructure\n"
         s += f"obj  c.T.dot(x) + C\n"
         s += f"s.t. Gx <= h\n"
@@ -660,6 +664,8 @@ class LpStructure:
         s += f"lb\n{self.lb}\n\n"
         s += f"ub\n{self.ub}\n\n"
         s += f"x\n{self.x}"
+        if to_str:
+            return s
         print(s)
 
     def __repr__(self):
@@ -775,7 +781,7 @@ class IsingStructure:
             x = np.array([var.binary for var in self.x], dtype=object)
         return QuboStructure(Q, C, x)
 
-    def show(self):
+    def show(self, to_str=False):
         s = f"IsingStructure\n"
         s += f"- x.T.dot(J).dot(x) - h.T.dot(x) + C\n\n"
         s += f"#x\n{self.numVariables()}\n\n"
@@ -783,6 +789,8 @@ class IsingStructure:
         s += f"h\n{self.h}\n\n"
         s += f"C\n{self.C}\n\n"
         s += f"x\n{self.x}"
+        if to_str:
+            return s
         print(s)
 
     def __repr__(self):
@@ -879,13 +887,15 @@ class QuboStructure:
         """
         return self.toFlopt().obj.toIsing()
 
-    def show(self):
+    def show(self, to_str=False):
         s = f"QuboStructure\n"
         s += f"x.T.dot(Q).dot(x) + C\n\n"
         s += f"#x\n{self.numVariables()}\n\n"
         s += f"Q\n{self.Q}\n\n"
         s += f"C\n{self.C}\n\n"
         s += f"x\n{self.x}"
+        if to_str:
+            return s
         print(s)
 
     def __repr__(self):

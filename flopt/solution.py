@@ -50,26 +50,15 @@ class Solution(FloptNdarray):
     >>> sol_divide = sol1 / 2  # (Solution / constant)
     """
 
-    def __new__(cls, variables, *args, **kwargs):
-        if isinstance(variables, (list, tuple, set)):
-            shape = (len(variables),)
-        else:
-            shape = variables.shape
-        obj = super().__new__(cls, shape, dtype=object)
-        obj._variables = None
-        obj._var_dict = None
-        return obj
-
-    def __init__(self, variables, sort=True):
+    def __new__(cls, variables, sort=True, *args, **kwargs):
         if isinstance(variables, (tuple, set)):
             variables = list(variables)
-        for i in itertools.product(*map(range, self.shape)):
-            j = i[0] if isinstance(variables, (list, tuple, set)) else i
-            self[i] = variables[j]
         if sort:
-            self._variables = sorted(variables, key=lambda var: var.name)
-        else:
-            self._variables = variables
+            variables = sorted(variables, key=lambda var: var.name)
+        obj = np.asarray(variables, dtype=object).view(cls)
+        obj._variables = variables
+        obj._var_dict = None
+        return obj
 
     def __array_finalize__(self, obj):
         self._variables = getattr(obj, "_variables", None)
@@ -380,8 +369,8 @@ class Solution(FloptNdarray):
     def __iter__(self):
         return iter(self._variables)
 
-    def __getitem__(self, k):
-        return self._variables[k]
+    # def __getitem__(self, k):
+    #     return self._variables[k]
 
     def __str__(self):
         return self.__repr__()

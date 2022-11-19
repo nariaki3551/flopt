@@ -170,7 +170,7 @@ class MipSelector(Selector):
 
 class QpSelector(Selector):
     def __call__(self, prob, solver):
-        return "CvxoptQp"
+        return "Cvxopt"
 
 
 class PermutationSelector(Selector):
@@ -183,7 +183,7 @@ class BaseSelector(Selector):
         "2-Opt",
         "ScipyMilp",
         "Pulp",
-        "CvxoptQp",
+        "Cvxopt",
         "Scipy",
         "SFLA",
         "Random",

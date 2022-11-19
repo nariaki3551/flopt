@@ -139,6 +139,10 @@ class ScipySearch(BaseSearch):
             hessp=None,
             tol=None,
         )
+        if self.msg:
+            print("-" * 10 + " ScipySearch " + "-" * 10)
+            print(res)
+            print("-" * 10 + "-------------" + "-" * 10)
 
         if res.success:
             # get result of solver

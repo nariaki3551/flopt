@@ -81,6 +81,9 @@ class AutoSearch(BaseSearch):
         "Constraint": ExpressionType.Any,
     }
 
+    def __init__(self):
+        self.selector_msg = False
+
     def available(self, prob, verbose=False):
         """
         Parameters
@@ -138,7 +141,7 @@ class AutoSearch(BaseSearch):
                 and problem_type["Constraint"].expand()
                 <= problem_class["Constraint"].expand()
             )
-            if is_problem_class:
+            if is_problem_class and self.selector_msg:
                 logger.info(f"This problem is identified as {class_str}.")
             return is_problem_class
 
@@ -186,6 +189,8 @@ class AutoSearch(BaseSearch):
             list of constriants objects
         prob : Problem
             problem
+        msg :
+            if it is true, message about search is outputed
 
         Returns
         -------

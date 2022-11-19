@@ -750,16 +750,14 @@ class VarInteger(VarElement):
     def toSpin(self):
         return self.toBinary().toSpin()
 
-    def clone(self, variable_clone=True):
+    def clone(self):
         """
         Parameters
         ----------
         variable_clone : bool
             if it is true, return a cloned variable
         """
-        if variable_clone:
-            return VarInteger(self.name, self.lowBound, self.upBound, self._value)
-        return self
+        return VarInteger(self.name, self.lowBound, self.upBound, self._value)
 
     def __and__(self, other):
         if isinstance(other, number_classes):
@@ -840,16 +838,8 @@ class VarBinary(VarInteger):
                 )
         return (self.spin + 1) * 0.5
 
-    def clone(self, variable_clone=True):
-        """
-        Parameters
-        ----------
-        variable_clone : bool
-            if it is true, return a cloned variable
-        """
-        if variable_clone:
-            return VarBinary(self.name, self._value, self.spin)
-        return self
+    def clone(self):
+        return VarBinary(self.name, self._value, self.spin)
 
     def __mul__(self, other):
         if id(other) == id(self):
@@ -926,16 +916,8 @@ class VarSpin(VarElement):
     def toSpin(self):
         return self
 
-    def clone(self, variable_clone=True):
-        """
-        Parameters
-        ----------
-        variable_clone : bool
-            if it is true, return a cloned variable
-        """
-        if variable_clone:
-            return VarSpin(self.name, self._value, self.binary)
-        return self
+    def clone(self):
+        return VarSpin(self.name, self._value, self.binary)
 
     def __mul__(self, other):
         if id(other) == id(self):
@@ -999,16 +981,8 @@ class VarContinuous(VarElement):
         ub = self.getUb(must_number=True)
         self._value = random.uniform(lb, ub)
 
-    def clone(self, variable_clone=True):
-        """
-        Parameters
-        ----------
-        variable_clone : bool
-            if it is true, return a cloned variable
-        """
-        if variable_clone:
-            return VarContinuous(self.name, self.lowBound, self.upBound, self._value)
-        return self
+    def clone(self):
+        return VarContinuous(self.name, self.lowBound, self.upBound, self._value)
 
     def __repr__(self):
         return f'Variable("{self.name}", {self.lowBound}, {self.upBound}, "Continuous", {self._value})'
@@ -1069,16 +1043,8 @@ class VarPermutation(VarElement):
     def isQuadratic(self):
         return False
 
-    def clone(self, variable_clone=True):
-        """
-        Parameters
-        ----------
-        variable_clone : bool
-            if it is true, return a cloned variable
-        """
-        if variable_clone:
-            return VarPermutation(self.name, self.lowBound, self.upBound, self._value)
-        return self
+    def clone(self):
+        return VarPermutation(self.name, self.lowBound, self.upBound, self._value)
 
     def __iter__(self):
         return iter(self._value)

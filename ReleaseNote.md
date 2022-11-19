@@ -119,7 +119,7 @@
 **Update**
 
 1. Add New Solvers
-    - CvxoptQpSearch
+    - CvxoptSearch
       - It can solve the Quadratic Problem
     - AmplifySearch
         - It can solve the Ising model with constraints

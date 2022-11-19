@@ -42,18 +42,13 @@ class Constraint:
         self.name = name
         self.hash = None
 
-    def clone(self, variable_clone=False):
+    def clone(self):
         """
-        Parameters
-        ----------
-        variable_clone : bool
-            if it is true, variables are cloned in expression
-
         Returns
         -------
         Reduction
         """
-        return Constraint(self.expression.clone(variable_clone), self._type, self.name)
+        return Constraint(self.expression.clone(), self._type, self.name)
 
     def type(self):
         return self._type

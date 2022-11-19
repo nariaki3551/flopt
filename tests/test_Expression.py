@@ -146,10 +146,32 @@ def test_Expression_isMonomial2(a, b):
     assert (2 * a * b).toMonomial() == Monomial({a: 1, b: 1}, coeff=2)
 
 
-def test_Expression_toLinear(a, b):
+def test_Expression_toLinear1(a, b):
     lp = (a + b + 1).toLinear([a, b])
     assert lp.C == 1
     assert np.all(lp.c == [1, 1])
+
+
+def test_Expression_toLinear2(a, b):
+    lp = (a + b + 1).toLinear([a])
+    # assert (lp.C).value() == (b + 1).value()
+    assert lp.C == (b + 1).value()
+    assert np.all(lp.c == [1])
+
+
+def test_Expression_toQuadratic1(a, b):
+    qp = (a * a + a * b + b + 1).toQuadratic([a, b])
+    assert np.all(qp.Q == [[2, 1], [1, 0]])
+    assert np.all(qp.c == [0, 1])
+    assert qp.C == 1
+
+
+def test_Expression_toQuadratic2(a, b):
+    qp = (a * a + a * b + b + 1).toQuadratic([a])
+    assert np.all(qp.Q == [[2]])
+    assert np.all(qp.c == [b])
+    # assert (qp.C).value() == (b + 1).value()
+    assert qp.C == (b + 1).value()
 
 
 def test_Expression_simplify(a, b):

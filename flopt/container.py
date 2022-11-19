@@ -7,17 +7,9 @@ import numpy as np
 
 class FloptNdarray(np.ndarray):
     def __new__(cls, array, *args, **kwargs):
-        if isinstance(array, (list, tuple)):
-            shape = (len(array),)
-        else:
-            shape = array.shape
-        obj = super().__new__(cls, shape, dtype=object)
-        return obj
-
-    def __init__(self, array, *args, **kwargs):
-        for i in itertools.product(*map(range, self.shape)):
-            j = i[0] if isinstance(array, (list, tuple)) else i
-            self[i] = array[j]
+        if isinstance(array, set):
+            array = list(array)
+        return np.asarray(array, dtype=object).view(cls)
 
     def value(self, solution=None, var_dict=None):
         assert not (solution is not None and var_dict is not None)

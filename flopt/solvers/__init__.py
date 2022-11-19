@@ -14,7 +14,7 @@ algo_list = [
     "Pulp",
     "Scipy",
     "ScipyMilp",
-    "CvxoptQp",
+    "Cvxopt",
     # "Amplify",
     "auto",
 ]
@@ -37,8 +37,22 @@ def Solver(algo="auto"):
     if algo.endswith("Search"):
         algo = algo.replace("Search", "")
         logger.warning(
-            f"It is recommended to use algorithm name {algo}, {algo}Search will not be available in the future version"
+            f"It is recommended to use algorithm name {algo} instead of {algo}Search, "
+            +f"{algo}Search will not be available in the future version"
         )
+    if algo == "CvxoptQp":
+        algo = "Cvxopt"
+        logger.warning(
+            f"It is recommended to use algorithm name Cvxopt instead of CvxoptQp, "
+            +f"CvxoptQp will not be available in the future version"
+        )
+    elif algo == "HyperoptTPE":
+        algo = "Cvxopt"
+        logger.warning(
+            f"It is recommended to use algorithm name Hyperopt instead of HyperoptTPE, "
+            +f"HyperoptTPE will not be available in the future version"
+        )
+
     if algo == "Random":
         from flopt.solvers.random_search import RandomSearch
 
@@ -79,10 +93,10 @@ def Solver(algo="auto"):
         from flopt.solvers.scipy_searches import ScipyMilpSearch
 
         return ScipyMilpSearch()
-    elif algo == "CvxoptQp":
-        from flopt.solvers.cvxopt_qp_search import CvxoptQpSearch
+    elif algo == "Cvxopt":
+        from flopt.solvers.cvxopt_search import CvxoptSearch
 
-        return CvxoptQpSearch()
+        return CvxoptSearch()
     elif algo == "Amplify":
         from flopt.solvers.amplify_search import AmplifySearch
 
@@ -92,7 +106,7 @@ def Solver(algo="auto"):
 
         return AutoSearch()
     else:
-        assert True, f"{algo} is not available, choices from {Solver_list()}"
+        assert False, f"{algo} is not available, choices from {Solver_list()}"
 
 
 def Solver_list():

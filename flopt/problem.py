@@ -1,6 +1,6 @@
 import flopt
 from flopt.variable import VarElement
-from flopt.expression import Expression, CustomExpression, Const
+from flopt.expression import Expression, CustomExpression, Const, SelfReturn
 from flopt.constraint import Constraint
 from flopt.solvers import Solver
 from flopt.solution import Solution
@@ -86,9 +86,20 @@ class Problem:
             name=f"{self.name}" if self.name is not None else None,
             sense=self.sense,
         )
-        prob.setObjective(self.obj.clone(variable_clone), self.obj_name)
+        if not variable_clone:
+            prob.setObjective(self.obj.clone(), self.obj_name)
+            for const in self.constraints:
+                prob.addConstraint(const.clone(), const.name)
+            return prob
+
+        var_dict = {var.name: SelfReturn(var.clone()) for var in self.getVariables()}
+        prob.setObjective(self.obj.value(var_dict=var_dict), self.obj_name)
         for const in self.constraints:
-            prob.addConstraint(const.clone(variable_clone), const.name)
+            const_exp = const.expression.value(var_dict=var_dict)
+            if const.type == ConstraintType.Eq:
+                prob.addConstraint(const_exp == 0, const.name)
+            else:
+                prob.addConstraint(const_exp <= 0, const.name)
         return prob
 
     def setObjective(self, obj, name=None):
@@ -210,7 +221,15 @@ class Problem:
         """
         return self.constraints
 
-    def solve(self, solver=None, timelimit=None, lowerbound=None, msg=False, **kwargs):
+    def solve(
+        self,
+        solver=None,
+        timelimit=None,
+        lowerbound=None,
+        optimized_variables=None,
+        msg=False,
+        **kwargs,
+    ):
         """solve this problem
 
         Parameters
@@ -219,6 +238,8 @@ class Problem:
         timelimit : float or None
         lowerbound : float or None
             solver terminates when it obtains the solution whose objective value is lower than this value
+        optimized_variables : None or list, tuple, np.ndarray or any container of Variable
+            if it is specified, solver will optimize only the variables in optimized_variables
         msg : bool
             if true, display the message from solver
 
@@ -261,7 +282,13 @@ class Problem:
         if self.sense.lower() == "maximize":
             self.obj = -self.obj
 
-        solution = Solution(self.getVariables())
+        if optimized_variables is None:
+            solution = Solution(self.getVariables())
+        else:
+            assert (
+                set(optimized_variables) <= self.getVariables()
+            ), "optimized_variables containes variables that are not in the problem"
+            solution = Solution(optimized_variables)
 
         status, log, self.time = self.solver.solve(
             solution,
@@ -399,7 +426,7 @@ class Problem:
 
     def boundsToIneq(self):
         """Create a problem object has bounds constraints of variables as inequal constraints"""
-        prob = self.clone(variable_clone=True)
+        prob = self.clone()
         for var in prob.getVariables():
             if var.getLb() is not None:
                 prob += var >= var.getLb()
@@ -441,8 +468,13 @@ class Problem:
         s += f"{prefix}  #variables   : {len(self.getVariables())} ({variables_str})"
         return s
 
-    def show(self):
+    def show(self, to_str=False):
         s = str(self) + "\n\n"
         for ix, const in enumerate(self.constraints):
             s += f"  C {ix}, name {const.name}, {const}\n"
+        s += "\n"
+        for ix, var in enumerate(self.getVariables()):
+            s += f"  V {ix}, name {var.name}, {var.type()} {var.getLb()} <= {var.name} <= {var.getUb()}\n"
+        if to_str:
+            return s
         print(s)

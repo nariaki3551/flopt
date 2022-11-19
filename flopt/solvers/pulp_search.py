@@ -157,10 +157,11 @@ class PulpSearch(BaseSearch):
             lp_prob.setObjective(prob.obj.value(lp_solution))
 
         for const in prob.getConstraints():
-            const_exp = const.expression
-            if const.type() == ConstraintType.Eq:
-                lp_prob.addConstraint(const_exp.value(lp_solution) == 0, const.name)
-            else:  # const.type() == ConstraintType.Le
-                lp_prob.addConstraint(const_exp.value(lp_solution) <= 0, const.name)
+            const_exp = const.expression.value(lp_solution)
+            if not isinstance(const_exp, (int, float)):
+                if const.type() == ConstraintType.Eq:
+                    lp_prob.addConstraint(const_exp == 0, const.name)
+                else:  # const.type() == ConstraintType.Le
+                    lp_prob.addConstraint(const_exp <= 0, const.name)
 
         return lp_prob, lp_solution

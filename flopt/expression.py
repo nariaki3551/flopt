@@ -1,6 +1,6 @@
 import types
-import functools
 import operator
+import functools
 import itertools
 
 import numpy as np
@@ -209,21 +209,42 @@ class ExpressionElement:
         # |           Q[i, i] = 2 * polynomial.coeff(x[i], x[i])
         # |           for j in range(i+1, num_variables):
         # |               Q[i, j] = Q[j, i] = polynomial.coeff(x[i], x[j])
+        C = polynomial.constant()
         for mono, coeff in polynomial:
             if mono.isLinear():
-                c[mono_to_index[mono]] = coeff
+                if mono in mono_to_index:
+                    c[mono_to_index[mono]] += coeff
+                else:
+                    # C += mono.toExpression()
+                    C += mono.value()
             elif mono.isQuadratic():
                 if len(mono.terms) == 1:
-                    var_a = list(mono.terms)[0]
-                    a_ix = mono_to_index[var_a.toMonomial()]
-                    Q[a_ix, a_ix] = 2 * coeff
+                    mono_a = list(mono.terms)[0].toMonomial()
+                    if mono_a in mono_to_index:
+                        a_ix = mono_to_index[mono_a]
+                        Q[a_ix, a_ix] = 2 * coeff
+                    else:
+                        # C += mono.toExpression() ** 2
+                        C += mono.value() ** 2
                 else:
                     var_a, var_b = list(mono.terms.keys())
-                    a_ix = mono_to_index[var_a.toMonomial()]
-                    b_ix = mono_to_index[var_b.toMonomial()]
-                    Q[a_ix, b_ix] = Q[b_ix, a_ix] = coeff
+                    mono_a, mono_b = var_a.toMonomial(), var_b.toMonomial()
+                    if mono_a in mono_to_index and mono_b in mono_to_index:
+                        a_ix = mono_to_index[mono_a]
+                        b_ix = mono_to_index[mono_b]
+                        Q[a_ix, b_ix] = Q[b_ix, a_ix] = coeff
+                    elif mono_a in mono_to_index and mono_b not in mono_to_index:
+                        a_ix = mono_to_index[mono_a]
+                        # c[a_ix] += mono_b.toExpression()
+                        c[a_ix] += mono_b.value()
+                    elif mono_a not in mono_to_index and mono_b in mono_to_index:
+                        b_ix = mono_to_index[mono_b]
+                        # c[b_ix] += mono_a.toExpression()
+                        c[b_ix] += mono_a.value()
+                    else:
+                        # C += mono_a.toExpression() * mono_b.toExpression()
+                        C += mono_a.value() * mono_b.value()
 
-        C = polynomial.constant()
         return QuadraticStructure(Q, c, C, x=x)
 
     def isLinear(self):
@@ -282,11 +303,15 @@ class ExpressionElement:
             x[i].toMonomial(): i for i in itertools.product(*map(range, x.shape))
         }
 
+        C = polynomial.constant()
         c = np.zeros((num_variables,), dtype=np_float)
         for mono, coeff in polynomial:
-            c[mono_to_index[mono]] = coeff
+            if mono not in mono_to_index:
+                # C += mono.toExpression()
+                C += mono.value()
+            else:
+                c[mono_to_index[mono]] = coeff
 
-        C = polynomial.constant()
         return LinearStructure(c, C, x=x)
 
     def isIsing(self):
@@ -321,7 +346,7 @@ class ExpressionElement:
         from flopt.convert import IsingStructure
 
         if any(var.type() == VariableType.Binary for var in self.getVariables()):
-            return self.toSpin().toIsing()
+            return self.toSpin().toIsing(x)
         quadratic = self.toQuadratic(x)
         J = -np.triu(quadratic.Q)
         np.fill_diagonal(J, 0.5 * np.diag(J))
@@ -423,12 +448,13 @@ class ExpressionElement:
         }
         return self.value(var_dict=var_dict).expand()
 
-    def __calculate(self, sense, default_value):
+    def __calculate(self, sense, solver, default_value, *args, **kwargs):
         """Calculate min/max value of expression
 
         Parameters
         ----------
         sense : str
+        solver : Solver
         default_value : default value of excepsion case
 
         Returns
@@ -438,20 +464,15 @@ class ExpressionElement:
         """
         import flopt
 
-        if self.isLinear():
-            solver = flopt.Solver("ScipyMilp")
-        elif self.isQuadratic():
-            solver = flopt.Solver("CvxoptQp")
-        else:
-            logger.warning(
-                f"{sense} value of {self.getName()} cannot be calculated because it is not linear or quaratic"
-            )
-            return default_value
         prob = flopt.Problem(sense=sense)
         prob += self
-        # status, logs = prob.solve(solver, msg=False)
-        status, logs = prob.solve(solver, msg=True)
+        status, logs = prob.solve(solver, *args, **kwargs)
         if status == flopt.SolverTerminateState.Normal:
+            return prob.getObjectiveValue()
+        elif status == flopt.SolverTerminateState.Timelimit:
+            logger.warning(
+                f"{sense} value of {self.getName()} is not certain because search terminates by timelimit"
+            )
             return prob.getObjectiveValue()
         elif status == flopt.SolverTerminateState.Unbounded:
             logger.warning(
@@ -464,7 +485,7 @@ class ExpressionElement:
             )
             return default_value
 
-    def max(self):
+    def max(self, *args, **kwargs):
         """Calculate max value of expression when expression is linear or quadratic
 
         Returns
@@ -472,9 +493,24 @@ class ExpressionElement:
         float
             maximum value of this expression can take
         """
-        return self.__calculate("Maximize", get_variable_upper_bound())
+        default_value = get_variable_upper_bound()
+        if self.isLinear():
+            solver = "ScipyMilp"
+        elif self.isQuadratic():
+            solver = "CvxoptQp"
+        else:
+            logger.warning(
+                f"max value of {self.getName()} cannot be calculated because it is not linear or quaratic"
+            )
+            return default_value
+        return self.__calculate("Maximize", solver, default_value, *args, **kwargs)
 
-    def min(self):
+    def maximize(self, solver="auto", *args, **kwargs):
+        """Optimize the maximize problem has this expression as objective"""
+        default_value = get_variable_upper_bound()
+        return self.__calculate("Maximize", solver, default_value, *args, **kwargs)
+
+    def min(self, *args, **kwargs):
         """Calculate min value of expression when expression is linear or quadratic
 
         Returns
@@ -482,7 +518,22 @@ class ExpressionElement:
         float
             minimum value of this expression can take
         """
-        return self.__calculate("Minimize", get_variable_lower_bound())
+        default_value = get_variable_lower_bound()
+        if self.isLinear():
+            solver = "ScipyMilp"
+        elif self.isQuadratic():
+            solver = "CvxoptQp"
+        else:
+            logger.warning(
+                f"min value of {self.getName()} cannot be calculated because it is not linear or quaratic"
+            )
+            return default_value
+        return self.__calculate("Minimize", solver, default_value, *args, **kwargs)
+
+    def minimize(self, solver="auto", *args, **kwargs):
+        """Optimize the minimize problem has this expression as objective"""
+        default_value = get_variable_lower_bound()
+        return self.__calculate("Minimize", solver, default_value, *args, **kwargs)
 
     def traverse(self):
         """traverse Expression tree as root is self
@@ -779,23 +830,13 @@ class Expression(ExpressionElement):
             return elms[0]
         return Sum(elms)
 
-    def clone(self, variable_clone=False):
+    def clone(self):
         """
-        Parameters
-        ----------
-        variable_clone : bool
-            if it is true, variables are cloned in expression
-
         Returns
         -------
         Expression
         """
-        if variable_clone:
-            elmA = self.elmA.clone(variable_clone)
-            elmB = self.elmB.clone(variable_clone)
-        else:
-            elmA, elmB = self.elmA, self.elmB
-        return Expression(elmA, elmB, self.operator, self.name)
+        return Expression(self.elmA, self.elmB, self.operator, self.name)
 
     def setName(self):
         stack = [self]
@@ -1402,23 +1443,14 @@ class Reduction(ExpressionElement):
         self.elms = to_const_ufunc(np.array(elms, dtype=object))
         super().__init__()
 
-    def clone(self, variable_clone=False):
+    def clone(self):
         """
-        Parameters
-        ----------
-        variable_clone : bool
-            if it is true, variables are cloned in expression
-
         Returns
         -------
         Reduction
         """
         cls = self.__class__
-        if variable_clone:
-            elms = [elms.clone(variable_clone=True) for elm in self.elms]
-        else:
-            elms = self.elms
-        return cls(elms)
+        return cls(self.elms)
 
     def setName(self):
         self._name = ""
@@ -1607,23 +1639,14 @@ class MathOperation(ExpressionElement):
         self.elm = elm
         super().__init__()
 
-    def clone(self, variable_clone=False):
+    def clone(self):
         """
-        Parameters
-        ----------
-        variable_clone : bool
-            if it is true, variables are cloned in expression
-
         Returns
         -------
         MathOperation
         """
         cls = self.__class__
-        if variable_clone:
-            elm = self.elm.clone(variable_clone=True)
-        else:
-            elm = self.elm
-        return cls(elm)
+        return cls(self.elm)
 
     def setName(self):
         self._name = f"{self.operator}({self.elm.getName()})"

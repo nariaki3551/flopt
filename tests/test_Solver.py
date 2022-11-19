@@ -51,8 +51,8 @@ def prob_with_const():
 
 @pytest.fixture(scope="function")
 def prob_lp():
-    a = flopt.Variable("a", cat="Continuous")
-    b = flopt.Variable("b", cat="Continuous")
+    a = flopt.Variable("a", cat="Continuous", ini_value=0)
+    b = flopt.Variable("b", cat="Continuous", ini_value=0)
     _prob = flopt.Problem("TestLp", sense="Maximize")
     _prob += 1 * a + 3 * b <= 30
     _prob += 2 * a + 1 * b <= 40
@@ -66,8 +66,8 @@ def prob_lp():
 def prob_qp():
     # Problem with constraint
     a = Variable("a", 0, 1, "Integer")
-    b = Variable("b", 1, 2, "Continuous")
-    c = Variable("c", 1, 3, "Continuous")
+    b = Variable("b", 1, 2, "Continuous", ini_value=1)
+    c = Variable("c", 0, 3, "Continuous")
     _prob = Problem(name="TestC")
     _prob += 2 * b * b + b * c + b + c
     _prob += b + c == 1
@@ -132,15 +132,29 @@ def test_Solver_list():
 
 
 def test_RandomSearch(prob, callback):
-    solver = Solver(algo="Random")
-    solver.setParams(n_trial=10, callbacks=[callback])
-    prob.solve(solver, timelimit=0.5)
+    """test to solve problem has only objective"""
+    prob.solve(solver="Random", n_trial=10, timelimit=0.5, callbacks=[callback])
 
 
 def test_RandomSearch2(prob_perm, callback):
-    solver = Solver(algo="Random")
-    solver.setParams(n_trial=10, callbacks=[callback])
-    prob_perm.solve(solver, timelimit=0.5)
+    """test to solve problem has permutation variable"""
+    prob_perm.solve(solver="Random", n_trial=10, timelimit=0.5, callbacks=[callback])
+
+
+def test_RandomSearch3(prob_only_continuous, callback):
+    """test to solve problem with optimized_variables"""
+    variables = list(prob_only_continuous.getVariables())
+    non_optimized_values = [var.value() for var in variables[1:]]
+    prob_only_continuous.solve(
+        solver="Random",
+        n_trial=10,
+        timelimit=0.5,
+        callbacks=[callback],
+        optimized_variables=variables[:1],
+    )
+    assert all(
+        var.value() == value for var, value in zip(variables[1:], non_optimized_values)
+    )
 
 
 def test_RandomSearch_available(
@@ -155,9 +169,7 @@ def test_RandomSearch_available(
 
 
 def test_2Opt(prob_perm, callback):
-    solver = Solver(algo="2-Opt")
-    solver.setParams(n_trial=10, callbacks=[callback])
-    prob_perm.solve(solver, timelimit=0.5)
+    prob_perm.solve(solver="2-Opt", n_trial=10, timelimit=0.5, callbacks=[callback])
 
 
 def test_2Opt_available(prob, prob_with_const, prob_qp, prob_nonlinear, prob_perm):
@@ -169,10 +181,25 @@ def test_2Opt_available(prob, prob_with_const, prob_qp, prob_nonlinear, prob_per
     assert solver.available(prob_perm) == True
 
 
-def test_OptunaTPESearch(prob, callback):
-    solver = Solver(algo="OptunaTPE")
-    solver.setParams(n_trial=10, callbacks=[callback])
-    prob.solve(solver, timelimit=0.5)
+def test_OptunaTPESearch1(prob, callback):
+    """test to solve problem has only objective"""
+    prob.solve(solver="OptunaTPE", n_trial=10, timelimit=0.5, callbacks=[callback])
+
+
+def test_OptunaTPESearch2(prob_only_continuous, callback):
+    """test to solve problem with optimized_variables"""
+    variables = list(prob_only_continuous.getVariables())
+    non_optimized_values = [var.value() for var in variables[1:]]
+    prob_only_continuous.solve(
+        solver="OptunaTPE",
+        n_trial=10,
+        timelimit=0.5,
+        callbacks=[callback],
+        optimized_variables=variables[:1],
+    )
+    assert all(
+        var.value() == value for var, value in zip(variables[1:], non_optimized_values)
+    )
 
 
 def test_OptunaTPESearch_available(
@@ -186,10 +213,25 @@ def test_OptunaTPESearch_available(
     assert solver.available(prob_perm) == False
 
 
-def test_OptunaCmaEsSearch(prob, callback):
-    solver = Solver(algo="OptunaCmaEs")
-    solver.setParams(n_trial=10, callbacks=[callback])
-    prob.solve(solver, timelimit=0.5)
+def test_OptunaCmaEsSearch1(prob, callback):
+    """test to solve problem has only objective"""
+    prob.solve(solver="OptunaCmaEs", n_trial=10, timelimit=0.5, callbacks=[callback])
+
+
+def test_OptunaCmaEsSearch2(prob_only_continuous, callback):
+    """test to solve problem with optimized_variables"""
+    variables = list(prob_only_continuous.getVariables())
+    non_optimized_values = [var.value() for var in variables[1:]]
+    prob_only_continuous.solve(
+        solver="OptunaCmaEs",
+        n_trial=10,
+        timelimit=0.5,
+        callbacks=[callback],
+        optimized_variables=variables[:1],
+    )
+    assert all(
+        var.value() == value for var, value in zip(variables[1:], non_optimized_values)
+    )
 
 
 def test_OptunaCmaEsSearch_available(
@@ -204,15 +246,29 @@ def test_OptunaCmaEsSearch_available(
 
 
 def test_HyperoptSearch1(prob, callback):
-    solver = Solver(algo="Hyperopt")
-    solver.setParams(n_trial=10, callbacks=[callback])
-    prob.solve(solver, timelimit=0.5)
+    """test to solve problem has only objective"""
+    prob.solve(solver="Hyperopt", n_trial=10, timelimit=0.5, callbacks=[callback])
 
 
 def test_HyperoptSearch2(prob_ising, callback):
-    solver = Solver(algo="Hyperopt")
-    solver.setParams(n_trial=10, callbacks=[callback])
-    prob_ising.solve(solver, timelimit=0.5)
+    """test to solve ising problem"""
+    prob_ising.solve(solver="Hyperopt", n_trial=10, timelimit=0.5, callbacks=[callback])
+
+
+def test_HyperoptSearch3(prob_only_continuous, callback):
+    """test to solve problem with optimized_variables"""
+    variables = list(prob_only_continuous.getVariables())
+    non_optimized_values = [var.value() for var in variables[1:]]
+    prob_only_continuous.solve(
+        solver="Hyperopt",
+        n_trial=10,
+        timelimit=0.5,
+        callbacks=[callback],
+        optimized_variables=variables[:1],
+    )
+    assert all(
+        var.value() == value for var, value in zip(variables[1:], non_optimized_values)
+    )
 
 
 def test_HyperoptSearch_available(
@@ -234,18 +290,38 @@ def test_HyperoptSearch_available(
     assert solver.available(prob_ising_const) == False
 
 
-def test_SFLA(prob, callback):
-    solver = Solver(algo="SFLA")
-    solver.setParams(
+def test_SFLA1(prob, callback):
+    """test to solve problem has only objective"""
+    prob.solve(
+        solver="SFLA",
         n_memeplex=5,
         n_frog_per_memeplex=10,
         n_memetic_iter=100,
         n_iter=1000,
         max_step=0.01,
-        msg=True,
+        timelimit=2,
         callbacks=[callback],
     )
-    prob.solve(solver=solver, timelimit=2, msg=True)
+
+
+def test_SFLA2(prob_only_continuous, callback):
+    """test to solve problem with optimized_variables"""
+    variables = list(prob_only_continuous.getVariables())
+    non_optimized_values = [var.value() for var in variables[1:]]
+    prob_only_continuous.solve(
+        solver="SFLA",
+        n_memeplex=5,
+        n_frog_per_memeplex=10,
+        n_memetic_iter=100,
+        n_iter=1000,
+        max_step=0.01,
+        timelimit=2,
+        callbacks=[callback],
+        optimized_variables=variables[:1],
+    )
+    assert all(
+        var.value() == value for var, value in zip(variables[1:], non_optimized_values)
+    )
 
 
 def test_SFLA_available(prob, prob_with_const, prob_qp, prob_nonlinear, prob_perm):
@@ -258,21 +334,25 @@ def test_SFLA_available(prob, prob_with_const, prob_qp, prob_nonlinear, prob_per
 
 
 def test_PulpSearch1(prob, callback):
-    solver = Solver(algo="Pulp")
-    solver.setParams(n_trial=10, callbacks=[callback])
-    prob.solve(solver, timelimit=0.5)
+    prob.solve(solver="Pulp", timelimit=0.5)
 
 
 def test_PulpSearch2(prob_with_const, callback):
-    solver = Solver(algo="Pulp")
-    solver.setParams(n_trial=10, callbacks=[callback])
-    prob_with_const.solve(solver, timelimit=0.5)
+    prob_with_const.solve(solver="Pulp", timelimit=0.5)
 
 
-def test_PulpSearch2(prob_no_obj, callback):
-    solver = Solver(algo="Pulp")
-    solver.setParams(n_trial=10, callbacks=[callback])
-    prob_no_obj.solve(solver, timelimit=0.5)
+def test_PulpSearch3(prob_no_obj, callback):
+    prob_no_obj.solve(solver="Pulp", timelimit=0.5)
+
+
+def test_PulpSearch4(prob_lp, callback):
+    """test to solve problem with optimized_variables"""
+    variables = list(prob_lp.getVariables())
+    non_optimized_values = [var.value() for var in variables[1:]]
+    prob_lp.solve(solver="Pulp", timelimit=0.5, optimized_variables=variables[:1])
+    assert all(
+        var.value() == value for var, value in zip(variables[1:], non_optimized_values)
+    )
 
 
 def test_PulpSearch_available(
@@ -297,15 +377,31 @@ def test_Pulp_available_Error(prob_nonlinear, callback):
 
 
 def test_ScipySearch1(prob_only_continuous, callback):
-    solver = Solver(algo="Scipy")
-    solver.setParams(n_trial=10, callbacks=[callback])
-    prob_only_continuous.solve(solver, timelimit=0.5)
+    prob_only_continuous.solve(
+        solver="Scipy", n_trial=10, timelimit=0.5, callbacks=[callback]
+    )
 
 
 def test_ScipySearch2(prob_with_const, callback):
-    solver = Solver(algo="Scipy")
-    solver.setParams(n_trial=10, callbacks=[callback])
-    prob_with_const.solve(solver, timelimit=0.5)
+    prob_with_const.solve(
+        solver="Scipy", n_trial=10, timelimit=0.5, callbacks=[callback]
+    )
+
+
+def test_ScipySearch3(prob_with_const, callback):
+    """test to solve problem with optimized_variables"""
+    variables = list(prob_with_const.getVariables())
+    non_optimized_values = [var.value() for var in variables[1:]]
+    prob_with_const.solve(
+        solver="Scipy",
+        n_trial=10,
+        timelimit=0.5,
+        callbacks=[callback],
+        optimized_variables=variables[:1],
+    )
+    assert all(
+        var.value() == value for var, value in zip(variables[1:], non_optimized_values)
+    )
 
 
 def test_ScipySearch_available(
@@ -330,27 +426,28 @@ def test_ScipySearch_available(
 
 
 def test_ScipyMilpSearch1(prob):
-    solver = Solver(algo="ScipyMilp")
-    solver.setParams()
-    prob.solve(solver, timelimit=0.5)
+    prob.solve(solver="ScipyMilp", timelimit=0.5)
 
 
 def test_ScipyMilpSearch2(prob_only_continuous):
-    solver = Solver(algo="ScipyMilp")
-    solver.setParams()
-    prob_only_continuous.solve(solver, timelimit=0.5)
+    prob_only_continuous.solve(solver="ScipyMilp", timelimit=0.5)
 
 
 def test_ScipyMilpSearch3(prob_with_const):
-    solver = Solver(algo="ScipyMilp")
-    solver.setParams()
-    prob_with_const.solve(solver, timelimit=0.5)
+    prob_with_const.solve(solver="ScipyMilp", timelimit=0.5)
 
 
 def test_ScipyMilpSearch4(prob_lp):
-    solver = Solver(algo="ScipyMilp")
-    solver.setParams()
-    prob_lp.solve(solver, timelimit=0.5)
+    prob_lp.solve(solver="ScipyMilp", timelimit=0.5)
+
+
+def test_ScipyMilpSearch5(prob_lp):
+    variables = list(prob_lp.getVariables())
+    non_optimized_values = [var.value() for var in variables[1:]]
+    prob_lp.solve(solver="ScipyMilp", timelimit=0.5, optimized_variables=variables[:1])
+    assert all(
+        var.value() == value for var, value in zip(variables[1:], non_optimized_values)
+    )
 
 
 def test_ScipyMilpSearch_available(
@@ -371,16 +468,49 @@ def test_ScipyMilpSearch_available(
     assert solver.available(prob_nonlinear) == False
 
 
-def test_CvxoptQpSearch1(prob_only_continuous, callback):
-    solver = Solver(algo="CvxoptQp")
-    solver.setParams(n_trial=10, callbacks=[callback])
-    prob_only_continuous.solve(solver, timelimit=0.5)
+def test_CvxoptSearch1(prob_only_continuous, callback):
+    prob_only_continuous.solve(
+        solver="Cvxopt", n_trial=10, timelimit=0.5, callbacks=[callback]
+    )
 
 
-def test_CvxoptQpSearch2(prob_qp, callback):
-    solver = Solver(algo="CvxoptQp")
-    solver.setParams(n_trial=10, callbacks=[callback])
-    prob_qp.solve(solver, timelimit=0.5)
+def test_CvxoptSearch2(prob_qp, callback):
+    prob_qp.solve(solver="Cvxopt", n_trial=10, timelimit=0.5, callbacks=[callback])
+
+
+def test_CvxoptSearch3(prob_qp, callback):
+    """test to solve problem with optimized_variables"""
+    variables = list(prob_qp.getVariables())
+    variables.sort(key=lambda v: v.name)
+    non_optimized_values = [var.value() for var in variables[1:]]
+    prob_qp.solve(
+        solver="Cvxopt",
+        n_trial=10,
+        timelimit=0.5,
+        callbacks=[callback],
+        optimized_variables=variables[:1],
+    )
+    assert all(
+        var.value() == value for var, value in zip(variables[1:], non_optimized_values)
+    )
+
+
+def test_CvxoptSearch4(prob_qp, callback):
+    """test to solve problem with optimized_variables"""
+    variables = list(prob_qp.getVariables())
+    variables.sort(key=lambda v: v.name, reverse=True)
+    non_optimized_values = [var.value() for var in variables[1:]]
+    prob_qp.solve(
+        solver="Cvxopt",
+        n_trial=10,
+        timelimit=0.5,
+        callbacks=[callback],
+        optimized_variables=variables[:1],
+    )
+    assert all(
+        var.value() == value for var, value in zip(variables[1:], non_optimized_values)
+    )
+
 
 
 def test_AmplifySearch_available(
@@ -422,62 +552,61 @@ def test_AmplifySearch2(prob_ising_const, callback, request):
     prob_ising_const.solve(solver, timelimit=1, msg=True)
 
 
-def test_CvxoptQpSearch1(prob_only_continuous, callback):
-    solver = Solver(algo="CvxoptQp")
-    solver.setParams(n_trial=10, callbacks=[callback])
-    prob_only_continuous.solve(solver, timelimit=0.5)
+def test_CvxoptSearch1(prob_only_continuous, callback):
+    prob_only_continuous.solve(
+        solver="Cvxopt", n_trial=10, timelimit=0.5, callbacks=[callback]
+    )
 
 
-def test_CvxoptQpSearch2(prob_qp, callback):
-    solver = Solver(algo="CvxoptQp")
-    solver.setParams(n_trial=10, callbacks=[callback])
-    prob_qp.solve(solver, timelimit=0.5)
+def test_CvxoptpSearch2(prob_qp, callback):
+    prob_qp.solve(solver="Cvxopt", n_trial=10, timelimit=0.5, callbacks=[callback])
 
 
-def test_CvxoptQpSearch3(callback):
-    solver = Solver(algo="CvxoptQp")
-    solver.setParams(n_trial=10, callbacks=[callback])
-
+def test_CvxoptpSearch3(callback):
     x = Variable("x", 1, 4, "Continuous")
     prob_qp = Problem(name="issue72")
     prob_qp += x * x
-    prob_qp.solve(solver)
+    prob_qp.solve(solver="Cvxopt", n_trial=10, msg=True, callbacks=[callback])
+
+
+def test_CvxoptSearch4(prob_qp, callback):
+    """test to solve problem with optimized_variables"""
+    variables = list(prob_qp.getVariables())
+    non_optimized_values = [var.value() for var in variables[1:]]
+    prob_qp.solve(
+        solver="Cvxopt",
+        n_trial=10,
+        timelimit=0.5,
+        callbacks=[callback],
+        optimized_variables=variables[:1],
+    )
+    assert all(
+        var.value() == value for var, value in zip(variables[1:], non_optimized_values)
+    )
 
 
 def test_AutoSearch1(prob, callback):
-    solver = Solver(algo="auto")
-    solver.setParams(n_trial=10, callbacks=[callback])
-    prob.solve(solver, timelimit=0.5)
+    prob.solve(solver="auto", timelimit=0.5, callbacks=[callback])
 
 
 def test_AutoSearch2(prob_with_const, callback):
-    solver = Solver(algo="auto")
-    solver.setParams(n_trial=10, callbacks=[callback])
-    prob_with_const.solve(solver, timelimit=0.5)
+    prob_with_const.solve(solver="auto", timelimit=0.5, callbacks=[callback])
 
 
 def test_AutoSearch3(prob_ising, callback):
-    solver = Solver(algo="auto")
-    solver.setParams(n_trial=10, callbacks=[callback])
-    prob_ising.solve(solver, timelimit=0.5)
+    prob_ising.solve(solver="auto", timelimit=0.5, callbacks=[callback])
 
 
 def test_AutoSearch4(prob_with_const, callback):
-    solver = Solver(algo="auto")
-    solver.setParams(n_trial=10, callbacks=[callback])
-    prob_with_const.solve(solver, timelimit=0.5)
+    prob_with_const.solve(solver="auto", timelimit=0.5, callbacks=[callback])
 
 
 def test_AutoSearch5(prob_qp, callback):
-    solver = Solver(algo="auto")
-    solver.setParams(n_trial=10, callbacks=[callback])
-    prob_qp.solve(solver, timelimit=0.5)
+    prob_qp.solve(solver="auto", timelimit=0.5, callbacks=[callback])
 
 
 def test_AutoSearch6(prob_perm, callback):
-    solver = Solver(algo="auto")
-    solver.setParams(n_trial=10, callbacks=[callback])
-    prob_perm.solve(solver, timelimit=0.5)
+    prob_perm.solve(solver="auto", timelimit=0.5, callbacks=[callback])
 
 
 def test_AutoSearch_available(

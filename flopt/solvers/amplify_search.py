@@ -111,17 +111,17 @@ class AmplifySearch(BaseSearch):
 
         self.start_build()
 
-        x = self.prob.getVariables()
+        x = solution
         s = gen_symbols(IsingPoly, len(x))
         np_s = np.array(gen_symbols(IsingPoly, len(x)), dtype=object)
 
         # objective function
-        ising = objective.toIsing()
+        ising = objective.toIsing(x)
         f = -np_s.T.dot(ising.J).dot(np_s) - ising.h.T.dot(np_s) + ising.C
 
         # constraints
         for const in constraints:
-            ising = const.expression.toIsing()
+            ising = const.expression.toIsing(x)
             g = np_s.T.dot(ising.J).dot(np_s) - ising.h.T.dot(np_s) + ising.C
             if const.type() == ConstraintType.Eq:
                 f += equal_to(g, 0)

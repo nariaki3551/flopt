@@ -1,3 +1,6 @@
+import operator
+import functools
+
 from flopt.constants import VariableType
 
 
@@ -31,6 +34,12 @@ class Monomial:
         Monomial
         """
         return Monomial(dict(self.terms), self.coeff)
+
+    def value(self):
+        return self.coeff * functools.reduce(
+            operator.mul,
+            (var.value() ** exponent for var, exponent in self.terms.items()),
+        )
 
     def maxDegree(self):
         """
@@ -102,6 +111,17 @@ class Monomial:
         if self.terms:
             return Polynomial({Monomial(self.terms): self.coeff})
         return Polynomial(constant=self.coeff)
+
+    def toExpression(self):
+        """
+        Returns
+        -------
+        Expression
+        """
+        expression = self.coeff
+        for var, exponent in self.terms.items():
+            expression *= var**exponent
+        return expression
 
     def simplify(self):
         """Simplify this monomial
@@ -205,6 +225,11 @@ class Polynomial:
     def __init__(self, terms={}, constant=0):
         self.terms = terms
         self._constant = constant
+
+    def value(self):
+        return (
+            sum(coeff * mono.value() for mono, coeff in terms.items()) + self.constant()
+        )
 
     def coeff(self, *args):
         """

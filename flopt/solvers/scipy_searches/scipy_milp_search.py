@@ -60,7 +60,7 @@ class ScipyMilpSearch(BaseSearch):
         # lp structure
         lp = LpStructure.fromFlopt(
             self.prob,
-            x=FloptNdarray(solution.getVariables()),
+            x=solution,
             option="ineq",
         )
 
