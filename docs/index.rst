@@ -45,7 +45,7 @@ flopt has functionalities as follows:
    solvers/index
    api_reference/index
    reference/index
-   examples/index
+   recipes/index
 
 
 Indices and tables

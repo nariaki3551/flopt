@@ -52,52 +52,53 @@ def Solver(algo="auto"):
             f"It is recommended to use algorithm name Hyperopt instead of HyperoptTPE, "
             +f"HyperoptTPE will not be available in the future version"
         )
+    algo = algo.lower()
 
-    if algo == "Random":
+    if algo == "random":
         from flopt.solvers.random_search import RandomSearch
 
         return RandomSearch()
-    elif algo == "2-Opt":
+    elif algo == "2-opt":
         from flopt.solvers.two_opt import TwoOpt
 
         return TwoOpt()
-    elif algo == "SteepestDescent":
+    elif algo == "steepestdescent":
         from flopt.solvers.steepest_descent import SteepestDescentSearch
 
         return SteepestDescentSearch()
-    elif algo == "OptunaTPE":
+    elif algo == "optunatpe":
         from flopt.solvers.optuna_searches import OptunaTPESearch
 
         return OptunaTPESearch()
-    elif algo == "OptunaCmaEs":
+    elif algo == "optunacmaes":
         from flopt.solvers.optuna_searches import OptunaCmaEsSearch
 
         return OptunaCmaEsSearch()
-    elif algo == "Hyperopt":
+    elif algo == "hyperopt":
         from flopt.solvers.hyperopt_search import HyperoptSearch
 
         return HyperoptSearch()
-    elif algo == "SFLA":
+    elif algo == "sfla":
         from flopt.solvers.shuffled_frog_leaping_search import ShuffledFrogLeapingSearch
 
         return ShuffledFrogLeapingSearch()
-    elif algo == "Pulp":
+    elif algo == "pulp":
         from flopt.solvers.pulp_search import PulpSearch
 
         return PulpSearch()
-    elif algo == "Scipy":
+    elif algo == "scipy":
         from flopt.solvers.scipy_searches import ScipySearch
 
         return ScipySearch()
-    elif algo == "ScipyMilp":
+    elif algo == "scipymilp":
         from flopt.solvers.scipy_searches import ScipyMilpSearch
 
         return ScipyMilpSearch()
-    elif algo == "Cvxopt":
+    elif algo == "cvxopt":
         from flopt.solvers.cvxopt_search import CvxoptSearch
 
         return CvxoptSearch()
-    elif algo == "Amplify":
+    elif algo == "amplify":
         from flopt.solvers.amplify_search import AmplifySearch
 
         return AmplifySearch()

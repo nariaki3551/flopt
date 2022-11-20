@@ -4,6 +4,8 @@ Baysian Search
 OptunaTPESearch
 ^^^^^^^^^^^^^^^
 
+Solver name is "OptunaTPE".
+
 .. image:: https://img.shields.io/badge/Variable-Number-blue.svg
 .. image:: https://img.shields.io/badge/Objective-any-orange.svg
 .. image:: https://img.shields.io/badge/Constraints-None-green.svg
@@ -13,6 +15,8 @@ OptunaTPESearch
 
 HyperoptSearch
 ^^^^^^^^^^^^^^
+
+Solver name is "Hyperopt".
 
 .. image:: https://img.shields.io/badge/Variable-Number-blue.svg
 .. image:: https://img.shields.io/badge/Objective-any-orange.svg

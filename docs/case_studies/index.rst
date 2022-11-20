@@ -10,4 +10,3 @@ Case Studies
   max_satisfiability
   number_partitioning
   max_cut
-  newton

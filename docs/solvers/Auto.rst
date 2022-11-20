@@ -4,6 +4,8 @@ Solver Selector
 AutoSearch
 ^^^^^^^^^^
 
+Solver name is "auto".
+
 .. autoclass:: flopt.solvers.auto_search.AutoSearch
 
 

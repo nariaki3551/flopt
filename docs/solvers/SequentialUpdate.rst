@@ -2,8 +2,10 @@ Iterative Search
 ----------------
 
 
-Random Search (RandomSearch)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Random Search
+^^^^^^^^^^^^^
+
+Solver name is "Random".
 
 .. image:: https://img.shields.io/badge/Variable-any-blue.svg
 .. image:: https://img.shields.io/badge/Objective-any-orange.svg
@@ -15,6 +17,8 @@ Random Search (RandomSearch)
 2-Opt (TwoOpt)
 ^^^^^^^^^^^^^^
 
+Solver name is "2-Opt".
+
 .. image:: https://img.shields.io/badge/Variable-permutation-blue.svg
 .. image:: https://img.shields.io/badge/Objective-any-orange.svg
 .. image:: https://img.shields.io/badge/Constraints-None-green.svg
@@ -22,8 +26,10 @@ Random Search (RandomSearch)
 .. autoclass:: flopt.solvers.two_opt.TwoOpt
 
 
-Steepest Descent Search (SteepestDescentSearch)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Steepest Descent Search
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Solver name is "SteepestDescent".
 
 .. image:: https://img.shields.io/badge/Variable-number-blue.svg
 .. image:: https://img.shields.io/badge/Objective-polynominal-orange.svg

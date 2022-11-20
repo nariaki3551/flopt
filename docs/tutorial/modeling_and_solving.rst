@@ -12,7 +12,7 @@ Overview
 
 
 This optimization problem is a kind of the *mixed integer constrained non-linear programming*.
-This problem can be formulated using `flopt` as follows,
+This problem can be formulated using `flopt` as follows.
 
 .. code-block:: python
 
@@ -43,14 +43,12 @@ This problem can be formulated using `flopt` as follows,
 Variables
 ---------
 
-We declear variables using :doc:`../api_reference/Variable`.
-
 ::
 
   0 <= a <= 1, a is integer
   1 <= b <= 2, b is continuous
 
-In flopt, we denote these as
+In flopt, we denote these variables as
 
 .. code-block:: python
 
@@ -71,13 +69,13 @@ Flopt provides some variables categories.
 
 .. code-block:: python
 
-  # Integer (flopt.VarInteger) -- for variable takes integer value
+  # Integer (flopt.VarInteger) -- for variable takes only integer values
   x = Variable("x", cat="Integer")
 
-  # Binary (flopt.VarBinary) -- for variable takes 0 or 1
+  # Binary (flopt.VarBinary) -- for variable takes only 0 or 1
   x = Variable("x", cat="Binary")
 
-  # Spin (flopt.VarSpin) -- for variable takes -1 or 1
+  # Spin (flopt.VarSpin) -- for variable takes only -1 or 1
   x = Variable("x", cat="Spin")
 
   # Continuous (flopt.VarContinuous) -- for variable takes real numbers
@@ -223,11 +221,11 @@ We set the object function to *Problem* using `+=` operation or `.setObjective` 
   prob += 2*(3*a+b)*b**2+3   # set the objective function
   # prob.setObjective(2*(3*a+b)*b**2+3)   # same above
 
-When we solve a maximize problem, we set `sense="Maximize"` (default is sense=Minimize).
+When we solve a maximize problem, we set `sense="Maximize"` (default is sense="Minimize").
 
 .. code-block:: python
 
-  prob = flopt.Problem(name="Test", sense="Maximize")
+  prob = flopt.Problem(name="Test", sense="Maximize")  # is equal to sense=flopt.Maximize
 
 
 Constraints
@@ -263,7 +261,7 @@ Solve
 -----
 
 We can obtain the solution of the problem by prob.solve().
-If no solver argument is specified, an algorithm that can solve the problem is automatically selected in flopt.
+If no solver argument is specified, an algorithm that can solve the problem is automatically selected by flopt.
 The user can limit the algorithm's execution time by specifying timelimit.
 When timelimit is not set, note that this function is often time-consuming because it essentially runs until the algorithm satisfies the termination condition.
 
@@ -273,9 +271,9 @@ When timelimit is not set, note that this function is often time-consuming becau
 
 
 Solver
-------
+^^^^^^
 
-When you select algorithm to solve problem, you create a Solver object and specify it as solver parameter in problem.solve().
+When you want to select algorithm to solve problem, you create a Solver object and specify it as solver parameter in problem.solve().
 
 .. code-block:: python
 
@@ -321,10 +319,10 @@ You can specify the available solver by declaring solver object or specifing the
 
 
 AutoSolver
-^^^^^^^^^^
+~~~~~~~~~~
 
-Flopt provides *AutoSolver*.
-We specify the AutoSolver, flopt select the appropriate solver for the problem.
+Flopt provides *AutoSolver* as a default solver.
+AutoSolver selects the appropriate solver for the user modeled problem.
 
 .. code-block:: python
 
