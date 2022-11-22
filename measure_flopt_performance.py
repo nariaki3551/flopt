@@ -226,7 +226,7 @@ def speed_func_ce_value(count):
     data = list()
 
     dataset = flopt.performance.get_dataset("func")
-    instances = {"Ackley", "Goldstain", "Rosenbrock ", "WeitedSphere"}
+    instances = {"Ackley", "Goldstain", "Rosenbrock ", "WeightedSphere"}
     for instance in dataset:
         if instance.name not in instances:
             continue
@@ -239,7 +239,7 @@ def speed_func_ce_value(count):
 
         for i in tqdm.tqdm(range(count), desc="[ " + _name + " ]"):
             start_time = time.time()
-            if instance == {"Ackley", "WeitedSphere"}:
+            if instance == {"Ackley", "WeightedSphere"}:
                 _count = 1000000
             else:
                 _count = 200000
