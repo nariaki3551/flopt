@@ -224,7 +224,7 @@ def _get_dot_graph(expression, writer):
         node_operator = hash(expression)
         operator_str = expression.operator
         if isinstance(expression, CustomExpression):
-            elms = expression.arg
+            elms = expression.args
         elif isinstance(expression, Expression):
             elms = [expression.elmA, expression.elmB]
         elif isinstance(expression, Reduction):

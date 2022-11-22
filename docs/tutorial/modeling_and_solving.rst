@@ -197,7 +197,7 @@ We can represent the blackbox function as CustomExpression.
    x = flopt.Variable("x")
    y = flopt.Variable("y")
   
-   z = flopt.CustomExpression(user_defined_fn, arg=[x, y])
+   z = flopt.CustomExpression(user_defined_fn, args=[x, y])
    z.value()  # value calculated through user_defind_fn(x, y)
 
 

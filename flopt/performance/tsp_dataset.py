@@ -186,7 +186,7 @@ class TSPInstance(BaseInstance):
                 distance += self.D[head][tail]
             return distance
 
-        tsp_obj = CustomExpression(func=tsp_dist, arg=[perm])
+        tsp_obj = CustomExpression(func=tsp_dist, args=[perm])
 
         # Problem
         prob = Problem(name=f"TSP:{self.name}")

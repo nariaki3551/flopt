@@ -1196,7 +1196,7 @@ class CustomExpression(ExpressionElement):
       b = Variable("b", cat="Continuous")
       def user_simulater(a, b):
           return simulater(a, b)
-      obj = CustomExpression(func=user_simulater, arg=[a, b])
+      obj = CustomExpression(func=user_simulater, args=[a, b])
       prob = Problem("simulater")
       prob += obj
 
