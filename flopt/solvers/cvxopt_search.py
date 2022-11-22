@@ -114,14 +114,23 @@ class CvxoptSearch(BaseSearch):
                 sol = cvxopt.solvers.qp(Q, c, G, h, A, b)
             except Exception as e:
                 logger.error(e)
-                logger.error("-" * 10 + " CvxoptSearch Error Log " + "-" * 20)
+                logger.error("-" * 20 + " CvxoptSearch Error Log " + "-" * 20)
                 logger.error("QpStructure is ")
                 logger.error(qp.show(to_str=True))
-                logger.error("-" * 10 + "------------------------" + "-" * 20)
+                logger.error("-" * 20 + "------------------------" + "-" * 20)
                 raise SolverError(e)
         except Exception as e:
             logger.error(e)
             raise SolverError(e)
+
+        if self.msg:
+            import pprint
+
+            print()
+            print("-" * 20 + " CvxoptSearch " + "-" * 20)
+            pprint.pprint(sol)
+            print("-" * 20 + "--------------" + "-" * 20)
+            print()
 
         return sol
 

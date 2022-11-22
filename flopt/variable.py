@@ -377,6 +377,12 @@ class VarElement:
         self._value = None
         if ini_value is not None:
             self._value = ini_value
+        elif self._type == VariableType.Permutation:
+            self.setRandom()
+        elif self.lowBound is not None and self.upBound is None:
+            self._value = self.lowBound
+        elif self.lowBound is None and self.upBound is not None:
+            self._value = self.upBound
         else:
             self.setRandom()
         self.monomial = Monomial({self: 1})

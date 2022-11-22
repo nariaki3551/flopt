@@ -176,6 +176,7 @@ class BaseSearch:
                 self.build_time,
                 time.time() - self.start_time,
                 self.trial_ix,
+                self.prob.sense,
             )
 
         return status, self.log, time.time() - self.start_time

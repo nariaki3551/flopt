@@ -16,14 +16,14 @@ This problem can be formulated using `flopt` as follows.
 
 .. code-block:: python
 
-  from flopt import Variable, Problem
+  import flopt
 
   # variables
-  a = Variable(name="a", lowBound=0, upBound=1, cat="Integer")
-  b = Variable(name="b", lowBound=1, upBound=2, cat="Continuous")
+  a = flopt.Variable(name="a", lowBound=0, upBound=1, cat="Integer")
+  b = flopt.Variable(name="b", lowBound=1, upBound=2, cat="Continuous")
 
   # problem
-  prob = Problem(name="Test")
+  prob = flopt.Problem(name="Test")
 
   # set objective function
   prob += 2*(3*a+b)*b**2+3
@@ -84,7 +84,7 @@ Flopt provides some variables categories.
   # Permutation (flopt.VarPermutation) -- for permutation variable
   x = Variable("x", lowBound=0, upBound=5, cat="Permutation")
 
-Permutation variable has a permutation. We use this variable to model the problem that optimizes the permutaion, sush as travelling salesman problem (TSP) or the quadratic assignment problem (QAP).
+Permutation variable has a permutation. We use this variable to model the problem that optimizes the permutaion, sush as :doc:`../case_studies/tsp` or the quadratic assignment problem (QAP).
 
 In addition, we can create multiple variables as array or dictionary format.
 
@@ -104,7 +104,7 @@ In addition, we can create multiple variables as array or dictionary format.
    >>>                Variable("x_4", None, None, "Continuous", -7.981446809145265e+17)],
    >>>                dtype=object)
 
-   flopt.Variable.array("x", (2, 2))  # (name, shape); this is equal to flopt.Variable.matrix("x", 2, 2)
+   Variable.array("x", (2, 2))  # (name, shape); this is equal to flopt.Variable.matrix("x", 2, 2)
    >>>  FloptNdArray([[Variable("x_0_0", None, None, "Continuous", -1.1465787630314445e+17),
    >>>                  Variable("x_0_1", None, None, "Continuous", -4.926156739107439e+17)],
    >>>                 [Variable("x_1_0", None, None, "Continuous", 8.384051961545784e+17),
@@ -147,10 +147,9 @@ We can represent expression from operation of variables and expression.
    z = x - y
    z = x * y
    z = x / y
-   z = x ^ y
 
    w = z * (x ** z) / y
-   q = w ** z * / z
+   q = w ** z / z
 
 Value of expression is calcluated by values of variables.
 
@@ -168,18 +167,17 @@ In addition, flopt provides some mathematical operations.
 
    x = flopt.Variable("x")
 
-   # cosine
-   z = flopt.sum(x)  # Same as flopt.Sum(x)
-   z = flopt.prod(x) # Same as flopt.Prod(x)
    z = flopt.cos(x)
    z = flopt.sin(x)
+   z = flopt.abs(x)
+   z = flopt.floor(x)
    ...
 
 This mathematical operations affect array-like variables element by element.
 
 .. code-block:: python
 
-   x = flopt.Variable("x", 3)
+   x = flopt.Variable.array("x", 3)
    >>> FloptNdarray([Variable("x_0", None, None, "Continuous", -61809393740223.375),
    >>>               Variable("x_1", None, None, "Continuous", 636452077623562.0),
    >>>               Variable("x_2", None, None, "Continuous", 65797807764902.125)],
@@ -254,6 +252,9 @@ The details of user's defined problem can be shown by `.show()`.
   >>>   #variables   : 2 (Continuous 2)
   >>> 
   >>>   C 0, name None, 2-(a*b) <= 0
+  >>> 
+  >>>   V 0, name b, Continuous 1 <= b <= 2
+  >>>   V 1, name a, Integer 0 <= a <= 1
 
 
 
@@ -267,7 +268,22 @@ When timelimit is not set, note that this function is often time-consuming becau
 
 .. code-block:: python
 
-  prob.solve(timelimit=0.5, msg=True)  # run solver
+  prob.solve(timelimit=0.5, msg=True)
+
+Full minimul example code is here.
+
+.. code-block:: python
+
+  import flopt
+
+  a = Variable(name="a", lowBound=0, upBound=1, cat="Integer")
+  b = Variable(name="b", lowBound=1, upBound=2, cat="Continuous")
+
+  prob = flopt.Problem(name="Test", sense="Minimize")
+  prob += 2*(3*a+b)*b**2+3
+
+  # run solver
+  prob.solve(timelimit=0.5, msg=True)
 
 
 Solver
@@ -304,7 +320,7 @@ Users can use some third-party solvers and solvers implemented in flopt.
   >>> ['Pulp',
   >>>  'Scipy',
   >>>  'ScipyMilp',
-  >>>  'CvxoptQp',
+  >>>  'Cvxopt',
   >>>  'auto']
 
 You can specify the available solver by declaring solver object or specifing the solver name.
@@ -345,14 +361,13 @@ The result of the solver is reflected in Problem and Variable objects.
 
 - `getObjectiveValue()` in problem shows the objective value of the best solution solver found.
 
-- `.value()` or `flopt.Value()` in variable shows the value of variable of the best solution.
+- `.value()`, `flopt.value()`, `flopt.Value()` shows the value of variable of the best solution.
 
 .. code-block:: python
 
   print("obj value", prob.getObjectiveValue())
   print("a", a.value())  # or flopt.Value(a)
   print("b", b.value())
-  print("c", c.value())
 
 
 Solver Profiling

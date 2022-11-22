@@ -225,7 +225,7 @@ class ExpressionElement:
                         Q[a_ix, a_ix] = 2 * coeff
                     else:
                         # C += mono.toExpression() ** 2
-                        C += mono.value() ** 2
+                        C += coeff * mono.value() ** 2
                 else:
                     var_a, var_b = list(mono.terms.keys())
                     mono_a, mono_b = var_a.toMonomial(), var_b.toMonomial()
@@ -235,15 +235,15 @@ class ExpressionElement:
                         Q[a_ix, b_ix] = Q[b_ix, a_ix] = coeff
                     elif mono_a in mono_to_index and mono_b not in mono_to_index:
                         a_ix = mono_to_index[mono_a]
-                        # c[a_ix] += mono_b.toExpression()
-                        c[a_ix] += mono_b.value()
+                        # c[a_ix] += coeff * mono_b.toExpression()
+                        c[a_ix] += coeff * mono_b.value()
                     elif mono_a not in mono_to_index and mono_b in mono_to_index:
                         b_ix = mono_to_index[mono_b]
-                        # c[b_ix] += mono_a.toExpression()
-                        c[b_ix] += mono_a.value()
+                        # c[b_ix] += coeff * mono_a.toExpression()
+                        c[b_ix] += coeff * mono_a.value()
                     else:
                         # C += mono_a.toExpression() * mono_b.toExpression()
-                        C += mono_a.value() * mono_b.value()
+                        C += coeff * mono_a.value() * mono_b.value()
 
         return QuadraticStructure(Q, c, C, x=x)
 
@@ -1232,14 +1232,14 @@ class CustomExpression(ExpressionElement):
 
     operator = "CustomExpression"
 
-    def __init__(self, func, arg, name=None):
+    def __init__(self, func, args, name=None):
         self.func = func
-        self.arg = arg
-        self.variables = unpack_variables(arg)
+        self.args = args
+        self.variables = unpack_variables(args)
         super().__init__(name=name)
 
     def clone(self, *args, **kwargs):
-        return CustomExpression(self.func, self.arg, self.name)
+        return CustomExpression(self.func, self.args, self.name)
 
     def setName(self):
         self._name = f"{self.func.__name__}(*)"
@@ -1258,9 +1258,9 @@ class CustomExpression(ExpressionElement):
         if solution is not None:
             var_dict = solution.toDict()
         if var_dict is not None:
-            arg = pack_variables(self.arg, var_dict)
+            arg = pack_variables(self.args, var_dict)
         else:
-            arg = self.arg
+            arg = self.args
 
         value = self.func(*arg)
         if not isinstance(value, number_classes):
@@ -1284,7 +1284,7 @@ class CustomExpression(ExpressionElement):
         return f"{self.func.__name__}(*)"
 
     def __repr__(self):
-        return f"CustomExpression({self.func.__name__, self.arg, self.getName()})"
+        return f"CustomExpression({self.func.__name__, self.args, self.getName()})"
 
 
 class Const(ExpressionElement):

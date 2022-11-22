@@ -512,7 +512,6 @@ def test_CvxoptSearch4(prob_qp, callback):
     )
 
 
-
 def test_AmplifySearch_available(
     prob,
     prob_only_continuous,

@@ -104,7 +104,7 @@ def user_func(a, b):
     from math import sin, cos
     return (0.7*a + 0.3*cos(b)**2 + 0.1*sin(b))*abs(a)
 
-custom_obj = CustomExpression(func=user_func, arg=[a, b])
+custom_obj = CustomExpression(func=user_func, args=[a, b])
 
 prob = Problem(name='CustomExpression')
 prob += custom_obj
@@ -138,7 +138,7 @@ def tsp_dist(x):
     for head, tail in zip(x, x[1:]+[x[0]]):
         distance += D[head][tail]  # D is the distance matrix
     return distance
-tsp_obj = CustomExpression(func=tsp_dist, arg=[x])
+tsp_obj = CustomExpression(func=tsp_dist, args=[x])
 
 # Problem
 prob = Problem(name='TSP')

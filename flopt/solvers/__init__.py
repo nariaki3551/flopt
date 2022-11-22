@@ -38,19 +38,19 @@ def Solver(algo="auto"):
         algo = algo.replace("Search", "")
         logger.warning(
             f"It is recommended to use algorithm name {algo} instead of {algo}Search, "
-            +f"{algo}Search will not be available in the future version"
+            + f"{algo}Search will not be available in the future version"
         )
     if algo == "CvxoptQp":
         algo = "Cvxopt"
         logger.warning(
             f"It is recommended to use algorithm name Cvxopt instead of CvxoptQp, "
-            +f"CvxoptQp will not be available in the future version"
+            + f"CvxoptQp will not be available in the future version"
         )
     elif algo == "HyperoptTPE":
         algo = "Cvxopt"
         logger.warning(
             f"It is recommended to use algorithm name Hyperopt instead of HyperoptTPE, "
-            +f"HyperoptTPE will not be available in the future version"
+            + f"HyperoptTPE will not be available in the future version"
         )
     algo = algo.lower()
 

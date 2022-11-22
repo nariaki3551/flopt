@@ -267,6 +267,14 @@ class Problem:
             solver = flopt.Solver("auto")
             status, logs = prob.solve(solver=solver)
 
+        When user want to optimize a part of variables under otherwise variables are fixed,
+        user specify optmized_variables in problem.solve().
+
+        .. code-block:: python
+
+            # optimize only a
+            status, log = prob.solve(optimized_variables=[a], timelimit=1)
+
         """
         if solver is None:
             solver = Solver("auto")
