@@ -444,6 +444,79 @@ class Problem:
             var.upBound = None
         return prob
 
+    def replace(self, correspondence_dict):
+        """Replace variable to another variables or expression
+
+        Parameters
+        ----------
+        correspondence_dict : dict
+            key is Variable and value is Variable or ExpressionElement
+
+        Examples
+        --------
+
+        .. code-block:: python
+
+            import flopt
+
+            # create problem
+            x = flopt.Variable("x", lowBound=4, upBound=5)
+            prob = flopt.Problem()
+            prob += x
+            prob.show()
+            >>> Name: None
+            >>> Type         : Problem
+            >>> sense        : Minimize
+            >>> objective    : x+0
+            >>> #constraints : 0
+            >>> #variables   : 1 (Continuous 1)
+            >>>
+            >>>
+            >>> V 0, name x, Continuous 4 <= x <= 5
+
+            # convert bounds of variables to constraints
+            prob = prob.clone().boundsToIneq()
+            prob.show()
+            >>> Name: None
+            >>>   Type         : Problem
+            >>>   sense        : Minimize
+            >>>   objective    : x+0
+            >>>   #constraints : 2
+            >>>   #variables   : 1 (Continuous 1)
+            >>>
+            >>>   C 0, name None, 4-x <= 0
+            >>>   C 1, name None, x-5 <= 0
+            >>>
+            >>>   V 0, name x, Continuous None <= x <= None
+
+            # replace x with x_plus + x_minus
+            x_plus = flopt.Variable("x_plus", lowBound=0)
+            x_minus = flopt.Variable("x_minus", lowBound=0)
+            prob.replace(correspondence_dict={x: x_plus + x_minus})
+            prob.show()
+            >>> Name: None
+            >>>   Type         : Problem
+            >>>   sense        : Minimize
+            >>>   objective    : x_plus+x_minus
+            >>>   #constraints : 2
+            >>>   #variables   : 2 (Continuous 2)
+            >>>
+            >>>   C 0, name None, 4-(x_plus+x_minus) <= 0
+            >>>   C 1, name None, x_plus+x_minus-5 <= 0
+            >>>
+            >>>   V 0, name x_minus, Continuous 0 <= x_minus <= None
+            >>>   V 1, name x_plus, Continuous 0 <= x_plus <= None
+
+        """
+        assert all(isinstance(key, VarElement) for key in correspondence_dict.keys())
+        var_dict = {var.name: SelfReturn(var) for var in self.getVariables()}
+        for var, value in correspondence_dict.items():
+            var_dict[var.name] = SelfReturn(value)
+        self.setObjective(self.obj.value(var_dict=var_dict), self.obj_name)
+        for const in self.constraints:
+            const.expression = const.expression.value(var_dict=var_dict)
+        return self
+
     def __iadd__(self, other):
         if not isinstance(other, tuple):
             other = (other,)
