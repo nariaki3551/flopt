@@ -33,7 +33,7 @@ class LogVisualizer:
 
       log_visualizer = LogVisualiser()
       log_visualizer.load(
-          solver_names=['RandomSearch', '2-Opt'],
+          solver_names=['Random', '2-Opt'],
           datasets=['tsp']
       )
       log_visualizer.plot()

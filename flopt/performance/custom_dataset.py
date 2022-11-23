@@ -55,10 +55,10 @@ class CustomDataset(BaseDataset):
 
     .. code-block:: python
 
-      rs_solver = Solver('RandomSearch')
-      tpe_solver = Solver('OptunaTPESearch')
-      cma_solver = Solver('OptunaCmaEsSearch')
-      htpe_solver = Solver('HyperoptTPESearch')
+      rs_solver = Solver('Random')
+      tpe_solver = Solver('OptunaTPE')
+      cma_solver = Solver('OptunaCmaEs')
+      htpe_solver = Solver('Hyperopt')
 
       logs = flopt.performance.compute(
           cd,  # dataset or dataset list

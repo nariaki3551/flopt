@@ -163,17 +163,23 @@ class QpStructure:
         prob : Problem
         x : None or list of VarElement family
         progress: bool
-        option : {"all_neq", "all_eq"}
+        option : {"ineq", "eq"}
 
         Returns
         -------
         QpStructure
         """
+        assert option is None or option in {
+            "ineq",
+            "eq",
+        }, f"option must be None, ineq or eq, but got {option}"
         assert prob.obj.isQuadratic()
         assert all(const.isLinear() for const in prob.getConstraints())
-
         if x is None:
-            x = FloptNdarray(list(prob.getVariables()), dtype=object)
+            variables = list(prob.getVariables())
+            x = FloptNdarray(sorted(variables, key=lambda v: ("__" in v.name, v.name)))
+        elif not isinstance(x, np.ndarray):
+            x = FloptNdarray(x)
 
         quadratic = prob.obj.toQuadratic(x)
         Q, c, C = quadratic.Q, quadratic.c, quadratic.C
@@ -196,18 +202,18 @@ class QpStructure:
                 return x
 
         # create G, h
-        num_neq_consts = sum(
+        num_ineq_consts = sum(
             const.type() == ConstraintType.Le for const in prob.getConstraints()
         )
-        if num_neq_consts == 0:
+        if num_ineq_consts == 0:
             G = None
             h = None
         else:
-            G = np.zeros((num_neq_consts, num_x), dtype=np_float)
-            h = np.zeros((num_neq_consts,), dtype=np_float)
+            G = np.zeros((num_ineq_consts, num_x), dtype=np_float)
+            h = np.zeros((num_ineq_consts,), dtype=np_float)
             i = 0
             for const in iter_wrapper(
-                prob.getConstraints(), desc="convert neq constraints"
+                prob.getConstraints(), desc="convert ineq constraints"
             ):
                 if const.type() == ConstraintType.Le:
                     # c.T.dot(x) + C <= 0
@@ -215,7 +221,7 @@ class QpStructure:
                     G[i, :] = linear.c.T
                     h[i] = -linear.C
                     i += 1
-            assert i == num_neq_consts
+            assert i == num_ineq_consts
 
         # create A, b
         num_eq_consts = sum(
@@ -253,13 +259,13 @@ class QpStructure:
 
         qp = cls(Q, c, C, G, h, A, b, lb, ub, types, x)
 
-        if option == "all_neq":
-            return qp.toAllNeq()
-        elif option == "all_eq":
-            return qp.toAllEq()
+        if option == "ineq":
+            return qp.toIneq()
+        elif option == "eq":
+            return qp.toEq()
         return qp
 
-    def toAllNeq(self):
+    def toIneq(self):
         """convert all non eqaual constraint type
 
         ::
@@ -280,7 +286,7 @@ class QpStructure:
             self.Q, self.c, self.C, G, h, A, b, self.lb, self.ub, self.types, self.x
         )
 
-    def toAllEq(self):
+    def toEq(self):
         """convert all eqaual constraint type
 
         ::
@@ -299,11 +305,18 @@ class QpStructure:
         Q = np.zeros((num_var + num_stack, num_var + num_stack), dtype=np_float)
         Q[: self.Q.shape[0], : self.Q.shape[1]] = self.Q
         c = np.hstack([self.c, np.zeros((num_stack,), dtype=np_float)])
-        A = np.zeros((self.A.shape[0] + num_stack, num_var + num_stack), dtype=np_float)
-        A[: self.A.shape[0], : self.A.shape[1]] = self.A
-        A[self.A.shape[0] :, : self.G.shape[1]] = self.G
-        A[self.A.shape[0] :, self.G.shape[1] :] = np.identity(num_stack, dtype=np_float)
-        b = np.hstack([self.b, self.h])
+        if self.A is None:
+            A_row, A_col = 0, 0
+        else:
+            A_row, A_col = self.A.shape
+        A = np.zeros((A_row + num_stack, num_var + num_stack), dtype=np_float)
+        A[:A_row, :A_col] = self.A
+        A[A_row:, : self.G.shape[1]] = self.G
+        A[A_row:, self.G.shape[1] :] = np.identity(num_stack, dtype=np_float)
+        if self.b is None:
+            b = self.h
+        else:
+            b = np.hstack([self.b, self.h])
         if self.lb is not None:
             lb = np.hstack([self.lb, np.zeros((num_stack,), dtype=np_float)])
         else:
@@ -318,14 +331,16 @@ class QpStructure:
             types = self.types
         if self.x is not None:
             with create_variable_mode():
-                s = Variable.array("slack", num_stack, lowBound=0, cat="Continuous")
+                s = Variable.array(
+                    "slack", num_stack, lowBound=0, cat="Continuous", ini_value=0
+                )
             x = np.hstack([self.x, s])
         else:
             x = self.x
         return QpStructure(Q, c, self.C, None, None, A, b, lb, ub, types, x)
 
-    def boundsToNeq(self):
-        """convert bounds constraints into neq constraints
+    def boundsToIneq(self):
+        """convert bounds constraints into inequality constraints
 
         ::
 
@@ -341,23 +356,25 @@ class QpStructure:
         h = np.array(self.h) if self.h is not None else None
         if self.lb is not None:
             I = np.identity(self.numVariables(), dtype=np_float)
-            G = merge(np.vstack, [(G, 1), (I, -1)])
-            h = merge(np.hstack, [(h, 1), (self.lb, -1)])
+            non_none_ix = np.logical_not(np.isnan(self.lb))
+            G = merge(np.vstack, [(G, 1), (I[non_none_ix], -1)])
+            h = merge(np.hstack, [(h, 1), (self.lb[non_none_ix], -1)])
         if self.ub is not None:
             I = np.identity(self.numVariables(), dtype=np_float)
-            G = merge(np.vstack, [(G, 1), (I, 1)])
-            h = merge(np.hstack, [(h, 1), (self.ub, 1)])
+            non_none_ix = np.logical_not(np.isnan(self.ub))
+            G = merge(np.vstack, [(G, 1), (I[non_none_ix], 1)])
+            h = merge(np.hstack, [(h, 1), (self.ub[non_none_ix], 1)])
         lb, ub = None, None
         return QpStructure(
             self.Q, self.c, self.C, G, h, self.A, self.b, lb, ub, self.types, self.x
         )
 
-    def toFlopt(self, name=None):
+    def toFlopt(self, var_name="x"):
         """
         Parameters
         ----------
-        name : str
-            name of problem
+        var_name : str
+            variable prefix
 
         Returns
         -------
@@ -366,8 +383,8 @@ class QpStructure:
         if self.x is not None:
             x = self.x
         else:
-            x = Variable.array("x", len(self.Q), self.lb, self.ub, self.types)
-        prob = Problem(name)
+            x = Variable.array(var_name, len(self.Q), self.lb, self.ub, self.types)
+        prob = Problem()
         prob += (0.5 * (x.T.dot(self.Q).dot(x)) + self.c.T.dot(x) + self.C).expand()
         if self.G is not None:
             for g, h_ in zip(self.G, self.h):
@@ -440,7 +457,7 @@ class QpStructure:
         assert self.G is None and self.A is None
         return self.toIsing().toQubo()
 
-    def show(self):
+    def show(self, to_str=False):
         s = f"QpStructure\n"
         s += f"obj  1/2 x.T.dot(Q).dot(x) + c.T.dot(x) + C\n"
         s += f"s.t. Gx <= h\n"
@@ -457,7 +474,9 @@ class QpStructure:
         s += f"lb\n{self.lb}\n\n"
         s += f"ub\n{self.ub}\n\n"
         s += f"x\n{self.x}"
-        return s
+        if to_str:
+            return s
+        print(s)
 
     def __repr__(self):
         return f"QpStructure{self.Q, self.c, self.C, self.G, self.h, self.A, self.b, self.lb, self.ub, self.types, self.x}"
@@ -520,21 +539,21 @@ class LpStructure:
         elif self.A is not None:
             return self.A.shape[1]
 
-    def toAllNeq(self):
+    def toIneq(self):
         """
         Returns
         -------
         LpStructure
         """
-        return self.toQp().toAllNeq().toLp()
+        return self.toQp().toIneq().toLp()
 
-    def toAllEq(self):
+    def toEq(self):
         """
         Returns
         -------
         LpStructure
         """
-        return self.toQp().toAllEq().toLp()
+        return self.toQp().toEq().toLp()
 
     @classmethod
     def fromFlopt(cls, prob, x=None, option=None, progress=False):
@@ -547,7 +566,7 @@ class LpStructure:
         ----------
         prob : Problem
         x : None or list of Variable family
-        option : {"all_neq", "all_eq"}
+        option : {"ineq", "eq"}
         progress : bool
 
         Returns
@@ -555,27 +574,32 @@ class LpStructure:
         LpStructure
         """
         assert option is None or option in {
-            "all_neq",
-            "all_eq",
-        }, f"option must be None, all_neq or all_eq, but got {option}"
+            "ineq",
+            "eq",
+        }, f"option must be None, ineq or eq, but got {option}"
         qp = QpStructure.fromFlopt(prob, x, progress=progress)
-        if option == "all_neq":
-            return qp.toAllNeq().toLp()
-        elif option == "all_eq":
-            return qp.toAllEq().toLp()
+        if option == "ineq":
+            return qp.toIneq().toLp()
+        elif option == "eq":
+            return qp.toEq().toLp()
         return qp.toLp()
 
-    def toFlopt(self):
+    def toFlopt(self, var_name="x"):
         """
         ::
 
             LpStructure --> QpStructure --> Problem (flopt)
 
+        Parameters
+        ----------
+        var_name : str
+            variable prefix
+
         Returns
         -------
         Problem
         """
-        return self.toQp().toFlopt()
+        return self.toQp().toFlopt(var_name)
 
     def toQp(self):
         """
@@ -624,7 +648,7 @@ class LpStructure:
         assert self.G is None and self.A is None
         return self.toIsing().toQubo()
 
-    def show(self):
+    def show(self, to_str=False):
         s = f"LpStructure\n"
         s += f"obj  c.T.dot(x) + C\n"
         s += f"s.t. Gx <= h\n"
@@ -640,7 +664,9 @@ class LpStructure:
         s += f"lb\n{self.lb}\n\n"
         s += f"ub\n{self.ub}\n\n"
         s += f"x\n{self.x}"
-        return s
+        if to_str:
+            return s
+        print(s)
 
     def __repr__(self):
         return f"LpStructure{self.c, self.C, self.G, self.h, self.A, self.b, self.lb, self.ub, self.types, self.x}"
@@ -684,11 +710,21 @@ class IsingStructure:
     def fromFlopt(cls, prob, x=None):
         return prob.obj.toIsing()
 
-    def toFlopt(self):
+    def toFlopt(self, var_name="x"):
+        """
+        Parameters
+        ----------
+        var_name : str
+            variable prefix
+
+        Returns
+        -------
+        Problem
+        """
         if self.x is not None:
             x = self.x
         else:
-            x = Variable.array("x", len(self.J), cat="Spin")
+            x = Variable.array(var_name, len(self.J), cat="Spin")
         prob = Problem()
         prob += -x.T.dot(self.J).dot(x) - self.h.T.dot(x) + self.C
         return prob
@@ -745,7 +781,7 @@ class IsingStructure:
             x = np.array([var.binary for var in self.x], dtype=object)
         return QuboStructure(Q, C, x)
 
-    def show(self):
+    def show(self, to_str=False):
         s = f"IsingStructure\n"
         s += f"- x.T.dot(J).dot(x) - h.T.dot(x) + C\n\n"
         s += f"#x\n{self.numVariables()}\n\n"
@@ -753,7 +789,9 @@ class IsingStructure:
         s += f"h\n{self.h}\n\n"
         s += f"C\n{self.C}\n\n"
         s += f"x\n{self.x}"
-        return s
+        if to_str:
+            return s
+        print(s)
 
     def __repr__(self):
         return f"IsingStructure{self.J, self.h, self.C, self.x}"
@@ -794,8 +832,13 @@ class QuboStructure:
         """
         return IsingStructure.fromFlopt(prob, x).toQubo()
 
-    def toFlopt(self):
+    def toFlopt(self, var_name="x"):
         """
+        Parameters
+        ----------
+        var_name : str
+            variable prefix
+
         Returns
         -------
         Problem
@@ -803,7 +846,7 @@ class QuboStructure:
         if self.x is not None:
             x = self.x
         else:
-            x = Variable.array("x", len(self.Q), cat="Binary")
+            x = Variable.array(var_name, len(self.Q), cat="Binary")
         prob = Problem()
         prob += (x.T.dot(self.Q).dot(x) + self.C).expand()
         return prob
@@ -844,14 +887,16 @@ class QuboStructure:
         """
         return self.toFlopt().obj.toIsing()
 
-    def show(self):
+    def show(self, to_str=False):
         s = f"QuboStructure\n"
         s += f"x.T.dot(Q).dot(x) + C\n\n"
         s += f"#x\n{self.numVariables()}\n\n"
         s += f"Q\n{self.Q}\n\n"
         s += f"C\n{self.C}\n\n"
         s += f"x\n{self.x}"
-        return s
+        if to_str:
+            return s
+        print(s)
 
     def __repr__(self):
         return f"QuboStructure{self.Q, self.C, self.x}"

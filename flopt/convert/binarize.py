@@ -15,65 +15,64 @@ def binarize(prob):
     --------
     .. code-block:: python
 
-        from flopt import Variable, Problem
-        x = Variable.array('x', 2, cat='Binary')
-        y = Variable.array('y', 1, lowBound=1, upBound=3, cat='Integer')
-        x = np.hstack([x, y])
+        import flopt
 
-        prob = Problem()
-        prob += x[2] * x[0] + x[1]
+        x = flopt.Variable.array('x', 2, cat='Binary')
+        y = flopt.Variable('y', lowBound=1, upBound=3, cat='Integer')
+
+        prob = flopt.Problem()
+        prob += y * x[0] + x[1]
+
         print('[ original ]')
-        print(prob.show())
+        prob.show()
+        >>> [ original ]
+        >>>  Name: None
+        >>>   Type         : Problem
+        >>>   sense        : minimize
+        >>>   objective    : y_0*x_0+x_1
+        >>>   #constraints : 0
+        >>>   #variables   : 3 (Binary 2, Integer 1)
 
         from flopt.convert import linearize, binarize
+
         binarize(prob)
+
         print('[ binarized ]')
-        print(prob.show())
+        prob.show()
+        >>> [ binarized ]
+        >>>  Name: None
+        >>>   Type         : Problem
+        >>>   sense        : minimize
+        >>>   objective    : x_0*(1*bin_y_0_0+2*bin_y_0_1+3*bin_y_0_2)+x_1
+        >>>   #constraints : 2
+        >>>   #variables   : 6 (Binary 5, Integer 1)
+
+        >>>   C 0, name for_bin_y_0_sum, bin_y_0_0+bin_y_0_2+bin_y_0_1-1 == 0
+        >>>   C 1, name for_bin_y_0_eq, y_0-(1*bin_y_0_0+2*bin_y_0_1+3*bin_y_0_2) == 0
 
         linearize(prob)
+
         print('[ linearized ]')
-        print(prob.show())
+        prob.show()
+        >>> [ linearized ]
+        >>>  Name: None
+        >>>   Type         : Problem
+        >>>   sense        : minimize
+        >>>   objective    : mul_0+2*mul_1+3*mul_2+x_1
+        >>>   #constraints : 11
+        >>>   #variables   : 9 (Binary 8, Integer 1)
 
-    ::
-
-        [ original ]
-         Name: None
-          Type         : Problem
-          sense        : minimize
-          objective    : y_0*x_0+x_1
-          #constraints : 0
-          #variables   : 3 (Binary 2, Integer 1)
-
-        [ binarized ]
-         Name: None
-          Type         : Problem
-          sense        : minimize
-          objective    : x_0*(1*bin_y_0_0+2*bin_y_0_1+3*bin_y_0_2)+x_1
-          #constraints : 2
-          #variables   : 6 (Binary 5, Integer 1)
-
-          C 0, name for_bin_y_0_sum, bin_y_0_0+bin_y_0_2+bin_y_0_1-1 == 0
-          C 1, name for_bin_y_0_eq, y_0-(1*bin_y_0_0+2*bin_y_0_1+3*bin_y_0_2) == 0
-
-        [ linearized ]
-         Name: None
-          Type         : Problem
-          sense        : minimize
-          objective    : mul_0+2*mul_1+3*mul_2+x_1
-          #constraints : 11
-          #variables   : 9 (Binary 8, Integer 1)
-
-          C 0, name for_bin_y_0_sum, bin_y_0_0+bin_y_0_1+bin_y_0_2-1 == 0
-          C 1, name for_bin_y_0_eq, -bin_y_0_0-(2*bin_y_0_1)-(3*bin_y_0_2)+y_0 == 0
-          C 2, name for_mul_0_1, mul_0-bin_y_0_0 <= 0
-          C 3, name for_mul_0_2, mul_0-x_0 <= 0
-          C 4, name for_mul_0_3, mul_0-(bin_y_0_0+x_0-1) >= 0
-          C 5, name for_mul_1_1, mul_1-bin_y_0_1 <= 0
-          C 6, name for_mul_1_2, mul_1-x_0 <= 0
-          C 7, name for_mul_1_3, mul_1-(bin_y_0_1+x_0-1) >= 0
-          C 8, name for_mul_2_1, mul_2-bin_y_0_2 <= 0
-          C 9, name for_mul_2_2, mul_2-x_0 <= 0
-          C 10, name for_mul_2_3, mul_2-(bin_y_0_2+x_0-1) >= 0
+        >>>   C 0, name for_bin_y_0_sum, bin_y_0_0+bin_y_0_1+bin_y_0_2-1 == 0
+        >>>   C 1, name for_bin_y_0_eq, -bin_y_0_0-(2*bin_y_0_1)-(3*bin_y_0_2)+y_0 == 0
+        >>>   C 2, name for_mul_0_1, mul_0-bin_y_0_0 <= 0
+        >>>   C 3, name for_mul_0_2, mul_0-x_0 <= 0
+        >>>   C 4, name for_mul_0_3, mul_0-(bin_y_0_0+x_0-1) >= 0
+        >>>   C 5, name for_mul_1_1, mul_1-bin_y_0_1 <= 0
+        >>>   C 6, name for_mul_1_2, mul_1-x_0 <= 0
+        >>>   C 7, name for_mul_1_3, mul_1-(bin_y_0_1+x_0-1) >= 0
+        >>>   C 8, name for_mul_2_1, mul_2-bin_y_0_2 <= 0
+        >>>   C 9, name for_mul_2_2, mul_2-x_0 <= 0
+        >>>   C 10, name for_mul_2_3, mul_2-(bin_y_0_2+x_0-1) >= 0
     """
     binarizes = {}
     prob.obj = binarize_expression(prob.obj, binarizes)
@@ -84,7 +83,6 @@ def binarize(prob):
         prob += flopt.Sum(binaries) == 1, f"for_bin_{source.name}_sum"
         prob += source == source.toBinary(), f"for_bin_{source.name}_eq"
 
-    prob.resetVariables()
     return prob
 
 

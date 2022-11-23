@@ -19,7 +19,7 @@ def user_func(a, b, c):
     return (0.7 * a + 0.3 * cos(b) ** 2 + 0.1 * sin(c)) * c
 
 
-custom_obj = CustomExpression(func=user_func, arg=[a, b, c])
+custom_obj = CustomExpression(func=user_func, args=[a, b, c])
 
 
 # 1. Minimize
@@ -29,7 +29,7 @@ prob += custom_obj
 
 # Solver
 # in this case optimal solution (a, b, c) = (0, 1, 1), and objective value = 0.4
-solver = Solver(algo="RandomSearch")
+solver = Solver(algo="Random")
 solver.setParams(n_trial=1000)  # setting of the hyper parameters
 status, log = prob.solve(solver, msg=True)  # run solver to solve the problem
 
@@ -51,7 +51,7 @@ prob += custom_obj * c
 
 # Solver
 # in this case optimal solution (a, b, c) = (0, 1, 1), and objective value = 0.4
-solver = Solver(algo="RandomSearch")
+solver = Solver(algo="Random")
 solver.setParams({"n_trial": 1000})  # setting of the hyper parameters
 status, log = prob.solve(solver, msg=True)  # run solver to solve the problem
 
@@ -72,7 +72,7 @@ prob += custom_obj
 
 # Solver
 # in this case optimal solution (a, b, c) = (1, 2, 3), and objective value = 2.2
-solver = Solver(algo="RandomSearch")
+solver = Solver(algo="Random")
 solver.setParams(n_trial=1000)  # setting of the hyper parameters
 status, log = prob.solve(solver, msg=True)  # run solver to solve the problem
 

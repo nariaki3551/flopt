@@ -377,6 +377,12 @@ class VarElement:
         self._value = None
         if ini_value is not None:
             self._value = ini_value
+        elif self._type == VariableType.Permutation:
+            self.setRandom()
+        elif self.lowBound is not None and self.upBound is None:
+            self._value = self.lowBound
+        elif self.lowBound is None and self.upBound is not None:
+            self._value = self.upBound
         else:
             self.setRandom()
         self.monomial = Monomial({self: 1})
@@ -479,7 +485,7 @@ class VarElement:
         """set random value to variable"""
         raise NotImplementedError()
 
-    def clone(self):
+    def clone(self, *args, **kwargs):
         raise NotImplementedError()
 
     def max(self):
@@ -685,7 +691,7 @@ class VarElement:
 
 
 class VarInteger(VarElement):
-    """Integer Variable class"""
+    """Integer Variable"""
 
     _type = VariableType.Integer
 
@@ -751,6 +757,12 @@ class VarInteger(VarElement):
         return self.toBinary().toSpin()
 
     def clone(self):
+        """
+        Parameters
+        ----------
+        variable_clone : bool
+            if it is true, return a cloned variable
+        """
         return VarInteger(self.name, self.lowBound, self.upBound, self._value)
 
     def __and__(self, other):
@@ -778,7 +790,7 @@ class VarInteger(VarElement):
 
 
 class VarBinary(VarInteger):
-    """Binary Variable class
+    """Binary Variable
 
     .. note::
       Binary Variable behaves differently in "-" and "~" operation.
@@ -861,7 +873,7 @@ class VarBinary(VarInteger):
 
 
 class VarSpin(VarElement):
-    """Spin Variable class, which takes only 1 or -1"""
+    """Spin Variable, which takes only 1 or -1"""
 
     _type = VariableType.Spin
 
@@ -966,7 +978,7 @@ class VarSpin(VarElement):
 
 
 class VarContinuous(VarElement):
-    """Continuous Variable class"""
+    """Continuous Variable"""
 
     _type = VariableType.Continuous
 
@@ -983,7 +995,7 @@ class VarContinuous(VarElement):
 
 
 class VarPermutation(VarElement):
-    """Permutation Variable class
+    """Permutation Variable
 
     This has [lowBound, ... upBound] range permutation.
 

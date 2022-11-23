@@ -16,7 +16,7 @@ np.random.seed(0)
 
 
 def main():
-    count = 10
+    count = 1
     data = list()
     data += speed_import(count)
     data += speed_build_LpStructure(count)
@@ -226,12 +226,12 @@ def speed_func_ce_value(count):
     data = list()
 
     dataset = flopt.performance.get_dataset("func")
-    instances = {"Ackley", "Goldstain", "Rosenbrock ", "WeitedSphere"}
+    instances = {"Ackley", "Goldstain", "Rosenbrock ", "WeightedSphere"}
     for instance in dataset:
         if instance.name not in instances:
             continue
         _name = name + "_" + instance.name
-        random_search = flopt.Solver("RandomSearch")
+        random_search = flopt.Solver("Random")
         formulatable, prob = instance.createProblem(random_search)
         random_search.reset()
         prob.solve(solver=random_search, n_trial=2)
@@ -239,7 +239,7 @@ def speed_func_ce_value(count):
 
         for i in tqdm.tqdm(range(count), desc="[ " + _name + " ]"):
             start_time = time.time()
-            if instance == {"Ackley", "WeitedSphere"}:
+            if instance == {"Ackley", "WeightedSphere"}:
                 _count = 1000000
             else:
                 _count = 200000

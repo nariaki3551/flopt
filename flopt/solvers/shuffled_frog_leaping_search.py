@@ -22,10 +22,11 @@ def bisect_left(a, x, key):
 
 
 class Frog(Solution):
-    def __init__(self, solution, prob):
-        super().__init__(solution._variables, sort=False)
-        self.prob = prob
-        self.obj_value = None
+    def __new__(cls, solution, prob):
+        obj = super().__new__(cls, solution._variables, sort=False)
+        obj.prob = prob
+        obj.obj_value = None
+        return obj
 
     def setObjValue(self):
         self.obj_value = self.prob.getObjValue(self)
@@ -87,8 +88,7 @@ class ShuffledFrogLeapingSearch(BaseSearch):
         prob = flopt.Problem()
         prob += 2*x*x + x*y + y*y + x + y
 
-        solver = flopt.Solver("SFLA")
-        status, log = prob.solve(solver, msg=True, timelimit=1)
+        status, log = prob.solve(solver="SFLA", msg=True, timelimit=1)
 
         print("obj =", flopt.Value(prob.obj))
         print("x =", flopt.Value(x))

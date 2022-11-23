@@ -1,22 +1,13 @@
 Tutorial
 ========
 
-Declaration problem and solving
--------------------------------
-
-We recommend reading them in order from the top.
-
 .. toctree::
-   :maxdepth: 1
+  :maxdepth: 1
 
-   nlp
-   nlp_constraint
-   black_box
-   permutation
-   max_satisfiability
-   expression_examples
-   solver
-   problem_type
+  modeling_and_solving
+  advanced_usage
+  expression_examples
+  problem_type
 
 
 Conversion to different formulations

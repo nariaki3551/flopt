@@ -1,15 +1,17 @@
+import flopt
 from flopt.variable import VarElement
-from flopt.expression import Expression, CustomExpression, Const
+from flopt.expression import Expression, CustomExpression, Const, SelfReturn
 from flopt.constraint import Constraint
 from flopt.solvers import Solver
 from flopt.solution import Solution
 from flopt.constants import (
     VariableType,
     ExpressionType,
+    ConstraintType,
     OptimizationType,
     array_classes,
 )
-from flopt.env import setup_logger
+from flopt.env import setup_logger, create_variable_mode
 
 
 logger = setup_logger(__name__)
@@ -48,10 +50,9 @@ class Problem:
 
     >>> prob = Problem(name='test', sense='maximize')
 
-    Input solver, when we solve
+    We solve
 
-    >>> solve = Solver(algo=...)
-    >>> prob.solve(solver=solver, timelimit=10)
+    >>> prob.solve(solver=solver_name or solver object, timelimit=10)
 
     After solving, we can obtain the objective value.
 
@@ -59,10 +60,6 @@ class Problem:
     """
 
     def __init__(self, name=None, sense=OptimizationType.Minimize):
-        if sense in ("minimize", "maximize"):
-            logger.warning(
-                f"'minimize' and 'maximize' is deprecated. You have to use 'Minimize', 'Maximize', flopt.Minimize or flopt.Maximize"
-            )
         self.type = "Problem"
         self.name = name
         self.sense = str(sense)
@@ -73,6 +70,37 @@ class Problem:
         self.solver = None
         self.time = None
         self.best_bound = None
+
+    def clone(self, variable_clone=False):
+        """create clone object
+        Parameters
+        ----------
+        variable_clone : bool
+            if it is true, variables are cloned in expression
+
+        Returns
+        -------
+        prob : Problem
+        """
+        prob = Problem(
+            name=f"{self.name}" if self.name is not None else None,
+            sense=self.sense,
+        )
+        if not variable_clone:
+            prob.setObjective(self.obj.clone(), self.obj_name)
+            for const in self.constraints:
+                prob.addConstraint(const.clone(), const.name)
+            return prob
+
+        var_dict = {var.name: SelfReturn(var.clone()) for var in self.getVariables()}
+        prob.setObjective(self.obj.value(var_dict=var_dict), self.obj_name)
+        for const in self.constraints:
+            const_exp = const.expression.value(var_dict=var_dict)
+            if const.type == ConstraintType.Eq:
+                prob.addConstraint(const_exp == 0, const.name)
+            else:
+                prob.addConstraint(const_exp <= 0, const.name)
+        return prob
 
     def setObjective(self, obj, name=None):
         """set objective function. __iadd__(), "+=" operations call this function.
@@ -88,16 +116,6 @@ class Problem:
             obj = Expression(obj, Const(0), "+")
         self.obj = obj
         self.obj_name = name
-        try:
-            self.__variables |= obj.getVariables()
-        except RecursionError:
-            import sys
-
-            logger.warning(f"recursion reaches {sys.getrecursionlimit}")
-            sys.setrecursionlimit(sys.getrecursionlimit() * 100)
-            self.__variables |= obj.getVariables()
-        except Exception as e:
-            raise e
 
     def setBestBound(self, best_bound):
         """
@@ -135,7 +153,6 @@ class Problem:
         ), f"assume Constraint class, but got {type(const)}"
         const.name = name
         self.constraints.append(const)
-        self.__variables |= const.getVariables()
 
     def addConstraints(self, consts, name=None):
         for i, const in enumerate(consts):
@@ -190,6 +207,9 @@ class Problem:
         set
             set of VarElement used in this problem
         """
+        self.__variables = self.obj.getVariables()
+        for const in self.constraints:
+            self.__variables |= const.getVariables()
         return self.__variables
 
     def getConstraints(self):
@@ -201,12 +221,15 @@ class Problem:
         """
         return self.constraints
 
-    def resetVariables(self):
-        self.__variables = self.obj.getVariables()
-        for const in self.constraints:
-            self.__variables |= const.getVariables()
-
-    def solve(self, solver=None, timelimit=None, lowerbound=None, msg=False, **kwargs):
+    def solve(
+        self,
+        solver=None,
+        timelimit=None,
+        lowerbound=None,
+        optimized_variables=None,
+        msg=False,
+        **kwargs,
+    ):
         """solve this problem
 
         Parameters
@@ -215,6 +238,8 @@ class Problem:
         timelimit : float or None
         lowerbound : float or None
             solver terminates when it obtains the solution whose objective value is lower than this value
+        optimized_variables : None or list, tuple, np.ndarray or any container of Variable
+            if it is specified, solver will optimize only the variables in optimized_variables
         msg : bool
             if true, display the message from solver
 
@@ -242,9 +267,19 @@ class Problem:
             solver = flopt.Solver("auto")
             status, logs = prob.solve(solver=solver)
 
+        When user want to optimize a part of variables under otherwise variables are fixed,
+        user specify optmized_variables in problem.solve().
+
+        .. code-block:: python
+
+            # optimize only a
+            status, log = prob.solve(optimized_variables=[a], timelimit=1)
+
         """
         if solver is None:
             solver = Solver("auto")
+        elif isinstance(solver, str):
+            solver = Solver(solver)
         if timelimit is not None:
             solver.setParams(timelimit=timelimit)
         if lowerbound is not None:
@@ -252,10 +287,16 @@ class Problem:
         solver.setParams(**kwargs)
         self.solver = solver
 
-        if self.sense in ("maximize", "Maximize"):
+        if self.sense.lower() == "maximize":
             self.obj = -self.obj
 
-        solution = Solution(self.getVariables())
+        if optimized_variables is None:
+            solution = Solution(self.getVariables())
+        else:
+            assert (
+                set(optimized_variables) <= self.getVariables()
+            ), "optimized_variables containes variables that are not in the problem"
+            solution = Solution(optimized_variables)
 
         status, log, self.time = self.solver.solve(
             solution,
@@ -265,7 +306,7 @@ class Problem:
             msg=msg,
         )
 
-        if self.sense in ("maximize", "Maximize"):
+        if self.sense.lower() == "maximize":
             self.obj = -self.obj
 
         return status, log
@@ -352,6 +393,130 @@ class Problem:
 
         return problem_type
 
+    def toEq(self):
+        """Create a problem object with only equal constraints
+
+        Returns
+        -------
+        prob : Problem
+        """
+        prob = self.clone()
+        constraints = []
+        for const in prob.constraints:
+            if const.type() == ConstraintType.Eq:
+                constraints.append(const)
+            else:  # ConstraintType.Le
+                with create_variable_mode():
+                    s = flopt.Variable(
+                        "slack", lowBound=0, cat="Continuous", ini_value=0
+                    )
+                constraints.append(const.expression + s == 0)
+        prob.constraints = constraints
+        return prob
+
+    def toIneq(self):
+        """Create a problem object with only inequal constraints
+
+        Returns
+        -------
+        prob : Problem
+        """
+        prob = self.clone()
+        constraints = []
+        for const in prob.constraints:
+            if const.type() == ConstraintType.Le:
+                constraints.append(const)
+            else:  # ConstraintType.Eq
+                constraints.append(const.expression <= 0)
+                constraints.append(const.expression >= 0)
+        prob.constraints = constraints
+        return prob
+
+    def boundsToIneq(self):
+        """Create a problem object has bounds constraints of variables as inequal constraints"""
+        prob = self.clone()
+        for var in prob.getVariables():
+            if var.getLb() is not None:
+                prob += var >= var.getLb()
+            if var.getUb() is not None:
+                prob += var <= var.getUb()
+            var.lowBound = None
+            var.upBound = None
+        return prob
+
+    def replace(self, correspondence_dict):
+        """Replace variable to another variables or expression
+
+        Parameters
+        ----------
+        correspondence_dict : dict
+            key is Variable and value is Variable or ExpressionElement
+
+        Examples
+        --------
+
+        .. code-block:: python
+
+            import flopt
+
+            # create problem
+            x = flopt.Variable("x", lowBound=4, upBound=5)
+            prob = flopt.Problem()
+            prob += x
+            prob.show()
+            >>> Name: None
+            >>> Type         : Problem
+            >>> sense        : Minimize
+            >>> objective    : x+0
+            >>> #constraints : 0
+            >>> #variables   : 1 (Continuous 1)
+            >>>
+            >>>
+            >>> V 0, name x, Continuous 4 <= x <= 5
+
+            # convert bounds of variables to constraints
+            prob = prob.clone().boundsToIneq()
+            prob.show()
+            >>> Name: None
+            >>>   Type         : Problem
+            >>>   sense        : Minimize
+            >>>   objective    : x+0
+            >>>   #constraints : 2
+            >>>   #variables   : 1 (Continuous 1)
+            >>>
+            >>>   C 0, name None, 4-x <= 0
+            >>>   C 1, name None, x-5 <= 0
+            >>>
+            >>>   V 0, name x, Continuous None <= x <= None
+
+            # replace x with x_plus + x_minus
+            x_plus = flopt.Variable("x_plus", lowBound=0)
+            x_minus = flopt.Variable("x_minus", lowBound=0)
+            prob.replace(correspondence_dict={x: x_plus + x_minus})
+            prob.show()
+            >>> Name: None
+            >>>   Type         : Problem
+            >>>   sense        : Minimize
+            >>>   objective    : x_plus+x_minus
+            >>>   #constraints : 2
+            >>>   #variables   : 2 (Continuous 2)
+            >>>
+            >>>   C 0, name None, 4-(x_plus+x_minus) <= 0
+            >>>   C 1, name None, x_plus+x_minus-5 <= 0
+            >>>
+            >>>   V 0, name x_minus, Continuous 0 <= x_minus <= None
+            >>>   V 1, name x_plus, Continuous 0 <= x_plus <= None
+
+        """
+        assert all(isinstance(key, VarElement) for key in correspondence_dict.keys())
+        var_dict = {var.name: SelfReturn(var) for var in self.getVariables()}
+        for var, value in correspondence_dict.items():
+            var_dict[var.name] = SelfReturn(value)
+        self.setObjective(self.obj.value(var_dict=var_dict), self.obj_name)
+        for const in self.constraints:
+            const.expression = const.expression.value(var_dict=var_dict)
+        return self
+
     def __iadd__(self, other):
         if not isinstance(other, tuple):
             other = (other,)
@@ -384,8 +549,13 @@ class Problem:
         s += f"{prefix}  #variables   : {len(self.getVariables())} ({variables_str})"
         return s
 
-    def show(self):
+    def show(self, to_str=False):
         s = str(self) + "\n\n"
         for ix, const in enumerate(self.constraints):
             s += f"  C {ix}, name {const.name}, {const}\n"
-        return s
+        s += "\n"
+        for ix, var in enumerate(self.getVariables()):
+            s += f"  V {ix}, name {var.name}, {var.type()} {var.getLb()} <= {var.name} <= {var.getUb()}\n"
+        if to_str:
+            return s
+        print(s)

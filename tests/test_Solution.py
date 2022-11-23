@@ -48,6 +48,10 @@ def test_Solution_value_1(b, c):
     assert np.all(c.value() == [0, 2])
 
 
+def test_Solution_value_2(b, c):
+    assert np.all(b.value(c) == [0, 2])
+
+
 def test_Solution_clone(b):
     assert np.all((b.clone()).value() == [1, 2])
 

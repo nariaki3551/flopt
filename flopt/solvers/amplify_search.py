@@ -36,14 +36,14 @@ class AmplifySearch(BaseSearch):
 
         import flopt
 
-        x = flopt.Variable('x', cat='Spin')
-        y = flopt.Variable('y', cat='Spin')
+        x = flopt.Variable("x", cat="Spin")
+        y = flopt.Variable("y", cat="Spin")
 
         prob = flopt.Problem()
         prob += 1 - x * y - x
         prob += x + y >= 0
 
-        print(prob.show())
+        prob.show()
         >>> Name: None
         >>>   Type         : Problem
         >>>   sense        : minimize
@@ -55,14 +55,14 @@ class AmplifySearch(BaseSearch):
 
     .. code-block:: python
 
-        solver = flopt.Solver('AmplifySearch')
+        solver = flopt.Solver("Amplify")
         solver.setParams(token="xxx")  # your token
         prob.solve(solver, msg=True)
 
         print()
-        print('obj =', flopt.Value(prob.obj))
-        print('x =', flopt.Value(x))
-        print('y =', flopt.Value(y))
+        print("obj =", flopt.Value(prob.obj))
+        print("x =", flopt.Value(x))
+        print("y =", flopt.Value(y))
         >>> obj = -1
         >>> x = 1
         >>> y = 1
@@ -74,14 +74,14 @@ class AmplifySearch(BaseSearch):
 
         import flopt
 
-        x = flopt.Variable('x', cat='Binary')
-        y = flopt.Variable('y', cat='Binary')
+        x = flopt.Variable("x", cat="Binary")
+        y = flopt.Variable("y", cat="Binary")
 
         prob = flopt.Problem()
         prob += (1 - x * y - x).toSpin()
         prob += (x + y >= 0).toSpin()
 
-        print(prob.show())
+        prob.show()
         >>> Name: None
         >>>   Type         : Problem
         >>>   sense        : minimize
@@ -92,7 +92,7 @@ class AmplifySearch(BaseSearch):
         >>>   C 0, name None, 0.5*x_s+(0.5*y_s)+1.0 >= 0
     """
 
-    name = "AmplifySearch"
+    name = "Amplify"
     can_solve_problems = {
         "Variable": VariableType.Spin,
         "Objective": ExpressionType.Quadratic,
@@ -111,17 +111,17 @@ class AmplifySearch(BaseSearch):
 
         self.start_build()
 
-        x = self.prob.getVariables()
+        x = solution
         s = gen_symbols(IsingPoly, len(x))
         np_s = np.array(gen_symbols(IsingPoly, len(x)), dtype=object)
 
         # objective function
-        ising = objective.toIsing()
+        ising = objective.toIsing(x)
         f = -np_s.T.dot(ising.J).dot(np_s) - ising.h.T.dot(np_s) + ising.C
 
         # constraints
         for const in constraints:
-            ising = const.expression.toIsing()
+            ising = const.expression.toIsing(x)
             g = np_s.T.dot(ising.J).dot(np_s) - ising.h.T.dot(np_s) + ising.C
             if const.type() == ConstraintType.Eq:
                 f += equal_to(g, 0)

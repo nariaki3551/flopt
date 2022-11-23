@@ -13,6 +13,7 @@ from flopt.solvers import (
     estimate_problem_type_info,
 )
 from flopt.solution import Solution
+from flopt.error import ConversionError
 
 # performance
 import flopt.performance
@@ -35,6 +36,7 @@ from flopt.utils import Norm as norm
 from flopt.utils import Sqnorm
 from flopt.utils import Sqnorm as sqnorm
 from flopt.utils import Value
+from flopt.utils import Value as value
 from flopt.utils import sqrt
 from flopt.utils import exp
 from flopt.utils import cos

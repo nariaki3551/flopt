@@ -210,7 +210,7 @@ LP to flopt
   from flopt.convert import LpStructure
   prob = LpStructure(c, C, A=A, b=b, lb=lb, ub=ub, types=types).toFlopt()
 
-  print(prob.show())
+  prob.show()
   >>> Name: None
   >>>   Type         : Problem
   >>>   sense        : minimize

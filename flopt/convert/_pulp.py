@@ -34,7 +34,7 @@ def flopt_to_pulp(prob):
         prob += a + d >= -1 # set the constraint
 
         # check wheter prob can be converted into pulp modeling
-        flopt.Solver(algo='PulpSearch').available(prob)
+        flopt.Solver(algo="Pulp").available(prob)
 
         # convert flopt to pulp
         from flopt.solvers.convert import flopt_to_pulp

@@ -1,6 +1,6 @@
 import types
-import functools
 import operator
+import functools
 import itertools
 
 import numpy as np
@@ -181,7 +181,11 @@ class ExpressionElement:
         from flopt.convert import QuadraticStructure
 
         if x is None:
-            x = FloptNdarray(sorted(self.getVariables(), key=lambda var: var.name))
+            x = FloptNdarray(
+                sorted(
+                    self.getVariables(), key=lambda var: ("__" in var.name, var.name)
+                )
+            )
         elif not isinstance(x, FloptNdarray):
             x = FloptNdarray(x)
         assert x.ndim == 1, f"x must be a 1-dimension array"
@@ -205,21 +209,42 @@ class ExpressionElement:
         # |           Q[i, i] = 2 * polynomial.coeff(x[i], x[i])
         # |           for j in range(i+1, num_variables):
         # |               Q[i, j] = Q[j, i] = polynomial.coeff(x[i], x[j])
+        C = polynomial.constant()
         for mono, coeff in polynomial:
             if mono.isLinear():
-                c[mono_to_index[mono]] = coeff
+                if mono in mono_to_index:
+                    c[mono_to_index[mono]] += coeff
+                else:
+                    # C += mono.toExpression()
+                    C += mono.value()
             elif mono.isQuadratic():
                 if len(mono.terms) == 1:
-                    var_a = list(mono.terms)[0]
-                    a_ix = mono_to_index[var_a.toMonomial()]
-                    Q[a_ix, a_ix] = 2 * coeff
+                    mono_a = list(mono.terms)[0].toMonomial()
+                    if mono_a in mono_to_index:
+                        a_ix = mono_to_index[mono_a]
+                        Q[a_ix, a_ix] = 2 * coeff
+                    else:
+                        # C += mono.toExpression() ** 2
+                        C += coeff * mono.value() ** 2
                 else:
                     var_a, var_b = list(mono.terms.keys())
-                    a_ix = mono_to_index[var_a.toMonomial()]
-                    b_ix = mono_to_index[var_b.toMonomial()]
-                    Q[a_ix, b_ix] = Q[b_ix, a_ix] = coeff
+                    mono_a, mono_b = var_a.toMonomial(), var_b.toMonomial()
+                    if mono_a in mono_to_index and mono_b in mono_to_index:
+                        a_ix = mono_to_index[mono_a]
+                        b_ix = mono_to_index[mono_b]
+                        Q[a_ix, b_ix] = Q[b_ix, a_ix] = coeff
+                    elif mono_a in mono_to_index and mono_b not in mono_to_index:
+                        a_ix = mono_to_index[mono_a]
+                        # c[a_ix] += coeff * mono_b.toExpression()
+                        c[a_ix] += coeff * mono_b.value()
+                    elif mono_a not in mono_to_index and mono_b in mono_to_index:
+                        b_ix = mono_to_index[mono_b]
+                        # c[b_ix] += coeff * mono_a.toExpression()
+                        c[b_ix] += coeff * mono_a.value()
+                    else:
+                        # C += mono_a.toExpression() * mono_b.toExpression()
+                        C += coeff * mono_a.value() * mono_b.value()
 
-        C = polynomial.constant()
         return QuadraticStructure(Q, c, C, x=x)
 
     def isLinear(self):
@@ -278,11 +303,15 @@ class ExpressionElement:
             x[i].toMonomial(): i for i in itertools.product(*map(range, x.shape))
         }
 
+        C = polynomial.constant()
         c = np.zeros((num_variables,), dtype=np_float)
         for mono, coeff in polynomial:
-            c[mono_to_index[mono]] = coeff
+            if mono not in mono_to_index:
+                # C += mono.toExpression()
+                C += mono.value()
+            else:
+                c[mono_to_index[mono]] = coeff
 
-        C = polynomial.constant()
         return LinearStructure(c, C, x=x)
 
     def isIsing(self):
@@ -317,7 +346,7 @@ class ExpressionElement:
         from flopt.convert import IsingStructure
 
         if any(var.type() == VariableType.Binary for var in self.getVariables()):
-            return self.toSpin().toIsing()
+            return self.toSpin().toIsing(x)
         quadratic = self.toQuadratic(x)
         J = -np.triu(quadratic.Q)
         np.fill_diagonal(J, 0.5 * np.diag(J))
@@ -419,12 +448,13 @@ class ExpressionElement:
         }
         return self.value(var_dict=var_dict).expand()
 
-    def __calculate(self, sense, default_value):
+    def __calculate(self, sense, solver, default_value, *args, **kwargs):
         """Calculate min/max value of expression
 
         Parameters
         ----------
         sense : str
+        solver : Solver
         default_value : default value of excepsion case
 
         Returns
@@ -434,19 +464,15 @@ class ExpressionElement:
         """
         import flopt
 
-        if self.isLinear():
-            solver = flopt.Solver("ScipyMilpSearch")
-        elif self.isQuadratic():
-            solver = flopt.Solver("CvxoptQpSearch")
-        else:
-            logger.warning(
-                f"{sense} value of {self.getName()} cannot be calculated because it is not linear or quaratic"
-            )
-            return default_value
         prob = flopt.Problem(sense=sense)
         prob += self
-        status, logs = prob.solve(solver, msg=False)
+        status, logs = prob.solve(solver, *args, **kwargs)
         if status == flopt.SolverTerminateState.Normal:
+            return prob.getObjectiveValue()
+        elif status == flopt.SolverTerminateState.Timelimit:
+            logger.warning(
+                f"{sense} value of {self.getName()} is not certain because search terminates by timelimit"
+            )
             return prob.getObjectiveValue()
         elif status == flopt.SolverTerminateState.Unbounded:
             logger.warning(
@@ -459,7 +485,7 @@ class ExpressionElement:
             )
             return default_value
 
-    def max(self):
+    def max(self, *args, **kwargs):
         """Calculate max value of expression when expression is linear or quadratic
 
         Returns
@@ -467,9 +493,24 @@ class ExpressionElement:
         float
             maximum value of this expression can take
         """
-        return self.__calculate("Maximize", get_variable_upper_bound())
+        default_value = get_variable_upper_bound()
+        if self.isLinear():
+            solver = "ScipyMilp"
+        elif self.isQuadratic():
+            solver = "CvxoptQp"
+        else:
+            logger.warning(
+                f"max value of {self.getName()} cannot be calculated because it is not linear or quaratic"
+            )
+            return default_value
+        return self.__calculate("Maximize", solver, default_value, *args, **kwargs)
 
-    def min(self):
+    def maximize(self, solver="auto", *args, **kwargs):
+        """Optimize the maximize problem has this expression as objective"""
+        default_value = get_variable_upper_bound()
+        return self.__calculate("Maximize", solver, default_value, *args, **kwargs)
+
+    def min(self, *args, **kwargs):
         """Calculate min value of expression when expression is linear or quadratic
 
         Returns
@@ -477,7 +518,22 @@ class ExpressionElement:
         float
             minimum value of this expression can take
         """
-        return self.__calculate("Minimize", get_variable_lower_bound())
+        default_value = get_variable_lower_bound()
+        if self.isLinear():
+            solver = "ScipyMilp"
+        elif self.isQuadratic():
+            solver = "CvxoptQp"
+        else:
+            logger.warning(
+                f"min value of {self.getName()} cannot be calculated because it is not linear or quaratic"
+            )
+            return default_value
+        return self.__calculate("Minimize", solver, default_value, *args, **kwargs)
+
+    def minimize(self, solver="auto", *args, **kwargs):
+        """Optimize the minimize problem has this expression as objective"""
+        default_value = get_variable_lower_bound()
+        return self.__calculate("Minimize", solver, default_value, *args, **kwargs)
 
     def traverse(self):
         """traverse Expression tree as root is self
@@ -774,18 +830,26 @@ class Expression(ExpressionElement):
             return elms[0]
         return Sum(elms)
 
+    def clone(self):
+        """
+        Returns
+        -------
+        Expression
+        """
+        return Expression(self.elmA, self.elmB, self.operator, self.name)
+
     def setName(self):
         stack = [self]
         while stack:
             elm = stack.pop()
             if elm._name is not None:
                 continue
-            if isinstance(elm, (CustomExpression, Reduction, Const, MathOperation)):
+            if not isinstance(elm, Expression):
                 elm.setName()
                 continue
             elmA = elm.elmA
             elmB = elm.elmB
-            if elmA.name is not None and elmB.name is not None:
+            if elmA._name is not None and elmB._name is not None:
                 elmA_name = elm.elmA.getName()
                 elmB_name = elm.elmB.getName()
                 if isinstance(elm.elmA, (Expression, Reduction)):
@@ -799,9 +863,9 @@ class Expression(ExpressionElement):
                 elm._name = f"{elmA_name}{elm.operator}{elmB_name}"
             else:
                 stack.append(elm)
-                if elmA.name is None:
+                if elmA._name is None:
                     stack.append(elmA)
-                if elmB.name is None:
+                if elmB._name is None:
                     stack.append(elmB)
         return self._name
 
@@ -1099,7 +1163,7 @@ def pack_variables(var_or_array, var_dict):
         array = var_or_array
 
         if isinstance(array, FloptNdarray):
-            return array.value(var_dict)
+            return array.value(var_dict=var_dict)
         else:
             return cls(
                 itertools.starmap(pack_variables, [(var, var_dict) for var in array])
@@ -1132,7 +1196,7 @@ class CustomExpression(ExpressionElement):
       b = Variable("b", cat="Continuous")
       def user_simulater(a, b):
           return simulater(a, b)
-      obj = CustomExpression(func=user_simulater, arg=[a, b])
+      obj = CustomExpression(func=user_simulater, args=[a, b])
       prob = Problem("simulater")
       prob += obj
 
@@ -1168,11 +1232,14 @@ class CustomExpression(ExpressionElement):
 
     operator = "CustomExpression"
 
-    def __init__(self, func, arg, name=None):
+    def __init__(self, func, args, name=None):
         self.func = func
-        self.arg = arg
-        self.variables = unpack_variables(arg)
+        self.args = args
+        self.variables = unpack_variables(args)
         super().__init__(name=name)
+
+    def clone(self, *args, **kwargs):
+        return CustomExpression(self.func, self.args, self.name)
 
     def setName(self):
         self._name = f"{self.func.__name__}(*)"
@@ -1191,9 +1258,9 @@ class CustomExpression(ExpressionElement):
         if solution is not None:
             var_dict = solution.toDict()
         if var_dict is not None:
-            arg = pack_variables(self.arg, var_dict)
+            arg = pack_variables(self.args, var_dict)
         else:
-            arg = self.arg
+            arg = self.args
 
         value = self.func(*arg)
         if not isinstance(value, number_classes):
@@ -1217,7 +1284,7 @@ class CustomExpression(ExpressionElement):
         return f"{self.func.__name__}(*)"
 
     def __repr__(self):
-        return f"CustomExpression({self.func.__name__, self.arg, self.getName()})"
+        return f"CustomExpression({self.func.__name__, self.args, self.getName()})"
 
 
 class Const(ExpressionElement):
@@ -1232,13 +1299,14 @@ class Const(ExpressionElement):
         name of constant
     """
 
-    def __init__(self, value, name=None):
-        if name is None:
-            name = f"{value}"
+    def __init__(self, value):
         if isinstance(value, Const):
             value = value._value
         self._value = value
-        super().__init__(name=name)
+        super().__init__(name=f"{value}")
+
+    def clone(self, *args, **kwargs):
+        return Const(self._value)
 
     def setName(self):
         return NotImplemented
@@ -1370,10 +1438,19 @@ to_const_ufunc = np.frompyfunc(to_const, 1, 1)
 #   Reduction Class
 # ------------------------------------------------
 class Reduction(ExpressionElement):
-    def __init__(self, elms, name=None):
+    def __init__(self, elms):
         assert len(elms) > 0
         self.elms = to_const_ufunc(np.array(elms, dtype=object))
-        super().__init__(name=name)
+        super().__init__()
+
+    def clone(self):
+        """
+        Returns
+        -------
+        Reduction
+        """
+        cls = self.__class__
+        return cls(self.elms)
 
     def setName(self):
         self._name = ""
@@ -1445,7 +1522,8 @@ class Reduction(ExpressionElement):
 
 
 class Sum(Reduction):
-    """
+    """Summation Operator
+
     Parameters
     ----------
     var_of_exps : list of VarELement or ExpressionElement
@@ -1498,7 +1576,8 @@ class Sum(Reduction):
 
 
 class Prod(Reduction):
-    """
+    """Production Operator
+
     Parameters
     ----------
     var_of_exps : list of VarELement or ExpressionElement
@@ -1556,9 +1635,18 @@ class Prod(Reduction):
 
 
 class MathOperation(ExpressionElement):
-    def __init__(self, elm, name=None):
+    def __init__(self, elm):
         self.elm = elm
-        super().__init__(name=name)
+        super().__init__()
+
+    def clone(self):
+        """
+        Returns
+        -------
+        MathOperation
+        """
+        cls = self.__class__
+        return cls(self.elm)
 
     def setName(self):
         self._name = f"{self.operator}({self.elm.getName()})"
@@ -1589,48 +1677,108 @@ class MathOperation(ExpressionElement):
 
 
 class Exp(MathOperation):
+    """Exponential operation
+
+    .. code-block:: python
+
+        import flopt
+
+        # single variable
+        x = flopt.Variable("x", ini_value=2)
+        flopt.exp(x)
+        >>> Exp(x)  # return single object
+        flopt.exp(x).value()
+        >>> 7.38905609893065
+
+        # variables as array
+        x = flopt.Variable.array("y", 4, ini_value=2)
+        flopt.exp(y)
+        >>> FloptNdarray([Exp(y_0), Exp(y_1), Exp(y_2), Exp(y_3)], dtype=object)
+    """
 
     operator = "Exp"
     func = np.exp
 
 
 class Cos(MathOperation):
+    """Cosine operation
+
+    See Also
+    --------
+    flopt.expression.Exp
+    """
 
     operator = "Cos"
     func = np.cos
 
 
 class Sin(MathOperation):
+    """Sine operation
+
+    See Also
+    --------
+    flopt.expression.Exp
+    """
 
     operator = "Sin"
     func = np.sin
 
 
 class Tan(MathOperation):
+    """Tangent operation
+
+    See Also
+    --------
+    flopt.expression.Exp
+    """
 
     operator = "Tan"
     func = np.tan
 
 
 class Log(MathOperation):
+    """Logarithmc operation
+
+    See Also
+    --------
+    flopt.expression.Exp
+    """
 
     operator = "Log"
     func = np.log
 
 
 class Abs(MathOperation):
+    """Absolute operation
+
+    See Also
+    --------
+    flopt.expression.Exp
+    """
 
     operator = "Abs"
     func = np.abs
 
 
 class Floor(MathOperation):
+    """Floor operation
+
+    See Also
+    --------
+    flopt.expression.Exp
+    """
 
     operator = "Floor"
     func = np.floor
 
 
 class Ceil(MathOperation):
+    """Ceil operation
+
+    See Also
+    --------
+    flopt.expression.Exp
+    """
 
     operator = "Ceil"
     func = np.ceil

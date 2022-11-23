@@ -22,15 +22,14 @@ class RandomSearch(BaseSearch):
         prob = flopt.Problem()
         prob += 2*x*x + x*y + y*y + x + y
 
-        solver = flopt.Solver("RandomSearch")
-        status, log = prob.solve(solver, msg=True, timelimit=1)
+        status, log = prob.solve(solver="Random", msg=True, timelimit=1)
 
         print("obj =", flopt.Value(prob.obj))
         print("x =", flopt.Value(x))
         print("y =", flopt.Value(y))
     """
 
-    name = "RandomSearch"
+    name = "Random"
     can_solve_problems = {
         "Variable": VariableType.Any,
         "Objective": ExpressionType.Any,

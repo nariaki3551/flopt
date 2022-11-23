@@ -31,12 +31,21 @@ def test_Monomial_constructer(x, y):
     print(Monomial({x: 2, y: 2}, 3))
 
 
-def test_Monomial_mul(x, y):
+def test_Monomial_mul1(x, y):
     a = Monomial({x: 1})  # x
     b = Monomial({y: 2})  # y^2
     assert a * b == Monomial({x: 1, y: 2})
     assert 2 * a == Monomial({x: 1}, coeff=2)
     assert a * 2 == Monomial({x: 1}, coeff=2)
+
+
+def test_Monomial_mul2(x, y):
+    a = Monomial({x: 1})  # x
+    b = Monomial({y: 2})  # y^2
+    a *= 2
+    b *= 2
+    assert a == Monomial({x: 1}, coeff=2)
+    assert b == Monomial({y: 2}, coeff=2)
 
 
 def test_Monomial_pow(x, y):
@@ -133,6 +142,7 @@ def test_Polynomial_coeff(x, y, a, b):
 def test_Polynomial_isConstant(x, y, a, b):
     assert Polynomial(constant=2).isConstant() == True
     assert Polynomial(constant=2).constant() == 2
+    assert Polynomial(constant=2).toMonomial() == Monomial(coeff=2)
     assert a.isConstant() == False
 
 

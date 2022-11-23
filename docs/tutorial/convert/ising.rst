@@ -157,7 +157,7 @@ Ising to flopt
   from flopt.convert import IsingStructure
   prob = IsingStructure(J, h, C).toFlopt()
 
-  print(prob.show())
+  prob.show()
   >>> Name: None
   >>>   Type         : Problem
   >>>   sense        : minimize

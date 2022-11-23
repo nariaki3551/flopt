@@ -7,6 +7,32 @@ import flopt.convert
 from flopt import Variable, Problem, Solver
 
 
+def test_QuadraticStructure():
+    from flopt.convert import QuadraticStructure
+
+    Q = [[1, 1], [1, 2]]
+    c = [1, 1]
+    C = 0
+    qs = QuadraticStructure(Q, c, C)
+    try:
+        qs.toLinear()
+    except flopt.ConversionError:
+        assert True
+        return True
+    assert False
+
+    Q = None
+    c = [1, 1]
+    C = 0
+    qs = QuadraticStructure(Q, c, C)
+    try:
+        qs.toLinear()
+    except flopt.ConversionError:
+        assert False
+        return True
+    assert True
+
+
 def test_flopt_to_qp1():
     # Variables
     a = Variable("a", cat="Binary")
@@ -27,8 +53,8 @@ def test_flopt_to_qp1():
     qp = QpStructure.fromFlopt(prob, progress=True)
     print(qp)
 
-    qp.toAllEq()
-    qp.toAllNeq()
+    qp.toEq()
+    qp.toIneq()
     qp.show()
 
 
@@ -47,8 +73,8 @@ def test_flopt_to_qp2():
     qp = QpStructure.fromFlopt(prob)
     print(qp)
 
-    qp.toAllEq()
-    qp.toAllNeq()
+    qp.toEq()
+    qp.toIneq()
     qp.toLp()
     qp.toIsing()
     qp.toQubo()
@@ -96,8 +122,8 @@ def test_flopt_to_lp1():
     lp = LpStructure.fromFlopt(prob)
     print(lp)
 
-    lp.toAllEq()
-    lp.toAllNeq()
+    lp.toEq()
+    lp.toIneq()
     lp.toQp()
     lp.show()
 
@@ -117,14 +143,14 @@ def test_flopt_to_lp2():
     lp = LpStructure.fromFlopt(prob)
     print(lp)
 
-    lp.toAllEq()
-    lp.toAllNeq()
+    lp.toEq()
+    lp.toIneq()
     lp.toQp()
     lp.toIsing()
     lp.toQubo()
 
 
-def test_flopt_to_lp_allneq():
+def test_flopt_to_lp_ineq():
     # Variables
     a = Variable("a", cat="Binary")
     b = Variable("b", cat="Binary")
@@ -141,10 +167,10 @@ def test_flopt_to_lp_allneq():
 
     from flopt.convert import LpStructure
 
-    lp = LpStructure.fromFlopt(prob, option="all_neq")
+    lp = LpStructure.fromFlopt(prob, option="ineq")
 
 
-def test_flopt_to_lp_alleq():
+def test_flopt_to_lp_eq():
     # Variables
     a = Variable("a", cat="Binary")
     b = Variable("b", cat="Binary")
@@ -161,7 +187,7 @@ def test_flopt_to_lp_alleq():
 
     from flopt.convert import LpStructure
 
-    lp = LpStructure.fromFlopt(prob, option="all_eq")
+    lp = LpStructure.fromFlopt(prob, option="eq")
 
 
 def test_flopt_to_lp1():
@@ -184,8 +210,8 @@ def test_flopt_to_lp1():
     lp = LpStructure.fromFlopt(prob)
     print(lp)
 
-    lp.toAllEq()
-    lp.toAllNeq()
+    lp.toEq()
+    lp.toIneq()
     lp.toQp()
 
 
@@ -204,8 +230,8 @@ def test_flopt_to_lp1():
     lp = LpStructure.fromFlopt(prob)
     print(lp)
 
-    lp.toAllEq()
-    lp.toAllNeq()
+    lp.toEq()
+    lp.toIneq()
     lp.toQp()
     lp.toIsing()
     lp.toQubo()
@@ -324,7 +350,7 @@ def test_flopt_to_pulp():
     print(prob)
 
     # check wheter prob can be converted into pulp modeling
-    assert Solver(algo="PulpSearch").available(prob)
+    assert Solver(algo="Pulp").available(prob)
 
     # convert flopt to pulp
     from flopt.convert import flopt_to_pulp
@@ -347,7 +373,7 @@ def test_lp_to_flopt():
     from flopt.convert import LpStructure
 
     prob = LpStructure(c, C, A=A, b=b, lb=lb, ub=ub, types=var_types).toFlopt()
-    print(prob.show())
+    prob.show()
 
 
 def test_ising_to_flopt():
@@ -359,7 +385,7 @@ def test_ising_to_flopt():
     from flopt.convert import IsingStructure
 
     prob = IsingStructure(J, h, C).toFlopt()
-    print(prob.show())
+    prob.show()
 
 
 def test_qubo_to_flopt():
@@ -393,7 +419,7 @@ def test_pulp_to_flopt1():
     from flopt.convert import pulp_to_flopt
 
     flopt_prob = pulp_to_flopt(prob)
-    print(flopt_prob.show())
+    flopt_prob.show()
 
 
 def test_pulp_to_flopt2():

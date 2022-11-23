@@ -112,12 +112,12 @@ RandomSearch
        prob += CustomExpression(test_func, [x, y])
 
        algos = [
-           'RandomSearch',
-           'OptunaTPESearch',
-           'OptunaCmaEsSearch',
-           'HyperoptTPESearch',
+           'Random',
+           'OptunaTPE',
+           'OptunaCmaEs',
+           'Hyperopt',
            'SFLA',
-           'ScipySearch'
+           'Scipy'
        ]
        for algo in algos:
            x.setRandom()

@@ -29,7 +29,7 @@ obj = sum(w * c for c, w in zip(clauses, weights))
 prob = Problem("MaxSat", sense="Maximize")
 prob += obj
 
-solver = Solver(algo="RandomSearch")
+solver = Solver(algo="Random")
 prob.solve(solver, timelimit=2, msg=True)
 
 print("value x0", x0.value())

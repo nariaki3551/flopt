@@ -66,11 +66,8 @@ Hence, the maximum cut problem is formulated as :math:`\max \sum_{i < j} w_{i, j
     prob = Problem(sense=Maximize)
     prob += obj
     
-    # create solver
-    solver = Solver("RandomSearch")
-    
     # solve
-    staus, log = prob.solve(solver, timelimit=1)
+    staus, log = prob.solve(solver="Random", timelimit=1)
 
     print("result = ", Value(s))
     >>> [-1 1 -1 -1 1]
@@ -123,8 +120,7 @@ We can download the Gset benchmark as follows.
     prob += obj
 
     # select algorithm to search and solve
-    solver = Solver(algo="RandomSearch")
-    status, log = prob.solve(solver, timelimit=10, msg=True)
+    status, log = prob.solve(solver="Random", timelimit=10, msg=True)
 
 
 

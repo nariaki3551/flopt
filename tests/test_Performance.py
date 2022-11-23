@@ -27,7 +27,7 @@ def test_tsp_dataset():
     instance = dataset["test8"]
 
     # lp
-    milp = Solver("ScipyMilpSearch")
+    milp = Solver("ScipyMilp")
     solvable, prob = instance.createProblem(milp)
     assert solvable
     prob.solve(milp, msg=True)
@@ -45,7 +45,7 @@ def test_func_dataset():
     dataset = flopt.performance.get_dataset("func")
     instance = dataset["Ackley"]
 
-    scipy_search = Solver("ScipySearch")
+    scipy_search = Solver("Scipy")
     solvable, prob = instance.createProblem(scipy_search)
     assert solvable
     prob.solve(scipy_search, msg=True)
@@ -54,7 +54,7 @@ def test_func_dataset():
 def test_mip_dataset():
     dataset = flopt.performance.get_dataset("mip")
     instance = dataset["markshare2"]
-    scipy_search = Solver("ScipyMilpSearch")
+    scipy_search = Solver("ScipyMilp")
     solvable, prob = instance.createProblem(scipy_search)
     assert solvable
     prob.solve(scipy_search, timelimit=0.5, msg=True)
@@ -69,7 +69,7 @@ def test_compute_nosolver(prob):
 
 
 def test_compute_RandomSearch(prob):
-    rs_solver = Solver("RandomSearch")
+    rs_solver = Solver("Random")
     logs = flopt.performance.compute(prob, rs_solver, timelimit=0.1, msg=True)
 
 

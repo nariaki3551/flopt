@@ -1,6 +1,9 @@
 Newton's method
 ===============
 
+Newton's method for root-finding
+--------------------------------
+
 Newton's method is a kind of iterative root-finding algorithm using jacobian.
 When we obtain :math:`x \in \mathbb{R}` such that :math:`f(x) = 0` where :math:`f: \mathbb{R} \to \mathbb{R}`,
 newton's method updates as follows.
@@ -24,11 +27,11 @@ The following code obtains the root of :math:`f(x) = x^2 - 2`, so it is success 
    x = flopt.Variable("x", ini_value=100)
    
    # obtain jacobian function
-   jac = f(x).jac(x)
+   jac = f(x).jac([x])
    
    for roop in range(10):
        # update x
-       x.setValue((x - f(x) / jac).value()))
+       x.setValue((x - f(x) / jac).value())
        print(f'roop {roop},  x = {x.value()}')
 
 Output of above code is here.
@@ -67,3 +70,46 @@ Another code equivalent to above code is shown here.
        # update x
        x.setValue(x.value() - f.value() / jac.value())
        print(f'roop {roop},  x = {x.value()}')
+
+
+Newton's method for minimizing expression
+-----------------------------------------
+
+We minimize smoothly function :math:`f` by newton's method.
+Update method is as follows.
+
+:math:`x_{n+1} \leftarrow x_n - \nabla^2 f(x_n)^{-1} \nabla f(x_n) (n \geq 0)` with initial point :math:`x_0`.
+
+.. code-block:: python
+
+  import flopt
+  import flopt.solution
+  
+  import itertools
+  import numpy as np
+  
+  x1 = flopt.Variable("x1", ini_value=0)
+  x2 = flopt.Variable("x2", ini_value=3)
+  x = flopt.solution.Solution([x1, x2])
+  
+  f = (x1 - 2) ** 4 + (x1 - 2 * x2) ** 2
+  
+  jac_fn = f.jac(x)
+  hess_fn = f.hess(x)
+  
+  for i in itertools.count():
+      # 1. calculate jac, hess
+      # 2. search direction d
+      # 3. update x
+      jac, hess = jac_fn.value(), hess_fn.value()
+      d = - np.dot(np.linalg.inv(hess), jac)
+      x += d
+      
+      print("iter", i, "x", x.value(), "obj", f.value())
+  
+      # terminate condition
+      if np.linalg.norm(jac) < 1e-4:
+          break
+
+
+.. image:: https://cdn-ak.f.st-hatena.com/images/fotolife/i/inarizuuuushi/20221120/20221120192625.png

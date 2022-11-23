@@ -59,10 +59,10 @@ class AutoSearch(BaseSearch):
         >>>   Date: September 1, 2022
         >>> # - - - - - - - - - - - - - - #
         >>>
-        >>> Algorithm: ScipySearch
+        >>> Algorithm: Scipy
         >>> Params: {'timelimit': 10}
 
-    See the log, you can see the RandomSearch algorithm is used for this problem.
+    See the log, you can see the Random algorithm is used for this problem.
     Executing .select(), we can check which solver will be select.
 
     .. code-block:: python
@@ -71,7 +71,7 @@ class AutoSearch(BaseSearch):
         solver.setParams({"timelimit": 10})
         solver = solver.select(prob)
         print(solver.name)
-        >>> ScipySearch
+        >>> Scipy
     """
 
     name = "auto"
@@ -80,6 +80,9 @@ class AutoSearch(BaseSearch):
         "Objective": ExpressionType.Any,
         "Constraint": ExpressionType.Any,
     }
+
+    def __init__(self):
+        self.selector_msg = False
 
     def available(self, prob, verbose=False):
         """
@@ -138,7 +141,7 @@ class AutoSearch(BaseSearch):
                 and problem_type["Constraint"].expand()
                 <= problem_class["Constraint"].expand()
             )
-            if is_problem_class:
+            if is_problem_class and self.selector_msg:
                 logger.info(f"This problem is identified as {class_str}.")
             return is_problem_class
 
@@ -186,6 +189,8 @@ class AutoSearch(BaseSearch):
             list of constriants objects
         prob : Problem
             problem
+        msg :
+            if it is true, message about search is outputed
 
         Returns
         -------

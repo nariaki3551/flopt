@@ -71,7 +71,7 @@ def test_dot_graph_CustomExpression(tmpdir):
     def custom(a, b, c):
         return a + b * c
 
-    z = CustomExpression(func=custom, arg=[a, b, c])
+    z = CustomExpression(func=custom, args=[a, b, c])
 
     path = tmpdir.mkdir("save").join("tmp2.txt")
     get_dot_graph(z, path)
