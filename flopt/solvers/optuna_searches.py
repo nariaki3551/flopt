@@ -76,7 +76,11 @@ class OptunaSearch(BaseSearch):
         def optimize():
             self.study.optimize(objective_func, self.n_trial, timeout=search_timelimit)
 
-        optimize()
+        try:
+            optimize()
+        except ValueError as e:
+            logger.warning(e)
+            raise flopt.error.SolverError()
 
         return SolverTerminateState.Normal
 

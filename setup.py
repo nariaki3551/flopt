@@ -19,9 +19,9 @@ setup(
     install_requires=[
         "numpy",
         "sympy",
-        "matplotlib==3.5.2",
+        "matplotlib",
         "pulp",
-        "optuna==2.10.1",
+        "optuna",
         "hyperopt",
         "cvxopt",
         "amplify",
