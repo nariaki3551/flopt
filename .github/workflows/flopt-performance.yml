@@ -29,6 +29,7 @@ jobs:
         python -m pip install wheel
         python -m pip install -r requirements.txt
         echo "timelimit = 2" > settings/short.param
+        cp performance/compute_performance.py compute_performance.py
     - name: Compute performance of func dataset
       run: |
         python compute_performance.py Random      Random      --datasets func --params ./settings/short.param --log_level 10
