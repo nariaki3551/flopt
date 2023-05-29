@@ -52,12 +52,12 @@ class OptunaSearch(BaseSearch):
                     var.toBinary()
                     var.binary.setValue(trial.suggest_int(var.name, 0, 1))
                 elif var.type() == VariableType.Integer:
-                    lb = var.getLb(must_number=True)
-                    ub = var.getUb(must_number=True)
+                    lb = var.getLb(number=True)
+                    ub = var.getUb(number=True)
                     var.setValue(trial.suggest_int(var.name, lb, ub))
                 elif var.type() == VariableType.Continuous:
-                    lb = var.getLb(must_number=True)
-                    ub = var.getUb(must_number=True)
+                    lb = var.getLb(number=True)
+                    ub = var.getUb(number=True)
                     var.setValue(trial.suggest_uniform(var.name, lb, ub))
             obj_value = self.getObjValue(solution)
 

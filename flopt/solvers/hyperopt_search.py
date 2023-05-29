@@ -75,8 +75,8 @@ class HyperoptSearch(BaseSearch):
         space = {}
         for var in solution:
             name = var.name
-            lb = var.getLb(must_number=True)
-            ub = var.getUb(must_number=True)
+            lb = var.getLb(number=True)
+            ub = var.getUb(number=True)
             if var.type() in {
                 VariableType.Integer,
                 VariableType.Binary,
