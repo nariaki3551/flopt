@@ -223,7 +223,7 @@ def allAvailableSolversProblemType(problem_type):
     return available_solvers
 
 
-def estimate_problem_type_info(prob):
+def estimate_problem_type(prob):
     """Estimate problem types
 
     Parameters
