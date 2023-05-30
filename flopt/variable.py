@@ -362,6 +362,7 @@ class VariableFactory:
         return Variable.array(name, (n_row, n_col), lowBound, upBound, cat, ini_value)
 
 
+
 # -------------------------------------------------------
 #   Variable Classes
 # -------------------------------------------------------
@@ -417,8 +418,8 @@ class VarElement:
     def getName(self):
         return self._name
 
-    def getLb(self, must_number=False):
-        if must_number:
+    def getLb(self, number=False):
+        if number:
             return (
                 self.lowBound
                 if self.lowBound is not None
@@ -426,8 +427,8 @@ class VarElement:
             )
         return self.lowBound
 
-    def getUb(self, must_number=False):
-        if must_number:
+    def getUb(self, number=False):
+        if number:
             return (
                 self.upBound
                 if self.upBound is not None
@@ -443,7 +444,7 @@ class VarElement:
           return true if value of self is in between lowBound and upBound else false
         """
         return (
-            self.getLb(must_number=True) <= self._value <= self.getUb(must_number=True)
+            self.getLb(number=True) <= self._value <= self.getUb(number=True)
         )
 
     def clip(self):
@@ -453,10 +454,10 @@ class VarElement:
         value > upBound  -> value = upBound
         """
         if self.getLb() is not None:
-            lb = self.getLb(must_number=True)
+            lb = self.getLb(number=True)
             self._value = max(self._value, lb)
         if self.getUb() is not None:
-            ub = self.getUb(must_number=True)
+            ub = self.getUb(number=True)
             self._value = min(self._value, ub)
 
     def getVariables(self):
@@ -711,8 +712,8 @@ class VarInteger(VarElement):
         """
         return round(self._value)
 
-    def getLb(self, must_number=False):
-        if must_number:
+    def getLb(self, number=False):
+        if number:
             return (
                 self.lowBound
                 if self.lowBound is not None
@@ -720,8 +721,8 @@ class VarInteger(VarElement):
             )
         return self.lowBound
 
-    def getUb(self, must_number=False):
-        if must_number:
+    def getUb(self, number=False):
+        if number:
             return (
                 self.upBound
                 if self.upBound is not None
@@ -730,8 +731,8 @@ class VarInteger(VarElement):
         return self.upBound
 
     def setRandom(self):
-        lb = self.getLb(must_number=True)
-        ub = self.getUb(must_number=True)
+        lb = self.getLb(number=True)
+        ub = self.getUb(number=True)
         self._value = random.randint(lb, ub)
 
     def toBinary(self):
@@ -983,8 +984,8 @@ class VarContinuous(VarElement):
     _type = VariableType.Continuous
 
     def setRandom(self):
-        lb = self.getLb(must_number=True)
-        ub = self.getUb(must_number=True)
+        lb = self.getLb(number=True)
+        ub = self.getUb(number=True)
         self._value = random.uniform(lb, ub)
 
     def clone(self):
