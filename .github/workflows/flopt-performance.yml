@@ -28,27 +28,27 @@ jobs:
         python -m pip install --upgrade pip
         python -m pip install wheel
         python -m pip install -r requirements.txt
-        echo "timelimit = 2" > settings/short.param
         cp performance/compute_performance.py compute_performance.py
+        cp performance/fit_models.py fit_models.py
     - name: Compute performance of func dataset
       run: |
-        python compute_performance.py Random      Random      --datasets func --params ./settings/short.param --log_level 10
-        python compute_performance.py OptunaTPE   OptunaTPE   --datasets func --params ./settings/short.param --log_level 10
-        python compute_performance.py Hyperopt    Hyperopt    --datasets func --params ./settings/short.param --log_level 10
-        python compute_performance.py OptunaCmaEs OptunaCmaEs --datasets func --params ./settings/short.param --log_level 10
-        python compute_performance.py SFLA        SFLA        --datasets func --params ./settings/short.param --log_level 10
-        python compute_performance.py Scipy       Scipy       --datasets func --params ./settings/short.param --log_level 10
-        python compute_performance.py auto        auto        --datasets func --params ./settings/short.param --log_level 10
+        python compute_performance.py Random      Random      --datasets func --timelimit 2  --log_level 10
+        python compute_performance.py OptunaTPE   OptunaTPE   --datasets func --timelimit 2  --log_level 10
+        python compute_performance.py Hyperopt    Hyperopt    --datasets func --timelimit 2  --log_level 10
+        python compute_performance.py OptunaCmaEs OptunaCmaEs --datasets func --timelimit 2  --log_level 10
+        python compute_performance.py SFLA        SFLA        --datasets func --timelimit 2  --log_level 10
+        python compute_performance.py Scipy       Scipy       --datasets func --timelimit 2  --log_level 10
+        python compute_performance.py auto        auto        --datasets func --timelimit 2  --log_level 10
     - name: Compute performance of tsp dataset
       run: |
-        python compute_performance.py Random      Random      --datasets tsp  --params ./settings/short.param --log_level 10
-        python compute_performance.py 2-Opt       2-Opt       --datasets tsp  --params ./settings/short.param --log_level 10
-        python compute_performance.py auto        auto        --datasets func --params ./settings/short.param --log_level 10
+        python compute_performance.py Random      Random      --datasets tsp  --timelimit 2  --log_level 10
+        python compute_performance.py 2-Opt       2-Opt       --datasets tsp  --timelimit 2  --log_level 10
+        python compute_performance.py auto        auto        --datasets func --timelimit 2  --log_level 10
     - name: Compute performance of mip dataset
       run: |
-        python compute_performance.py ScipyMilp   ScipyMilp   --datasets mip  --params ./settings/short.param --log_level 10
-        python compute_performance.py Pulp        Pulp        --datasets mip  --params ./settings/short.param --log_level 10
-        python compute_performance.py auto        auto        --datasets func --params ./settings/short.param --log_level 10
+        python compute_performance.py ScipyMilp   ScipyMilp   --datasets mip  --timelimit 2  --log_level 10
+        python compute_performance.py Pulp        Pulp        --datasets mip  --timelimit 2  --log_level 10
+        python compute_performance.py auto        auto        --datasets func --timelimit 2  --log_level 10
     - name: Collect trainting data of Auto Solver
       run: |
         python fit_models.py nonlinear      --collect --samples 3 --debug

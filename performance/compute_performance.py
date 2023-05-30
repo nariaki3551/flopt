@@ -34,24 +34,6 @@ def compute(algo, dataset_names, params):
     flopt.performance.compute(datasets, solver, msg=True, **params)
 
 
-def read_paramfile(paramfile):
-    params = dict()
-    if paramfile is None:
-        return params
-    for line in open(paramfile, "r"):
-        line = line.strip()
-        if line:
-            param_name, param_value = line.split("=")
-            param_name = param_name.strip()
-            param_value = param_value.strip()
-            if param_value in {"infty", "unlimited", "float('inf')", 'float("inf")'}:
-                param_value = float("inf")
-            else:
-                param_value = float(param_value)
-            params[param_name] = param_value
-    return params
-
-
 def setLogger(log_level):
     flopt.env.setLogLevel(log_level)
 
@@ -68,7 +50,9 @@ def argparser():
     parser.add_argument(
         "--datasets", nargs="*", choices=Dataset_list(), help="instance dataset"
     )
-    parser.add_argument("--params", default=None, help="param file")
+    parser.add_argument(
+        "--timelimit", default=60, type=float, help="timelimit for each instance"
+    )
     parser.add_argument(
         "--log_level",
         type=int,
@@ -85,10 +69,8 @@ if __name__ == "__main__":
     algo = args.algorithm
     savename = args.savename
     datasets = args.datasets
-    paramfile = args.params
     log_level = args.log_level
 
-    params = read_paramfile(paramfile)
-    params["name"] = savename
+    params = {"timelimit": args.timelimit}
 
     compute(algo, datasets, params)
