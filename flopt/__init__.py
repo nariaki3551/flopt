@@ -10,7 +10,7 @@ from flopt.solvers import (
     Solver,
     Solver_list,
     allAvailableSolvers,
-    estimate_problem_type_info,
+    estimate_problem_type,
 )
 from flopt.solution import Solution
 from flopt.error import ConversionError

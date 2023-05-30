@@ -8,7 +8,7 @@ from flopt import (
     Solver,
     Solver_list,
     CustomExpression,
-    estimate_problem_type_info,
+    estimate_problem_type,
 )
 
 
@@ -640,7 +640,7 @@ def test_solver_log_add(prob, callback):
     assert len(log1) == add_len
 
 
-def test_estimate_problem_type_info(
+def test_estimate_problem_type(
     prob,
     prob_only_continuous,
     prob_with_const,
@@ -650,11 +650,11 @@ def test_estimate_problem_type_info(
     prob_ising_const,
     prob_perm,
 ):
-    estimate_problem_type_info(prob)
-    estimate_problem_type_info(prob_only_continuous)
-    estimate_problem_type_info(prob_with_const)
-    estimate_problem_type_info(prob_qp)
-    estimate_problem_type_info(prob_nonlinear)
-    estimate_problem_type_info(prob_ising)
-    estimate_problem_type_info(prob_ising_const)
-    estimate_problem_type_info(prob_perm)
+    estimate_problem_type(prob)
+    estimate_problem_type(prob_only_continuous)
+    estimate_problem_type(prob_with_const)
+    estimate_problem_type(prob_qp)
+    estimate_problem_type(prob_nonlinear)
+    estimate_problem_type(prob_ising)
+    estimate_problem_type(prob_ising_const)
+    estimate_problem_type(prob_perm)

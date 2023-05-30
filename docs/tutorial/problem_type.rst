@@ -1,5 +1,5 @@
-Problem type
-============
+Estimation of Problem type
+==========================
 
 Flopt includes problem estimation mechanism, and provide an API for user to see the user defined problem type.
 
@@ -14,7 +14,7 @@ Flopt includes problem estimation mechanism, and provide an API for user to see 
   prob = flopt.Problem()
   
   prob += x + y
-  flopt.estimate_problem_type_info(prob)
+  flopt.estimate_problem_type(prob)
   >>> Problem
   >>> 	Name: None
   >>> 	  Type         : Problem
