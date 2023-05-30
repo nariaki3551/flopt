@@ -210,6 +210,7 @@ class Problem:
         self.__variables = self.obj.getVariables()
         for const in self.constraints:
             self.__variables |= const.getVariables()
+
         return self.__variables
 
     def getConstraints(self):
@@ -433,7 +434,12 @@ class Problem:
         return prob
 
     def boundsToIneq(self):
-        """Create a problem object has bounds constraints of variables as inequal constraints"""
+        """Create a problem object has bounds constraints of variables as inequal constraints
+
+        Returns
+        -------
+        prob : Problem
+        """
         prob = self.clone()
         for var in prob.getVariables():
             if var.getLb() is not None:
@@ -443,6 +449,43 @@ class Problem:
             var.lowBound = None
             var.upBound = None
         return prob
+
+    def toRelax(self):
+        """Create relaxed problem
+
+        Returns
+        -------
+        prob : Problem
+        """
+        prob = self.clone()
+        correspondence_dict = dict()
+        for var in prob.getVariables():
+            if var.type() == VariableType.Continuous:
+                pass
+            elif var.type() == VariableType.Integer:
+                with create_variable_mode():
+                    relaxed_var = flopt.Variable(
+                        var.getName(),
+                        lowBound=var.getLb(),
+                        upBound=var.getUb(),
+                        ini_value=var.value(),
+                    )
+                correspondence_dict[var] = relaxed_var
+            elif var.type() == VariableType.Binary:
+                with create_variable_mode():
+                    relaxed_var = flopt.Variable(
+                        var.getName(), lowBound=0, upBound=1, ini_value=var.value()
+                    )
+                correspondence_dict[var] = relaxed_var
+            elif var.type() == VariableType.Spin:
+                with create_variable_mode():
+                    relaxed_var = flopt.Variable(
+                        var.getName(), lowBound=0, upBound=1, ini_value=(var.value() + 1)//2
+                    )
+                correspondence_dict[var] = 2 * relaxed_var - 1
+            else:
+                assert True
+        return prob.replace(correspondence_dict)
 
     def replace(self, correspondence_dict):
         """Replace variable to another variables or expression
@@ -509,13 +552,15 @@ class Problem:
 
         """
         assert all(isinstance(key, VarElement) for key in correspondence_dict.keys())
-        var_dict = {var.name: SelfReturn(var) for var in self.getVariables()}
+        prob = self.clone()
+
+        var_dict = {var.name: SelfReturn(var) for var in prob.getVariables()}
         for var, value in correspondence_dict.items():
             var_dict[var.name] = SelfReturn(value)
-        self.setObjective(self.obj.value(var_dict=var_dict), self.obj_name)
-        for const in self.constraints:
+        prob.setObjective(prob.obj.value(var_dict=var_dict), prob.obj_name)
+        for const in prob.constraints:
             const.expression = const.expression.value(var_dict=var_dict)
-        return self
+        return prob
 
     def __iadd__(self, other):
         if not isinstance(other, tuple):
