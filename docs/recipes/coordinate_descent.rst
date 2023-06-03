@@ -13,10 +13,15 @@ By using optimized_variables option, we select the update variables in one optim
     x = flopt.Variable.array("x", 2, cat="Continuous")
     x[0].setValue(1.5)
     x[1].setValue(1.0)
+
+    # objective function
+    def f(x):
+        return 2*x[0]**2 + x[1]**2 + x[0]*x[1]
+        
     
     prob = flopt.Problem()
-    prob += 2*x[0]**2 + x[1]**2 + x[0]*x[1]
-    
+    prob += f(x)
+
     # store variable path
     path = [[x[0].value(), x[1].value()]]
     def callback(*args, **kwargs):

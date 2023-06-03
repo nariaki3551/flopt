@@ -1,5 +1,136 @@
 # flopt
 
+#### Version 0.5.6 (June, 2023)
+
+#### Update
+
+##### 1. problem type estimator API
+
+```python
+import flopt
+
+x = flopt.Variable("x")
+y = flopt.Variable("y")
+
+prob = flopt.Problem()
+
+prob += x + y
+flopt.estimate_problem_type(prob)
+>>> Problem
+>>> 	Name: None
+>>> 	  Type         : Problem
+>>> 	  sense        : Minimize
+>>> 	  objective    : x+y
+>>> 	  #constraints : 0
+>>> 	  #variables   : 2 (Continuous 2)
+>>> 
+>>> Problem components
+>>> 	Variable: Continuous
+>>> 	Objective: Linear
+>>> 	Constraint: Non
+>>> 
+>>> Problem classes
+>>> 	--> lp
+>>> 	--> mip
+>>> 	    ising
+>>> 	--> quadratic
+>>> 	    permutation
+>>> 	    blackbox
+>>> 	    blackbox with interger variables
+>>> 	--> nonlinear
+>>> 	--> nonlinear with integer variables
+```
+
+##### 2. Jacobian, Hessian API
+
+```python
+x = flopt.Variable.array("x", 3)
+f = flopt.Prod(x)  # f is x0 * x1 * x2
+
+# jacobian expression
+jac = f.jac(x)
+print("jac[0] =", jac[0].getName())  # 0-index value of \nabla f
+print("jac[1] =", jac[1].getName())  # 1-index value of \nabla f
+print("jac[2] =", jac[2].getName())  # 2-index value of \nabla f
+
+# jacobian value
+print("jac =", jac.value())
+
+# hessian expression
+hess = f.hess(x)
+print(hess)
+
+# hessian value
+print(hess.value())
+```
+
+##### 3. Math operation API
+
+- sqrt, exp, cos, sin, tan, log, abs, floor, ceil
+- dot, sum, prod, value
+
+##### 4. optimized_variables API
+
+```python
+# Coordinate Descent
+for _ in range(10):
+    # optimize only x_0
+    prob.solve(optimized_variables=[x[0]])
+    # optimize only x_1
+    prob.solve(optimized_variables=[x[1]])
+```
+
+##### 5. Replace API into Problem
+
+```python
+import flopt
+
+x = flopt.Variable("x")
+
+prob = flopt.Problem()
+prob += x
+print(prob)
+>>> Name: None
+>>>   Type         : Problem
+>>>   sense        : Minimize
+>>>   objective    : x+0
+>>>   #constraints : 0
+>>>   #variables   : 1 (Continuous 1)
+
+x_p = flopt.Variable("x_plus", lowBound=0)
+x_m = flopt.Variable("x_minus", lowBound=0)
+prob = prob.replace({x: x_p - x_m})
+print(prob)
+>>> Name: None
+>>>   Type         : Problem
+>>>   sense        : Minimize
+>>>   objective    : x_plus-x_minus
+>>>   #constraints : 0
+>>>   #variables   : 2 (Continuous 2)
+```
+
+##### 6. Clone API into Problem
+
+```python
+cloned_prob = prob.clone()
+```
+
+
+#### API Change
+
+##### 1. CustomExpression arguments (arg → args)
+   
+```python
+def f(x, y):
+    return x + y
+
+x = flopt.Variable("x")
+y = flopt.Variable("y")
+
+custom_expression = flopt.CustomeExpression(f, args=[x, y])
+```
+
+
 
 ### version 0.5.5 (Oct, 2022)
 
