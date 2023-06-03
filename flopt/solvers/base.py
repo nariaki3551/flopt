@@ -165,6 +165,10 @@ class BaseSearch:
         except KeyboardInterrupt:
             print("Get user ctrl-cuser ctrl-c")
             status = SolverTerminateState.Interrupt
+        except Exception as e:
+            print("Exception occures in solver", e)
+            logger.warning("Exception occures in solver", e)
+            status = SolverTerminateState.Abnormal
 
         self.recordLog()
 
@@ -176,6 +180,7 @@ class BaseSearch:
                 self.build_time,
                 time.time() - self.start_time,
                 self.trial_ix,
+                self.prob.sense,
             )
 
         return status, self.log, time.time() - self.start_time

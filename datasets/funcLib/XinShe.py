@@ -1,21 +1,25 @@
-from math import exp, sin, pi
+import math
 
 import flopt
 
 
-def create_objective(n):
-    def obj(x):
-        c1 = sum(abs(xi) for xi in x)
-        c2 = sum(sin(xi * xi) for xi in x)
-        return c1 * exp(-c2)
+class XinShe:
+    @staticmethod
+    def create_objective(n):
+        def obj(x):
+            c1 = flopt.sum(flopt.abs(x))
+            c2 = flopt.sum(flopt.sin(x * x))
+            return c1 * flopt.exp(-c2)
 
-    return obj
+        return obj
 
+    @staticmethod
+    def create_variables(n, cat="Continuous"):
+        x = flopt.Variable.array(
+            "x", n, lowBound=-2 * math.pi, upBound=2 * math.pi, cat=cat
+        )
+        return x
 
-def create_variables(n, cat="Continuous"):
-    variables = flopt.Variable.array("x", n, lowBound=-2 * pi, upBound=2 * pi, cat=cat)
-    return variables
-
-
-def minimum_obj(n):
-    return 0
+    @staticmethod
+    def minimum_obj(n):
+        return 0

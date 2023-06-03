@@ -119,7 +119,7 @@
 **Update**
 
 1. Add New Solvers
-    - CvxoptQpSearch
+    - CvxoptSearch
       - It can solve the Quadratic Problem
     - AmplifySearch
         - It can solve the Ising model with constraints
@@ -199,5 +199,5 @@
 
 ### version0.1 (Apr, 2020)
 
-1. Available Solvers are RandomSearch, 2-Opt, OptunaTPESearch, OptunaCmaEsSearch, HyperoptTPESearch
+1. Available Solvers are RandomSearch, 2-Opt, OptunaTPESearch, OptunaCmaEsSearch, HyperoptSearch
 

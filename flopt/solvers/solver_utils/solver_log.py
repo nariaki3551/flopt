@@ -8,8 +8,8 @@ logger = setup_logger(__name__)
 
 class Log:
     def __init__(self):
-        self.logs = list()
-        self.solutions = list()
+        self.logs = []
+        self.solutions = []
         heapq.heapify(self.solutions)
 
     def append(self, log_dict):

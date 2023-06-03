@@ -53,14 +53,13 @@ class PulpSearch(BaseSearch):
         prob += a + b >= 2
         prob += b - c >= 3
 
-        solver = flopt.Solver("PulpSearch")
-        prob.solve(solver, msg=True)
+        prob.solve(solver="Pulp", msg=True)
 
     When you use other solvers in pulp, for example GLPK solver, you set solver parameter in PulpSearch object.
 
     .. code-block:: python
 
-        solver = flopt.Solver("PulpSearch")
+        solver = flopt.Solver("Pulp")
 
         import pulp
         glpk_solver = pulp.GLPK_CMD()
@@ -69,7 +68,7 @@ class PulpSearch(BaseSearch):
 
     """
 
-    name = "PulpSearch"
+    name = "Pulp"
     can_solve_problems = {
         "Variable": VariableType.Number,
         "Objective": ExpressionType.Linear,
@@ -89,7 +88,7 @@ class PulpSearch(BaseSearch):
             solver = self.solver
         else:
             solver = pulp.PULP_CBC_CMD(
-                timeLimit=self.timelimit - self.build_time, msg=self.msg
+                timeLimit=max(0, self.timelimit - self.build_time), msg=self.msg
             )
 
         lp_status = lp_prob.solve(solver)
@@ -115,8 +114,7 @@ class PulpSearch(BaseSearch):
             return SolverTerminateState.Unbounded
         elif lp_status == -3:
             return SolverTerminateState.Abnormal
-        else:
-            return SolverTerminateState.Normal
+        return SolverTerminateState.Normal
 
     def createLpProblem(self, solution, prob):
         """Convert Problem into pulp.LpProblem
@@ -145,7 +143,7 @@ class PulpSearch(BaseSearch):
                 var.name, lowBound=var.getLb(), upBound=var.getUb(), cat=cat
             )
             lp_variables.append(lp_var)
-        lp_solution = Solution("lp_solution", lp_variables)
+        lp_solution = Solution(lp_variables)
 
         # conver Problem -> pulp.LpProblem
         name = "" if self.name is None else self.name
@@ -159,10 +157,11 @@ class PulpSearch(BaseSearch):
             lp_prob.setObjective(prob.obj.value(lp_solution))
 
         for const in prob.getConstraints():
-            const_exp = const.expression
-            if const.type() == ConstraintType.Eq:
-                lp_prob.addConstraint(const_exp.value(lp_solution) == 0, const.name)
-            else:  # const.type() == ConstraintType.Le
-                lp_prob.addConstraint(const_exp.value(lp_solution) <= 0, const.name)
+            const_exp = const.expression.value(lp_solution)
+            if not isinstance(const_exp, (int, float)):
+                if const.type() == ConstraintType.Eq:
+                    lp_prob.addConstraint(const_exp == 0, const.name)
+                else:  # const.type() == ConstraintType.Le
+                    lp_prob.addConstraint(const_exp <= 0, const.name)
 
         return lp_prob, lp_solution

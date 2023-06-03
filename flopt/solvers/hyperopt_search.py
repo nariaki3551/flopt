@@ -21,7 +21,7 @@ for logger in loggers_to_shut_up:
 logger = setup_logger(__name__)
 
 
-class HyperoptTPESearch(BaseSearch):
+class HyperoptSearch(BaseSearch):
     """
     TPE Search using Hyperopt (https://hyperopt.github.io/hyperopt/)
 
@@ -45,15 +45,14 @@ class HyperoptTPESearch(BaseSearch):
         prob = flopt.Problem()
         prob += 2*x*x + x*y + y*y + x + y
 
-        solver = flopt.Solver("HyperoptTPESearch")
-        status, log = prob.solve(solver, msg=True, timelimit=1)
+        status, log = prob.solve(solver="Hyperopt", msg=True, timelimit=1)
 
         print("obj =", flopt.Value(prob.obj))
         print("x =", flopt.Value(x))
         print("y =", flopt.Value(y))
     """
 
-    name = "HyperoptTPESearch"
+    name = "Hyperopt"
     can_solve_problems = {
         "Variable": VariableType.Number,
         "Objective": ExpressionType.Any,
@@ -73,11 +72,11 @@ class HyperoptTPESearch(BaseSearch):
         self.start_build()
 
         # make the search space
-        space = dict()
+        space = {}
         for var in solution:
             name = var.name
-            lb = var.getLb(must_number=True)
-            ub = var.getUb(must_number=True)
+            lb = var.getLb(number=True)
+            ub = var.getUb(number=True)
             if var.type() in {
                 VariableType.Integer,
                 VariableType.Binary,

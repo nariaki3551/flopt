@@ -1,8 +1,10 @@
 import pytest
 import numpy as np
 
+import flopt
 from flopt import Variable
-from flopt.expression import Const
+from flopt.polynomial import Monomial, Polynomial
+from flopt.expression import Expression, Const
 from flopt.env import get_variable_lower_bound, get_variable_upper_bound
 
 
@@ -104,6 +106,22 @@ def test_Expression_or():
     assert (1 | c).value() == 1 | c.value()
 
 
+def test_Expression_setPolynomial(a, b, c):
+    assert (a + b).setPolynomial() == Polynomial(
+        {Monomial({a: 1}): 1, Monomial({b: 1}): 1}
+    )
+    assert (a + b + c).setPolynomial() == Polynomial(
+        {Monomial({a: 1}): 2, Monomial({b: 1}): 2}
+    )
+    assert (3 * a).setPolynomial() == Polynomial({Monomial({a: 1}): 3})
+    assert (a * 3).setPolynomial() == Polynomial({Monomial({a: 1}): 3})
+    assert (a / 3).setPolynomial() == Polynomial({Monomial({a: 1}): 1.0 / 3})
+    assert (2 * a**3).setPolynomial() == Polynomial({Monomial({a: 3}): 2})
+    assert (a - b).setPolynomial() == Polynomial(
+        {Monomial({a: 1}): 1, Monomial({b: 1}): -1}
+    )
+
+
 def test_Expression_getVariable(a, b, c):
     assert c.getVariables() == {a, b}
 
@@ -124,8 +142,36 @@ def test_Expression_isMonomial1(a, b):
 
 
 def test_Expression_isMonomial2(a, b):
-    (2 * a).toMonomial()
-    (2 * a * b).toMonomial()
+    assert (2 * a).toMonomial() == Monomial({a: 1}, coeff=2)
+    assert (2 * a * b).toMonomial() == Monomial({a: 1, b: 1}, coeff=2)
+
+
+def test_Expression_toLinear1(a, b):
+    lp = (a + b + 1).toLinear([a, b])
+    assert lp.C == 1
+    assert np.all(lp.c == [1, 1])
+
+
+def test_Expression_toLinear2(a, b):
+    lp = (a + b + 1).toLinear([a])
+    # assert (lp.C).value() == (b + 1).value()
+    assert lp.C == (b + 1).value()
+    assert np.all(lp.c == [1])
+
+
+def test_Expression_toQuadratic1(a, b):
+    qp = (a * a + a * b + b + 1).toQuadratic([a, b])
+    assert np.all(qp.Q == [[2, 1], [1, 0]])
+    assert np.all(qp.c == [0, 1])
+    assert qp.C == 1
+
+
+def test_Expression_toQuadratic2(a, b):
+    qp = (a * a + a * b + b + 1).toQuadratic([a])
+    assert np.all(qp.Q == [[2]])
+    assert np.all(qp.c == [b])
+    # assert (qp.C).value() == (b + 1).value()
+    assert qp.C == (b + 1).value()
 
 
 def test_Expression_simplify(a, b):
@@ -156,7 +202,7 @@ def test_Expression_toSpin():
     print((i + 1).toSpin())
 
 
-def test_Expression_max(a, b, c):
+def test_Expression_max():
     a = Variable(name="a", lowBound=1, upBound=5)
     b = Variable(name="b", lowBound=1, upBound=5)
     c = a + b
@@ -173,7 +219,7 @@ def test_Expression_max(a, b, c):
     assert np.isclose((z + 1.0).max(), get_variable_upper_bound())
 
 
-def test_Expression_min(a, b, c):
+def test_Expression_min():
     a = Variable(name="a", lowBound=1, upBound=5)
     b = Variable(name="b", lowBound=1, upBound=5)
     c = a + b
@@ -216,6 +262,28 @@ def test_Expression_isLinear(a, b, c):
     assert a.isLinear() == True
     assert c.isLinear() == True
     assert (a * b).isLinear() == False
+
+
+def test_Expression_fromPolynominal():
+    x = Variable("x", cat="Integer")
+    y = Variable("y", cat="Integer")
+    polynomial = Polynomial({Monomial({x: 3}): 1, Monomial({y: 2}): 2})  # x^3 + 2*y^2
+    print(Expression.fromPolynomial(polynomial))
+
+
+def test_Expression_jac1():
+    x = Variable.array("x", 2, cat="Integer")
+    exp = x[0] ** 3 + 2 * x[1] ** 2 + x[0] * x[1]
+    jac = exp.jac(x)
+    assert jac[0] == 3 * x[0] ** 2 + x[1]
+    assert jac[1] == 4 * x[1] + x[0]
+
+
+def test_Expression_jac2():
+    x = Variable.array("x", 2, cat="Integer")
+    exp1 = flopt.Sum(x * x)
+    exp2 = x[0] * x[0] + x[1] * x[1]
+    assert np.all(exp1.jac(x) == exp2.jac(x))
 
 
 def test_Const_constant():
@@ -305,3 +373,56 @@ def test_Expression_toIsing(a, b):
     h = np.array([1, 2])
     obj = -(x.T).dot(J).dot(x) - (h.T).dot(x)
     obj.toIsing()
+
+
+def test_Expression_Exp1(a):
+    exp = flopt.exp(a)
+    assert exp.value() == np.exp(a.value())
+    assert exp.getName() == "Exp(a)"
+    assert list(exp.getChildren()) == [a]
+    assert exp.isPolynomial() == False
+    assert exp.getVariables() == {a}
+    assert exp.isNeg() == False
+    assert exp.__repr__()
+
+
+def test_Expression_Exp2():
+    x = flopt.Variable.array("x", 2)
+    exp = flopt.exp(x)
+    assert exp[0] == flopt.exp(x[0])
+    assert exp[1] == flopt.exp(x[1])
+
+
+def test_Expression_Cos(a):
+    exp = flopt.cos(a)
+    assert exp.value() == np.cos(a.value())
+    assert exp.getName() == "Cos(a)"
+
+
+def test_Expression_Sin(a):
+    exp = flopt.sin(a)
+    assert exp.value() == np.sin(a.value())
+    assert exp.getName() == "Sin(a)"
+
+
+def test_Expression_Log(a):
+    exp = flopt.log(a)
+    assert exp.value() == np.log(a.value())
+    assert exp.getName() == "Log(a)"
+
+
+def test_Expression_Abs(a):
+    exp = flopt.abs(a)
+    assert exp.value() == np.abs(a.value())
+    assert exp.getName() == "Abs(a)"
+
+
+def test_Expression_Floor(a):
+    exp = flopt.floor(a)
+    assert exp.value() == np.floor(a.value())
+    assert exp.getName() == "Floor(a)"
+
+
+def test_Expression_Ceil(a):
+    exp = flopt.ceil(a)
+    assert exp.getName() == "Ceil(a)"

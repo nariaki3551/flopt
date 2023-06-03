@@ -51,7 +51,7 @@ def test_VarSpin_mul2(a, b):
 
 
 def test_VarSpin_selfmul(a):
-    assert (a * a).value() == 1
+    assert a * a == 1
 
 
 def test_VarSpin_div(a):
@@ -64,7 +64,7 @@ def test_VarSpin_div(a):
 
 
 def test_VarSpin_pow(a):
-    assert (a**2).value() == 1
+    assert a**2 == 1
     assert (2**a).value() == 2
     assert (a**2.1).value() == 1
     assert (2.1**a).value() == 2.1
@@ -73,11 +73,11 @@ def test_VarSpin_pow(a):
 
 
 def test_VarSpin_intpow(a):
-    assert (a**0).value() == 1
+    assert a**0 == 1
     assert (a**1) == a
-    assert (a**2).value() == 1
+    assert a**2 == 1
     assert (a**3).value() == a
-    assert (a**4).value() == 1
+    assert a**4 == 1
 
 
 def test_VarSpin_mod(a):

@@ -36,7 +36,7 @@ def test_toProblemType3():
     problem_type = prob.toProblemType()
     assert problem_type == {
         "Variable": VariableType.Continuous,
-        "Objective": ExpressionType.Any,
+        "Objective": ExpressionType.Polynomial,
         "Constraint": ExpressionType.Non,
     }
 
@@ -74,7 +74,7 @@ def test_toProblemType6():
     problem_type = prob.toProblemType()
     assert problem_type == {
         "Variable": VariableType.Permutation,
-        "Objective": ExpressionType.Any,
+        "Objective": ExpressionType.Permutation,
         "Constraint": ExpressionType.Non,
     }
 
@@ -110,7 +110,7 @@ def test_toProblemType9():
     problem_type = prob.toProblemType()
     assert problem_type == {
         "Variable": VariableType.Binary,
-        "Objective": ExpressionType.Any,
+        "Objective": ExpressionType.Polynomial,
         "Constraint": ExpressionType.Non,
     }
 

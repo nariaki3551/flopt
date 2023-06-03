@@ -1,7 +1,7 @@
 import inspect
 
 from flopt.solvers.base import BaseSearch
-from flopt.solvers.auto_search.selector import (
+from flopt.solvers.selector import (
     mip,
     ising,
     qp,
@@ -59,10 +59,10 @@ class AutoSearch(BaseSearch):
         >>>   Date: September 1, 2022
         >>> # - - - - - - - - - - - - - - #
         >>>
-        >>> Algorithm: ScipySearch
+        >>> Algorithm: Scipy
         >>> Params: {'timelimit': 10}
 
-    See the log, you can see the RandomSearch algorithm is used for this problem.
+    See the log, you can see the Random algorithm is used for this problem.
     Executing .select(), we can check which solver will be select.
 
     .. code-block:: python
@@ -71,7 +71,7 @@ class AutoSearch(BaseSearch):
         solver.setParams({"timelimit": 10})
         solver = solver.select(prob)
         print(solver.name)
-        >>> ScipySearch
+        >>> Scipy
     """
 
     name = "auto"
@@ -80,6 +80,9 @@ class AutoSearch(BaseSearch):
         "Objective": ExpressionType.Any,
         "Constraint": ExpressionType.Any,
     }
+
+    def __init__(self):
+        self.selector_msg = False
 
     def available(self, prob, verbose=False):
         """
@@ -138,7 +141,7 @@ class AutoSearch(BaseSearch):
                 and problem_type["Constraint"].expand()
                 <= problem_class["Constraint"].expand()
             )
-            if is_problem_class:
+            if is_problem_class and self.selector_msg:
                 logger.info(f"This problem is identified as {class_str}.")
             return is_problem_class
 
@@ -147,18 +150,10 @@ class AutoSearch(BaseSearch):
                 return MipSelector()
             elif check(problem_type, ising, "Ising"):
                 return IsingSelector()
-            elif check(problem_type, qp, "Qadratic programming"):
+            elif check(problem_type, qp, "Quadratic programming"):
                 return QpSelector()
             elif check(problem_type, permutation, "Permutation programming"):
                 return PermutationSelector()
-            elif check(problem_type, blackbox, "Blackbox optimization"):
-                return BlackBoxSelector()
-            elif check(
-                problem_type,
-                blackbox_mip,
-                "Blackbox optimization with integer variables",
-            ):
-                return BlackBoxMipSelector()
             elif check(problem_type, nonlinear, "Nonlinear optimization"):
                 return NonlinearSelector()
             elif check(
@@ -167,6 +162,14 @@ class AutoSearch(BaseSearch):
                 "Nonlinear optimization with integer variables",
             ):
                 return NonlinearMipSelector()
+            elif check(problem_type, blackbox, "Blackbox optimization"):
+                return BlackBoxSelector()
+            elif check(
+                problem_type,
+                blackbox_mip,
+                "Blackbox optimization with integer variables",
+            ):
+                return BlackBoxMipSelector()
         except ModelNotFound as e:
             logger.warning(e)
             return BaseSelector()
@@ -186,6 +189,8 @@ class AutoSearch(BaseSearch):
             list of constriants objects
         prob : Problem
             problem
+        msg :
+            if it is true, message about search is outputed
 
         Returns
         -------

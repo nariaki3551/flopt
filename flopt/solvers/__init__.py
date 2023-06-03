@@ -1,17 +1,21 @@
 from flopt.constants import VariableType, ExpressionType
+from flopt.env import setup_logger
+
+logger = setup_logger(__name__)
 
 algo_list = [
-    "RandomSearch",
+    "Random",
     "2-Opt",
-    "OptunaTPESearch",
-    "OptunaCmaEsSearch",
-    "HyperoptTPESearch",
+    "SteepestDescent",
+    "OptunaTPE",
+    "OptunaCmaEs",
+    "Hyperopt",
     "SFLA",
-    "PulpSearch",
-    "ScipySearch",
-    "ScipyMilpSearch",
-    "CvxoptQpSearch",
-    # "AmplifySearch",
+    "Pulp",
+    "Scipy",
+    "ScipyMilp",
+    "Cvxopt",
+    # "Amplify",
     "auto",
 ]
 
@@ -30,47 +34,71 @@ def Solver(algo="auto"):
     Solver object
        return Solver
     """
-    if algo == "RandomSearch":
+    if algo.endswith("Search"):
+        algo = algo.replace("Search", "")
+        logger.warning(
+            f"It is recommended to use algorithm name {algo} instead of {algo}Search, "
+            + f"{algo}Search will not be available in the future version"
+        )
+    if algo == "CvxoptQp":
+        algo = "Cvxopt"
+        logger.warning(
+            f"It is recommended to use algorithm name Cvxopt instead of CvxoptQp, "
+            + f"CvxoptQp will not be available in the future version"
+        )
+    elif algo == "HyperoptTPE":
+        algo = "Cvxopt"
+        logger.warning(
+            f"It is recommended to use algorithm name Hyperopt instead of HyperoptTPE, "
+            + f"HyperoptTPE will not be available in the future version"
+        )
+    algo = algo.lower()
+
+    if algo == "random":
         from flopt.solvers.random_search import RandomSearch
 
         return RandomSearch()
-    elif algo == "2-Opt":
+    elif algo == "2-opt":
         from flopt.solvers.two_opt import TwoOpt
 
         return TwoOpt()
-    elif algo == "OptunaTPESearch":
+    elif algo == "steepestdescent":
+        from flopt.solvers.steepest_descent import SteepestDescentSearch
+
+        return SteepestDescentSearch()
+    elif algo == "optunatpe":
         from flopt.solvers.optuna_searches import OptunaTPESearch
 
         return OptunaTPESearch()
-    elif algo == "OptunaCmaEsSearch":
+    elif algo == "optunacmaes":
         from flopt.solvers.optuna_searches import OptunaCmaEsSearch
 
         return OptunaCmaEsSearch()
-    elif algo == "HyperoptTPESearch":
-        from flopt.solvers.hyperopt_search import HyperoptTPESearch
+    elif algo == "hyperopt":
+        from flopt.solvers.hyperopt_search import HyperoptSearch
 
-        return HyperoptTPESearch()
-    elif algo == "SFLA":
+        return HyperoptSearch()
+    elif algo == "sfla":
         from flopt.solvers.shuffled_frog_leaping_search import ShuffledFrogLeapingSearch
 
         return ShuffledFrogLeapingSearch()
-    elif algo == "PulpSearch":
+    elif algo == "pulp":
         from flopt.solvers.pulp_search import PulpSearch
 
         return PulpSearch()
-    elif algo == "ScipySearch":
+    elif algo == "scipy":
         from flopt.solvers.scipy_searches import ScipySearch
 
         return ScipySearch()
-    elif algo == "ScipyMilpSearch":
+    elif algo == "scipymilp":
         from flopt.solvers.scipy_searches import ScipyMilpSearch
 
         return ScipyMilpSearch()
-    elif algo == "CvxoptQpSearch":
-        from flopt.solvers.cvxopt_qp_search import CvxoptQpSearch
+    elif algo == "cvxopt":
+        from flopt.solvers.cvxopt_search import CvxoptSearch
 
-        return CvxoptQpSearch()
-    elif algo == "AmplifySearch":
+        return CvxoptSearch()
+    elif algo == "amplify":
         from flopt.solvers.amplify_search import AmplifySearch
 
         return AmplifySearch()
@@ -79,7 +107,7 @@ def Solver(algo="auto"):
 
         return AutoSearch()
     else:
-        assert True, f"{algo} is not available, choices from {Solver_list()}"
+        assert False, f"{algo} is not available, choices from {Solver_list()}"
 
 
 def Solver_list():
@@ -193,3 +221,62 @@ def allAvailableSolversProblemType(problem_type):
         if Solver(algo=algo).availableProblemType(problem_type)
     ]
     return available_solvers
+
+
+def estimate_problem_type(prob):
+    """Estimate problem types
+
+    Parameters
+    ----------
+    prob : Problem
+    """
+    from flopt.solvers.selector import (
+        lp,
+        mip,
+        ising,
+        qp,
+        permutation,
+        blackbox,
+        blackbox_mip,
+        nonlinear,
+        nonlinear_mip,
+    )
+
+    problem_classes = [
+        (lp, "lp"),
+        (mip, "mip"),
+        (ising, "ising"),
+        (qp, "quadratic"),
+        (permutation, "permutation"),
+        (blackbox, "blackbox"),
+        (blackbox_mip, "blackbox with interger variables"),
+        (nonlinear, "nonlinear"),
+        (nonlinear_mip, "nonlinear with integer variables"),
+    ]
+
+    def check(problem_type, problem_class):
+        is_problem_class = (
+            problem_type["Variable"].expand() <= problem_class["Variable"].expand()
+            and problem_type["Objective"].expand()
+            <= problem_class["Objective"].expand()
+            and problem_type["Constraint"].expand()
+            <= problem_class["Constraint"].expand()
+        )
+        return is_problem_class
+
+    problem_type = prob.toProblemType()
+
+    print("Problem")
+    print(prob.__str__(prefix="\t"))
+    print()
+    print("Problem components")
+    print(f"\tVariable: {problem_type['Variable']}")
+    print(f"\tObjective: {problem_type['Objective']}")
+    print(f"\tConstraint: {problem_type['Constraint']}")
+    print()
+    print("Problem classes")
+    for problem_class, name in problem_classes:
+        if is_problem_class := check(problem_type, problem_class):
+            print("\t-->", name)
+        else:
+            print("\t   ", name)

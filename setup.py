@@ -19,9 +19,9 @@ setup(
     install_requires=[
         "numpy",
         "sympy",
-        "matplotlib==3.5.2",
+        "matplotlib",
         "pulp",
-        "optuna==2.10.1",
+        "optuna",
         "hyperopt",
         "cvxopt",
         "amplify",
@@ -31,6 +31,7 @@ setup(
         "dill",
         "pooch",
         "timeout_decorator",
+        "colorlog",
     ],
     author="nariaki tateiwa",
     author_email="nariaki3551@gmail.com",
@@ -41,7 +42,6 @@ setup(
     keywords="optimization nonliear search heuristics algorithm",
     classifiers=[
         "License :: OSI Approved :: MIT License",
-        "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
     ],

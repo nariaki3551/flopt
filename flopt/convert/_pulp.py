@@ -34,14 +34,14 @@ def flopt_to_pulp(prob):
         prob += a + d >= -1 # set the constraint
 
         # check wheter prob can be converted into pulp modeling
-        flopt.Solver(algo='PulpSearch').available(prob)
+        flopt.Solver(algo="Pulp").available(prob)
 
         # convert flopt to pulp
         from flopt.solvers.convert import flopt_to_pulp
         lp_prob, lp_solution = flopt_to_pulp(prob)
     """
     assert PulpSearch().available(prob, verbose=True)
-    solution = Solution("s", prob.getVariables())
+    solution = Solution(prob.getVariables())
     lp_prob, lp_solution = PulpSearch().createLpProblem(solution, prob)
     return lp_prob, lp_solution
 
@@ -80,7 +80,7 @@ def pulp_to_flopt(prob):
 
     """
     # conver LpVariable -> VarElement
-    flopt_variables = dict()
+    flopt_variables = {}
     for var in prob.variables():
         flopt_var = flopt.Variable(
             var.getName(), lowBound=var.getLb(), upBound=var.getUb(), cat=var.cat
@@ -92,7 +92,7 @@ def pulp_to_flopt(prob):
     flopt_prob = flopt.Problem(name=name)
 
     def flopt_exp(const, var_dicts):
-        elms = list()
+        elms = []
         for var_dict in var_dicts:
             name, value = var_dict["name"], var_dict["value"]
             elms.append(value * flopt_variables[name])

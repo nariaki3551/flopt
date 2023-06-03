@@ -1,19 +1,17 @@
-from math import floor
-
 import flopt
 
 
-def create_objective(*args, **kwargs):
-    def obj(x):
-        return sum(floor(xi) for xi in x)
+class DeJongF3:
+    @staticmethod
+    def create_objective(*args, **kwargs):
+        obj = lambda x: flopt.sum(flopt.floor(x))
+        return obj
 
-    return obj
+    @staticmethod
+    def create_variables(cat="Continuous", *args, **kwargs):
+        x = flopt.Variable.array("x", 5, lowBound=-5.12, upBound=5.12, cat=cat)
+        return x
 
-
-def create_variables(cat="Continuous", *args, **kwargs):
-    variables = flopt.Variable.array("x", 5, lowBound=-5.12, upBound=5.12, cat=cat)
-    return variables
-
-
-def minimum_obj(n):
-    return -6 * n
+    @staticmethod
+    def minimum_obj(n):
+        return -6 * n

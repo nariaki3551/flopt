@@ -52,12 +52,12 @@ class OptunaSearch(BaseSearch):
                     var.toBinary()
                     var.binary.setValue(trial.suggest_int(var.name, 0, 1))
                 elif var.type() == VariableType.Integer:
-                    lb = var.getLb(must_number=True)
-                    ub = var.getUb(must_number=True)
+                    lb = var.getLb(number=True)
+                    ub = var.getUb(number=True)
                     var.setValue(trial.suggest_int(var.name, lb, ub))
                 elif var.type() == VariableType.Continuous:
-                    lb = var.getLb(must_number=True)
-                    ub = var.getUb(must_number=True)
+                    lb = var.getLb(number=True)
+                    ub = var.getUb(number=True)
                     var.setValue(trial.suggest_uniform(var.name, lb, ub))
             obj_value = self.getObjValue(solution)
 
@@ -70,13 +70,17 @@ class OptunaSearch(BaseSearch):
             return obj_value
 
         self.end_build()
-        search_timelimit = self.timelimit - self.build_time
+        search_timelimit = max(0, self.timelimit - self.build_time)
 
         @timeout_decorator.timeout(search_timelimit, timeout_exception=TimeoutError)
         def optimize():
             self.study.optimize(objective_func, self.n_trial, timeout=search_timelimit)
 
-        optimize()
+        try:
+            optimize()
+        except ValueError as e:
+            logger.warning(e)
+            raise flopt.error.SolverError()
 
         return SolverTerminateState.Normal
 
@@ -111,15 +115,14 @@ class OptunaTPESearch(OptunaSearch):
         prob = flopt.Problem()
         prob += 2*x*x + x*y + y*y + x + y
 
-        solver = flopt.Solver("OptunaTPESearch")
-        status, log = prob.solve(solver, msg=True, timelimit=1)
+        status, log = prob.solve(solver="OptunaTPE", msg=True, timelimit=1)
 
         print("obj =", flopt.Value(prob.obj))
         print("x =", flopt.Value(x))
         print("y =", flopt.Value(y))
     """
 
-    name = "OptunaTPESearch"
+    name = "OptunaTPE"
 
     def __init__(self):
         super().__init__()
@@ -156,7 +159,6 @@ class OptunaCmaEsSearch(OptunaSearch):
 
     Parameters
     ----------
-    x0
     sigma0
     n_startup_trials
     independent_sampler
@@ -176,8 +178,7 @@ class OptunaCmaEsSearch(OptunaSearch):
         prob = flopt.Problem()
         prob += 2*x*x + x*y + y*y + x + y
 
-        solver = flopt.Solver("OptunaCmaEsSearch")
-        status, log = prob.solve(solver, msg=True, timelimit=1)
+        status, log = prob.solve(solver="OptunaCmaEs", msg=True, timelimit=1)
 
         print("obj =", flopt.Value(prob.obj))
         print("x =", flopt.Value(x))
@@ -187,11 +188,10 @@ class OptunaCmaEsSearch(OptunaSearch):
         >>> y = -0.4285714299429902
     """
 
-    name = "OptunaCmaEsSearch"
+    name = "OptunaCmaEs"
 
     def __init__(self):
         super().__init__()
-        self.x0 = None
         self.sigma0 = None
         self.n_startup_trials = 1
         self.independent_sampler = None
@@ -200,8 +200,12 @@ class OptunaCmaEsSearch(OptunaSearch):
 
     def createStudy(self, solution):
         disable_default_handler()
-        if self.x0 is None:
-            x0 = {var.name: var.value() for var in solution}
+        x0 = dict()
+        for var in solution:
+            if var.type() == VariableType.Spin:
+                x0[var.name] = (var.value() + 1) / 2
+            else:
+                x0[var.name] = var.value()
         sampler = CmaEsSampler(
             x0=x0,
             sigma0=self.sigma0,

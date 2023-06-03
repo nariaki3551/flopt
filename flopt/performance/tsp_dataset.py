@@ -94,7 +94,7 @@ def read_edge_weight(f, edge_weight_format, dim):
 
 
 def read_node_coord(f, edge_weight_type, dim, D):
-    N = dict()
+    N = {}
     for _ in range(dim):
         line = f.readline()
         node_ix, x, y = line.split()
@@ -186,7 +186,7 @@ class TSPInstance(BaseInstance):
                 distance += self.D[head][tail]
             return distance
 
-        tsp_obj = CustomExpression(func=tsp_dist, arg=[perm])
+        tsp_obj = CustomExpression(func=tsp_dist, args=[perm])
 
         # Problem
         prob = Problem(name=f"TSP:{self.name}")

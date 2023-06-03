@@ -3,7 +3,7 @@ import numpy as np
 
 from flopt.solvers.base import BaseSearch
 from flopt.convert import LpStructure
-from flopt.variable import VariableArray
+from flopt.container import FloptNdarray
 from flopt.constants import VariableType, ExpressionType, SolverTerminateState
 from flopt.env import setup_logger
 
@@ -39,7 +39,7 @@ class ScipyMilpSearch(BaseSearch):
         prob += a + b >= 2
         prob += b - c >= 3
 
-        solver = flopt.Solver("ScipyMilpSearch")
+        solver = flopt.Solver("ScipyMilp")
         prob.solve(solver, msg=True)
 
     See Also
@@ -47,7 +47,7 @@ class ScipyMilpSearch(BaseSearch):
     scipy.optimize.milp
     """
 
-    name = "ScipyMilpSearch"
+    name = "ScipyMilp"
     can_solve_problems = {
         "Variable": VariableType.Number,
         "Objective": ExpressionType.Linear,
@@ -60,8 +60,8 @@ class ScipyMilpSearch(BaseSearch):
         # lp structure
         lp = LpStructure.fromFlopt(
             self.prob,
-            x=VariableArray(solution.getVariables()),
-            option="all_neq",
+            x=solution,
+            option="ineq",
         )
 
         # bounds
@@ -83,7 +83,10 @@ class ScipyMilpSearch(BaseSearch):
         self.end_build()
 
         # options
-        options = {"disp": self.msg, "time_limit": self.timelimit - self.build_time}
+        options = {
+            "disp": self.msg,
+            "time_limit": max(0, self.timelimit - self.build_time),
+        }
 
         # search
         res = scipy_optimize.milp(
@@ -109,5 +112,4 @@ class ScipyMilpSearch(BaseSearch):
             return SolverTerminateState.Infeasible
         elif res.status == 3:
             return SolverTerminateState.Unbounded
-        else:
-            return SolverTerminateState.Abnormal
+        return SolverTerminateState.Abnormal

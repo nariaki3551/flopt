@@ -20,7 +20,7 @@ prob = Problem(name="Test")
 prob += 2 * (3 * a + b) * c**2 + 3
 
 # Solver
-solver = Solver(algo="RandomSearch")
+solver = Solver(algo="Random")
 solver.setParams(n_trial=1000)  # setting of the hyper parameters
 status, log = prob.solve(solver, msg=True)  # run solver to solve the problem
 
@@ -42,7 +42,7 @@ prob = Problem(name="Test", sense="Maximize")
 prob.setObjective(2 * (3 * a + b) * c * c + 3)
 
 # Solver
-solver = Solver(algo="RandomSearch")
+solver = Solver(algo="Random")
 solver.setParams({"n_trial": 1000})  # setting of the hyper parameters
 status, log = prob.solve(solver, msg=True)  # run solver to solve the problem
 

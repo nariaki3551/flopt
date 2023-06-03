@@ -63,7 +63,7 @@ def compute(
 
     .. code-block:: python
 
-        rs_solver = flopt.Solver("RandomSearch")
+        rs_solver = flopt.Solver("Random")
 
         # compute the performance
         logs = flopt.performance.compute(
@@ -106,7 +106,7 @@ def compute(
     if save_prefix is None:
         save_prefix = PERFORMANCE_DIR
 
-    logs = dict()
+    logs = {}
 
     for dataset in datasets:
         for instance in dataset:

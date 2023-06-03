@@ -97,9 +97,12 @@ def during_solver_message(head, obj_value, best_bound, time, iteration):
     print(" ".join(message))
 
 
-def end_solver_message(status, obj_value, build_time, elapsed_time, num_trials):
+def end_solver_message(status, obj_value, build_time, elapsed_time, num_trials, sense):
+    if sense == "Maximize":
+        obj_value = -obj_value
     message = (
         "",
+        f"Sense: {sense}",
         f"Status: {status.__str__()}",
         f"Objective Value: {obj_value}",
         f"Time: {elapsed_time}",

@@ -6,6 +6,7 @@ from .custom_dataset import CustomDataset, CustomInstance
 dataset_list = [
     "tsp",
     "func",
+    # "cn_func",
     "mip",
 ]
 
@@ -19,6 +20,12 @@ def get_dataset(name):
         from .func_dataset import FuncDataset
 
         return FuncDataset()
+
+    # elif name == "cn_func":
+    #     from .constrainted_nonlinear_dataset import ConstraintedNonlinearDataset
+
+    #     return ConstraintedNonlinearDataset()
+
     elif name == "mip":
         from .mip_dataset import MipDataset
 

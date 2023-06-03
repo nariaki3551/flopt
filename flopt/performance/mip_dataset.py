@@ -37,7 +37,7 @@ class MipDataset(BaseDataset):
     ]
 
     def __init__(self):
-        self.sol_data = dict()
+        self.sol_data = {}
         sol_file = "miplib2017-v23.solu"
         pattern = re.compile("=(?P<status>.*)=\s+(?P<name>.*)\s+(?P<best_value>.*)")
         for line in open(f"{mip_storage}/{sol_file}", "r"):

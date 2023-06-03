@@ -1,5 +1,5 @@
-Examples
-========
+Recipes
+=======
 
 
 
@@ -8,3 +8,5 @@ Examples
 
    plot_search_points
    obtain_multi_solutions
+   newton
+   coordinate_descent

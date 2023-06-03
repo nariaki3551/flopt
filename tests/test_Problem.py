@@ -2,6 +2,7 @@ import pytest
 import numpy as np
 
 from flopt import Variable, Problem, CustomExpression, Solver, Sum
+import flopt.constants
 
 
 def test_Problem_obj():
@@ -28,6 +29,51 @@ def test_Problem_obj3():
     assert prob.getObjectiveValue() == 1
 
 
+def test_Problem_clone():
+    a = Variable("a", ini_value=1, cat="Integer")
+    b = Variable("b", ini_value=1, cat="Continuous")
+
+    prob = Problem()
+    prob += a + 2 * b
+    prob += a + b >= 3
+    cloned_prob = prob.clone()
+    assert cloned_prob.sense == prob.sense
+    assert cloned_prob.obj == prob.obj
+    assert cloned_prob.constraints == prob.constraints
+
+
+def test_Problem_toEq():
+    a = Variable("a", ini_value=1, cat="Integer")
+    b = Variable("b", ini_value=1, cat="Continuous")
+
+    prob = Problem()
+    prob += a + 2 * b
+    prob += a + b >= 3
+    eq_prob = prob.toEq()
+    assert len(eq_prob.getVariables()) == 3
+    assert len(prob.getVariables()) == 2
+    assert all(
+        const.type() == flopt.constants.ConstraintType.Eq
+        for const in eq_prob.constraints
+    )
+
+
+def test_Problem_toIneq():
+    a = Variable("a", ini_value=1, cat="Integer")
+    b = Variable("b", ini_value=1, cat="Continuous")
+
+    prob = Problem()
+    prob += a + 2 * b
+    prob += a + b == 3
+    eq_prob = prob.toIneq()
+    assert len(eq_prob.constraints) == 2
+    assert len(prob.constraints) == 1
+    assert all(
+        const.type() == flopt.constants.ConstraintType.Le
+        for const in eq_prob.constraints
+    )
+
+
 def test_Problem_getSolution():
     # Variables
     a = Variable("a", lowBound=0, upBound=1, cat="Integer")
@@ -42,7 +88,7 @@ def test_Problem_getSolution():
     prob += -(x.T).dot(J).dot(x) - (h.T).dot(x)
 
     # Solver
-    solver = Solver("RandomSearch")
+    solver = Solver("Random")
     solver.setParams(max_k=2, timelimit=1)  # set max_k > 1
 
     # solve

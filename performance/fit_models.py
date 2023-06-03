@@ -40,7 +40,7 @@ def create_nonlinear_datasets(num_probs, cat, args):
         "Schwefel",
         "Sphere",
         "SumDiffPower",
-        "WeitedSphere",
+        "WeightedSphere",
         "XinShe",
         "Zahkarov",
     ]

@@ -16,10 +16,12 @@ def test_convert_linearize1():
 
     prob = Problem(test_name)
     prob += x[0] - 2 * x[1] - x[0] * x[1] * x[2]
-    print("[ original ]\n", prob.show())
+    print("[ original ]")
+    prob.show()
 
     linearize(prob)
-    print("[ linearized ]\n", prob.show())
+    print("[ linearized ]")
+    prob.show()
 
 
 def test_convert_linearize2():
@@ -31,10 +33,12 @@ def test_convert_linearize2():
     prob = Problem(test_name)
     prob += x[0] - 2 * x[1] - x[0] * x[1] * x[2]
     prob += x[0] + x[1] <= 1
-    print("[ original ]\n", prob.show())
+    print("[ original ]")
+    prob.show()
 
     linearize(prob)
-    print("[ linearized ]\n", prob.show())
+    print("[ linearized ]")
+    prob.show()
 
 
 def test_convert_linearize3():
@@ -49,10 +53,10 @@ def test_convert_linearize3():
     prob = Problem(test_name)
     prob += x[0] - 2 * x[1] - x[0] * x[1] * x[2] - x[0] * x[3]
     prob += x[0] + x[2] <= 2
-    print(prob.show())
+    prob.show()
 
     linearize(prob)
-    print(prob.show())
+    prob.show()
 
 
 def test_convert_linearize4():
@@ -67,10 +71,10 @@ def test_convert_linearize4():
     prob = Problem(test_name)
     prob += x[1] * x[2]
     prob += x[0] + x[2] <= 2
-    print(prob.show())
+    prob.show()
 
     linearize(prob)
-    print(prob.show())
+    prob.show()
 
 
 def test_convert_linearize5():
@@ -81,10 +85,10 @@ def test_convert_linearize5():
 
     prob = Problem(test_name)
     prob += Prod(x)
-    print(prob.show())
+    prob.show()
 
     linearize(prob)
-    print(prob.show())
+    prob.show()
 
 
 def test_convert_linearize6():
@@ -95,10 +99,10 @@ def test_convert_linearize6():
 
     prob = Problem(test_name)
     prob += Sum(x) * Sum(x)
-    print(prob.show())
+    prob.show()
 
     linearize(prob)
-    print(prob.show())
+    prob.show()
 
 
 def test_convert_binarize1():
@@ -106,14 +110,17 @@ def test_convert_binarize1():
 
     prob = Problem()
     prob += x[0]
-    print("[ original ]\n", prob.show())
+
+    print("[ original ]")
+    prob.show()
 
     binarize(prob)
-    print("[ binarized ]\n", prob.show())
+    print("[ binarized ]")
+    prob.show()
 
     linearize(prob)
-    print(prob.show())
-    print("[ linearized ]\n", prob.show())
+    print("[ linearized ]")
+    prob.show()
 
 
 def test_convert_binarize2():
@@ -123,14 +130,17 @@ def test_convert_binarize2():
 
     prob = Problem()
     prob += x[2] * x[0]
-    print("[ original ]\n", prob.show())
+
+    print("[ original ]")
+    prob.show()
 
     binarize(prob)
-    print("[ binarized ]\n", prob.show())
+    print("[ binarized ]")
+    prob.show()
 
     linearize(prob)
-    print(prob.show())
-    print("[ linearized ]\n", prob.show())
+    print("[ linearized ]")
+    prob.show()
 
 
 def test_convert_binarize3():
@@ -140,14 +150,17 @@ def test_convert_binarize3():
 
     prob = Problem()
     prob += x[2] * x[0] + x[1]
-    print("[ original ]\n", prob.show())
+
+    print("[ original ]")
+    prob.show()
 
     binarize(prob)
-    print("[ binarized ]\n", prob.show())
+    print("[ binarized ]")
+    prob.show()
 
     linearize(prob)
-    print(prob.show())
-    print("[ linearized ]\n", prob.show())
+    print("[ linearized ]")
+    prob.show()
 
 
 def test_convert_binarize4():
@@ -157,13 +170,16 @@ def test_convert_binarize4():
 
     prob = Problem()
     prob += x[2] * x[0] + x[1]
-    print("[ original ]\n", prob.show())
+
+    print("[ original ]")
+    prob.show()
 
     binarize(prob)
-    print("[ binarized ]\n", prob.show())
+    print("[ binarized ]")
+    prob.show()
 
     linearize(prob)
-    print(prob.show())
+    prob.show()
 
 
 def test_convert_binarize5():
@@ -172,14 +188,16 @@ def test_convert_binarize5():
 
     prob = Problem()
     prob += flopt.Sum(y)
-    print("[ original ]\n", prob.show())
+
+    print("[ original ]")
+    prob.show()
 
     binarize(prob)
-    print("[ binarized ]\n", prob.show())
+    print("[ binarized ]")
+    prob.show()
 
     linearize(prob)
-    print(prob.show())
-    print("[ linearized ]\n", prob.show())
+    prob.show()
 
 
 def test_convert_binarize6():
@@ -187,14 +205,16 @@ def test_convert_binarize6():
 
     prob = Problem()
     prob += flopt.Prod(x)
-    print("[ original ]\n", prob.show())
+
+    print("[ original ]")
+    prob.show()
 
     binarize(prob)
-    print("[ binarized ]\n", prob.show())
+    print("[ binarized ]")
+    prob.show()
 
     linearize(prob)
-    print(prob.show())
-    print("[ linearized ]\n", prob.show())
+    prob.show()
 
 
 def test_convert_binarize7():

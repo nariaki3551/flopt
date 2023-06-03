@@ -28,7 +28,7 @@ For example, the following problem is one of the QP.
   prob += a + b <= 2
   prob += b - c == 3
 
-  print(prob.show())
+  prob.show()
   >>> Name: None
   >>>   Type         : Problem
   >>>   sense        : minimize
@@ -162,7 +162,7 @@ QP to flopt
   from flopt.convert import QpStructure
   prob = QpStructure(Q, c, C, A=A, b=b, lb=lb, ub=ub, types=types).toFlopt()
 
-  print(prob.show())
+  prob.show()
   >>> Name: None
   >>>   Type         : Problem
   >>>   sense        : minimize

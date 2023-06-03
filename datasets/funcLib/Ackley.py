@@ -1,24 +1,24 @@
-from math import exp, sqrt, e, cos, pi
+import math
 
 import flopt
 
 
-def create_objective(n):
-    def obj(x):
-        return (
-            20
-            - 20 * (exp(-0.2 * sqrt(flopt.Sqnorm(x)) / len(x)))
-            + e
-            - exp(sum(cos(2 * pi * xi) for xi in x) / len(x))
+class Ackley:
+    @staticmethod
+    def create_objective(n):
+        obj = (
+            lambda x: 20
+            - 20 * (flopt.exp(-0.2 * flopt.norm(x)) / n)
+            + math.e
+            - flopt.exp(flopt.sum(flopt.cos(2 * math.pi * x)) / n)
         )
+        return obj
 
-    return obj
+    @staticmethod
+    def create_variables(n, cat="Continuous"):
+        x = flopt.Variable.array("x", n, lowBound=-5.12, upBound=5.12, cat=cat)
+        return x
 
-
-def create_variables(n, cat="Continuous"):
-    variables = flopt.Variable.array("x", n, lowBound=-5.12, upBound=5.12, cat=cat)
-    return variables
-
-
-def minimum_obj(n):
-    return 0
+    @staticmethod
+    def minimum_obj(n):
+        return 0

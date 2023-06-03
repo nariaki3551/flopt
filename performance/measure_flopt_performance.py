@@ -16,15 +16,16 @@ np.random.seed(0)
 
 
 def main():
-    count = 10
+    count = 1
     data = list()
     data += speed_import(count)
     data += speed_build_LpStructure(count)
     data += speed_build_QpStructure(count)
     data += speed_create_quadratic_expression(count)
     data += speed_set_polynomial(count)
+    data += speed_quadratic_expression_value(count)
     data += speed_sum_operation(count)
-    data += speed_func_value(count)
+    data += speed_func_ce_value(count)
 
     df = pandas.DataFrame(data)
     print(df.drop("count", axis=1).groupby("name").describe())
@@ -185,17 +186,52 @@ def speed_set_polynomial(count):
     return data
 
 
-def speed_func_value(count):
+def speed_quadratic_expression_value(count):
+    name = "quadratic_expression_value"
+    data = list()
+
+    scales = [1, 100]
+    Ns = [40]
+    cats = ["Continuous", "Integer", "Binary"]
+
+    for scale, N, cat in itertools.product(scales, Ns, cats):
+        _name = name + f"_scale{scale}_N{N}_cat{cat}"
+
+        # sampling Q matrix
+        Q = np.random.normal(scale=scale, size=(N, N)).astype(np.int8)
+
+        # create quadratic expression
+        x = flopt.Variable.array("x", N, cat=cat, ini_value=1.0)
+        q = x.T.dot(Q).dot(x).expand()
+
+        for i in tqdm.tqdm(range(count), desc="[ " + _name + " ]"):
+            start_time = time.time()
+            _count = 1000
+            for j in range(_count):
+                q.value()
+            data.append(
+                {
+                    "name": _name,
+                    "value": time.time() - start_time,
+                    "unit": "s",
+                    "count": 1,
+                }
+            )
+    return data
+
+
+def speed_func_ce_value(count):
+    """custome expression value"""
     name = "func"
     data = list()
 
     dataset = flopt.performance.get_dataset("func")
-    instances = {"Ackley", "Goldstain", "Rosenbrock ", "WeitedSphere"}
+    instances = {"Ackley", "Goldstain", "Rosenbrock ", "WeightedSphere"}
     for instance in dataset:
         if instance.name not in instances:
             continue
         _name = name + "_" + instance.name
-        random_search = flopt.Solver("RandomSearch")
+        random_search = flopt.Solver("Random")
         formulatable, prob = instance.createProblem(random_search)
         random_search.reset()
         prob.solve(solver=random_search, n_trial=2)
@@ -203,10 +239,10 @@ def speed_func_value(count):
 
         for i in tqdm.tqdm(range(count), desc="[ " + _name + " ]"):
             start_time = time.time()
-            if instance == {"Ackley", "WeitedSphere"}:
-                _count = 100000
+            if instance == {"Ackley", "WeightedSphere"}:
+                _count = 1000000
             else:
-                _count = 20000
+                _count = 200000
             for j in range(_count):
                 obj_value = prob.obj.value(solution)
             data.append(
@@ -229,7 +265,7 @@ def speed_sum_operation(count):
     for size in sizes:
         x = flopt.Variable.array("x", size)
         y = flopt.Sum(x)
-        solution = flopt.Solution("tmp", [y])
+        solution = flopt.Solution([y])
 
         _name = name + f"_size{size}"
         for i in tqdm.tqdm(range(count), desc="[ " + _name + " ]"):

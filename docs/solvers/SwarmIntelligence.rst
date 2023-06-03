@@ -1,8 +1,10 @@
 Swarm Intelligence Search
 -------------------------
 
-Shuffled Frog Learping Algorighm (SFLA)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Shuffled Frog Learping Algorighm
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Solver name is "SFLA".
 
 .. currentmodule:: flopt.solvers.shuffled_frog_leaping_search
 

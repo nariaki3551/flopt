@@ -4,6 +4,8 @@ non-Linear Programming Search
 ScipySearch
 ^^^^^^^^^^^
 
+Solver name is "Scipy".
+
 .. image:: https://img.shields.io/badge/Variable-Number-blue.svg
 .. image:: https://img.shields.io/badge/Objective-any-orange.svg
 .. image:: https://img.shields.io/badge/Constraints-any-green.svg

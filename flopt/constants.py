@@ -2,8 +2,8 @@ import enum
 
 import numpy as np
 
-VERSION = "0.5.4"
-DATE = "September 1, 2022"
+VERSION = "0.5.5"
+DATE = "October 15, 2022"
 
 # number classes
 number_classes = (int, float, np.number)
@@ -66,20 +66,20 @@ class VariableType(enum.IntEnum):
             return {vt.Continuous, vt.Integer, vt.Binary, vt.Spin}
         elif self == vt.Any:
             return vt.Number.expand() | {vt.Permutation}
-        else:
-            return {self}
+        return {self}
 
 
 # expression type
 class ExpressionType(enum.IntEnum):
     Unknown = 200
-    Custom = 201
-    Const = 202
-    Any = 203
-    Linear = 204
-    Quadratic = 205
-    BlackBox = 206
-    Non = 207
+    Any = 201
+    Linear = 202
+    Quadratic = 203
+    Polynomial = 204
+    Nonlinear = 205
+    Permutation = 206
+    BlackBox = 207
+    Non = 208
 
     def __str__(self):
         return self.name
@@ -89,19 +89,33 @@ class ExpressionType(enum.IntEnum):
         if self == et.Any:
             return {
                 et.Unknown,
-                et.Custom,
-                et.Const,
                 et.Linear,
                 et.Quadratic,
+                et.Polynomial,
+                et.Nonlinear,
+                et.Permutation,
                 et.BlackBox,
                 et.Non,
             }
-        elif self == et.Quadratic:
-            return {et.Const, et.Linear, et.Quadratic, et.Non}
         elif self == et.Linear:
-            return {et.Const, et.Linear, et.Non}
-        else:
-            return {self, et.Non}
+            return {et.Linear, et.Non}
+        elif self == et.Quadratic:
+            return {et.Linear, et.Quadratic, et.Non}
+        elif self == et.Polynomial:
+            return {et.Linear, et.Quadratic, et.Polynomial, et.Non}
+        elif self == et.Permutation:
+            return {et.Permutation, et.Non}
+        elif self == et.BlackBox:
+            return {et.Permutation, et.BlackBox, et.Non}
+        elif self == et.Nonlinear:
+            return {
+                et.Linear,
+                et.Quadratic,
+                et.Polynomial,
+                et.Nonlinear,
+                et.Non,
+            }
+        return {self, et.Non}
 
 
 # expression type

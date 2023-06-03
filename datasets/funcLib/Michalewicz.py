@@ -1,21 +1,22 @@
-from math import sin, pi, sin
+import math
 
 import flopt
 
 
-def create_objective(*args, **kwargs):
-    def obj(x):
-        m = 10
-        fi = lambda i: sin(x[i]) * sin(i * x[i] * x[i] / pi) ** (2**m)
-        return sum(fi(i) for i in range(len(x)))
+class Michalewicz:
+    @staticmethod
+    def create_objective(*args, **kwargs):
+        obj = lambda x: -flopt.sum(
+            flopt.sin(x[i]) * flopt.sin((i + 1) * x[i] ** 2 / math.pi) ** (2**10)
+            for i in range(2)
+        )
+        return obj
 
-    return obj
+    @staticmethod
+    def create_variables(n, cat="Continuous"):
+        x = flopt.Variable.array("x", 2, lowBound=0, upBound=math.pi, cat=cat)
+        return x
 
-
-def create_variables(n, cat="Continuous"):
-    variables = flopt.Variable.array("x", 2, lowBound=0, upBound=pi, cat=cat)
-    return variables
-
-
-def minimum_obj(n):
-    return -1.8013
+    @staticmethod
+    def minimum_obj(*args, **kwargs):
+        return -1.8013

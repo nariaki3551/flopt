@@ -1,3 +1,6 @@
+import operator
+import functools
+
 from flopt.constants import VariableType
 
 
@@ -17,20 +20,26 @@ class Monomial:
     If terms is empty dictionary, then this monomial is constant whose value is self.coeff
     """
 
-    def __init__(self, terms=dict(), coeff=1):
+    def __init__(self, terms={}, coeff=1):
         self.terms = terms
         self.coeff = coeff
         self.max_degree = None
         self.is_linear = None
         self._hash = None
 
-    def copy(self):
+    def clone(self):
         """
         Returns
         -------
         Monomial
         """
         return Monomial(dict(self.terms), self.coeff)
+
+    def value(self):
+        return self.coeff * functools.reduce(
+            operator.mul,
+            (var.value() ** exponent for var, exponent in self.terms.items()),
+        )
 
     def maxDegree(self):
         """
@@ -101,8 +110,18 @@ class Monomial:
         """
         if self.terms:
             return Polynomial({Monomial(self.terms): self.coeff})
-        else:
-            return Polynomial(constant=self.coeff)
+        return Polynomial(constant=self.coeff)
+
+    def toExpression(self):
+        """
+        Returns
+        -------
+        Expression
+        """
+        expression = self.coeff
+        for var, exponent in self.terms.items():
+            expression *= var**exponent
+        return expression
 
     def simplify(self):
         """Simplify this monomial
@@ -111,7 +130,7 @@ class Monomial:
         -------
         Monomial
         """
-        terms = dict()
+        terms = {}
         for x in self.terms:
             if x.type() == VariableType.Binary:
                 terms[x] = 1  # x * x = x
@@ -125,18 +144,9 @@ class Monomial:
         return Monomial(terms, self.coeff)
 
     def __mul__(self, other):
-        if isinstance(other, (int, float)):
-            return Monomial(self.terms, self.coeff * other)
-        elif isinstance(other, Monomial):
-            terms = dict(self.terms)
-            for x in other.terms:
-                if x in self.terms:
-                    terms[x] += other[x]
-                else:
-                    terms[x] = other[x]
-            return Monomial(terms, self.coeff * other.coeff)
-        else:
-            return NotImplemented
+        mono = self.clone()
+        mono *= other
+        return mono
 
     def __rmul__(self, other):
         return self * other
@@ -162,6 +172,9 @@ class Monomial:
         assert isinstance(other, int)
         terms = {x: exp * other for x, exp in self.terms.items()}
         return Monomial(terms, self.coeff**other)
+
+    def __iter__(self):
+        return iter(self.terms.items())
 
     def __getitem__(self, item):
         return self.terms[item]
@@ -209,17 +222,14 @@ class Polynomial:
         constant of polynomial
     """
 
-    def __init__(self, terms=dict(), constant=0):
+    def __init__(self, terms={}, constant=0):
         self.terms = terms
         self._constant = constant
 
-    def monos(self):
-        """
-        Returns
-        -------
-        set of Monomial
-        """
-        return set(self.terms.keys())
+    def value(self):
+        return (
+            sum(coeff * mono.value() for mono, coeff in terms.items()) + self.constant()
+        )
 
     def coeff(self, *args):
         """
@@ -261,22 +271,14 @@ class Polynomial:
             e.polynomial.coeff(y**3)
             >>> 3
         """
-        if isinstance(args[0], Monomial):
-            mono = args[0]
-        else:
-            mono = args[0].toMonomial()
+        mono = args[0].toMonomial()
         if len(args) > 1:
-            mono = mono.copy()
-        for elm in args[1:]:
-            if isinstance(elm, Monomial):
-                assert elm.coeff == 1
-                mono *= elm
-            else:
+            mono = mono.clone()
+            for elm in args[1:]:
                 mono *= elm.toMonomial()
         if mono in self.terms:
             return self.terms[mono]
-        else:
-            return 0
+        return 0
 
     def constant(self):
         """
@@ -326,7 +328,7 @@ class Polynomial:
         """
         poly = Polynomial(constant=0)
         for mono, coeff in self:
-            poly += mono.diff(x)
+            poly += coeff * mono.diff(x)
         return poly
 
     def maxDegree(self):
@@ -362,7 +364,7 @@ class Polynomial:
         Polynomial
             return simplified self polynomial
         """
-        terms = dict()
+        terms = {}
         constant = 0
         for mono in self.terms.keys():
             _mono = mono.simplify()
@@ -389,8 +391,7 @@ class Polynomial:
                     del terms[mono]
             constant = self._constant + other._constant
             return Polynomial(terms, constant)
-        else:
-            return NotImplemented
+        return NotImplemented
 
     def __radd__(self, other):
         return self + other
@@ -408,7 +409,7 @@ class Polynomial:
         elif isinstance(other, Monomial):
             return self * other.toPolynomial()
         elif isinstance(other, Polynomial):
-            terms = dict()
+            terms = {}
             for mono, coeff in other:
                 for mono_, coeff_ in self:
                     mono__ = mono * mono_
@@ -437,8 +438,7 @@ class Polynomial:
                     del terms[mono]
             constant = self._constant * other._constant
             return Polynomial(terms, constant)
-        else:
-            return NotImplemented
+        return NotImplemented
 
     def __rmul__(self, other):
         return self * other
@@ -473,11 +473,11 @@ class Polynomial:
         s = ""
         for mono, coeff in self.terms.items():
             if coeff == 1:
-                s += f"{str(mono)}+"
+                s += f"{mono}+"
             elif coeff > 0:
-                s += f"{coeff}*{str(mono)}+"
+                s += f"{coeff}*{mono}+"
             else:
-                s += f"({coeff}*{str(mono)})+"
+                s += f"({coeff}*{mono})+"
         return s + f"{self._constant}"
 
     def __repr__(self):

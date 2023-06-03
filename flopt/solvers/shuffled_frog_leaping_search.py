@@ -22,11 +22,11 @@ def bisect_left(a, x, key):
 
 
 class Frog(Solution):
-    def __init__(self, solution, prob):
-        super().__init__()
-        self._variables = solution._variables
-        self.prob = prob
-        self.obj_value = None
+    def __new__(cls, solution, prob):
+        obj = super().__new__(cls, solution._variables, sort=False)
+        obj.prob = prob
+        obj.obj_value = None
+        return obj
 
     def setObjValue(self):
         self.obj_value = self.prob.getObjValue(self)
@@ -43,6 +43,9 @@ class Frog(Solution):
     def clip(self):
         super().clip()
         self.obj_value = None
+
+    def clone(self):
+        return Frog(super().clone(), self.prob)
 
 
 class ShuffledFrogLeapingSearch(BaseSearch):
@@ -85,8 +88,7 @@ class ShuffledFrogLeapingSearch(BaseSearch):
         prob = flopt.Problem()
         prob += 2*x*x + x*y + y*y + x + y
 
-        solver = flopt.Solver("SFLA")
-        status, log = prob.solve(solver, msg=True, timelimit=1)
+        status, log = prob.solve(solver="SFLA", msg=True, timelimit=1)
 
         print("obj =", flopt.Value(prob.obj))
         print("x =", flopt.Value(x))
@@ -147,9 +149,10 @@ class ShuffledFrogLeapingSearch(BaseSearch):
         """
         M = self.n_memeplex
         N = self.n_frog_per_memeplex
+        frog = Frog(solution, self)
         if self.frogs[-2].getObjValue() - self.frogs[0].getObjValue() < 1e-9:
             logger.debug(f"reset frogs: #frogs {N} --> {N*2}")
-            new_frogs = [Frog(solution.clone(), self) for _ in range(M * N)]
+            new_frogs = [frog.clone() for _ in range(M * N)]
             self.frogs += new_frogs
             for frog in self.frogs[1:]:
                 frog.setRandom()
@@ -173,7 +176,7 @@ class ShuffledFrogLeapingSearch(BaseSearch):
                 step *= random.random()
                 if (norm := step.norm()) > self.max_step:
                     step *= self.max_step / norm
-                new_frog = Frog(worst_frog + step, self)
+                new_frog = worst_frog + step
                 new_frog.clip()
 
                 # if it does not improve (1)
@@ -182,7 +185,7 @@ class ShuffledFrogLeapingSearch(BaseSearch):
                     step *= random.random()
                     if (norm := step.norm()) > self.max_step:
                         step *= self.max_step / norm
-                    new_frog = Frog(worst_frog + step, self)
+                    new_frog = worst_frog + step
                     new_frog.clip()
 
                     # if it does not improve (2)
@@ -205,7 +208,7 @@ class ShuffledFrogLeapingSearch(BaseSearch):
 
         # sort entire memeplexes
         self.frogs = [frog for memeplex in self.memeplexes for frog in memeplex]
-        self.frogs.sort(key=lambda frog: self.getObjValue(frog))
+        self.frogs.sort(key=self.getObjValue)
 
     def startProcess(self, solution):
         super().startProcess()
@@ -215,7 +218,8 @@ class ShuffledFrogLeapingSearch(BaseSearch):
 
         M = self.n_memeplex
         N = self.n_frog_per_memeplex
-        self.frogs = [Frog(solution.clone(), self) for _ in range(M * N)]
+        frog = Frog(solution.clone(), self)
+        self.frogs = [frog.clone() for _ in range(M * N)]
         for frog in self.frogs:
             frog.setRandom()
         self.frogs.sort(key=lambda frog: frog.getObjValue())

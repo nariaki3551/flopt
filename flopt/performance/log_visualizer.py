@@ -33,14 +33,17 @@ class LogVisualizer:
 
       log_visualizer = LogVisualiser()
       log_visualizer.load(
-          solver_names=['RandomSearch', '2-Opt'],
+          solver_names=['Random', '2-Opt'],
           datasets=['tsp']
       )
       log_visualizer.plot()
     """
 
-    def __init__(self, logs=dict()):
-        self.logs = logs
+    def __init__(self, logs=None):
+        if logs is None:
+            self.logs = {}
+        else:
+            self.logs = logs
 
     def load(self, solver_names, datasets, load_prefix=PERFORMANCE_DIR):
         if isinstance(solver_names, str):

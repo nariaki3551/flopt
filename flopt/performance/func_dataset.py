@@ -25,12 +25,7 @@ class FuncDataset(BaseDataset):
         """create FuncInstance"""
         logger.debug(f"{instance_name}")
         func_data = benchmark_func[instance_name]
-        create_objective = func_data["co"]
-        create_variables = func_data["cv"]
-        minimum_value = func_data["mo"]
-        func_instance = FuncInstance(
-            instance_name, create_objective, create_variables, minimum_value
-        )
+        func_instance = FuncInstance(instance_name, func_data)
         return func_instance
 
 
@@ -41,24 +36,25 @@ class FuncInstance(BaseInstance):
     ----------
     name : str
         instance name
-    create_objective : function
-        function which generates the objective function using dimension n
-    create_variables : function
-        function which generates the variables using dimension n
+    func_data : class
+        create_objective : function
+            function which generates the objective function using dimension n
+        create_variables : function
+            function which generates the variables using dimension n
+        minimum_obj : function
+            minimum value
     n : int
         dimension (for some instance)
     """
 
-    def __init__(self, name, create_objective, create_variables, minimum_value, n=10):
+    def __init__(self, name, func_data, n=10):
         self.name = name
-        self.create_objective = create_objective
-        self.create_variables = create_variables
-        self.minimum_value = minimum_value
+        self.func_data = func_data
         self.n = n
 
     def getBestBound(self):
         """return the optimal value of objective function"""
-        return self.minimum_value(self.n)
+        return self.func_data.minimum_obj(self.n)
 
     def createProblem(self, solver):
         """Create problem according to solver
@@ -100,13 +96,11 @@ class FuncInstance(BaseInstance):
         Problem
             problem
         """
-        variables = self.create_variables(n=n, cat=cat)
-        for var in variables:
-            var.setRandom()
-        func = self.create_objective(n)
-        obj = CustomExpression(lambda *x: func(x), variables)
+        x = self.func_data.create_variables(n=n, cat=cat)
+        x.setRandom()
+        obj = self.func_data.create_objective(n)
         prob = Problem(name=f"Function:{self.name}_n{n}")
-        prob.setObjective(obj)
+        prob += obj(x)
         self.n = n
         return prob
 

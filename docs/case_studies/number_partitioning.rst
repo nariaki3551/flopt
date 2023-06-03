@@ -12,10 +12,10 @@ such that summation of B and that of C are equal.
 
 We use Spin variables :math:`s_i` to formulate this problem.
 A spin variable only takes +1 or -1.
-We regard :math:`s_i = +1` as that element A[i] is belong to B, and :math:`s_i = -1` as that element A[i] is belong to C.
-Then, the difference of the summation of B and that of C can be represented by :math:`\sum_i a_i s_i`.
+:math:`s_i = +1` represents that element A[i] is belong to B, and :math:`s_i = -1` represents element A[i] is belong to C.
+In that time, the difference of the summation of elemements in B and that of C can be calculated by :math:`\sum_i a_i s_i`.
 
-Hence, by optimizing the spin variables that takes minimum value of :math:`(\sum_i a_i s_i)^2`, we can obtain the desired partitioning.
+Hence, we can obtain the desired partitioning by optimizing the spin variables to take minimum value of :math:`(\sum_i a_i s_i)^2`.
 
 ::
 
@@ -27,16 +27,16 @@ In flopt, we model the problem as follows.
 
 .. code-block:: python
 
-    from flopt import Variable, Problem, Dot
+    import flopt
 
     # create variables
-    s = Variable.array("s", len(A), cat="Spin")
+    s = flopt.Variable.array("s", len(A), cat="Spin")
 
     # create problem
-    prob = Problem("Number Partitioning")
+    prob = flopt.Problem("Number Partitioning")
 
     # set objective function
-    prob += Dot(s, A) ** 2
+    prob += flopt.dot(s, A) ** 2
 
     print(prob)
     >>> Name: Number Partitioning
@@ -51,27 +51,25 @@ Solving using RandomSearch
 --------------------------
 
 We search the optimal solution by RandomSearch.
+This is a simple sampling algorithm, which repeats to assigne random values to all variables in one search phase.
 
 .. code-block:: python
 
-    from flopt import Solver, Value
-
     # solve until obtain the solution
     # whose objective value is lower than or equal to 0
-    solver = Solver("RandomSearch")
-    prob.solve(solver, msg=True, lowerbound=0)
+    prob.solve(solver="Random", msg=True, lowerbound=0)
 
-    print("s", Value(s))
+    print("s", flopt.Value(s))
     >>> s [1 -1 1 -1]
 
 
-We caught obtain the optimal solution.
+We succeeded to obtain the optimal solution.
 
 
 Solving using LP Search
 -----------------------
 
-To make sure we obtain the optimal solution, we can use LP Solver to convert problem after linearizing the problem.
+Flopt provides the powerful **problem linearize** mecanism, so if the defined problem can be linearized then we can use the LP solvers to obtain the optimal solution.
 First, we linearize the objective function and constraints by flopt.convert.linearize.
 To linearize the product of spin variables, flopt replace spin variables to binary variables and add slack variables and constrains.
 
@@ -81,7 +79,7 @@ To linearize the product of spin variables, flopt replace spin variables to bina
 
     linearize(prob)
 
-    print(prob.show())
+    prob.show()
     >>> Name: Number Partitioning
     >>>   Type         : Problem
     >>>   sense        : minimize
@@ -108,14 +106,11 @@ To linearize the product of spin variables, flopt replace spin variables to bina
     >>>   C 16, name for_mul_5_2, mul_5-s_3_b <= 0
     >>>   C 17, name for_mul_5_3, mul_5-s_2_b-s_3_b+1 >= 0
 
-, and solve it.
+Then, we solve it.
 
 .. code-block:: python
 
-    from flopt import Solver
-
-    solver = Solver("auto")
-    prob.solve(solver)
+    prob.solve(solver="auto")
 
     print("s", Value(s))
     >>> s [1 -1 1 -1]
@@ -125,7 +120,7 @@ Conversion to other formulations of number partitioning
 -------------------------------------------------------
 
 
-By using flopt.convert methods, we can obtain the data for another formulation of the number partitioning.
+By using flopt.convert methods, we can obtain the structure data for another formulation of the number partitioning.
 
 
 QP

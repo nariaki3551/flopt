@@ -27,49 +27,48 @@ def linearize(prob):
 
     .. code-block:: python
 
-        from flopt import Variable, Problem
+        import flopt
 
-        x = Variable.array('x', 3, cat='Binary')
+        x = flopt.Variable.array('x', 3, cat='Binary')
 
-        prob = Problem()
+        prob = flopt.Problem()
         prob += x[0] - 2*x[1] - x[0]*x[1]*x[2]
+
         print('[ original ]')
-        print(prob.show())
+        prob.show()
+        >>> [ original ]
+        >>>  Name: None
+        >>>   Type         : Problem
+        >>>   sense        : minimize
+        >>>   objective    : x_0-(2*x_1)-((x_0*x_1)*x_2)
+        >>>   #constraints : 0
+        >>>   #variables   : 3 (Binary 3)
+
 
         from flopt.convert import linearize
+
         linearize(prob)
+
         print('[ linearized ])
-        print(prob.show())
+        prob.show()
+        >>> [ linearized ]
+        >>>  Name: None
+        >>>   Type         : Problem
+        >>>   sense        : minimize
+        >>>   objective    : 0-mul_1+x_0-(2*x_1)
+        >>>   #constraints : 6
+        >>>   #variables   : 5 (Binary 5)
 
-    ::
-
-        [ original ]
-         Name: None
-          Type         : Problem
-          sense        : minimize
-          objective    : x_0-(2*x_1)-((x_0*x_1)*x_2)
-          #constraints : 0
-          #variables   : 3 (Binary 3)
-
-
-        [ linearized ]
-         Name: None
-          Type         : Problem
-          sense        : minimize
-          objective    : 0-mul_1+x_0-(2*x_1)
-          #constraints : 6
-          #variables   : 5 (Binary 5)
-
-          C 0, name for_mul_0_1, mul_0-x_0 <= 0
-          C 1, name for_mul_0_2, mul_0-x_1 <= 0
-          C 2, name for_mul_0_3, mul_0-(x_0+x_1-1) >= 0
-          C 3, name for_mul_1_1, mul_1-mul_0 <= 0
-          C 4, name for_mul_1_2, mul_1-x_2 <= 0
-          C 5, name for_mul_1_3, mul_1-(mul_0+x_2-1) >= 0
+        >>>   C 0, name for_mul_0_1, mul_0-x_0 <= 0
+        >>>   C 1, name for_mul_0_2, mul_0-x_1 <= 0
+        >>>   C 2, name for_mul_0_3, mul_0-(x_0+x_1-1) >= 0
+        >>>   C 3, name for_mul_1_1, mul_1-mul_0 <= 0
+        >>>   C 4, name for_mul_1_2, mul_1-x_2 <= 0
+        >>>   C 5, name for_mul_1_3, mul_1-(mul_0+x_2-1) >= 0
 
     """
     try:
-        var_muls = dict()
+        var_muls = {}
         prob.setObjective(linearize_expression(prob.obj, var_muls))
         for const in prob.getConstraints():
             const.expression = linearize_expression(const.expression, var_muls)
@@ -99,8 +98,8 @@ def linearize(prob):
                 var_bin, var_int = var_a, var_b
             else:
                 var_bin, var_int = var_b, var_a
-            l = var_int.getLb(must_number=True)
-            u = var_int.getUb(must_number=True)
+            l = var_int.getLb(number=True)
+            u = var_int.getUb(number=True)
             prob += var_mul >= l * var_bin, f"for_{var_mul.name}_1"
             prob += var_mul <= u * var_bin, f"for_{var_mul.name}_2"
             prob += var_mul >= var_int - u * (1 - var_bin), f"for_{var_mul.name}_3"
@@ -114,14 +113,13 @@ def linearize(prob):
                 var_bin, var_con = var_a, var_b
             else:
                 var_bin, var_con = var_b, var_a
-            l = var_con.getLb(must_number=True)
-            u = var_con.getUb(must_number=True)
+            l = var_con.getLb(number=True)
+            u = var_con.getUb(number=True)
             prob += var_mul >= l * var_bin, f"for_{var_mul.name}_1"
             prob += var_mul <= u * var_bin, f"for_{var_mul.name}_2"
             prob += var_mul >= var_con - l * (1 - var_bin), f"for_{var_mul.name}_3"
             prob += var_mul <= var_con - u * (1 - var_bin), f"for_{var_mul.name}_4"
 
-    prob.resetVariables()
     return prob
 
 
@@ -190,11 +188,11 @@ def linearize_traverse(e, var_muls):
                 node.elmB = create_var_mul(node.elmB, var_muls)
                 update = True
             if update:
-                node.setName()
-                node.setPolynomial()
+                node.resetName()
+                node.polynomial = None
                 for parent in node.traverseAncestors():
-                    parent.setName()
-                    parent.setPolynomial()
+                    parent.resetName()
+                    parent.polynomial = None
                 return False, e
     return True, e
 
