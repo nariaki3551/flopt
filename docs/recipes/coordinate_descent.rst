@@ -21,7 +21,7 @@ By using optimized_variables option, we select the update variables in one optim
     
     prob = flopt.Problem()
     prob += f(x)
-    
+
     # store variable path
     path = [[x[0].value(), x[1].value()]]
     def callback(*args, **kwargs):
