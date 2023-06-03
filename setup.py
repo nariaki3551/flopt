@@ -14,7 +14,7 @@ setup(
         "flopt": ["flopt.config"],
     },
     include_package_data=True,
-    version="0.5.5",
+    version="0.5.6",
     license="MIT",
     install_requires=[
         "numpy",
