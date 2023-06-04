@@ -194,7 +194,11 @@ class AutoSearch(BaseSearch):
 
         Returns
         -------
-        status, Log
+        status : flopt.SolverTerminateState
+        Log : Log
+        running_time : float
         """
         solver = self.select(prob)
-        return solver.solve(solution, objective, constraints, prob, *args, **kwargs)
+        status, self.log, running_time = solver.solve(solution, objective, constraints, prob, *args, **kwargs)
+        self.best_solution = solver.best_solution
+        return status, self.log, running_time

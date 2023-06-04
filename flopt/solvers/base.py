@@ -134,7 +134,9 @@ class BaseSearch:
 
         Returns
         -------
-        status, Log
+        status : flopt.SolverTerminateState
+        Log : Log
+        running_time : float
         """
         self.start_search()
 

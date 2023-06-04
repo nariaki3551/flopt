@@ -31,7 +31,7 @@ def get_dataset(name):
 
         return MipDataset()
     else:
-        assert f"{name} is not available, choices from {Dataset_list()}"
+        assert False, f"{name} is not available, choices from {Dataset_list()}"
 
 
 def Dataset_list():
