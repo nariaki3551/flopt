@@ -57,6 +57,7 @@ class ScipySearch(BaseSearch):
 
     def __init__(self):
         super().__init__()
+        self.n_max_retry = 100
         self.n_trial = 1e8
         self.method = None
 
@@ -125,32 +126,39 @@ class ScipySearch(BaseSearch):
 
         self.end_build()
 
-        res = scipy_optimize.minimize(
-            gen_func(objective),
-            x0,
-            bounds=bounds,
-            constraints=scipy_constraints,
-            options=options,
-            callback=callback,
-            args=(),
-            method=self.method,
-            jac=None,
-            hess=None,
-            hessp=None,
-            tol=None,
-        )
-        if self.msg:
-            print()
-            print("-" * 20 + " ScipySearch " + "-" * 20)
-            print(res)
-            print("-" * 20 + "-------------" + "-" * 20)
-            print()
+        for i in range(self.n_max_retry):
+            res = scipy_optimize.minimize(
+                gen_func(objective),
+                x0,
+                bounds=bounds,
+                constraints=scipy_constraints,
+                options=options,
+                callback=callback,
+                args=(),
+                method=self.method,
+                jac=None,
+                hess=None,
+                hessp=None,
+                tol=None,
+            )
+            if self.msg:
+                print()
+                print("-" * 20 + " ScipySearch " + "-" * 20)
+                print(res)
+                print("-" * 20 + "-------------" + "-" * 20)
+                print()
 
-        if res.success:
-            # get result of solver
-            solution.setValuesFromArray(res.x)
-            self.registerSolution(solution)
-            return SolverTerminateState.Normal
-        else:
-            logger.warning(f"ScipySearch cound not success to find solution.")
-            return SolverTerminateState.Abnormal
+            if res.success:
+                # get result of solver
+                solution.setValuesFromArray(res.x)
+                self.registerSolution(solution)
+                return SolverTerminateState.Normal
+            else:
+                logger.warning(f"ScipySearch cound not success to find solution.")
+                for var in solution:
+                    var.setRandom(scale=1.0/(1 << (i + 1)))
+                x0 = [var.value() for var in solution]
+                logger.warning(f"{i+1}-th Restart ScipySearch scaled {1.0/(1 << (i+1))}")
+
+        logger.warning(f"ScipySearch cound not success to find solution.")
+        return SolverTerminateState.Abnormal

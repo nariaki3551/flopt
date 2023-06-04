@@ -482,7 +482,7 @@ class VarElement:
     def isQuadratic(self):
         return True
 
-    def setRandom(self):
+    def setRandom(self, scale=1.0):
         """set random value to variable"""
         raise NotImplementedError()
 
@@ -730,9 +730,9 @@ class VarInteger(VarElement):
             )
         return self.upBound
 
-    def setRandom(self):
-        lb = self.getLb(number=True)
-        ub = self.getUb(number=True)
+    def setRandom(self, scale=1.0):
+        lb = int(scale * self.getLb(number=True))
+        ub = int(scale * self.getUb(number=True))
         self._value = random.randint(lb, ub)
 
     def toBinary(self):
@@ -819,8 +819,9 @@ class VarBinary(VarInteger):
         if self.spin is not None:
             self.spin._value = 2 * value - 1
 
-    def setRandom(self):
-        self._value = random.randint(0, 1)
+    def setRandom(self, scale=None):
+        # scale is ignored
+        self._value = random.choice([0, 1])
 
     def toBinary(self):
         return self
@@ -896,8 +897,9 @@ class VarSpin(VarElement):
         """
         return self._value in {-1, 1}
 
-    def setRandom(self):
+    def setRandom(self, scale=None):
         """set random value to variable"""
+        # scale is ignored
         self._value = random.choice([-1, 1])
 
     def toBinary(self):
@@ -983,9 +985,9 @@ class VarContinuous(VarElement):
 
     _type = VariableType.Continuous
 
-    def setRandom(self):
-        lb = self.getLb(number=True)
-        ub = self.getUb(number=True)
+    def setRandom(self, scale=1.0):
+        lb = scale * self.getLb(number=True)
+        ub = scale * self.getUb(number=True)
         self._value = random.uniform(lb, ub)
 
     def clone(self):
@@ -1037,8 +1039,9 @@ class VarPermutation(VarElement):
         _value = self._value[:]  # copy
         return _value
 
-    def setRandom(self):
+    def setRandom(self, scale=None):
         """shuffle the list"""
+        # scale is ignored
         return random.shuffle(self._value)
 
     def isPolynomial(self):
