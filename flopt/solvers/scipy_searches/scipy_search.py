@@ -156,9 +156,11 @@ class ScipySearch(BaseSearch):
             else:
                 logger.warning(f"ScipySearch cound not success to find solution.")
                 for var in solution:
-                    var.setRandom(scale=1.0/(1 << (i + 1)))
+                    var.setRandom(scale=1.0 / (1 << (i + 1)))
                 x0 = [var.value() for var in solution]
-                logger.warning(f"{i+1}-th Restart ScipySearch scaled {1.0/(1 << (i+1))}")
+                logger.warning(
+                    f"{i+1}-th Restart ScipySearch scaled {1.0/(1 << (i+1))}"
+                )
 
         logger.warning(f"ScipySearch cound not success to find solution.")
         return SolverTerminateState.Abnormal

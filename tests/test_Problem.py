@@ -146,7 +146,6 @@ def test_Problem_getSolution_AutoSearch():
         )
 
 
-
 def test_Problem_duplicate_constraint():
     # Variables
     a = Variable("a", lowBound=0, upBound=1, cat="Integer")

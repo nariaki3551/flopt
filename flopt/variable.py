@@ -362,7 +362,6 @@ class VariableFactory:
         return Variable.array(name, (n_row, n_col), lowBound, upBound, cat, ini_value)
 
 
-
 # -------------------------------------------------------
 #   Variable Classes
 # -------------------------------------------------------
@@ -443,9 +442,7 @@ class VarElement:
         bool
           return true if value of self is in between lowBound and upBound else false
         """
-        return (
-            self.getLb(number=True) <= self._value <= self.getUb(number=True)
-        )
+        return self.getLb(number=True) <= self._value <= self.getUb(number=True)
 
     def clip(self):
         """

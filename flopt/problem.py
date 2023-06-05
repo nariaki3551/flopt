@@ -480,7 +480,10 @@ class Problem:
             elif var.type() == VariableType.Spin:
                 with create_variable_mode():
                     relaxed_var = flopt.Variable(
-                        var.getName(), lowBound=0, upBound=1, ini_value=(var.value() + 1)//2
+                        var.getName(),
+                        lowBound=0,
+                        upBound=1,
+                        ini_value=(var.value() + 1) // 2,
                     )
                 correspondence_dict[var] = 2 * relaxed_var - 1
             else:

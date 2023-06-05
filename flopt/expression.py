@@ -80,17 +80,6 @@ class ExpressionElement:
         self.linkChildren()
         return self
 
-    def isPolynomial(self):
-        raise NotImplementedError
-
-    def setPolynomial(self):
-        raise NotImplementedError
-
-    def toPolynomial(self):
-        if self.polynomial is None:
-            self.setPolynomial()
-        return self.polynomial
-
     def value(self, solution=None, var_dict=None):
         """
         Returns
@@ -148,6 +137,17 @@ class ExpressionElement:
 
     def toMonomial(self):
         return self.toPolynomial().toMonomial()
+
+    def isPolynomial(self):
+        raise NotImplementedError
+
+    def setPolynomial(self):
+        raise NotImplementedError
+
+    def toPolynomial(self):
+        if self.polynomial is None:
+            self.setPolynomial()
+        return self.polynomial
 
     def isQuadratic(self):
         """
