@@ -158,7 +158,7 @@ class TSPInstance(BaseInstance):
         )
         available_solvers = flopt.solvers.allAvailableSolversProblemType(problem_type)
         if solver.name in available_solvers:
-            return True, self.createPermProblem()
+            return self.createPermProblem()
 
         problem_type = dict(
             Variable=flopt.constants.VariableType.Number,
@@ -169,11 +169,11 @@ class TSPInstance(BaseInstance):
         if solver.name in available_solvers:
             if self.dim > 10:
                 logger.info("this instance is enough big not to crate problem")
-                return False, None
-            return True, self.createLpProblem()
+                return None
+            return self.createLpProblem()
 
         logger.info(f"{solver.name} cannot solve this instance")
-        return False, None
+        return None
 
     def createPermProblem(self):
         # Variables

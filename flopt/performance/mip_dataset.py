@@ -106,11 +106,11 @@ class MipInstance(BaseInstance):
             Constraint=ExpressionType.Linear,
         )
         available_solvers = flopt.solvers.allAvailableSolversProblemType(problem_type)
-        if solver.name in available_solvers:
-            return solver.available(self.prob), self.prob
+        if solver.name in available_solvers and solver.available(self.prob):
+            return self.prob
         else:
             logger.info(f"{solver.name} cannot solve this instance")
-            return False, None
+            return None
 
     def __str__(self):
         s = f"NAME: {self.name}"

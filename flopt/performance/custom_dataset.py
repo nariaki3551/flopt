@@ -121,8 +121,8 @@ class CustomInstance(BaseInstance):
         if solver.available(self.prob):
             for variable in self.prob.getVariables():
                 variable.setValue(self.var_values[variable.name])
-            return True, self.prob
-        return False, None
+            return self.prob
+        return None
 
     def getBestBound(self):
         """return the optimal value of objective function"""

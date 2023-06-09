@@ -113,7 +113,8 @@ def compute(
             logger.info(instance)
             for solver in solvers:
                 solver.reset()
-                formulatable, prob = instance.createProblem(solver)
+                prob = instance.createProblem(solver)
+                formulatable = prob is not None
                 if not formulatable:
                     continue
                 state, log = prob.solve(solver=solver, msg=msg)
@@ -124,9 +125,9 @@ def compute(
 
 def save_log(log, solver, dataset, instance, save_prefix):
     """
-    save log as save_prefix/solver.name/dataset.name/instance.name/log.pickle
+    save log as save_prefix/dataset.name/instance.name/log.pickle
     """
-    save_dir = f"{save_prefix}/{solver.name}/{dataset.name}/{instance.name}"
+    save_dir = f"{save_prefix}/{dataset.name}/{instance.name}"
     os.makedirs(save_dir, exist_ok=True)
     with open(f"{save_dir}/log.pickle", "wb") as pf:
         pickle.dump(log, pf)

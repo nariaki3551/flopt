@@ -232,7 +232,7 @@ def speed_func_ce_value(count):
             continue
         _name = name + "_" + instance.name
         random_search = flopt.Solver("Random")
-        formulatable, prob = instance.createProblem(random_search)
+        prob = instance.createProblem(random_search)
         random_search.reset()
         prob.solve(solver=random_search, n_trial=2)
         solution = random_search.best_solution

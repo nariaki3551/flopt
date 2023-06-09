@@ -1,4 +1,3 @@
-import random
 from argparse import ArgumentParser
 
 import flopt
@@ -45,7 +44,7 @@ def argparser():
         choices=Solver_list(),
     )
     parser.add_argument(
-        "savename",
+        "save_prefix",
     )
     parser.add_argument(
         "--datasets", nargs="*", choices=Dataset_list(), help="instance dataset"
@@ -67,10 +66,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     algo = args.algorithm
-    savename = args.savename
     datasets = args.datasets
     log_level = args.log_level
 
-    params = {"timelimit": args.timelimit}
+    params = {"timelimit": args.timelimit, "save_prefix": args.save_prefix}
 
+    setLogger(log_level)
     compute(algo, datasets, params)

@@ -28,16 +28,16 @@ def test_tsp_dataset():
 
     # lp
     milp = Solver("ScipyMilp")
-    solvable, prob = instance.createProblem(milp)
-    assert solvable
+    prob = instance.createProblem(milp)
+    assert prob is not None
     prob.solve(milp, msg=True)
     obj_value = prob.getObjectiveValue()
 
     # 2-opt
     two_opt = Solver("2-Opt")
-    solvable, prob = instance.createProblem(two_opt)
+    prob = instance.createProblem(two_opt)
     prob.setBestBound(obj_value)
-    assert solvable
+    assert prob is not None
     prob.solve(two_opt, timelimit=0.5, msg=True)
 
 
@@ -46,8 +46,8 @@ def test_func_dataset():
     instance = dataset["Ackley"]
 
     scipy_search = Solver("Scipy")
-    solvable, prob = instance.createProblem(scipy_search)
-    assert solvable
+    prob = instance.createProblem(scipy_search)
+    assert prob is not None
     prob.solve(scipy_search, msg=True)
 
 
@@ -55,8 +55,8 @@ def test_mip_dataset():
     dataset = flopt.performance.get_dataset("mip")
     instance = dataset["markshare2"]
     scipy_search = Solver("ScipyMilp")
-    solvable, prob = instance.createProblem(scipy_search)
-    assert solvable
+    prob = instance.createProblem(scipy_search)
+    assert prob is not None
     prob.solve(scipy_search, timelimit=0.5, msg=True)
 
 

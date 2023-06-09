@@ -66,9 +66,9 @@ class FuncInstance(BaseInstance):
 
         Returns
         -------
-        (bool, Problem)
+        Problem
             if solver can be solve this instance return
-            (true, prob formulated according to solver)
+            (None, prob formulated according to solver)
         """
         problem_type = dict(
             Variable=VariableType.Number,
@@ -76,10 +76,10 @@ class FuncInstance(BaseInstance):
             Constraint=None,
         )
         if solver.availableProblemType(problem_type):
-            return True, self.createProblemFunc(self.n)
+            return self.createProblemFunc(self.n)
         else:
             logger.debug(f"{solver.name} cannot solve this instance")
-            return False, None
+            return None
 
     def createProblemFunc(self, n=10, cat=VarContinuous):
         """create problem from instance
