@@ -114,6 +114,8 @@ class ExpressionElement:
             return ExpressionType.Quadratic
         elif self.isPolynomial():
             return ExpressionType.Polynomial
+        elif self.differentiable():
+            return ExpressionType.Differentiable
         elif any(isinstance(exp, CustomExpression) for exp in self.traverse()):
             return ExpressionType.BlackBox
         elif any(var.type() == VariableType.Permutation for var in self.getVariables()):
@@ -351,6 +353,44 @@ class ExpressionElement:
         J = -np.triu(quadratic.Q)
         np.fill_diagonal(J, 0.5 * np.diag(J))
         return IsingStructure(J, -quadratic.c, quadratic.C, quadratic.x)
+
+    def differentiable(self):
+        return (
+            self.elmA.differentiable()
+            and self.elmB.differentiable()
+            and self.operator in {"+", "-", "*", "/"}
+        ) or (
+            self.operator == "^"
+            and isinstance(self.elmB, Const)
+            and self.elmA.differentiable()
+        )
+
+    def diff(self, x):
+        """
+        Parameters
+        ----------
+        x : VarElement family
+
+        Returns
+        -------
+        Expression
+            the expression differentiated by x
+        """
+        if not self.differentiable():
+            return None
+        if self.operator == "+":
+            return self.elmA.diff(x) + self.elmB.diff(x)
+        elif self.operator == "-":
+            return self.elmA.diff(x) - self.elmB.diff(x)
+        elif self.operator == "*":
+            return self.elmA.diff(x) * self.elmB + self.elmA * self.elmB.diff(x)
+        elif self.operator == "/":
+            return (self.elmA.diff(x) * self.elmB - self.elmA * self.elmB.diff(x)) / (
+                self.elmB * self.elmB
+            )
+        elif self.operator == "^":
+            return self.elmB * (self.elmA ** (self.elmB - 1)) * self.elmA.diff(x)
+        return None
 
     def simplify(self):
         """
@@ -1003,12 +1043,10 @@ class Expression(ExpressionElement):
             x = FloptNdarray(x)
 
         num_variables = len(x)
-        if self.polynomial is None:
-            self.setPolynomial()
 
         jac = np.empty((num_variables,), dtype=object)
         for i in range(num_variables):
-            jac[i] = Expression.fromPolynomial(self.polynomial.diff(x[i]))
+            jac[i] = self.diff(x[i])
         return FloptNdarray(jac)
 
     def hess(self, x):
@@ -1049,7 +1087,7 @@ class Expression(ExpressionElement):
         hess = np.empty((num_variables, num_variables), dtype=object)
         for i in range(num_variables):
             for j in range(num_variables):
-                hess[i, j] = Expression.fromPolynomial(jac[i].toPolynomial().diff(x[j]))
+                hess[i, j] = jac[i].diff(x[j])
         return FloptNdarray(hess)
 
     def traverse(self):
@@ -1253,6 +1291,9 @@ class CustomExpression(ExpressionElement):
     def setPolynomial(self):
         self.polynomial = None
 
+    def differentiable(self):
+        return False
+
     def value(self, solution=None, var_dict=None):
         assert not (solution is not None and var_dict is not None)
         if solution is not None:
@@ -1356,6 +1397,12 @@ class Const(ExpressionElement):
     def isIsing(self):
         return True
 
+    def differentiable(self):
+        return True
+
+    def diff(self, x):
+        return 0
+
     def simplify(self):
         return self
 
@@ -1365,6 +1412,8 @@ class Const(ExpressionElement):
     def __add__(self, other):
         if isinstance(other, number_classes):
             return Const(self._value + other)
+        elif isinstance(other, Const):
+            return Const(self._value + other._value)
         return self._value + other
 
     def __radd__(self, other):
@@ -1373,11 +1422,15 @@ class Const(ExpressionElement):
     def __sub__(self, other):
         if isinstance(other, number_classes):
             return Const(self._value - other)
+        elif isinstance(other, Const):
+            return Const(self._value - other._value)
         return self._value - other
 
     def __rsub__(self, other):
         if isinstance(other, number_classes):
             return Const(other - self._value)
+        elif isinstance(other, Const):
+            return Const(other._value - self._value)
         if self._value < 0:
             return other + (-self)
         return other - self._value
@@ -1385,6 +1438,8 @@ class Const(ExpressionElement):
     def __mul__(self, other):
         if isinstance(other, number_classes):
             return Const(self._value * other)
+        elif isinstance(other, Const):
+            return Const(self._value * other._value)
         return self._value * other
 
     def __rmul__(self, other):
@@ -1393,6 +1448,8 @@ class Const(ExpressionElement):
     def __truediv__(self, other):
         if isinstance(other, number_classes):
             return Const(self._value / other)
+        elif isinstance(other, Const):
+            return Const(self._value / other._value)
         return self._value / other
 
     def __rtruediv__(self, other):
@@ -1401,6 +1458,8 @@ class Const(ExpressionElement):
     def __pow__(self, other):
         if isinstance(other, number_classes):
             return Const(self._value**other)
+        elif isinstance(other, Const):
+            return Const(self._value**other._value)
         return self._value**other
 
     def __rpow__(self, other):
@@ -1480,6 +1539,9 @@ class Reduction(ExpressionElement):
     def getVariables(self):
         return functools.reduce(operator.or_, (elm.getVariables() for elm in self.elms))
 
+    def differentiable(self):
+        return all(elm.differentiable() for elm in self.elms)
+
     def jac(self, x):
         """jacobian
         See Also
@@ -1545,6 +1607,9 @@ class Sum(Reduction):
     def setPolynomial(self):
         self.polynomial = sum(elm.toPolynomial() for elm in self.elms)
 
+    def diff(self, x):
+        return Sum([elm.diff(x) for elm in self.elms])
+
     def value(self, solution=None, var_dict=None):
         """
         Returns
@@ -1591,13 +1656,14 @@ class Prod(Reduction):
         if const != 0:
             self._name = f"{const}*" + self._name
 
-    def isPolynomial(self):
-        return all(elm.isPolynomial() for elm in self.elms)
-
-    def setPolynomial(self):
-        self.polynomial = functools.reduce(
-            operator.mul, (elm.toPolynomial() for elm in self.elms)
-        )
+    def diff(self, x):
+        diff_elms = []
+        num_elms = len(self.elms)
+        for i in range(num_elms):
+            elms = [elm for elm in self.elms]
+            elms[i] = elms[i].diff(x)
+            diff_elms.append(Prod(elms))
+        return Sum(diff_elms)
 
     def value(self, solution=None, var_dict=None):
         """
@@ -1620,10 +1686,22 @@ class Prod(Reduction):
         return to_value_ufunc(self.elms).prod()
 
     def isLinear(self):
-        return self.toPolynomial().isLinear()
+        if self.isPolynomial():
+            return self.toPolynomial().isLinear()
+        return False
 
     def isQuadratic(self):
-        return self.toPolynomial().isQuadratic()
+        if self.isPolynomial():
+            return self.toPolynomial().isQuadratic()
+        return False
+
+    def isPolynomial(self):
+        return all(elm.isPolynomial() for elm in self.elms)
+
+    def setPolynomial(self):
+        self.polynomial = functools.reduce(
+            operator.mul, (elm.toPolynomial() for elm in self.elms)
+        )
 
     def __repr__(self):
         return f"Prod({self.elms})"
@@ -1656,6 +1734,9 @@ class MathOperation(ExpressionElement):
 
     def isPolynomial(self):
         return False
+
+    def diff(self):
+        return None
 
     def value(self, solution=None, var_dict=None):
         assert not (solution is not None and var_dict is not None)
@@ -1699,6 +1780,12 @@ class Exp(MathOperation):
     operator = "Exp"
     func = np.exp
 
+    def differentiable(self):
+        return self.elm.differentiable()
+
+    def diff(self, x):
+        return Exp(self.elm) * self.elm.diff(x)
+
 
 class Cos(MathOperation):
     """Cosine operation
@@ -1710,6 +1797,12 @@ class Cos(MathOperation):
 
     operator = "Cos"
     func = np.cos
+
+    def differentiable(self):
+        return self.elm.differentiable()
+
+    def diff(self, x):
+        return -Sin(self.elm) * self.elm.diff(x)
 
 
 class Sin(MathOperation):
@@ -1723,6 +1816,12 @@ class Sin(MathOperation):
     operator = "Sin"
     func = np.sin
 
+    def differentiable(self):
+        return self.elm.differentiable()
+
+    def diff(self, x):
+        return Cos(self.elm) * self.elm.diff(x)
+
 
 class Tan(MathOperation):
     """Tangent operation
@@ -1734,6 +1833,12 @@ class Tan(MathOperation):
 
     operator = "Tan"
     func = np.tan
+
+    def differentiable(self):
+        return self.elm.differentiable()
+
+    def diff(self, x):
+        return 1.0 / (Cos(self.elm) ** 2) * self.elm.diff(x)
 
 
 class Log(MathOperation):
@@ -1747,6 +1852,12 @@ class Log(MathOperation):
     operator = "Log"
     func = np.log
 
+    def differentiable(self):
+        return self.elm.differentiable()
+
+    def diff(self, x):
+        return 1.0 / self.elm * self.elm.diff(x)
+
 
 class Abs(MathOperation):
     """Absolute operation
@@ -1758,6 +1869,9 @@ class Abs(MathOperation):
 
     operator = "Abs"
     func = np.abs
+
+    def differentiable(self):
+        return False
 
 
 class Floor(MathOperation):
@@ -1771,6 +1885,9 @@ class Floor(MathOperation):
     operator = "Floor"
     func = np.floor
 
+    def differentiable(self):
+        return False
+
 
 class Ceil(MathOperation):
     """Ceil operation
@@ -1782,3 +1899,6 @@ class Ceil(MathOperation):
 
     operator = "Ceil"
     func = np.ceil
+
+    def differentiable(self):
+        return False

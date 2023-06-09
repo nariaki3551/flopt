@@ -426,3 +426,21 @@ def test_Expression_Floor(a):
 def test_Expression_Ceil(a):
     exp = flopt.ceil(a)
     assert exp.getName() == "Ceil(a)"
+
+
+def test_Expression_diff(a, b):
+    assert ((a * a).diff(a)).value() == (2 * a).value()
+    assert ((2 * a * a).diff(a)).value() == (4 * a).value()
+    assert ((a * a).diff(b)).value() == 0
+
+    assert (flopt.sin(a).diff(a)).value() == flopt.cos(a).value()
+    assert (flopt.cos(a).diff(a)).value() == (-flopt.sin(a)).value()
+    assert (flopt.tan(a).diff(a)).value() == (1.0 / (flopt.cos(a) ** 2)).value()
+    assert (flopt.log(a).diff(a)).value() == (1.0 / a).value()
+
+    assert (flopt.sin(a * a).diff(a)).value() == (flopt.cos(a * a) * 2 * a).value()
+    assert (flopt.cos(a * a).diff(a)).value() == ((-flopt.sin(a * a) * 2 * a)).value()
+    assert (flopt.tan(a * a).diff(a)).value() == (
+        (1.0 / (flopt.cos(a * a) ** 2) * 2 * a)
+    ).value()
+    assert (flopt.log(a * a).diff(a)).value() == ((2.0 / a)).value()

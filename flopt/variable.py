@@ -460,11 +460,11 @@ class VarElement:
     def getVariables(self):
         return {self}
 
-    def isPolynomial(self):
-        return True
-
     def toMonomial(self):
         return self.monomial
+
+    def isPolynomial(self):
+        return True
 
     @property
     def polynomial(self):
@@ -478,6 +478,25 @@ class VarElement:
 
     def isQuadratic(self):
         return True
+
+    def differentiable(self):
+        return True
+
+    def diff(self, x):
+        """
+        Parameters
+        ----------
+        x : VarElement family
+
+        Returns
+        -------
+        Expression
+            the expression differentiated by x
+        """
+        if x.getName() == self.getName():
+            return Const(1)
+        else:
+            return Const(0)
 
     def setRandom(self, scale=1.0):
         """set random value to variable"""
@@ -501,6 +520,9 @@ class VarElement:
 
     def traverseAncestors(self):
         raise NotImplementedError
+
+    def simplify(self):
+        return self
 
     def __add__(self, other):
         if isinstance(other, number_classes):
@@ -1048,6 +1070,9 @@ class VarPermutation(VarElement):
         return False
 
     def isQuadratic(self):
+        return False
+
+    def differentiable(self):
         return False
 
     def clone(self):

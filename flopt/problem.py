@@ -361,6 +361,7 @@ class Problem:
             ExpressionType.Linear,
             ExpressionType.Quadratic,
             ExpressionType.Polynomial,
+            ExpressionType.Differentiable,
             ExpressionType.Nonlinear,
             ExpressionType.Permutation,
             ExpressionType.BlackBox,

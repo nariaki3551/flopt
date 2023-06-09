@@ -39,3 +39,8 @@ class FloptNdarray(np.ndarray):
         for var in self.getVariables():
             var.setRandom()
         return self
+
+    def simplify(self):
+        for i in itertools.product(*map(range, self.shape)):
+            self[i].simplify()
+        return self
