@@ -45,8 +45,8 @@ class VariableFactory:
         assert "/" not in name, f"The / character cannot be used in the name."
         assert "%" not in name, f"The % character cannot be used in the name."
         assert "^" not in name, f"The ^ character cannot be used in the name."
-        assert "(" not in name, f"The ( character cannot be used in the name."
-        assert ")" not in name, f"The ) character cannot be used in the name."
+        # assert "(" not in name, f"The ( character cannot be used in the name."
+        # assert ")" not in name, f"The ) character cannot be used in the name."
         if is_create_variable_mode():
             assert name.startswith("__"), f"The name must be started with __ characters"
         else:
@@ -104,6 +104,7 @@ class VariableFactory:
             assert name is not None
             name = f"__{get_variable_id()}_" + name
         self.checkName(name)
+        name = name.replace(" ", "_")
         cat = str(cat)
         if cat == "Continuous":
             return VarContinuous(name, lowBound, upBound, ini_value)

@@ -468,6 +468,35 @@ def test_ScipyMilpSearch_available(
     assert solver.available(prob_nonlinear) == False
 
 
+def test_GurobiSearch_available(
+    prob,
+    prob_only_continuous,
+    prob_with_const,
+    prob_qp,
+    prob_nonlinear,
+    prob_ising,
+    prob_ising_const,
+    prob_perm,
+):
+    solver = Solver(algo="Gurobi")
+    assert solver.available(prob) == True
+    assert solver.available(prob_only_continuous) == True
+    assert solver.available(prob_with_const) == True
+    assert solver.available(prob_qp) == True
+    assert solver.available(prob_nonlinear) == False
+    assert solver.available(prob_ising) == True
+    assert solver.available(prob_ising_const) == True
+    assert solver.available(prob_perm) == False
+
+
+def test_GurobiSearch1(prob_only_continuous, callback):
+    prob_only_continuous.solve(solver="Gurobi", timelimit=0.5, callbacks=[callback])
+
+
+def test_GurobiSearch2(prob_qp, callback):
+    prob_qp.solve(solver="Gurobi", timelimit=0.5, callbacks=[callback])
+
+
 def test_CvxoptSearch1(prob_only_continuous, callback):
     prob_only_continuous.solve(
         solver="Cvxopt", n_trial=10, timelimit=0.5, callbacks=[callback]

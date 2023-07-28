@@ -11,6 +11,7 @@ algo_list = [
     "OptunaCmaEs",
     "Hyperopt",
     "SFLA",
+    "Gurobi",
     "Pulp",
     "Scipy",
     "ScipyMilp",
@@ -82,6 +83,11 @@ def Solver(algo="auto"):
         from flopt.solvers.shuffled_frog_leaping_search import ShuffledFrogLeapingSearch
 
         return ShuffledFrogLeapingSearch()
+    elif algo == "gurobi":
+        from flopt.solvers.gurobi_search import GurobiSearch
+
+        return GurobiSearch()
+
     elif algo == "pulp":
         from flopt.solvers.pulp_search import PulpSearch
 
