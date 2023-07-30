@@ -102,9 +102,10 @@ class ScipyMilpSearch(BaseSearch):
         #               2: Problem is infeasible.
         #               3: Problem is unbounded.
         #               4: Other; see message for details.
-        if res.status == 0:
+        if res.x is not None:
             solution.setValuesFromArray(res.x)
             self.registerSolution(solution)
+        if res.status == 0:
             return SolverTerminateState.Normal
         elif res.status == 1:
             return SolverTerminateState.Timelimit
