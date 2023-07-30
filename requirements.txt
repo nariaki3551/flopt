@@ -12,6 +12,7 @@ dill
 pooch
 timeout_decorator
 colorlog
+gurobipy
 
 # docs
 Sphinx==5.2.0

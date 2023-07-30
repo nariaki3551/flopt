@@ -48,7 +48,7 @@ jobs:
       run: |
         python compute_performance.py ScipyMilp   ScipyMilp   --datasets mip  --timelimit 2  --log_level 10
         python compute_performance.py Pulp        Pulp        --datasets mip  --timelimit 2  --log_level 10
-        python compute_performance.py auto        auto        --datasets func --timelimit 2  --log_level 10
+        python compute_performance.py auto        auto        --datasets mip  --timelimit 2  --log_level 10
     - name: Collect trainting data of Auto Solver
       run: |
         python fit_models.py nonlinear      --collect --samples 3 --debug
