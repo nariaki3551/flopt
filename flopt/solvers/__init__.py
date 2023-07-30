@@ -9,6 +9,7 @@ algo_list = [
     "SteepestDescent",
     "OptunaTPE",
     "OptunaCmaEs",
+    "OptunaNSGAII",
     "Hyperopt",
     "SFLA",
     "Gurobi",
@@ -75,6 +76,10 @@ def Solver(algo="auto"):
         from flopt.solvers.optuna_searches import OptunaCmaEsSearch
 
         return OptunaCmaEsSearch()
+    elif algo == "optunansgaii":
+        from flopt.solvers.optuna_searches import OptunaNSGAIISearch
+
+        return OptunaNSGAIISearch()
     elif algo == "hyperopt":
         from flopt.solvers.hyperopt_search import HyperoptSearch
 
