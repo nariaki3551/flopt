@@ -5,7 +5,6 @@ Tutorial
   :maxdepth: 1
 
   modeling_and_solving
-  advanced_usage
   expression_examples
   problem_type
 

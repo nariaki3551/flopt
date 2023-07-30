@@ -202,14 +202,25 @@ def test_OptunaTPESearch2(prob_only_continuous, callback):
     )
 
 
+def test_OptunaTPESearch3(prob_qp, callback):
+    prob_qp.solve(solver="OptunaTPE", n_trial=10, timelimit=0.5, callbacks=[callback])
+
+
+def test_OptunaTPESearch4(prob_nonlinear, callback):
+    prob_nonlinear.solve(
+        solver="OptunaTPE", n_trial=10, timelimit=0.5, callbacks=[callback]
+    )
+
+
 def test_OptunaTPESearch_available(
-    prob, prob_with_const, prob_qp, prob_nonlinear, prob_perm
+    prob, prob_only_continuous, prob_with_const, prob_qp, prob_nonlinear, prob_perm
 ):
     solver = Solver(algo="OptunaTPE")
     assert solver.available(prob) == True
-    assert solver.available(prob_with_const) == False
-    assert solver.available(prob_qp) == False
-    assert solver.available(prob_nonlinear) == False
+    assert solver.available(prob_only_continuous) == True
+    assert solver.available(prob_with_const) == True
+    assert solver.available(prob_qp) == True
+    assert solver.available(prob_nonlinear) == True
     assert solver.available(prob_perm) == False
 
 
@@ -235,13 +246,59 @@ def test_OptunaCmaEsSearch2(prob_only_continuous, callback):
 
 
 def test_OptunaCmaEsSearch_available(
-    prob, prob_with_const, prob_qp, prob_nonlinear, prob_perm
+    prob, prob_only_continuous, prob_with_const, prob_qp, prob_nonlinear, prob_perm
 ):
     solver = Solver(algo="OptunaCmaEs")
     assert solver.available(prob) == True
+    assert solver.available(prob_only_continuous) == True
     assert solver.available(prob_with_const) == False
     assert solver.available(prob_qp) == False
     assert solver.available(prob_nonlinear) == False
+    assert solver.available(prob_perm) == False
+
+
+def test_OptunaNSGAIISearch1(prob, callback):
+    """test to solve problem has only objective"""
+    prob.solve(solver="OptunaNSGAII", n_trial=10, timelimit=0.5, callbacks=[callback])
+
+
+def test_OptunaNSGAIISearch2(prob_only_continuous, callback):
+    """test to solve problem with optimized_variables"""
+    variables = list(prob_only_continuous.getVariables())
+    non_optimized_values = [var.value() for var in variables[1:]]
+    prob_only_continuous.solve(
+        solver="OptunaNSGAII",
+        n_trial=10,
+        timelimit=0.5,
+        callbacks=[callback],
+        optimized_variables=variables[:1],
+    )
+    assert all(
+        var.value() == value for var, value in zip(variables[1:], non_optimized_values)
+    )
+
+
+def test_OptunaNSGAIISearch3(prob_qp, callback):
+    prob_qp.solve(
+        solver="OptunaNSGAII", n_trial=10, timelimit=0.5, callbacks=[callback]
+    )
+
+
+def test_OptunaNSGAIISearch4(prob_nonlinear, callback):
+    prob_nonlinear.solve(
+        solver="OptunaNSGAII", n_trial=10, timelimit=0.5, callbacks=[callback]
+    )
+
+
+def test_OptunaNSGAIISearch_available(
+    prob, prob_only_continuous, prob_with_const, prob_qp, prob_nonlinear, prob_perm
+):
+    solver = Solver(algo="OptunaNSGAII")
+    assert solver.available(prob) == True
+    assert solver.available(prob_only_continuous) == True
+    assert solver.available(prob_with_const) == True
+    assert solver.available(prob_qp) == True
+    assert solver.available(prob_nonlinear) == True
     assert solver.available(prob_perm) == False
 
 

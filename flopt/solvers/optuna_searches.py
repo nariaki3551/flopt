@@ -1,11 +1,16 @@
 from optuna.study import create_study
-from optuna.samplers import CmaEsSampler, TPESampler
+from optuna.samplers import TPESampler, CmaEsSampler, NSGAIISampler  # , BoTorchSampler
 from optuna.logging import disable_default_handler
 import timeout_decorator
 
 import flopt
 from flopt.solvers.base import BaseSearch
-from flopt.constants import VariableType, ExpressionType, SolverTerminateState
+from flopt.constants import (
+    VariableType,
+    ExpressionType,
+    ConstraintType,
+    SolverTerminateState,
+)
 from flopt.env import setup_logger
 
 
@@ -25,12 +30,6 @@ class OptunaSearch(BaseSearch):
     n_trial : int
         number of trials
     """
-
-    can_solve_problems = {
-        "Variable": VariableType.Number,
-        "Objective": ExpressionType.Any,
-        "Constraint": ExpressionType.Non,
-    }
 
     def __init__(self):
         super().__init__()
@@ -58,11 +57,31 @@ class OptunaSearch(BaseSearch):
                 elif var.type() == VariableType.Continuous:
                     lb = var.getLb(number=True)
                     ub = var.getUb(number=True)
-                    var.setValue(trial.suggest_uniform(var.name, lb, ub))
+                    var.setValue(trial.suggest_float(var.name, lb, ub))
             obj_value = self.getObjValue(solution)
 
+            # Constraints which are considered feasible if less than or equal to zero.
+            optuna_const_values = list()
+            for const in self.prob.getConstraints():
+                if const.type() == ConstraintType.Le:
+                    optuna_const_values.append(const.value(solution))
+                elif const.type() == ConstraintType.Eq:
+                    optuna_const_values.append(const.value(solution))
+                    optuna_const_values.append(-const.value(solution))
+                else:
+                    raise Exception()
+
+            # Store the constraints as user attributes so that they can be restored after optimization.
+            trial.set_user_attr("constraint", optuna_const_values)
+
             # update best solution if needed
-            self.registerSolution(solution, obj_value)
+            if self.prob.getConstraints():
+                if all(
+                    const.feasible(solution) for const in self.prob.getConstraints()
+                ):
+                    self.registerSolution(solution, obj_value)
+            else:
+                self.registerSolution(solution, obj_value)
 
             # callback
             self.callback([solution])
@@ -76,11 +95,22 @@ class OptunaSearch(BaseSearch):
         def optimize():
             self.study.optimize(objective_func, self.n_trial, timeout=search_timelimit)
 
+        def set_best_value():
+            if self.best_obj_value < float("inf"):
+                for var in self.best_solution:
+                    solution.toDict()[var.name].setValue(var.value())
+
         try:
             optimize()
+        except TimeoutError as e:
+            set_best_value()
+            raise e
         except ValueError as e:
             logger.warning(e)
+            set_best_value()
             raise flopt.error.SolverError()
+
+        set_best_value()
 
         return SolverTerminateState.Normal
 
@@ -114,6 +144,7 @@ class OptunaTPESearch(OptunaSearch):
 
         prob = flopt.Problem()
         prob += 2*x*x + x*y + y*y + x + y
+        prob += x + y >= 0
 
         status, log = prob.solve(solver="OptunaTPE", msg=True, timelimit=1)
 
@@ -123,6 +154,11 @@ class OptunaTPESearch(OptunaSearch):
     """
 
     name = "OptunaTPE"
+    can_solve_problems = {
+        "Variable": VariableType.Number,
+        "Objective": ExpressionType.Any,
+        "Constraint": ExpressionType.Any,
+    }
 
     def __init__(self):
         super().__init__()
@@ -136,10 +172,11 @@ class OptunaTPESearch(OptunaSearch):
 
     def createStudy(self, *args):
         """
-        create sampler and create Study object
+        create sampler and Study object
         """
 
         disable_default_handler()
+        constraints = lambda trial: trial.user_attrs["constraint"]
         sampler = TPESampler(
             consider_prior=self.consider_prior,
             prior_weight=self.prior_weight,
@@ -148,6 +185,7 @@ class OptunaTPESearch(OptunaSearch):
             n_startup_trials=self.n_startup_trials,
             n_ei_candidates=self.n_ei_candidates,
             seed=self.seed,
+            constraints_func=constraints,
         )
         self.study = create_study(sampler=sampler)
 
@@ -189,6 +227,11 @@ class OptunaCmaEsSearch(OptunaSearch):
     """
 
     name = "OptunaCmaEs"
+    can_solve_problems = {
+        "Variable": VariableType.Number,
+        "Objective": ExpressionType.Any,
+        "Constraint": ExpressionType.Non,
+    }
 
     def __init__(self):
         super().__init__()
@@ -213,5 +256,77 @@ class OptunaCmaEsSearch(OptunaSearch):
             independent_sampler=self.independent_sampler,
             warn_independent_sampling=self.warn_independent_sampling,
             seed=self.seed,
+        )
+        self.study = create_study(sampler=sampler)
+
+
+class OptunaNSGAIISearch(OptunaSearch):
+    """
+    Multi-objective sampler using the NSGA-II algorithm of Optuna.
+
+    Parameters
+    ----------
+    name : str
+        name
+    population_size : int
+    mutation_prob : float
+    crossover : ---
+    crossover_prob : float
+    swapping_prob : float
+    seed : float
+        seed of random generater
+
+    Examples
+    --------
+
+    .. code-block:: python
+
+        import flopt
+
+        x = flopt.Variable("x", lowBound=-1, upBound=1, cat="Continuous")
+        y = flopt.Variable("y", lowBound=-1, upBound=1, cat="Continuous")
+
+        prob = flopt.Problem()
+        prob += 2*x*x + x*y + y*y + x + y
+        prob += x + y >= 0
+
+        status, log = prob.solve(solver="OptunaNSGAII", msg=True, timelimit=1)
+
+        print("obj =", flopt.Value(prob.obj))
+        print("x =", flopt.Value(x))
+        print("y =", flopt.Value(y))
+    """
+
+    name = "OptunaNSGAII"
+    can_solve_problems = {
+        "Variable": VariableType.Number,
+        "Objective": ExpressionType.Any,
+        "Constraint": ExpressionType.Any,
+    }
+
+    def __init__(self):
+        super().__init__()
+        self.population_size = 50
+        self.mutation_prob = None
+        self.crossover = None
+        self.crossover_prob = 0.9
+        self.swapping_prob = 0.5
+        self.seed = None
+
+    def createStudy(self, *args):
+        """
+        create sampler and Study object
+        """
+
+        disable_default_handler()
+        constraints = lambda trial: trial.user_attrs["constraint"]
+        sampler = NSGAIISampler(
+            population_size=self.population_size,
+            mutation_prob=self.mutation_prob,
+            crossover=self.crossover,
+            crossover_prob=self.crossover_prob,
+            swapping_prob=self.swapping_prob,
+            seed=self.seed,
+            constraints_func=constraints,
         )
         self.study = create_study(sampler=sampler)
