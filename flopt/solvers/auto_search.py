@@ -173,6 +173,9 @@ class AutoSearch(BaseSearch):
         except ModelNotFound as e:
             logger.warning(e)
             return BaseSelector()
+        except ValueError as e:
+            logger.warning(e)
+            return BaseSelector()
         return BaseSelector()
 
     def solve(self, solution, objective, constraints, prob, *args, **kwargs):
