@@ -461,6 +461,27 @@ def test_ScipySearch3(prob_with_const, callback):
     )
 
 
+def test_ScipySearch4(prob_with_const, callback):
+    """test to solve problem with should_continue_searching"""
+    prob_with_const.solve(
+        solver="Scipy",
+        timelimit=2,
+        should_continue_searching=True,
+        msg=True,
+        callbacks=[callback],
+    )
+
+
+def test_ScipySearch5(prob_with_const, callback):
+    """test to solve problem with calculate_jac_hess"""
+    prob_with_const.solve(
+        solver="Scipy",
+        timelimit=2,
+        calculate_jac_hess=True,
+        callbacks=[callback],
+    )
+
+
 def test_ScipySearch_available(
     prob,
     prob_only_continuous,

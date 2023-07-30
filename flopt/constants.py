@@ -76,10 +76,11 @@ class ExpressionType(enum.IntEnum):
     Linear = 202
     Quadratic = 203
     Polynomial = 204
-    Nonlinear = 205
-    Permutation = 206
-    BlackBox = 207
-    Non = 208
+    Differentiable = 205
+    Nonlinear = 206
+    Permutation = 207
+    BlackBox = 208
+    Non = 209
 
     def __str__(self):
         return self.name
@@ -92,6 +93,7 @@ class ExpressionType(enum.IntEnum):
                 et.Linear,
                 et.Quadratic,
                 et.Polynomial,
+                et.Differentiable,
                 et.Nonlinear,
                 et.Permutation,
                 et.BlackBox,
@@ -103,6 +105,8 @@ class ExpressionType(enum.IntEnum):
             return {et.Linear, et.Quadratic, et.Non}
         elif self == et.Polynomial:
             return {et.Linear, et.Quadratic, et.Polynomial, et.Non}
+        elif self == et.Differentiable:
+            return {et.Linear, et.Quadratic, et.Polynomial, et.Differentiable}
         elif self == et.Permutation:
             return {et.Permutation, et.Non}
         elif self == et.BlackBox:
@@ -112,6 +116,7 @@ class ExpressionType(enum.IntEnum):
                 et.Linear,
                 et.Quadratic,
                 et.Polynomial,
+                et.Differentiable,
                 et.Nonlinear,
                 et.Non,
             }

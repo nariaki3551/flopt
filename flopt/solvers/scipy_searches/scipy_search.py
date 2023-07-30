@@ -19,6 +19,17 @@ logger = setup_logger(__name__)
 class ScipySearch(BaseSearch):
     """scipy optimize minimize API Solver
 
+    Parameters
+    ----------
+    n_max_retry : int
+        maximum number of retries to success the search
+    n_trial : int
+        number of trials in scipy solver
+    should_continue_searching : bool
+        if it is true, the searches continue to timelimit
+    calculate_jac_hess : bool
+        if it is true, jac and hess is calculated and pass them into the solver, if it is possible
+
     Examples
     --------
 
@@ -59,6 +70,8 @@ class ScipySearch(BaseSearch):
         super().__init__()
         self.n_max_retry = 100
         self.n_trial = 1e8
+        self.should_continue_searching = False
+        self.calculate_jac_hess = False
         self.method = None
 
     def search(self, solution, objective, constraints):
@@ -124,6 +137,17 @@ class ScipySearch(BaseSearch):
             # callbacks
             self.callback([solution])
 
+        jac = None
+        hess = None
+        if self.calculate_jac_hess:
+            if objective.differentiable():
+                flopt_jac = objective.jac(solution)
+                flopt_hess = objective.hess(solution)
+                jac = gen_func(flopt_jac)
+                hess = gen_func(flopt_hess)
+            else:
+                logger.warning(f"ScipySearch dose not calcuate the jac and hess")
+
         self.end_build()
 
         for i in range(self.n_max_retry):
@@ -136,8 +160,8 @@ class ScipySearch(BaseSearch):
                 callback=callback,
                 args=(),
                 method=self.method,
-                jac=None,
-                hess=None,
+                jac=jac,
+                hess=hess,
                 hessp=None,
                 tol=None,
             )
@@ -152,15 +176,23 @@ class ScipySearch(BaseSearch):
                 # get result of solver
                 solution.setValuesFromArray(res.x)
                 self.registerSolution(solution)
-                return SolverTerminateState.Normal
+                if self.should_continue_searching:
+                    for var in solution:
+                        var.setRandom()
+                    x0 = [var.value() for var in solution]
+                else:
+                    return SolverTerminateState.Normal
             else:
-                logger.warning(f"ScipySearch cound not success to find solution.")
+                logger.warning(f"ScipySearch could not success to find solution.")
                 for var in solution:
-                    var.setRandom(scale=1.0 / (1 << (i + 1)))
+                    var.setRandom(scale=1.0 / (1 << (i // 4 + 1)))
                 x0 = [var.value() for var in solution]
                 logger.warning(
                     f"{i+1}-th Restart ScipySearch scaled {1.0/(1 << (i+1))}"
                 )
 
-        logger.warning(f"ScipySearch cound not success to find solution.")
-        return SolverTerminateState.Abnormal
+        if not self.should_continue_searching:
+            logger.warning(f"ScipySearch cound not success to find solution.")
+            return SolverTerminateState.Abnormal
+        else:
+            return SolverTerminateState.Normal
