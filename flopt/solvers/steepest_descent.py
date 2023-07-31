@@ -1,3 +1,5 @@
+import timeout_decorator
+
 from flopt.solvers.base import BaseSearch
 from flopt.constants import VariableType, ExpressionType, SolverTerminateState
 
@@ -48,7 +50,11 @@ class SteepestDescentSearch(BaseSearch):
         x = solution.getVariables()
 
         # get jacobian (gradient) function
-        jac = obj.jac(x)
+        @timeout_decorator.timeout(self.timelimit, timeout_exception=TimeoutError)
+        def calc_jac(obj, x):
+            return obj.jac(x)
+
+        jac = calc_jac(obj, x)
 
         for _ in range(int(self.n_trial)):
             # 1. obtain gradient
