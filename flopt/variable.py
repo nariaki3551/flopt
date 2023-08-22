@@ -411,6 +411,10 @@ class VarElement:
             value = value.item()
         self._value = value
 
+    def fixValue(self):
+        self.lowBound = self._value
+        self.upBound = self._value
+
     @property
     def name(self):
         return self._name

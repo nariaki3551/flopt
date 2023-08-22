@@ -28,7 +28,6 @@ from .WeightedSphere import WeightedSphere
 from .XinShe import XinShe
 from .Zahkarov import Zahkarov
 
-from .G1 import G1
 
 benchmark_func = {
     "Ackley": Ackley,
@@ -60,8 +59,4 @@ benchmark_func = {
     "WeightedSphere": WeightedSphere,
     "XinShe": XinShe,
     "Zahkarov": Zahkarov,
-}
-
-benchmark_cn_func = {
-    "G1": G1,
 }

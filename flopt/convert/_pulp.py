@@ -99,8 +99,9 @@ def pulp_to_flopt(prob):
         return flopt.Sum(elms) + const
 
     # convert objective function
-    obj = flopt_exp(prob.objective.constant, prob.objective.to_dict())
-    flopt_prob.setObjective(obj)
+    if prob.objective is not None:
+        obj = flopt_exp(prob.objective.constant, prob.objective.to_dict())
+        flopt_prob.setObjective(obj)
 
     for const in prob.constraints.values():
         if "coefficients" in const.to_dict():

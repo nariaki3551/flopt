@@ -84,6 +84,7 @@ class GurobiSearch(BaseSearch):
     def __init__(self):
         super().__init__()
         self.gurobi_params = None
+        self.compute_iis = False
 
     def search(self, solution, *args):
         self.start_build()
@@ -120,6 +121,11 @@ class GurobiSearch(BaseSearch):
         logger.debug(f"Gurobi Status {gp_model.status}")
         if gp_model.status == 3:
             status = SolverTerminateState.Infeasible
+            if self.compute_iis:
+                logger.info("Model is infeasible, then compute IIS ...")
+                gp_model.computeIIS()
+                gp_model.write(f"{self.prob.name}.ilp")
+                logger.info(f"Write IIS file as {self.prob.name}.ilp")
             return status
         elif gp_model.status == 5:
             status = SolverTerminateState.Unbounded
