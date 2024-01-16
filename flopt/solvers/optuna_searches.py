@@ -119,6 +119,7 @@ class OptunaTPESearch(OptunaSearch):
     """
     Tree-structured Parzen Estimator (TPE) Sampling Search of Optuna.
     https://optuna.readthedocs.io/en/latest/reference/samplers/generated/optuna.samplers.TPESampler.html
+    This solver can solve constrainted problems, but it cannot handle equal constraints well.
 
     Parameters
     ----------
@@ -263,6 +264,7 @@ class OptunaCmaEsSearch(OptunaSearch):
 class OptunaNSGAIISearch(OptunaSearch):
     """
     Multi-objective sampler using the NSGA-II algorithm of Optuna.
+    This solver can solve constrainted problems, but it cannot handle equal constraints well.
 
     Parameters
     ----------
