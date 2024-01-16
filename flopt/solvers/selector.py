@@ -139,8 +139,13 @@ class SklearnSelector(Selector):
         logger.debug(f"load selector model from {self.model_path}")
 
     def __call__(self, prob, solver):
-        feature = self.model.features(prob, solver)
-        return self.model.output([feature])[0]
+        try:
+            feature = self.model.features(prob, solver)
+            return self.model.output([feature])[0]
+        except Exception as e:
+            logger.error(f"SklearnSelector error: {e}, using base selector instead.")
+            selector = BaseSelector()
+            return selector(prob, solver)
 
 
 class IsingSelector(SklearnSelector):
