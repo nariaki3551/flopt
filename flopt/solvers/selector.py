@@ -135,12 +135,21 @@ class SklearnSelector(Selector):
         if not os.path.exists(self.model_path):
             raise ModelNotFound(f"{self.model_path}: trained model file is not found")
         with open(self.model_path, "rb") as bf:
-            self.model = dill.load(bf)
+            try:
+                self.model = dill.load(bf)
+            except Exception as e:
+                self.model = None
+                logger.warning(f"SklearnSelector error: {e}")
         logger.debug(f"load selector model from {self.model_path}")
 
     def __call__(self, prob, solver):
-        feature = self.model.features(prob, solver)
-        return self.model.output([feature])[0]
+        try:
+            feature = self.model.features(prob, solver)
+            return self.model.output([feature])[0]
+        except Exception as e:
+            logger.warning(f"SklearnSelector error: {e}, using base selector instead.")
+            selector = BaseSelector()
+            return selector(prob, solver)
 
 
 class IsingSelector(SklearnSelector):

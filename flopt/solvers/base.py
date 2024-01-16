@@ -168,8 +168,8 @@ class BaseSearch:
             print("Get user ctrl-cuser ctrl-c")
             status = SolverTerminateState.Interrupt
         except Exception as e:
-            print("Exception occures in solver", e)
-            logger.warning("Exception occures in solver", e)
+            print(f"Exception occures in solver: {e}")
+            logger.warning(f"Exception occures in solver: {e}")
             status = SolverTerminateState.Abnormal
 
         self.recordLog()
