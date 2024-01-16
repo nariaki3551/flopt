@@ -143,7 +143,7 @@ class SklearnSelector(Selector):
             feature = self.model.features(prob, solver)
             return self.model.output([feature])[0]
         except Exception as e:
-            logger.error(f"SklearnSelector error: {e}, using base selector instead.")
+            logger.warning(f"SklearnSelector error: {e}, using base selector instead.")
             selector = BaseSelector()
             return selector(prob, solver)
 
