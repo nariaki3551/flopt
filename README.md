@@ -23,7 +23,7 @@ pip install flopt
 **GitHub**
 
 ```
-git clone https://github.com/flab-coder/flopt.git
+git clone https://github.com/nariaki3551/flopt.git
 cd flopt && python -m pip install .
 ```
 
