@@ -1,4 +1,4 @@
-networkx==3.2.1  # networkx >= 3.3 dose not support Python3.9, and networkx is required by hyperopt
+networkx==3.2.*  # networkx >= 3.3 dose not support Python3.9, and networkx is required by hyperopt
 numpy
 sympy
 matplotlib
