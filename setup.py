@@ -17,6 +17,7 @@ setup(
     version="0.5.6",
     license="MIT",
     install_requires=[
+        "networkx==3.2.*",
         "numpy",
         "sympy",
         "matplotlib",
